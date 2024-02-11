@@ -1,0 +1,4 @@
+sudo apt install git
+git clone git@gitlab.com:bgovedur/dotfiles.git .dotfile
+chsh -s /bin/zsh
+curl -fsSL https://raw.githubusercontent.com/ronniedroid/getnf/master/install.sh | bash
