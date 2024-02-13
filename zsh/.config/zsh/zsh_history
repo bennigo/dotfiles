@@ -1,0 +1,34 @@
+: 1707653427:0;ls vim zshrc
+: 1707653464:1;rm .config/zsh/.zshrc
+: 1707653542:33;vimdiff zshrc .config/zsh/.zshrc
+: 1707653620:232;vim .zshrc
+: 1707653907:1;vim zshrc
+: 1707653910:1;rm zshrc
+: 1707653966:0;sl
+: 1707654089:2;sudo apt install zoxide
+: 1707654140:0;echo "sudo apt install zoxide" >> .dotfiles/install.txt
+: 1707654165:0;sudo apt install fnm
+: 1707654245:0;cd .config/
+: 1707654380:9;vim zsh/.zshrc
+: 1707654400:2;sudo apt install ripgrep
+: 1707654466:0;echo "sudo apt install ripgrep" >> ~/.dotfiles/install.txt
+: 1707654483:17;sudo apt install pip
+: 1707654530:0;echo "sudo apt install pip" >> ~/.dotfiles/install.txt
+: 1707654531:0;cd ..
+: 1707654533:0;cd
+: 1707654624:2;curl -fsSL https://fnm.vercel.app/install | bash
+: 1707654671:0;echo "curl -fsSL https://fnm.vercel.app/install | bash" >> .dotfiles/install.txt
+: 1707654720:0;sudo apt install eza
+: 1707654749:0;cd .dotfiles
+: 1707654752:0;cd zsh
+: 1707654760:0;cd .config/zsh
+: 1707654761:0;ls
+: 1707654798:0;fnm
+: 1707654813:5;vim exports.zsh
+: 1707654821:0;fnm env
+: 1707654879:0;cd .dotfiles/zsh/.config/zsh
+: 1707655129:0;ls
+: 1707655216:64;vim .zshrc
+: 1707655312:0;cd .dotfiles/zsh/.config/zsh
+: 1707655381:8759;vim .zshrc
+: 1707664188:0;ls
