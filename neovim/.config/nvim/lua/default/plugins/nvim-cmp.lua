@@ -3,13 +3,22 @@ return {
     'hrsh7th/nvim-cmp',
     event = "InsertEnter",
     dependencies = {
+        -- https://github.com/hrsh7th/cmp-buffer
         "hrsh7th/cmp-buffer",       -- source for text in buffer
+        -- https://github.com/hrsh7th/cmp-path
         "hrsh7th/cmp-path",         -- source for file system paths
+        -- LSP completion capabilities
+        -- https://github.com/hrsh7th/cmp-nvim-lsp
         'hrsh7th/cmp-nvim-lsp',     -- Adds LSP completion capabilities
         "L3MON4D3/LuaSnip",         -- snippet engine
+        -- https://github.com/saadparwaiz1/cmp_luasnip
         "saadparwaiz1/cmp_luasnip", -- for autocompletion
+        -- Additional user-friendly snippets
+        -- https://github.com/rafamadriz/friendly-snippets
         "rafamadriz/friendly-snippets", -- useful snippets
         "onsails/lspkind.nvim",     -- vs-code like pictograms
+        -- https://github.com/hrsh7th/cmp-cmdline
+        'hrsh7th/cmp-cmdline',
     },
     -- [[ Configure nvim-cmp ]]
     -- See `:help cmp`
@@ -67,6 +76,11 @@ return {
                 { name = "buffer" }, -- text within current buffer
                 { name = "path" }, -- file system paths
             }),
+            window = {
+                -- Add borders to completions popups
+                completion = cmp.config.window.bordered(),
+                documentation = cmp.config.window.bordered(),
+            },
             -- configure lspkind for vs-code like pictograms in completion menu
             formatting = {
                 format = lspkind.cmp_format({

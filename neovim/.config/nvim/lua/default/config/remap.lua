@@ -29,7 +29,7 @@ keymap({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
 -- keymap("n", "<leader>e", ":NvimTreeToggle<cr>", opts)
 -- keymap("n", "<leader>pv", vim.cmd.Ex)
 
-keymap('n', '<leader>s', [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]])
+keymap('n', '<leader>r', [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]])
 
 -- keymap("n", "<leader>vpp", "<cmd>e ~/.dotfiles/nvim/.config/nvim/lua/theprimeagen/packer.lua<CR>");
 -- keymap("n", "<leader>mr", "<cmd>CellularAutomaton make_it_rain<CR>");
@@ -67,10 +67,10 @@ keymap('n', '<leader>j', '<cmd>lprev<CR>zz')
 -- keymap("n", "<mtab-l>", "<C-w>l", opts)
 keymap('n', '<m-tab>', '<c-6>', opts)
 
--- keymap('n', 'q', '<cmd>bdelete!<CR>', opts)
+keymap('n', 'q', '<cmd>bdelete!<CR>', opts)
 -- Remap for dealing with word wrap
 
-keymap('n', '<leader>f', vim.lsp.buf.format)
+keymap('n', '<leader>F', vim.lsp.buf.format)
 -- Diagnostic keymaps
 keymap('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous diagnostic message' })
 keymap('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next diagnostic message' })
@@ -85,7 +85,7 @@ keymap({ 'n', 'v' }, '<leader>w', '<cmd>w!<CR>')
 
 -- Insert --
 keymap({ 'v', 'i' }, 'jk', '<ESC>', opts) -- Press jk fast to enter
-keymap('i', '<C-c>', '<Esc>') -- This is going to get me cancelled
+keymap('i', '<C-c>', '<Esc>')             -- This is going to get me cancelled
 
 -- Visual --
 -- Stay in indent mode

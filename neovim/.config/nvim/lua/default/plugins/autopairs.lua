@@ -22,6 +22,7 @@ local function setup()
             check_comma = true,
             highlight = "PmenuSel",
             highlight_grey = "LineNr",
+            
         },
     }
 
