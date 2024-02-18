@@ -3,12 +3,13 @@ alias j='z'
 alias f='zi'
 alias g='lazygit'
 alias zsh-update-plugins="find "$ZDOTDIR/plugins" -type d -exec test -e '{}/.git' ';' -print0 | xargs -I {} -0 git -C {} pull -q"
-alias nvimrc='nvim ~/.config/nvim/'
+alias vrc='nvim ~/.config/nvim/'
+alias v='nvim'
 
 # alias lvim='nvim -u ~/.local/share/lunarvim/lvim/init.lua --cmd "set runtimepath+=~/.local/share/lunarvim/lvim"'
 
 # Remarkable
-alias restream='restream -p'
+# alias restream='restream -p'
 
 alias rek='TERM=xterm-256color ssh gpsops@rek.vedur.is'
 alias okada='TERM=xterm-256color ssh gpsops@okada.vedur.is'

@@ -1,6 +1,6 @@
 local function setup()
-    -- [[ Configure Treesitter ]]
-    -- See `:help nvim-treesitter`
+    -- [[ configure treesitter ]]
+    -- see `:help nvim-treesitter`
     require('nvim-treesitter.configs').setup {
 
         highlight = { enable = true, disable = {} },
@@ -11,11 +11,11 @@ local function setup()
         },
         sync_install = true,
         ignore_install = {},
-        -- Add languages to be installed here that you want installed for treesitter
+        -- add languages to be installed here that you want installed for treesitter
         ensure_installed = { 'c', 'lua', 'vim', 'vimdoc', 'query', 'python', 'rust', 'tsx', 'typescript', 'markdown', 'norg', 'bash'},
         modules = {},
 
-        -- Autoinstall languages that are not installed. Defaults to false (but you can change for yourself!)
+        -- autoinstall languages that are not installed. defaults to false (but you can change for yourself!)
         auto_install = true,
 
         incremental_selection = {
@@ -34,23 +34,23 @@ local function setup()
         textobjects = {
             select = {
                 enable = true,
-                lookahead = true, -- Automatically jump forward to textobj, similar to targets.vim
+                lookahead = true, -- automatically jump forward to textobj, similar to targets.vim
                 keymaps = {
-                    -- You can use the capture groups defined in textobjects.scm
+                    -- you can use the capture groups defined in textobjects.scm
                     ['aa'] = '@parameter.outer',
                     ['ia'] = '@parameter.inner',
                     ['af'] = '@function.outer',
                     ['if'] = '@function.inner',
-                    ["ic"] = { query = "@class.inner", desc = "Select inner part of a class region" },
                     ['ac'] = '@class.outer',
-                    -- You can also use captures from other query groups like `locals.scm`
-                    ["as"] = { query = "@scope", query_group = "locals", desc = "Select language scope" },
+                    ["ic"] = { query = "@class.inner", desc = "select inner part of a class region" },
+                    -- you can also use captures from other query groups like `locals.scm`
+                    ["as"] = { query = "@scope", query_group = "locals", desc = "select language scope" },
                 },
-                selection_modes = {
-                    ['@parameter.outer'] = 'v', -- charwise
-                    ['@function.outer'] = 'V', -- linewise
-                    ['@class.outer'] = '<c-v>', -- blockwise
-                },
+                      selection_modes = {
+        ['@parameter.outer'] = 'v', -- charwise
+        ['@function.outer'] = 'v', -- linewise
+        ['@class.outer'] = '<c-v>', -- blockwise
+      },
             },
             move = {
                 enable = true,
@@ -60,7 +60,7 @@ local function setup()
                     [']]'] = '@class.outer',
                 },
                 goto_next_end = {
-                    [']M'] = '@function.outer',
+                    [']m'] = '@function.outer',
                     [']['] = '@class.outer',
                 },
                 goto_previous_start = {
@@ -68,7 +68,7 @@ local function setup()
                     ['[['] = '@class.outer',
                 },
                 goto_previous_end = {
-                    ['[M'] = '@function.outer',
+                    ['[m'] = '@function.outer',
                     ['[]'] = '@class.outer',
                 },
             },
@@ -78,7 +78,7 @@ local function setup()
                     ['<leader>a'] = '@parameter.inner',
                 },
                 swap_previous = {
-                    ['<leader>A'] = '@parameter.inner',
+                    ['<leader>a'] = '@parameter.inner',
                 },
             },
        },
