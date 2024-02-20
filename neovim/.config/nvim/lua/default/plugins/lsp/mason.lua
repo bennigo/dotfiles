@@ -49,7 +49,7 @@ return {
         'black', -- python formatter
         'flake8',
         'mypy',
-        'pylint', -- python linter
+        -- 'pylint', -- python linter
         'eslint_d', -- js linter
       },
     }

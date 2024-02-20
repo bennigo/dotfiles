@@ -17,8 +17,9 @@ return {
             ['<leader>g'] = { name = '[G]it', _ = 'which_key_ignore' },
             ['<leader>h'] = { name = 'More git', _ = 'which_key_ignore' },
             ['<leader>r'] = { name = '[R]ename', _ = 'which_key_ignore' },
-            ['<leader>s'] = { name = '[p]project', _ = 'which_key_ignore' },
+            ['<leader>s'] = { name = '[S]earch [P]project', _ = 'which_key_ignore' },
             ['<leader>W'] = { name = '[W]orkspace', _ = 'which_key_ignore' },
+            ['<leader>D'] = { name = '[D]Dap', _ = 'which_key_ignore' },
         }
     end,
 }

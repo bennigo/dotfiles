@@ -14,7 +14,7 @@ return {
   opts = {
     controls = {
       element = "repl",
-      enabled = false,
+      enabled = true,
       icons = {
         disconnect = "",
         pause = "",
@@ -48,6 +48,10 @@ return {
             id = "scopes",
             size = 0.50
           },
+          -- {
+          --   id = "repl",
+          --   size = 0.05
+          -- },
           {
             id = "stacks",
             size = 0.30
@@ -59,14 +63,13 @@ return {
           {
             id = "breakpoints",
             size = 0.10
-          }
+          },
         },
-        size = 40,
+        size = 50,
         position = "left", -- Can be "left" or "right"
       },
       {
         elements = {
-          "repl",
           "console",
         },
         size = 10,

@@ -3,7 +3,6 @@
 some python test
 """
 
-
 def main():
     """
     test
