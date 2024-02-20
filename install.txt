@@ -40,3 +40,11 @@ make
 sudo make install
 curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh"
 bash Miniforge3-Linux-x86_64.sh
+sudo apt install pass
+# libnfs
+git clone git@github.com:sahlberg/libnfs.git
+cd libnfs && mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr ..
+make && sudo make install
+sudo apt install nfs-common
+sudo apt install libnfs-utils

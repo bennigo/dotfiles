@@ -5,7 +5,7 @@ return {
   "tpope/vim-sleuth",
   "tpope/vim-surround",
   "nvim-telescope/telescope-symbols.nvim",
-  
+
 
  {
    -- Add indentation guides even on blank lines
@@ -28,8 +28,6 @@ return {
     config = function()
       -- callin `setup` is optional for customization
       require('fzf-lua').setup {}
-    end, 
+    end,
   },
-
-    
 }
