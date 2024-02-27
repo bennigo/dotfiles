@@ -48,3 +48,20 @@ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr ..
 make && sudo make install
 sudo apt install nfs-common
 sudo apt install libnfs-utils
+sudo apt install m4
+wget https://downloads.unidata.ucar.edu/netcdf-c/4.9.2/netcdf-c-4.9.2.zip
+sudo apt install libcurl4-openssl-dev
+sudo apt install libhdf5-dev
+sudo apt-get install gfortran
+wget https://hdf-wordpress-1.s3.amazonaws.com/wp-content/uploads/manual/HDF5/HDF5_1_14_3/src/hdf5-1.14.3.tar.gz
+cd hdf5-1.14.3
+sudo apt install libxml2-dev
+sudo apt-get install libxml2-dev libxslt-dev
+wget https://github.com/OSGeo/gdal/releases/download/v3.8.4/gdal-3.8.4.tar.gz
+sudo apt install libcrypto++-dev
+sudo apt install sqlite3
+sudo apt install libtiff-dev
+sudo apt install libproj-dev
+sudo apt install gdal-bin
+sudo apt-get install software-properties-common
+sudo add-apt-repository ppa:ubuntugis/ppa

@@ -67,7 +67,7 @@ keymap('n', '<leader>j', '<cmd>lprev<CR>zz')
 -- keymap("n", "<mtab-l>", "<C-w>l", opts)
 keymap('n', '<m-tab>', '<c-6>', opts)
 
-keymap('n', 'q', '<cmd>bdelete!<CR>', opts)
+keymap('n', '<m-q>', '<cmd>bdelete!<CR>', opts)
 -- Remap for dealing with word wrap
 
 keymap('n', '<leader>F', vim.lsp.buf.format)
