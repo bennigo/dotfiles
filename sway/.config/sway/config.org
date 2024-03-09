@@ -31,7 +31,3 @@ include $HOME/.config/sway/config.d/*.conf
 # Include nwg-displays config's (if exists)
 include ~/.config/sway/outputs
 include ~/.config/sway/workspaces
-
-set $term alacritty
-
-bindsym $mod+q kill

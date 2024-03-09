@@ -52,7 +52,7 @@ local function setup()
 				return false
 			end,
 		})
-	end, { desc = "[ ] Find existing buffers" })
+	end, { desc = "[spc] Find existing buffers" })
 
 	-- general files other projects
 	vim.keymap.set("n", "<leader>?", function()
@@ -92,7 +92,7 @@ local function setup()
 	vim.keymap.set("n", "<leader>sr", require("telescope.builtin").resume, { desc = "[S]earch [R]esume" })
 
 	-- find files in work directories
-	vim.keymap.set("n", "<leader>Wp", function()
+	vim.keymap.set("n", "<leader>Wf", function()
 		require("telescope.builtin").find_files({ cwd = "~/work/projects", follow = true })
 	end, { desc = "[W]ork [P]rojects" })
 
@@ -110,48 +110,52 @@ local function setup()
 				},
 			},
 		})
-	end, { desc = "[w]ork [G]grep" })
+	end, { desc = "[W]ork [G]grep" })
 
-	-- find nvim config files (standard location)
-	vim.keymap.set("n", "<leader>nc", function()
+	-- NOTE: Find nvim config files (standard location)
+	vim.api.nvim_set_keymap(
+		"n",
+		"<leader>nc",
+		[[<cmd>:lua require'fzf-lua'.colorschemes({ winopts = { height=0.33, width=0.33 } })<cr>]],
+		{ desc = "[N]eovim [C]olorschemes", noremap = true, silent = true }
+	)
+	-- vim.keymap.set('n', '<leader>nc', [[<cmd>Telescope colorscheme<cr>]], {noremap = true, silent = true})
+	vim.keymap.set("n", "<leader>nz", "<cmd>Telescope zoxide list<cr>", {})
+	-- find spell suggestions of word under cursor
+	vim.keymap.set(
+		"n",
+		"<leader>ns",
+		'<cmd>lua require("telescope.builtin").spell_suggest()<cr>',
+		{ desc = "[N]eovim [S]pell suggestions" }
+	)
+	vim.keymap.set("n", "<leader>nh", require("telescope.builtin").help_tags, { desc = "[S]earch [H]elp" })
+
+	vim.keymap.set("n", "<leader>nf", function()
 		require("telescope.builtin").find_files({ cwd = "~/.config/nvim", follow = true })
-	end, { desc = "[n]eovim [c]onfig" })
+	end, { desc = "[n]eovim config [file]" })
 
 	vim.keymap.set("n", "<leader>ng", function()
 		require("telescope.builtin").live_grep({ cwd = "~/.config/nvim", follow = true })
 	end, { desc = "[n]eovim [c]onfig" })
 
-	-- find notes
-	vim.keymap.set("n", "<leader>Wn", function() end, { desc = "[N]otes" })
-
-	vim.keymap.set("n", "<leader>th", require("telescope.builtin").help_tags, { desc = "[S]earch [H]elp" })
-	vim.keymap.set("n", "<leader>tz", "<cmd>Telescope zoxide list<cr>", {})
-	-- find spell suggestions of word under cursor
-	vim.keymap.set("n", "<leader>ts", '<cmd>lua require("telescope.builtin").spell_suggest()<cr>', {})
-	-- vim.api.nvim_set_keymap('n', '<leader>cs', [[<cmd>Telescope colorscheme<cr>]], {noremap = true, silent = true})
-	vim.api.nvim_set_keymap(
-		"n",
-		"<leader>cs",
-		[[<cmd>:lua require'fzf-lua'.colorschemes({ winopts = { height=0.33, width=0.33 } })<cr>]],
-		{ noremap = true, silent = true }
-	)
-
-	-- temp for configuring neovim
-	vim.keymap.set("n", "<leader>td", function()
-		require("telescope.builtin").find_files({ cwd = "~/dotfiles/.config/nvim", follow = true })
-	end, { desc = "old [D]otfiles" })
-
-	vim.keymap.set("n", "<leader>tg", function()
-		require("telescope.builtin").live_grep({ cwd = "~/dotfiles/.config/nvim", follow = true })
-	end, { desc = "old [D]otfiles" })
-
-	-- temp for configuring neovim
-	vim.keymap.set("n", "<leader>tc", function()
+	vim.keymap.set("n", "<leader>nof", function()
 		require("telescope.builtin").find_files({
-			cwd = "~/Downloads/git/nvim-starter-kit/.config/nvim/",
+			cwd = "~/personal/ext_dotfiles",
+			follow = true,
+			hidden = true,
+			search_file = "*.lua",
+		})
+	end, { desc = "[N]eovim [O]ther [F]ile" })
+
+	vim.keymap.set("n", "<leader>nog", function()
+		require("telescope.builtin").live_grep({
+			cwd = "~/personal/ext_dotfiles",
 			follow = true,
 		})
-	end, { desc = "[T]est [C]onfig" })
+	end, { desc = "[N]eovim [O]ther [G]rep" })
+
+	-- find notes
+	-- vim.keymap.set("n", "<leader>Wn", function() end, { desc = "[N]otes" })
 
 	-- if IsAvailable('telescope-fzf-native') then
 	-- https://github.com/nvim-telescope/telescope-fzf-native.nvim

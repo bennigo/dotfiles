@@ -31,5 +31,5 @@ return {
 		end, { desc = "Trigger linting for current file" })
 	end,
 
-	vim.diagnostic.config({virtual_text = false})
+	vim.diagnostic.config({ virtual_text = false }),
 }

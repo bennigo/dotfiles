@@ -43,7 +43,8 @@ local function setup()
 			"bash",
 			"regex",
 			"yaml",
-			"json"
+			"json",
+			"sql",
 		},
 		modules = {},
 

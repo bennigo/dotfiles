@@ -1,0 +1,54 @@
+# [env]
+# TERM = "xterm-256color"
+
+[font]
+builtin_box_drawing = true
+size = 14.0
+
+[font.bold]
+family = "hack nerd font"
+style = "bold"
+
+[font.glyph_offset]
+x = 0
+y = 0
+
+[font.italic]
+family = "hack nerd font"
+style = "italic"
+
+[font.italic.bold_italic]
+family = "hack nerd font"
+style = "Bold Italic"
+
+[font.normal]
+family = "hack nerd font"
+style = "regular"
+
+[font.offset]
+x = 0
+y = 0
+
+[window]
+decorations = "none"
+decorations_theme_variant = "None"
+dynamic_title = true
+opacity = 0.8
+startup_mode = "Windowed"
+title = "Alacritty"
+
+[window.class]
+general = "Alacritty"
+instance = "Alacritty"
+
+[window.dimensions]
+columns = 80
+lines = 30
+
+[window.padding]
+x = 2
+y = 2
+
+[window.scrolling]
+history = 10000
+multiplier = 3

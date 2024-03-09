@@ -1,5 +1,6 @@
 local M = {}
 
+print('dadbod test')
 local function db_completion()
   require("cmp").setup.buffer { sources = { { name = "vim-dadbod-completion" } } }
 end
@@ -27,4 +28,3 @@ function M.setup()
 end
 
 return M
-

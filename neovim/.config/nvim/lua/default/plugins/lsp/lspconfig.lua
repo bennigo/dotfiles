@@ -86,6 +86,12 @@ return {
 		end
 
 		local lsp_capabilities = cmp_nvim_lsp.default_capabilities()
+		-- lsp_capabilities.workspace.didChangeWatchedFiles.dynamicRegistration = false
+
+
+		local capabilities = vim.lsp.protocol.make_client_capabilities()
+		capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
+		capabilities.workspace.didChangeWatchedFiles.dynamicRegistration = false
 
 		-- Change the Diagnostic symbols in the sign column (gutter)
 		-- (not in youtube nvim video)
@@ -107,7 +113,8 @@ return {
 			function(server_name)
 				lspconfig[server_name].setup({
 					on_attach = lsp_attach,
-					capabilities = lsp_capabilities,
+					-- capabilities = lsp_capabilities,
+					capabilities = capabilities,
 					handlers = {
 						-- Add borders to LSP popups
 						["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = "rounded" }),
