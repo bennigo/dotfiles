@@ -14,6 +14,7 @@ return {
         yaml = { 'prettier' },
         markdown = { 'prettier' },
         lua = { 'stylua' },
+        toml = { 'toml' },
       },
       format_on_save = false,
       lsp_fallback = true,
@@ -33,6 +34,6 @@ return {
         async = false,
         timout_ms = 500,
       }
-    end, { desc = 'Format fiel or range (in visual mode)' })
+    end, { desc = 'Format field or range (in visual mode)' })
   end,
 }
