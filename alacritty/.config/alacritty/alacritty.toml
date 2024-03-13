@@ -17,9 +17,9 @@ y = 0
 family = "hack nerd font"
 style = "italic"
 
-[font.italic.bold_italic]
-family = "hack nerd font"
-style = "Bold Italic"
+# [font.italic.bold_italic]
+# family = "hack nerd font"
+# style = "Bold Italic"
 
 [font.normal]
 family = "hack nerd font"
@@ -49,6 +49,6 @@ lines = 30
 x = 2
 y = 2
 
-[window.scrolling]
-history = 10000
-multiplier = 3
+# [window.scrolling]
+# history = 10000
+# multiplier = 3
