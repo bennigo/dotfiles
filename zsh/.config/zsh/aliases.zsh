@@ -38,6 +38,9 @@ alias lo='ls -lsold'
 alias df='df -h'     # human-readable sizes
 alias free='free -m' # show sizes in MB
 
+#info with vim keys
+alias info='info --vi-keys'
+
 # get top process eating memory
 alias psmem='ps auxf | sort -nr -k 4 | head -5'
 

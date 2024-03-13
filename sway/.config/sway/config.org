@@ -8,7 +8,7 @@
 set $theme /usr/share/themes/yaru-sway
 
 # theme variables
-include $theme/variables
+    include $theme/variables
 
 # Global variables
 include /etc/sway/variables
@@ -25,9 +25,4 @@ include /etc/sway/modes/*.conf
 # Additional configs
 include /etc/sway/config.d/*.conf
 
-# User config
-include $HOME/.config/sway/config.d/*.conf
 
-# Include nwg-displays config's (if exists)
-include ~/.config/sway/outputs
-include ~/.config/sway/workspaces
