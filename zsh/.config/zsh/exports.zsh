@@ -14,6 +14,7 @@ export PATH=$HOME/.local/share/go/bin:$PATH
 export GOPATH=$HOME/.local/share/go
 export PATH=$HOME/.fnm:$PATH
 export PATH="$HOME/.local/share/neovim/bin":$PATH
+export PATH="$HOME/.cargo/bin":$PATH
 export XDG_CURRENT_DESKTOP="Wayland"
 
 #export PATH="$PATH:./node_modules/.bin"
