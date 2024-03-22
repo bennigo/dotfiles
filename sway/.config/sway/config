@@ -54,7 +54,7 @@ include /etc/sway/config-vars.d/*
 #
 # Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
 # output * bg /usr/share/backgrounds/sway/Sway_Wallpaper_Blue_1920x1080.png fill
-output * bg /home/bgo/Downloads/THOB_gps.jpg fill
+# output * bg /home/bgo/Downloads/THOB_gps.jpg fill
 #
 # Example configuration:
 #

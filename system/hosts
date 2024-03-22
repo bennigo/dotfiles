@@ -1,0 +1,39 @@
+127.0.0.1	localhost
+127.0.1.1	elday
+
+# The following lines are desirable for IPv6 capable hosts
+::1     ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+
+#vedur
+#130.208.84.248    oskugos.vedur.is       oskugos
+10.91.10.129      oskugos.vedur.is       oskugos
+#10.91.10.191      klosigar.dyn.vedur.is  klosigar
+10.91.10.243      eldkeila.vedur.is      eldkeila
+10.91.10.236      aska.vedur.is          aska
+10.170.100.187    vi-tos-api.vedur.is    tos
+
+# servers
+10.170.80.8	      gpsplot.vedur.is       gpsplot
+10.170.80.4       rtk.vedur.is           rtk
+10.170.80.6       bernese.vedur.is       bernese
+10.170.80.7       rek.vedur.is           rek
+#10.170.80.2       rekold.vedur.is        rekold
+10.250.251.5      hildur.vedur.is        hildur
+10.170.80.3       okada.vedur.is         okada
+10.170.100.38     sarpur.vedur.is        sarpur
+130.208.87.145	  brunnur.vedur.is       brunnur
+
+# servers DMZ
+130.208.87.160    ntrcaster.vedur.is     ntrcaster
+
+
+#Hí
+130.208.140.137   strokkur.raunvis.hi.is strokkur
+130.208.143.214   dyngja.rhi.hi.is       dyngja
+130.208.165.26	  askja.rhi.hi.is	 askja
+
+
