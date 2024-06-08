@@ -1,4 +1,5 @@
 return {
+	enabled = true,
 	"neovim/nvim-lspconfig",
 	event = "VeryLazy",
 	dependencies = {
@@ -88,9 +89,8 @@ return {
 		local lsp_capabilities = cmp_nvim_lsp.default_capabilities()
 		-- lsp_capabilities.workspace.didChangeWatchedFiles.dynamicRegistration = false
 
-
 		local capabilities = vim.lsp.protocol.make_client_capabilities()
-		capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
+		capabilities = vim.tbl_deep_extend("force", capabilities, require("cmp_nvim_lsp").default_capabilities())
 		capabilities.workspace.didChangeWatchedFiles.dynamicRegistration = false
 
 		-- Change the Diagnostic symbols in the sign column (gutter)
@@ -128,6 +128,7 @@ return {
 		})
 
 		require("lspconfig").lua_ls.setup({
+			on_attach = lsp_attach,
 			settings = { -- custom settings for lua
 				Lua = {
 					-- make the language server recognize "vim" global

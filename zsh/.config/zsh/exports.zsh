@@ -16,6 +16,8 @@ export PATH=$HOME/.fnm:$PATH
 export PATH="$HOME/.local/share/neovim/bin":$PATH
 export PATH="$HOME/.cargo/bin":$PATH
 export XDG_CURRENT_DESKTOP="Wayland"
+export NVM_DIR="$HOME/.config//nvm"
+
 
 #export PATH="$PATH:./node_modules/.bin"
 eval "$(fnm env)"

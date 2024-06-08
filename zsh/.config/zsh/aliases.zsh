@@ -19,6 +19,7 @@ alias rtk='TERM=xterm-256color ssh gpsops@rtk.vedur.is'
 alias rplot='TERM=xterm-256color ssh -X gpsops@rplot.vedur.is'
 alias strokkur='TERM=xterm-256color ssh bgo@strokkur.raunvis.hi.is'
 alias cdn='TERM=xterm-256color ssh gpsops@cdn-p01.vedur.is'
+alias insar='TERM=xterm-256color ssh bgo@insar.vedur.is'
 
 # Colorize grep output (good for log files)
 alias grep='grep --color=auto'
