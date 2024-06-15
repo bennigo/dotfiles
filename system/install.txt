@@ -3,6 +3,9 @@ git clone git@gitlab.com:bgovedur/dotfiles.git .dotfile
 chsh -s /bin/zsh
 curl -fsSL https://raw.githubusercontent.com/ronniedroid/getnf/master/install.sh | bash
 apt install stow
+# for esc,ctrl on capslock overload
+sudo add-apt-repository ppa:deafmute/interception
+sudo apt install caps2esc
 # for anyconnect
 sudo apt-get install libwebkit2gtk-4.0.37
 sudo apt install zoxide
@@ -17,7 +20,6 @@ sudo apt update
 sudo apt install -y eza
 sudo apt install fzf
 sudo apt install bat
-sudo apt install openconnect
 sudo apt install tmux
 sudo apt remove neovim
 sudo apt install vim
