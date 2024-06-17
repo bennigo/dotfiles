@@ -1,30 +1,31 @@
-sudo apt install git
+sudo apt install git stow
 git clone git@gitlab.com:bgovedur/dotfiles.git .dotfile
-chsh -s /bin/zsh
-curl -fsSL https://raw.githubusercontent.com/ronniedroid/getnf/master/install.sh | bash
-apt install stow
+
 # for esc,ctrl on capslock overload
 sudo add-apt-repository ppa:deafmute/interception
-sudo apt install caps2esc
+sudo apt install interception-caps2esc
+sudo systemctl enable --now udevmon
+
+# setting up zsh
+chsh -s /bin/zsh
+curl -fsSL https://raw.githubusercontent.com/ronniedroid/getnf/master/install.sh | bash
+
 # for anyconnect
-sudo apt-get install libwebkit2gtk-4.0.37
-sudo apt install zoxide
-sudo apt install ripgrep
-sudo apt install pip
+sudo apt-get install libwebkit2gtk-4.0.37 
+https://vpn.vedur.is
+
+sudo apt install zoxide ripgrep pip
+
 curl -fsSL https://fnm.vercel.app/install | bash
 sudo mkdir -p /etc/apt/keyrings
 wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | sudo gpg --dearmor -o /etc/apt/keyrings/gierens.gpg
-echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" | sudo tee /etc/apt/sources.list.d/gieren
+echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" | sudo tee /etc/apt/sources.list.d/gierens.list
 sudo chmod 644 /etc/apt/keyrings/gierens.gpg /etc/apt/sources.list.d/gierens.list
 sudo apt update
 sudo apt install -y eza
-sudo apt install fzf
-sudo apt install bat
-sudo apt install tmux
-sudo apt remove neovim
-sudo apt install vim
-cd && mkdir git && cd git
-git clone git@github.com:neovim/neovim.git 
+
+sudo apt remove neovim fzf bat tmux vim
+
 sudo apt-get install ninja-build gettext cmake unzip curl
 sudo apt install cmake pkg-config libfreetype6-dev libfontconfig1-dev libxcb-xfixes0-dev libxkbcommon-dev python3
 sudo apt install clangd
@@ -34,14 +35,22 @@ curl -fsSL https://deb.nodesource.com/setup_21.x | sudo -E bash - &&\sudo apt-ge
 nvm install node
 sudo apt install fd-find
 sudo apt install build-essential libreadline-dev unzip
-curl -R -O http://luarocks.github.io/luarocks/releases/luarocks-3.9.2.tar.gz
-cd luarocks-3.9.2
+
 curl -L -R -O https://www.lua.org/ftp/lua-5.4.6.tar.gz
 tar -zxf lua-5.4.6.tar.gz
 cd lua-5.4.6
+make
+sudo make install
+
+curl -R -O http://luarocks.github.io/luarocks/releases/luarocks-3.9.2.tar.gz
+cd luarocks-3.9.2
 ./configure --with-lua-include=/usr/local/include
 make
 sudo make install
+
+cd && mkdir git && cd git
+git clone git@github.com:neovim/neovim.git 
+
 curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh"
 bash Miniforge3-Linux-x86_64.sh
 sudo apt install pass

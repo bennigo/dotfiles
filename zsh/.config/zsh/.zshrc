@@ -17,7 +17,7 @@ plug "zap-zsh/supercharge"
 plug "zap-zsh/vim"
 plug "zap-zsh/zap-prompt"
 plug "zap-zsh/fzf"
-plug "zap-zsh/exa"
+# plug "zap-zsh/exa"
 plug "zsh-users/zsh-syntax-highlighting"
 
 export PATH="$HOME/bin:$HOME/.local/bin":$PATH
@@ -41,24 +41,27 @@ alias less="less -R"
 autoload -Uz compinit
 compinit
 
+# echo "TEST"
+export NVM_DIR="$HOME/.config/nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('/home/bgo/.local/share/miniforge-pypy3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
+__conda_setup="$('/home/bgo/.local/share/miniforge3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
 if [ $? -eq 0 ]; then
     eval "$__conda_setup"
 else
-    if [ -f "/home/bgo/.local/share/miniforge-pypy3/etc/profile.d/conda.sh" ]; then
-        . "/home/bgo/.local/share/miniforge-pypy3/etc/profile.d/conda.sh"
+    if [ -f "/home/bgo/.local/share/miniforge3/etc/profile.d/conda.sh" ]; then
+        . "/home/bgo/.local/share/miniforge3/etc/profile.d/conda.sh"
     else
-        export PATH="/home/bgo/.local/share/miniforge-pypy3/bin:$PATH"
+        export PATH="/home/bgo/.local/share/miniforge3/bin:$PATH"
     fi
 fi
 unset __conda_setup
 
-if [ -f "/home/bgo/.local/share/miniforge-pypy3/etc/profile.d/mamba.sh" ]; then
-    . "/home/bgo/.local/share/miniforge-pypy3/etc/profile.d/mamba.sh"
+if [ -f "/home/bgo/.local/share/miniforge3/etc/profile.d/mamba.sh" ]; then
+    . "/home/bgo/.local/share/miniforge3/etc/profile.d/mamba.sh"
 fi
 # <<< conda initialize <<<
 
