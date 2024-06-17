@@ -15,11 +15,13 @@ export GOPATH=$HOME/.local/share/go
 export PATH=$HOME/.fnm:$PATH
 export PATH="$HOME/.local/share/neovim/bin":$PATH
 export PATH="$HOME/.cargo/bin":$PATH
+export PATH="/usr/local/go/bin":$PATH
 export XDG_CURRENT_DESKTOP="Wayland"
 export NVM_DIR="$HOME/.config//nvm"
 
 
 #export PATH="$PATH:./node_modules/.bin"
+source <(fzf --zsh)
 eval "$(fnm env)"
 eval "$(zoxide init zsh)"
 eval `pip completion --zsh`
