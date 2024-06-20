@@ -17,7 +17,7 @@ plug "zap-zsh/supercharge"
 plug "zap-zsh/vim"
 plug "zap-zsh/zap-prompt"
 plug "zap-zsh/fzf"
-# plug "zap-zsh/exa"
+plug "zap-zsh/exa"
 plug "zsh-users/zsh-syntax-highlighting"
 
 export PATH="$HOME/bin:$HOME/.local/bin":$PATH
@@ -65,3 +65,5 @@ if [ -f "/home/bgo/.local/share/miniforge3/etc/profile.d/mamba.sh" ]; then
 fi
 # <<< conda initialize <<<
 
+
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
