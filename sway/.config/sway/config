@@ -5,7 +5,7 @@
 # Read `man 5 sway` for a complete reference.
 
 # Styles
-set $theme /usr/share/ubuntusway/themes/yaru-sway
+set $theme /usr/share/themes/yaru-sway
 
 # theme variables
 include $theme/variables
@@ -31,3 +31,7 @@ include $HOME/.config/sway/config.d/*.conf
 # Include nwg-displays config's (if exists)
 include ~/.config/sway/outputs
 include ~/.config/sway/workspaces
+
+
+# Kill focused window
+bindsym $mod+q kill
