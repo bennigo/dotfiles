@@ -21,7 +21,7 @@ export NVM_DIR="$HOME/.config//nvm"
 
 
 #export PATH="$PATH:./node_modules/.bin"
-source <(fzf --zsh)
+#source <(fzf --zsh)
 eval "$(fnm env)"
 eval "$(zoxide init zsh)"
 eval `pip completion --zsh`
