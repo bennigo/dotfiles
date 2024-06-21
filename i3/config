@@ -2,7 +2,6 @@
 #
 # Please see https://i3wm.org/docs/userguide.html for a complete reference!
 
-include $HOME/.config/sway/config.d/*.conf
 # GET DEM BORDERS OUT OF HEREc:w
 for_window [class="^.*"] border pixel 2
 for_window [class="^.*"] client.focused 2          #77dd77 #285577 #ffffff #2e9ef4   #285577
@@ -39,7 +38,7 @@ exec --no-startup-id nm-applet
 ### Dynamic behavior
 exec_always autotiling 
 
-#exec_always feh --bg-scale ~/Desktop/veggfodur/flateyjardalur_set-2022.jpg
+exec_always feh --bg-scale ~/Desktop/veggfodur/flateyjardalur_set-2022.jpg
 # move scratchpad feh ~/Desktop/veggfodur/800px-kb_united_kingdom_svg.png
 for_window  [instance="feh"] floating enable
 for_window  [instance="feh"] move scratchpad
@@ -50,8 +49,8 @@ bindsym $mod+b [instance="feh"] scratchpad show; [instance="feh"] move position 
 
 # keyboard layout
 exec_always --no-startup-id "setxkbmap -option 'grp:alt_shift_toggle' -layout us,is"
-#bindsym $mod+i exec  xkb-switch -s is 
-#bindsym $mod+u exec  xkb-switch -s us 
+bindsym $mod+i exec  xkb-switch -s is 
+bindsym $mod+u exec  xkb-switch -s us 
 
 # Use pactl to adjust volume in alsa.
 bindsym XF86AudioRaiseVolume exec amixer -q sset Master 5%+ unmute && pkill -RTMIN+10 i3blocks 
@@ -70,7 +69,7 @@ floating_modifier $mod
 # move tiling windows via drag & drop by left-clicking
 # into the title bar, or left-clicking anywhere into
 # the window while holding the floating modifier.
-# tiling_drag modifier titlebar
+tiling_drag modifier titlebar
 
 # start a terminal
 # bindsym $mod+Return exec i3-sensible-terminal
