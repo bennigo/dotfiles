@@ -2,7 +2,6 @@
 #
 # Please see https://i3wm.org/docs/userguide.html for a complete reference!
 
-include $HOME/.config/sway/config.d/*.conf
 # GET DEM BORDERS OUT OF HEREc:w
 for_window [class="^.*"] border pixel 2
 for_window [class="^.*"] client.focused 2          #77dd77 #285577 #ffffff #2e9ef4   #285577
