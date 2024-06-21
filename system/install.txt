@@ -17,6 +17,7 @@ curl -fsSL https://fnm.vercel.app/install | bash
 sudo apt install cargo
 cargo install eza
 cargo install fnm
+cargo install bat
 
 sudo apt remove neovim 
 sudo apt-get install ninja-build gettext cmake unzip curl tmux vim
@@ -38,7 +39,6 @@ sudo apt install pass
 # installing fzf
 git clone --depth 1 https://github.com/junegunn/fzf.git ~/.local/share/fzf
 ~/.local/share/fzf/install
-cargo install bat
 
 # tmux plugin manger
 git clone https://github.com/tmux-plugins/tpm ~/.local/share/tmux/plugins/tpm
@@ -48,7 +48,8 @@ chsh -s /bin/zsh
 curl -fsSL https://raw.githubusercontent.com/ronniedroid/getnf/master/install.sh | bash
 zsh <(curl -s https://raw.githubusercontent.com/zap-zsh/zap/master/install.zsh) --branch release-v1
 
-cd && mkdir git && cd git
+cd && mkdir -p Download/git && cd Download/git
+sudo apt-get install ninja-build gettext cmake unzip curl build-essential
 git clone git@github.com:neovim/neovim.git && cd neovim
 make CMAKE_BUILD_TYPE=Release
 sudo make install
