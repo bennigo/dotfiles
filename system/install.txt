@@ -6,11 +6,6 @@ sudo add-apt-repository ppa:deafmute/interception
 sudo apt install interception-caps2esc
 sudo systemctl enable --now udevmon
 
-# setting up zsh
-chsh -s /bin/zsh
-curl -fsSL https://raw.githubusercontent.com/ronniedroid/getnf/master/install.sh | bash
-zsh <(curl -s https://raw.githubusercontent.com/zap-zsh/zap/master/install.zsh) --branch release-v1
-
 
 # for anyconnect
 sudo apt-get install libwebkit2gtk-4.0.37 
@@ -23,9 +18,9 @@ sudo apt install cargo
 cargo install eza
 cargo install fnm
 
-sudo apt remove neovim fzf bat tmux vim
+sudo apt remove neovim 
+sudo apt-get install ninja-build gettext cmake unzip curl tmux vim
 
-sudo apt-get install ninja-build gettext cmake unzip curl
 sudo apt install cmake pkg-config libfreetype6-dev libfontconfig1-dev libxcb-xfixes0-dev libxkbcommon-dev python3
 sudo apt install clangd
 sudo apt install xclip
@@ -36,10 +31,25 @@ curl -fsSL https://deb.nodesource.com/setup_21.x | sudo -E bash - &&\sudo apt-ge
 sudo apt install fd-find
 sudo apt install build-essential libreadline-dev unzip
 sudo apt install lua5.4 luarocks
+sudo apt install ansible
+sudo apt install python3-venv python3.12-venv
 sudo apt install pass
 
+# installing fzf
+git clone --depth 1 https://github.com/junegunn/fzf.git ~/.local/share/fzf
+~/.local/share/fzf/install
+cargo install bat
+
+# tmux plugin manger
+git clone https://github.com/tmux-plugins/tpm ~/.local/share/tmux/plugins/tpm
+
+# setting up zsh
+chsh -s /bin/zsh
+curl -fsSL https://raw.githubusercontent.com/ronniedroid/getnf/master/install.sh | bash
+zsh <(curl -s https://raw.githubusercontent.com/zap-zsh/zap/master/install.zsh) --branch release-v1
+
 cd && mkdir git && cd git
-git clone git@github.com:neovim/neovim.git 
+git clone git@github.com:neovim/neovim.git && cd neovim
 make CMAKE_BUILD_TYPE=Release
 sudo make install
 
@@ -70,5 +80,3 @@ sudo apt install libproj-dev
 sudo apt install gdal-bin
 sudo apt-get install software-properties-common
 sudo add-apt-repository ppa:ubuntugis/ppa
-sudo apt install ansible
-sudo apt install python3-venv python3.12-venv
