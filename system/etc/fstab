@@ -1,16 +1,3 @@
-# /etc/fstab: static file system information.
-#
-# Use 'blkid' to print the universally unique identifier for a
-# device; this may be used with UUID= as a more robust way to name devices
-# that works even if disks are added and removed. See fstab(5).
-#
-# <file system> <mount point>   <type>  <options>       <dump>  <pass>
-# / was on /dev/nvme0n1p2 during installation
-UUID=fca08e11-4fb8-404c-a14a-14527af3ba46 /               ext4    errors=remount-ro 0       1
-# /boot/efi was on /dev/nvme0n1p1 during installation
-UUID=F724-1F92  /boot/efi       vfat    umask=0077      0       1
-/swapfile                                 none            swap    sw              0       0
-
 # 
 granit.vedur.is:/mnt/sdc1/sk2 /mnt_data/sildata nfs defaults 0 0
 granit.vedur.is:/mnt/sdd1/sil/trem /mnt_data/tremdata nfs defaults 0 0
@@ -32,4 +19,3 @@ gpsplot.vedur.is:/home/gpsops/.gpsconfig /mnt_data/gpsconfig nfs defaults 0 0
 #//nas.vedur.is/vatn /mnt/nas/vatn cifs credentials=/root/.smbcredentials,iocharset=utf8,domain=VI,vers=1.0 0 0
 #nas.vedur.is:/export/joklar /mnt/joklar nfs defaults 0 0
 #nas.vedur.is:/export/luk/gogn/haedarlikon/ /mnt/haedarlikon nfs defaults 0 0
-
