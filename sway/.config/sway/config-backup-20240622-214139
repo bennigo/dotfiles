@@ -13,12 +13,6 @@ set $left h
 set $down j
 set $up k
 set $right l
-
-# gaps
-gaps inner 4
-gaps outer 2 
-smart_gaps on
-
 # Your preferred terminal emulator
 set $term foot
 # Your preferred application launcher

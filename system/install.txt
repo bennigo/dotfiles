@@ -6,18 +6,28 @@ sudo add-apt-repository ppa:deafmute/interception
 sudo apt install interception-caps2esc
 sudo systemctl enable --now udevmon
 
+# Installing sway and waybar
+sudo apt sway installfoot-themes swayidle swaylock xdg-desktop-portal-wlr waybar
+sudo apt fonts-font-awsome
+sudo apt install playerctl
+sudo apt install makoctl 
+
 
 # for anyconnect
 sudo apt-get install libwebkit2gtk-4.0.37 
 https://vpn.vedur.is
 
-sudo apt install zoxide ripgrep pip
+sudo apt install pip
+
 
 curl -fsSL https://fnm.vercel.app/install | bash
-sudo apt install cargo
+curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
 cargo install eza
 cargo install fnm
 cargo install bat
+cargo install ripgrep 
+cargo install zoxide 
+cargo install fd-find
 
 sudo apt remove neovim 
 sudo apt-get install ninja-build gettext cmake unzip curl tmux vim
@@ -29,7 +39,6 @@ sudo apt install xclip
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 nvm install node
 curl -fsSL https://deb.nodesource.com/setup_21.x | sudo -E bash - &&\sudo apt-get install -y nodejs
-sudo apt install fd-find
 sudo apt install build-essential libreadline-dev unzip
 sudo apt install lua5.4 luarocks
 sudo apt install ansible
@@ -65,19 +74,36 @@ make && sudo make install
 sudo apt install nfs-common
 sudo apt install libnfs-utils
 sudo apt install m4
-wget https://downloads.unidata.ucar.edu/netcdf-c/4.9.2/netcdf-c-4.9.2.zip
-sudo apt install libcurl4-openssl-dev
-sudo apt install libhdf5-dev
-sudo apt-get install gfortran
-wget https://hdf-wordpress-1.s3.amazonaws.com/wp-content/uploads/manual/HDF5/HDF5_1_14_3/src/hdf5-1.14.3.tar.gz
-cd hdf5-1.14.3
-sudo apt install libxml2-dev
-sudo apt-get install libxml2-dev libxslt-dev
-wget https://github.com/OSGeo/gdal/releases/download/v3.8.4/gdal-3.8.4.tar.gz
-sudo apt install libcrypto++-dev
-sudo apt install sqlite3
-sudo apt install libtiff-dev
-sudo apt install libproj-dev
-sudo apt install gdal-bin
-sudo apt-get install software-properties-common
-sudo add-apt-repository ppa:ubuntugis/ppa
+
+# Installing gmt
+sudo apt-get install build-essential cmake libcurl4-gnutls-dev libnetcdf-dev libgdal-dev 
+# optional for gmt
+sudo apt-get install ninja-build gdal-bin libfftw3-dev libpcre3-dev liblapack-dev libblas-dev libglib2.0-dev ghostscript
+
+# movies
+sudo apt-get install graphicsmagick ffmpeg
+
+# to enable document viewing via gmt docs
+sudo apt-get install xdg-utils
+
+# to enable testing
+sudo apt-get install graphicsmagick
+
+# to build the documentation
+sudo apt-get install python3-sphinx
+
+# latex
+sudo apt-get install texlive-latex-base texlive-binaries texlive-fonts-recommended
+
+
+cd ~/Download/
+wget https://github.com/GenericMappingTools/gmt/releases/download/6.5.0/gmt-6.5.0-src.tar.gz
+tar -zxf gmt-6.5.0-src.tar.gz
+git clone https://github.com/GenericMappingTools/gshhg-gmt.git
+git clone https://github.com/GenericMappingTools/dcw-gmt.git
+
+# vantar að editera ConfigUser.cmake til að includa gshhg og dcw
+cd gmt-6.5.0
+mkdir build && cd build
+cmake .. -G Ninja
+sudo cmake --build . --target install
