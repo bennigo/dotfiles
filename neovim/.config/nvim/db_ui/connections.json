@@ -1,1 +1,6 @@
-[{"url": "postgresql://bgo:5pCMfg9un7Hf@dev.psql.vedur.is:5432/gps_metrics", "name": "dev_gps_metrics"}]
+[{"url": "postgresql://bgo:5pCMfg9un7Hf@dev.psql.vedur.is:5432/gps_metrics", "name": "dev_gps_metrics"},
+ {"url": "postgresql://bgo:5pCMfg9un7Hf@dev.psql.vedur.is:5432/tos", "name": "dev_tos"}, 
+ {"url": "postgresql://bgo:5pCMfg9un7Hf@dev.psql.vedur.is:5432/skjalftalisa", "name": "def_skjalftalisa"}, 
+ {"url": "postgresql://bgo:5pCMfg9un7Hf@dev.psql.vedur.is:5432/epos", "name": "dev_epos"}, 
+ {"url": "postgresql://postgres:482KfuXt@localhost:5432", "name": "local_db"}
+]

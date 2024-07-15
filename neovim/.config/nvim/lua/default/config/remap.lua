@@ -59,6 +59,9 @@ keymap('n', '<C-k>', '<cmd>cnext<CR>zz')
 keymap('n', '<C-j>', '<cmd>cprev<CR>zz')
 keymap('n', '<leader>k', '<cmd>lnext<CR>zz')
 keymap('n', '<leader>j', '<cmd>lprev<CR>zz')
+keymap('n', '<leader>t', '<cmd>TransparentToggle<CR>')
+keymap('n',  '<C-s>', '<C-a>')
+keymap('n',  '<C-x>', '<C-x>')
 
 -- Better window navigation
 -- keymap("n", "<tab-h>", "<C-w>h", opts)
