@@ -14,11 +14,17 @@ set $down j
 set $up k
 set $right l
 
+# border & title
+for_window [title="^.*"] border pixel 0.5, title_format "<b>%app_id</b> %class"
+default_border pixel 0.5
+
 # gaps
 gaps inner 4
 gaps outer 2 
 smart_gaps on
 
+# font
+font pango:HackNerdFont 6 
 # Your preferred terminal emulator
 set $term foot
 # Your preferred application launcher
@@ -27,18 +33,21 @@ set $term foot
 # set $menu dmenu_path | wmenu | xargs swaymsg exec --
 # rofi theme
 set $rofi_theme "* {lightbg: $background-color; background: $background-color; lightfg: $accent-color; foreground: $text-color; border-color: $accent-color;} window {border: 2;}"
-
-
 # Your preferred application launcher
 set $menu rofi -show combi -combi-modi "drun,run" -terminal $term -ssh-command "{terminal} {ssh-client} {host} [-p {port}]" -run-shell-command "{terminal} {cmd}" -show-icons -font "$gui-font"
 
 include /etc/sway/config-vars.d/*
 include $XDG_CONFIG_HOME/sway/config.d/*.conf
 
+set $wallpaper $XDG_CONFIG_HOME/sway/wallpapers/mahdi-khomsaz-asset.jpg
 ### Output configuration
-#
+#$XDG_CONFIG_HOME/sway/wallpapers/mahdi-khomsaz-asset.jpg
 # Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
-output * bg ~/Downloads/mahdi-khomsaz-asset.jpg fill
+# output * bg $XDG_CONFIG_HOME/sway/wallpapers/mahdi-khomsaz-asset.jpg fill
+# output * bg $XDG_CONFIG_HOME/sway/wallpapers/mahdi-khomsaz-asset.jpg fill
+exec_always swaybg -i $wallpaper -m fit
+# automounting requres udisks2
+exec udiskie 
 
 #
 # Example configuration:
@@ -50,15 +59,31 @@ output * bg ~/Downloads/mahdi-khomsaz-asset.jpg fill
 ### Idle configuration
 #
 # Example configuration:
-#
-# exec swayidle -w \
-#          timeout 300 'swaylock -f -c 000000' \
-#          timeout 600 'swaymsg "output * power off"' resume 'swaymsg "output * power on"' \
-#          before-sleep 'swaylock -f -c 000000'
+
+### Turn off screen on lid closed
+set $laptop eDP-1
+# bindswitch lid:on output $laptop disable
+# bindswitch lid:off output $laptop enable
+
+exec_always swayidle -w \
+         timeout 60 'brightnessctl -s && brightnessctl set 10' \
+         resume 'brightnessctl -r' \
+         timeout 300 'swaylock -f -c 000000 -i $wallpaper' \
+         timeout 600 'swaymsg "output * power off"' resume 'swaymsg "output * power on"' \
+         before-sleep 'swaylock -f -c 000000 -i $wallpaper'
+
 #
 # This will lock your screen after 300 seconds of inactivity, then turn off
 # your displays after another 300 seconds, and turn your screens back on when
 # resumed. It will also lock your screen before your computer goes to sleep.
+
+# backlight
+# bindsym XF86MonBrightnessUp exec light -A 5
+# bindsym XF86MonBrightnessDown exec light -U 5
+bindsym XF86MonBrightnessDown exec brightnessctl set 5%-
+bindsym XF86MonBrightnessUp exec brightnessctl set 5%+
+ 
+# not be the current outputactl set-sink-mute @DEFAULT_SINK@ toggle
 
 ### Input configuration
 #
@@ -78,6 +103,12 @@ output * bg ~/Downloads/mahdi-khomsaz-asset.jpg fill
 #
 # Basics:
 #
+    bindsym $mod+x exec swaylock -f -c 000000 -i $wallpaper
+    bindsym $mod+Shift+x exec swaymsg "output * power off" resume 'swaymsg "output * power on"'
+
+    # mounting usb disks
+    bindsym $mod+m exec udsikie
+     
     # Start a terminal
     bindsym $mod+Return exec $term
 
@@ -94,7 +125,7 @@ output * bg ~/Downloads/mahdi-khomsaz-asset.jpg fill
     # mouse button for dragging.
     floating_modifier $mod normal
 
-    # Reload the configuration file
+    # Reoad the configuration file
     bindsym $mod+Shift+c reload
 
     # Exit sway (logs you out of your Wayland session)

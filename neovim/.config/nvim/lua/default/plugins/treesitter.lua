@@ -111,7 +111,7 @@ local function setup()
 					["<leader>a"] = "@parameter.inner",
 				},
 				swap_previous = {
-					["<leader>a"] = "@parameter.inner",
+					["<leader>A"] = "@parameter.inner",
 				},
 			},
 		},

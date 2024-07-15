@@ -19,7 +19,7 @@ return {
       format_on_save = false,
       lsp_fallback = true,
       async = false,
-      timout_ms = 500,
+      timout_ms = 1000,
       formatters = {
         black = {
           prepend_args = { '--fast' },

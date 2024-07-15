@@ -1,7 +1,7 @@
 {
-    "layer": "top",
+    "layer": "bottom",
     "position": "top",
-    "height": 30,
+    "height": 20,
     "modules-left": ["custom/menu", "sway/workspaces", "sway/window"],
     "modules-center": ["custom/wf-recorder", "sway/mode"],
     "modules-right": [
@@ -17,6 +17,7 @@
         "memory",
         "battery",
         "network",
+        "backlight",
         "bluetooth",
         "pulseaudio",
         "clock",
@@ -65,13 +66,25 @@
         "tooltip": true
     },
 
+    "backlight#icon": { 
+    "format": "{icon}",    	
+    "format-icons": [""],    	
+    "on-scroll-down": "brightnessctl -c backlight set 5%",
+    "on-scroll-up": "brightnessctl -c backlight set +5%-"
+    },
+
+    "backlight#value" :{ "format": "{percent}%",
+    "on-scroll-down": "brightnessctl -c backlight set 5%", 
+    "on-scroll-up": "brightnessctl -c backlight set +5%"
+    },
+
     "idle_inhibitor": {
         "format": "{icon}",
         "format-icons": {
             "activated": "",
             "deactivated": ""
         },
-        "start-activated": true,
+        "start-activated": false,
         "tooltip": true,
         "tooltip-format-activated": "power-saving disabled",
         "tooltip-format-deactivated": "power-saving enabled"

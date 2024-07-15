@@ -35,8 +35,8 @@ local function setup()
 end
 
 return {
-    enabled = true,
     "windwp/nvim-autopairs",
+    enabled = true,
     dependencies = {
         "hrsh7th/nvim-cmp"
     },
