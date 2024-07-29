@@ -34,6 +34,6 @@ return {
         async = false,
         timout_ms = 500,
       }
-    end, { desc = 'Format field or range (in visual mode)' })
+    end, { desc = '[F]ormat field or range (in visual mode)' })
   end,
 }
