@@ -88,7 +88,7 @@ local function setup()
 		})
 	end, { desc = "[S]earch by [G]rep" })
 	vim.keymap.set("n", "<leader>sd", require("telescope.builtin").diagnostics, { desc = "[S]earch [D]iagnostics" })
-	vim.keymap.set("n", "<leader>sf", require("telescope.builtin").find_files, { desc = "[S]oject [F]iles" })
+	vim.keymap.set("n", "<leader>sf", require("telescope.builtin").find_files, { desc = "[S]earch project [F]iles" })
 	vim.keymap.set("n", "<leader>sr", require("telescope.builtin").resume, { desc = "[S]earch [R]esume" })
 
 	-- find files in work directories

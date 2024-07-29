@@ -19,6 +19,6 @@ return {
 		require("default.config.dadbod").setup()
 	end,
 
-	vim.keymap.set("n", "<leader>b", vim.cmd.DBUIToggle),dad
+	vim.keymap.set("n", "<leader>b", vim.cmd.DBUIToggle, { desc = "Toggle Data[B]ase"}), -- dad
 	-- "Toggle data[b]ase uiFuzzily search in current buffer"
 }
