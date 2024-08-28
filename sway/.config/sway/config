@@ -118,6 +118,13 @@ bindsym XF86MonBrightnessUp exec brightnessctl set 5%+
     # Start your launcher
     bindsym $mod+d exec $menu
 
+    # Screenshot a window
+        bindsym $mod+Print exec sway-screenshot -m window
+    # Screenshot a monitor
+    bindsym Print exec sway-screenshot -m output
+    # Screenshot a region
+    bindsym $mod+Shift+Print exec sway-screenshot -m region
+
     # Drag floating windows by holding down $mod and left mouse button.
     # Resize them with right mouse button + $mod.
     # Despite the name, also works for non-floating windows.
