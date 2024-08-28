@@ -57,6 +57,7 @@ keymap('n', '<C-f>', '<cmd>silent !tmux neww tmux-sessionizer<CR>')
 
 keymap('n', '<C-k>', '<cmd>cnext<CR>zz')
 keymap('n', '<C-j>', '<cmd>cprev<CR>zz')
+keymap('n', 'q', '<cmd>ccl<CR>zz')
 keymap('n', '<leader>k', '<cmd>lnext<CR>zz')
 keymap('n', '<leader>j', '<cmd>lprev<CR>zz')
 keymap('n', '<leader>t', '<cmd>TransparentToggle<CR>')

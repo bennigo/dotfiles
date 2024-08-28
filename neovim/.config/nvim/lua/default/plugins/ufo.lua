@@ -6,7 +6,7 @@ local ftMap = {
 
 return {
 	"kevinhwang91/nvim-ufo",
-	enabled = true,
+	enabled = false,
 	-- disable = false,
 	dependencies = "kevinhwang91/promise-async",
 	config = function()
