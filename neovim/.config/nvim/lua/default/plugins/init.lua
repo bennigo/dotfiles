@@ -3,7 +3,7 @@ return {
 
 	-- Detect tabstop and shiftwidth automatically
 	"tpope/vim-sleuth",
-	"tpope/vim-surround",
+	-- "tpope/vim-surround",
 	"nvim-telescope/telescope-symbols.nvim",
 
 	{
