@@ -60,9 +60,9 @@ keymap('n', '<C-j>', '<cmd>cprev<CR>zz')
 keymap('n', 'q', '<cmd>ccl<CR>zz')
 keymap('n', '<leader>k', '<cmd>lnext<CR>zz')
 keymap('n', '<leader>j', '<cmd>lprev<CR>zz')
-keymap('n', '<leader>t', '<cmd>TransparentToggle<CR>')
-keymap('n',  '<C-s>', '<C-a>')
-keymap('n',  '<C-x>', '<C-x>')
+keymap('n', 'TT', '<cmd>TransparentToggle<CR>')
+keymap('n', '<C-s>', '<C-a>')
+keymap('n', '<C-x>', '<C-x>')
 
 -- Better window navigation
 -- keymap("n", "<tab-h>", "<C-w>h", opts)
@@ -70,14 +70,19 @@ keymap('n',  '<C-x>', '<C-x>')
 -- keymap("n", "<tab-k>", "<C-w>k", opts)
 -- keymap("n", "<mtab-l>", "<C-w>l", opts)
 keymap('n', '<m-tab>', '<c-6>', opts)
-
 keymap('n', '<m-q>', '<cmd>bdelete!<CR>', opts)
 -- Remap for dealing with word wrap
 
 keymap('n', '<leader>F', vim.lsp.buf.format)
 -- Diagnostic keymaps
-keymap('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous diagnostic message' })
-keymap('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next diagnostic message' })
+keymap('n', '[d', function()
+  vim.diagnostic.jump({ count = -1, float = true })
+end, { desc = 'Go to previous diagnostic message' })
+
+keymap('n', ']d', function()
+  vim.diagnostic.jump({ count = 1, float = true })
+end, { desc = 'Go to next diagnostic message' })
+
 keymap('n', 'gl', vim.diagnostic.open_float, { desc = 'Open floating diagnostic message' })
 keymap('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostics list' })
 
@@ -89,7 +94,7 @@ keymap({ 'n', 'v' }, '<leader>w', '<cmd>w!<CR>')
 
 -- Insert --
 keymap({ 'v', 'i' }, 'jk', '<ESC>', opts) -- Press jk fast to enter
-keymap('i', '<C-c>', '<Esc>')             -- This is going to get me cancelled
+-- keymap('i', '<C-c>', '<Esc>')             -- This is going to get me cancelled
 
 -- Visual --
 -- Stay in indent mode
@@ -100,5 +105,6 @@ keymap('v', '>', '>gv', opts)
 keymap('v', 'J', ":m '>+1<CR>gv=gv")
 keymap('v', 'K', ":m '<-2<CR>gv=gv")
 -- greatest remap ever
-keymap('x', '<leader>p', [["_dP]])
+-- keymap('x', '<leader>p', [["_dP]])
+keymap("x", "p", [["_dP]])
 keymap('n', '<leader>x', '<cmd>!chmod +x %<CR>', { silent = true })

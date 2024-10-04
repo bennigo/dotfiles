@@ -5,6 +5,11 @@ return {
 	"tpope/vim-sleuth",
 	-- "tpope/vim-surround",
 	"nvim-telescope/telescope-symbols.nvim",
+	"preservim/vim-pencil",
+
+  'vim-pandoc/vim-pandoc',
+  'vim-pandoc/vim-pandoc-syntax',
+  'vim-pandoc/vim-rmarkdown',
 
 	{
 		-- Add indentation guides even on blank lines
@@ -29,4 +34,6 @@ return {
 			require("fzf-lua").setup({})
 		end,
 	},
+
+	{ "echasnovski/mini.nvim", version = false },
 }
