@@ -16,8 +16,11 @@ export PATH=$HOME/.fnm:$PATH
 export PATH="$HOME/.local/share/neovim/bin":$PATH
 export PATH="$HOME/.cargo/bin":$PATH
 export PATH="/usr/local/go/bin":$PATH
+export PATH="/opt/Septentrio/RxTools/bin":$PATH
+export PATH="/home/bgo/.PRIDE_PPPAR_BIN":$PATH
 export XDG_CURRENT_DESKTOP="Wayland"
 export NVM_DIR="$HOME/.config//nvm"
+export ZDOTDIR=~/.config/zsh
 
 
 #export PATH="$PATH:./node_modules/.bin"

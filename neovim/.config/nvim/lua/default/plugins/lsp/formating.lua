@@ -19,7 +19,7 @@ return {
       format_on_save = false,
       lsp_fallback = true,
       async = false,
-      timout_ms = 1000,
+      timout_ms = 2000,
       formatters = {
         black = {
           prepend_args = { '--fast' },
@@ -32,7 +32,7 @@ return {
       conform.format {
         lsp_fallback = true,
         async = false,
-        timout_ms = 500,
+        timout_ms = 1000,
       }
     end, { desc = '[F]ormat field or range (in visual mode)' })
   end,

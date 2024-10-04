@@ -26,13 +26,15 @@ return {
 	},
 	config = function()
 		require("which-key").add({
-			{ "<leader>c", group = "[C]ode" },
+			{ "<leader>l", group = "[L]SP" },
 			-- { "<leader>d", group = "[D]ocument" },
 			{ "<leader>g", group = "[G]it" },
-			{ "<leader>h", group = "More git" },
 			{ "<leader>r", group = "[R]ename" },
 			{ "<leader>s", group = "[S]earch [P]project" },
+			{ "<leader>n", group = "[N]eovim config" },
+			{ "<leader>c", group = "[C]hatGPT" },
 			{ "<leader>W", group = "[W]orkspace" },
+			{ "<leader>P", group = "[P]ersonal" },
 			{ "<leader>D", group = "[D]Dap" },
 		})
 	end,

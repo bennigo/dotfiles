@@ -54,7 +54,7 @@ local function setup()
 		})
 	end, { desc = "[spc] Find existing buffers" })
 
-	-- general files other projects
+	-- recently opened files
 	vim.keymap.set("n", "<leader>?", function()
 		require("telescope.builtin").oldfiles({
 			tiebreak = function()
@@ -90,6 +90,27 @@ local function setup()
 	vim.keymap.set("n", "<leader>sd", require("telescope.builtin").diagnostics, { desc = "[S]earch [D]iagnostics" })
 	vim.keymap.set("n", "<leader>sf", require("telescope.builtin").find_files, { desc = "[S]earch project [F]iles" })
 	vim.keymap.set("n", "<leader>sr", require("telescope.builtin").resume, { desc = "[S]earch [R]esume" })
+
+	-- find files in personal directories
+	vim.keymap.set("n", "<leader>Pf", function()
+		require("telescope.builtin").find_files({ cwd = "~/personal/", follow = true })
+	end, { desc = "[P]ersonal [P]rojects" })
+
+	vim.keymap.set("n", "<leader>Pg", function()
+		require("telescope.builtin").live_grep({
+			cwd = "~/personal/",
+			follow = true,
+			previewer = true,
+			layout_config = {
+				height = 0.95,
+				width = 0.95,
+				horizontal = {
+					preview_cutoff = 50,
+					preview_width = 0.6,
+				},
+			},
+		})
+	end, { desc = "[W]ork [G]grep" })
 
 	-- find files in work directories
 	vim.keymap.set("n", "<leader>Wf", function()
