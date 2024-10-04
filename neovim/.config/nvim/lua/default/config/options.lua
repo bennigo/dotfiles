@@ -48,12 +48,14 @@ local options = {
 	inccommand = "split",
 }
 
-vim.wo.colorcolumn = "80"
-vim.opt.shortmess:append("c")
-
 for k, v in pairs(options) do
 	vim.opt[k] = v
 end
+
+vim.wo.colorcolumn = "80"
+vim.opt.shortmess:append("c")
+vim.opt.spell = false
+vim.opt.spelllang = "is,en_us"
 
 -- vim.cmd "set whichwrap+=<,>,[,],h,l"
 vim.cmd([[set iskeyword+=-]])

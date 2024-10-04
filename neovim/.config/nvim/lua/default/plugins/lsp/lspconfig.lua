@@ -19,11 +19,13 @@ return {
 		-- Useful status updates for LSP
 		-- https://github.com/j-hui/fidget.nvim
 		{ "j-hui/fidget.nvim", opts = {} },
+		-- {"barreiroleo/ltex-extra.nvim"},
 
 		-- Additional lua configuration, makes nvim stuff amazing!
 		-- https://github.com/folke/neodev.nvim
 		{ "folke/neodev.nvim" },
 		"stevanmilic/nvim-lspimport",
+
 	},
 
 	config = function()
@@ -59,7 +61,7 @@ return {
 			keymap.set("n", "gt", "<cmd>Telescope lsp_type_definitions<CR>", opts) -- show lsp type definitions
 
 			opts.desc = "See available code actions"
-			keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, opts) -- see available code actions, in visual mode will apply to selection
+			keymap.set({ "n", "v" }, "<leader>la", vim.lsp.buf.code_action, opts) -- see available code actions, in visual mode will apply to selection
 
 			opts.desc = "Smart rename"
 			keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts) -- smart rename
@@ -86,7 +88,7 @@ return {
 			keymap.set("n", "<leader>rs", ":LspRestart<CR>", opts) -- mapping to restart lsp if necessary
 		end
 
-		local lsp_capabilities = cmp_nvim_lsp.default_capabilities()
+		-- local lsp_capabilities = cmp_nvim_lsp.default_capabilities()
 		-- lsp_capabilities.workspace.didChangeWatchedFiles.dynamicRegistration = false
 
 		local capabilities = vim.lsp.protocol.make_client_capabilities()
@@ -118,10 +120,10 @@ return {
 					handlers = {
 						-- Add borders to LSP popups
 						["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = "rounded" }),
-						["textDocument/signatureHelp"] = vim.lsp.with(
-							vim.lsp.handlers.signature_help,
-							{ border = "rounded" }
-						),
+						["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {
+							border = "rounded",
+							opts = { offset_y = 20 },
+						}),
 					},
 				})
 			end,
@@ -143,5 +145,18 @@ return {
 				},
 			},
 		})
+
+	-- 	require("lspconfig").ltex.setup({
+	-- 		on_attach = function()
+	-- 			require("ltex_extra").setup({
+	-- 				-- This is where your dictionary will be stored! Replace this directory with
+	-- 				-- whatever you want!
+	-- 				load_langs = { "is" },
+	-- 				path = vim.fn.expand("~") .. "/.config/nvim/ltex",
+	-- 			})
+	-- 		end,
+	-- 		filetypes = { "markdown", "text", "tex", "gitcommit" },
+	-- 		flags = { debounce_text_changes = 300 },
+	-- 	})
 	end,
 }
