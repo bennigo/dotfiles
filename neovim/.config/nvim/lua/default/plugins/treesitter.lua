@@ -38,6 +38,7 @@ local function setup()
 			"rust",
 			"tsx",
 			"typescript",
+			"javascript",
 			"markdown",
 			"markdown_inline",
 			"norg",
@@ -46,7 +47,7 @@ local function setup()
 			"yaml",
 			"json",
 			"sql",
-			"r",
+			-- "r",
 		},
 		modules = {},
 

@@ -1,5 +1,6 @@
 -- [[ Setting options ]]
 -- See `:help vim.o`
+
 local options = {
 	hlsearch = false, -- highlight all matches on previous search pattern
 	incsearch = true,
@@ -24,7 +25,7 @@ local options = {
 	completeopt = { "menuone", "noselect" }, -- mostly just for cmp
 	termguicolors = true, -- NOTE You should make sure your terminal supports this
 	cmdheight = 0, -- more space in the neovim command line for displaying messages
-	conceallevel = 0, -- so that `` is visible in markdown files
+	conceallevel = 2, -- so that `` is visible in markdown files
 	fileencoding = "utf-8", -- the encoding written to a file
 	pumheight = 10, -- pop up menu height
 	showtabline = 4, -- always show tabs
@@ -32,8 +33,7 @@ local options = {
 	splitbelow = true, -- force all horizontal splits to go below current window
 	splitright = true, -- force all vertical splits to go to the right of current window
 	swapfile = false, -- creates a swapfile
-	--undodir = os.getenv("home") .. "/.vim/undodir",
-	undodir = "/home/bgo/.vim/undodir/",
+	undodir = os.getenv("HOME") .. "/.local/nvim/undodir",
 	undofile = true, -- Save undo history
 	backup = false, -- creates a backup file
 	writebackup = false, -- if a file is being edited by another program (or was written to file while editing with another program), it is not allowed to be edited

@@ -6,10 +6,13 @@ return {
 	-- "tpope/vim-surround",
 	"nvim-telescope/telescope-symbols.nvim",
 	"preservim/vim-pencil",
+	"jbyuki/quickmath.nvim",
+	"Apeiros-46B/qalc.nvim",
+	
 
-  'vim-pandoc/vim-pandoc',
-  'vim-pandoc/vim-pandoc-syntax',
-  'vim-pandoc/vim-rmarkdown',
+	-- "vim-pandoc/vim-pandoc",
+	-- "vim-pandoc/vim-pandoc-syntax",
+	-- 'vim-pandoc/vim-rmarkdown',
 
 	{
 		-- Add indentation guides even on blank lines
@@ -35,5 +38,4 @@ return {
 		end,
 	},
 
-	{ "echasnovski/mini.nvim", version = false },
 }

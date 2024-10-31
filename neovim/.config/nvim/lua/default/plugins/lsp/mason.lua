@@ -33,10 +33,11 @@ return {
 				"lua_ls",
 				"jsonls",
 				"marksman",
+				"markdown_oxide",
 				"quick_lint_js",
 				"yamlls",
 				"pyright",
-				-- "ltex-ls",
+				"ltex-ls",
 			},
 			-- auto-install configured servers (with lspconfig)
 			automatic_installation = true, -- not the same as ensure_installed
@@ -51,7 +52,7 @@ return {
 				"black", -- python formatter
 				"flake8",
 				"mypy",
-				-- 'pylint', -- python linter
+				'pylint', -- python linter
 				"eslint_d", -- js linter
 			},
 		})
