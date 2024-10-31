@@ -1,5 +1,6 @@
 return {
 	"R-nvim/R.nvim",
+	enabled = false,
 	config = function()
 		-- Create a table with the options to be passed to setup()
 		local opts = {

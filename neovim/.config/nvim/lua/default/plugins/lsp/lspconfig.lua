@@ -25,7 +25,6 @@ return {
 		-- https://github.com/folke/neodev.nvim
 		{ "folke/neodev.nvim" },
 		"stevanmilic/nvim-lspimport",
-
 	},
 
 	config = function()
@@ -33,7 +32,7 @@ return {
 
 		-- import cmp-nvim-lsp plugin
 		-- used to enable autocompletion (assign to every lsp server config)
-		local cmp_nvim_lsp = require("cmp_nvim_lsp")
+		-- local cmp_nvim_lsp = require("cmp_nvim_lsp")
 		local keymap = vim.keymap -- for conciseness
 		local opts = { noremap = true, silent = true }
 
@@ -75,11 +74,19 @@ return {
 			opts.desc = "Open diagnostics list"
 			keymap.set("n", "<leader>q", vim.diagnostic.setloclist, opts)
 
+			vim.diagnostic.config({ jump = { float = true } })
+			-- jump to previous diagnostic in buffer
 			opts.desc = "Go to previous diagnostic"
-			keymap.set("n", "[d", vim.diagnostic.goto_prev, opts) -- jump to previous diagnostic in buffer
+			keymap.set("n", "[d", function()
+				vim.diagnostic.jump({ count = -1 })
+			end, opts)
 
+			-- jump to next diagnostic in buffer
 			opts.desc = "Go to next diagnostic"
-			keymap.set("n", "]d", vim.diagnostic.goto_next, opts) -- jump to next diagnostic in buffer
+			keymap.set("n", "]d", function()
+				vim.diagnostic.jump({ count = 1 })
+			end, opts)
+			-- keymap.set("n", "]d", vim.diagnostic.goto_next, opts)
 
 			opts.desc = "Show documentation for what is under cursor"
 			keymap.set("n", "K", vim.lsp.buf.hover, opts) -- show documentation for what is under cursor
@@ -98,10 +105,21 @@ return {
 		-- Change the Diagnostic symbols in the sign column (gutter)
 		-- (not in youtube nvim video)
 		local signs = { Error = " ", Warn = " ", Hint = " ", Info = " " }
-		for type, icon in pairs(signs) do
-			local hl = "DiagnosticSign" .. type
-			vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = "" })
-		end
+		-- for type, icon in pairs(signs) do
+		-- 	local hl = "DiagnosticSign" .. type
+		-- 	vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = "" })
+		-- end
+
+		vim.diagnostic.config({
+			signs = {
+				text = {
+					[vim.diagnostic.severity.ERROR] = signs["Error"],
+					[vim.diagnostic.severity.WARN] = signs["Warn"],
+					[vim.diagnostic.severity.INFO] = signs["Info"],
+					[vim.diagnostic.severity.HINT] = signs["Hint"],
+				},
+			},
+		})
 
 		vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, {
 			virtual_text = false,
@@ -119,10 +137,11 @@ return {
 					capabilities = capabilities,
 					handlers = {
 						-- Add borders to LSP popups
+						-- vim.lsp.handlers["textDocument/hover"] = vim.lsp.with( vim.lsp.handlers.hover, { border = "rounded" })
 						["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = "rounded" }),
 						["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {
 							border = "rounded",
-							opts = { offset_y = 20 },
+							opts = { offset_y = 400 },
 						}),
 					},
 				})
@@ -146,17 +165,17 @@ return {
 			},
 		})
 
-	-- 	require("lspconfig").ltex.setup({
-	-- 		on_attach = function()
-	-- 			require("ltex_extra").setup({
-	-- 				-- This is where your dictionary will be stored! Replace this directory with
-	-- 				-- whatever you want!
-	-- 				load_langs = { "is" },
-	-- 				path = vim.fn.expand("~") .. "/.config/nvim/ltex",
-	-- 			})
-	-- 		end,
-	-- 		filetypes = { "markdown", "text", "tex", "gitcommit" },
-	-- 		flags = { debounce_text_changes = 300 },
-	-- 	})
+		-- 	require("lspconfig").ltex.setup({
+		-- 		on_attach = function()
+		-- 			require("ltex_extra").setup({
+		-- 				-- This is where your dictionary will be stored! Replace this directory with
+		-- 				-- whatever you want!
+		-- 				load_langs = { "is" },
+		-- 				path = vim.fn.expand("~") .. "/.config/nvim/ltex",
+		-- 			})
+		-- 		end,
+		-- 		filetypes = { "markdown", "text", "tex", "gitcommit" },
+		-- 		flags = { debounce_text_changes = 300 },
+		-- 	})
 	end,
 }

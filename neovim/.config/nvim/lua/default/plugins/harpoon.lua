@@ -7,8 +7,8 @@ local function setup()
 end
 
 return {
-	enabled = true,
 	"ThePrimeagen/harpoon",
+	enabled = true,
 	config = function()
 		setup()
 

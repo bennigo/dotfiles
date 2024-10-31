@@ -118,7 +118,7 @@
        "format-wifi": " ({signalStrength}%)",
        "format-ethernet": "",
        "format-disconnected": "",
-       "tooltip-format": "{ifname} ({essid}): {ipaddr}",
+       // "tooltip-format": "{ifname} ({essid}): {ipaddr}",
        "tooltip-format": "{icon} {ifname}: {ipaddr}",
        "tooltip-format-ethernet": "{icon} {ifname}: {ipaddr}",
        "tooltip-format-wifi": "{icon} {ifname} ({essid}): {ipaddr}",
@@ -127,15 +127,24 @@
        "on-click": "swaymsg exec \\$flock \\$term_float nmtui connect"
     },
 
+    // "bluetooth": {
+    //   "format": "",
+    //   "format-icons": {
+    //     "enabled": "",
+    //     "disabled": "\udb80\udcb2"
+    //   },
+    //   "on-click": "blueman-manager"
+    // }
+
     "bluetooth": {
         "format": "",
-        "format-disabled": "",
-        "format-no-controller": "",
-        "on-click": "swaymsg exec \\$bluetooth",
+        "format-disabled": "\udb80\udcb2",
+        "format-no-controller": "!",
+        "on-click": "bash ~/.config/waybar/scripts/blueman-manager-toggle.sh",
         "on-click-right": "rfkill toggle bluetooth",
         "tooltip-format": "{}"
     },
-    
+
     "clock": {
         "format": "{:%e %b %H:%M}",
         "tooltip": true,
