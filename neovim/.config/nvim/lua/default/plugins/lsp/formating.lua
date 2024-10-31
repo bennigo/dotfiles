@@ -16,7 +16,6 @@ return {
         lua = { 'stylua' },
         toml = { 'toml' },
       },
-      format_on_save = false,
       lsp_fallback = true,
       async = false,
       timout_ms = 2000,
