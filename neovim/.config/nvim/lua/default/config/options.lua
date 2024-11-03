@@ -12,7 +12,6 @@ local options = {
 
 	shiftwidth = 4, -- the number of spaces inserted for each indentation
 	tabstop = 4, -- insert 2 spaces for a tab
-	softtabstop = 4,
 
 	clipboard = "", -- Sync clipboard between OS and Neovim. See `:help 'clipboard'`
 	breakindent = true, -- Enable break indent

@@ -2,6 +2,9 @@
 vim.opt.wrap = true -- Wrap text
 vim.opt.breakindent = true -- Match indent on line break
 vim.opt.linebreak = true -- Line break on whole words
+vim.opt.shiftwidth = 4 -- the number of spaces inserted for each indentation
+vim.opt.tabstop = 4 -- insert 4 spaces for a tab
+vim.opt.softtabstop = 4
 
 -- Allow j/k when navigating wrapped lines
 vim.keymap.set("n", "j", "gj")

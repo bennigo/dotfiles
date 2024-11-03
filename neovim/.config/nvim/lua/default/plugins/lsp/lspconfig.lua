@@ -165,17 +165,17 @@ return {
 			},
 		})
 
-		-- 	require("lspconfig").ltex.setup({
-		-- 		on_attach = function()
-		-- 			require("ltex_extra").setup({
-		-- 				-- This is where your dictionary will be stored! Replace this directory with
-		-- 				-- whatever you want!
-		-- 				load_langs = { "is" },
-		-- 				path = vim.fn.expand("~") .. "/.config/nvim/ltex",
-		-- 			})
-		-- 		end,
-		-- 		filetypes = { "markdown", "text", "tex", "gitcommit" },
-		-- 		flags = { debounce_text_changes = 300 },
-		-- 	})
+		-- require("lspconfig").ltex.setup({
+		-- 	on_attach = function()
+		-- 		require("ltex_extra").setup({
+		-- 			-- This is where your dictionary will be stored! Replace this directory with
+		-- 			-- whatever you want!
+		-- 			load_langs = { "is" },
+		-- 			path = vim.fn.expand("~") .. "/.config/nvim/ltex",
+		-- 		})
+		-- 	end,
+		-- 	filetypes = { "markdown", "text", "tex", "gitcommit" },
+		-- 	flags = { debounce_text_changes = 300 },
+		-- })
 	end,
 }

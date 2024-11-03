@@ -47,7 +47,8 @@ local function setup()
 			"yaml",
 			"json",
 			"sql",
-			-- "r",
+			"latex",
+			"r",
 		},
 		modules = {},
 
