@@ -13,7 +13,7 @@ local function setup()
 		--  obsidian: mimic Obsidian UI
 		--  lazy:     will attempt to stay up to date with LazyVim configuration
 		--  none:     does nothing
-		preset = "obsidian",
+		preset = "lazy",
 		-- The level of logs to write to file: vim.fn.stdpath('state') .. '/render-markdown.log'
 		-- Only intended to be used for plugin development / debugging
 		log_level = "error",
@@ -21,7 +21,7 @@ local function setup()
 		-- Only intended to be used for plugin development / debugging
 		log_runtime = false,
 		-- Filetypes this plugin will run on
-		file_types = { "markdown" },
+		file_types = { "markdown", "rmd" },
 
 		heading = {
 			enabled = true,
@@ -56,6 +56,15 @@ local function setup()
 				"RenderMarkdownH6",
 			},
 		},
+		paragraph = {
+			-- Turn on / off paragraph rendering
+			enabled = true,
+			-- Amount of margin to add to the left of paragraphs
+			-- If a floating point value < 1 is provided it is treated as a percentage of the available window space
+			left_margin = 0,
+			-- Minimum width to use for paragraphs
+			min_width = 0,
+		},
 	})
 end
 
@@ -63,18 +72,19 @@ return {
 	"MeanderingProgrammer/render-markdown.nvim",
 	enabled = true,
 	-- opts = {},
+	ft = "markdown",
 	cmd = { "RenderMarkdown" },
 	-- main = "render-markdown",
 	-- name = "render-markdown", -- Only needed if you have another plugin named markdown.nvim
 	dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-tree/nvim-web-devicons", "echasnovski/mini.nvim" }, -- if you use the mini.nvim suite
 	-- dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-tree/nvim-web-devicons" }, -- if you use the mini.nvim suite
 	---@module 'render-markdown',
-	---@type render.md.UserConfig,
+	---@type render.md.UserConfig
 
 	config = function()
-		setup()
 		require("obsidian").get_client().opts.ui.enable = false
 		vim.api.nvim_buf_clear_namespace(0, vim.api.nvim_get_namespaces()["ObsidianUI"], 0, -1)
-		require("render-markdown").setup({})
+		setup()
+		-- require("render-markdown").setup({})
 	end,
 }
