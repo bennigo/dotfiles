@@ -36,7 +36,7 @@ local function setup()
 	})
 
 	-- current document stuff
-	vim.keymap.set("n", "<leader>/", function()
+	vim.keymap.set("n", "<leader>?", function()
 		-- You can pass additional configuration to telescope to change theme, layout, etc.
 		require("telescope.builtin").current_buffer_fuzzy_find(require("telescope.themes").get_dropdown({
 			winblend = 10,
@@ -55,7 +55,7 @@ local function setup()
 	end, { desc = "[spc] Find existing buffers" })
 
 	-- recently opened files
-	vim.keymap.set("n", "<leader>?", function()
+	vim.keymap.set("n", "<leader>/", function()
 		require("telescope.builtin").oldfiles({
 			tiebreak = function()
 				return false
@@ -73,7 +73,7 @@ local function setup()
 		require("telescope.builtin").grep_string,
 		{ desc = "[S]earch project current [W]ord" }
 	)
-	vim.keymap.set("n", "<leader>sg", function()
+	vim.keymap.set("n", "<leader>pg", function()
 		require("telescope.builtin").live_grep({
 			follow = true,
 			previewer = true,
@@ -87,9 +87,9 @@ local function setup()
 			},
 		})
 	end, { desc = "[S]earch by [G]rep" })
-	vim.keymap.set("n", "<leader>sd", require("telescope.builtin").diagnostics, { desc = "[S]earch [D]iagnostics" })
-	vim.keymap.set("n", "<leader>sf", require("telescope.builtin").find_files, { desc = "[S]earch project [F]iles" })
-	vim.keymap.set("n", "<leader>sr", require("telescope.builtin").resume, { desc = "[S]earch [R]esume" })
+	vim.keymap.set("n", "<leader>pd", require("telescope.builtin").diagnostics, { desc = "[S]earch [D]iagnostics" })
+	vim.keymap.set("n", "<leader>pf", require("telescope.builtin").find_files, { desc = "[S]earch project [F]iles" })
+	vim.keymap.set("n", "<leader>pr", require("telescope.builtin").resume, { desc = "[S]earch [R]esume" })
 
 	-- find files in personal directories
 	vim.keymap.set("n", "<leader>Pf", function()

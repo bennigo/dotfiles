@@ -47,7 +47,7 @@ local function setup()
 		-- way then set 'mappings = {}'.
 		mappings = {
 			-- Overrides the 'gf' mapping to work on markdown/wiki links within your vault.
-			["<leader>of"] = {
+			["gx"] = {
 				action = function()
 					return require("obsidian").util.gf_passthrough()
 				end,
@@ -177,8 +177,8 @@ local function setup()
 		-- file it will be ignored but you can customize this behavior here.
 		---@param img string
 		follow_img_func = function(img)
-			vim.fn.jobstart({ "qlmanage", "-p", img }) -- Mac OS quick look preview
-			-- vim.fn.jobstart({"xdg-open", url})  -- linux
+			-- vim.fn.jobstart({ "qlmanage", "-p", img }) -- Mac OS quick look preview
+			vim.fn.jobstart({"xdg-open", url})  -- linux
 			-- vim.cmd(':silent exec "!start ' .. url .. '"') -- Windows
 		end,
 
@@ -300,7 +300,7 @@ local function setup()
 			-- The default folder to place images in via `:ObsidianPasteImg`.
 			-- If this is a relative path it will be interpreted as relative to the vault root.
 			-- You can always override this per image by passing a full path to the command instead of just a filename.
-			img_folder = "assets/imgs", -- This is the default
+			img_folder = "Assets/attachments", -- This is the default
 
 			-- Optional, customize the default name or prefix when pasting images via `:ObsidianPasteImg`.
 			---@return string
