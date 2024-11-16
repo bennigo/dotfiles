@@ -24,6 +24,7 @@ alias insar='TERM=xterm-256color ssh bgo@insar.vedur.is'
 alias brunnur='TERM=xterm-256color ssh pub@brunnur.vedur.is'
 alias glass='TERM=xterm-256color ssh bgo@glass'
 alias holuhraun='TERM=xterm-256color ssh bgo@192.168.50.99'
+alias yang='TERM=xterm-256color ssh bgo@yang-d01.vedur.is'
 
 # Colorize grep output (good for log files)
 alias grep='grep --color=auto'

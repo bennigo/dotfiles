@@ -3,8 +3,9 @@
 HISTSIZE=1000000
 SAVEHIST=1000000
 export EDITOR="nvim"
-export TERMINAL="alacrity"
-export BROWSER="qutebrowser"
+export TERMINAL="foot"
+# export BROWSER="qutebrowser"
+export BROWSER="firefox"
 export PATH="$HOME/.local/bin":$PATH
 export PATH="/home/bgo/.local/share/fnm:$PATH"
 export MANPAGER='nvim +Man!'

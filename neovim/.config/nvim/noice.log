@@ -1,0 +1,40 @@
+{ "msg_showcmd", "sl:1", "tick:2614", false, { { 0, ":" } } }
+{ "cmdline_show", "sl:1", "tick:2615", "mode:c", { { 0, "" } } }
+{ "cmdline_show", "sl:1", "tick:2618", "mode:c", { { 0, "Noice debug" } } }
+{ "cmdline_show", "sl:1", "tick:2620", "mode:c", { { 0, 'lua vim.uv.chdir("$HOME")' } } }
+{ "cmdline_show", "sl:1", "tick:2622", "mode:c", { { 0, "Noice debug" } } }
+{ "cmdline_hide", "sl:1", "tick:2624", false, 1 }
+{ "msg_showcmd", "sl:1", "tick:2636", false, { { 0, ":" } } }
+{ "cmdline_show", "sl:1", "tick:2637", "mode:c", { { 0, "" } } }
+{ "cmdline_show", "sl:1", "tick:2640", "mode:c", { { 0, "Noice debug" } } }
+{ "cmdline_show", "sl:1", "tick:2642", "mode:c", { { 0, 'lua vim.uv.chdir("$HOME")' } } }
+{ "cmdline_hide", "sl:1", "tick:2644", false, 1 }
+{ "msg_showcmd", "sl:1", "tick:2645", false, { { 0, "~@k" } } }
+{ "msg_showcmd", "sl:1", "tick:2647", false, { { 0, "~@k" } } }
+{ "msg_showcmd", "sl:1", "tick:2649", false, { { 0, "~@k" } } }
+{ "msg_showcmd", "sl:1", "tick:2651", false, { { 0, "~@k" } } }
+{ "msg_showcmd", "sl:1", "tick:2653", false, { { 0, "~@k" } } }
+{ "msg_showcmd", "sl:1", "tick:2655", false, { { 0, "~@k" } } }
+{ "msg_showcmd", "sl:1", "tick:2657", false, { { 0, "~@k" } } }
+{ "msg_showcmd", "sl:1", "tick:2659", false, { { 0, "~@k" } } }
+{ "msg_showcmd", "sl:1", "tick:2661", false, { { 0, "~@k" } } }
+{ "msg_showcmd", "sl:1", "tick:2663", false, { { 0, "~@k" } } }
+{ "msg_showcmd", "sl:1", "tick:2665", false, { { 0, "~@k" } } }
+{ "msg_showcmd", "sl:1", "tick:2667", false, { { 0, "~@k" } } }
+{ "msg_showcmd", "sl:1", "tick:2669", false, { { 0, "~@k" } } }
+{ "msg_showcmd", "sl:1", "tick:2671", false, { { 0, "~@k" } } }
+{ "msg_showcmd", "sl:1", "tick:2673", false, { { 0, "~@k" } } }
+{ "msg_showcmd", "sl:1", "tick:2675", false, { { 0, "~@k" } } }
+{ "msg_showcmd", "sl:1", "tick:2677", false, { { 0, "~@k" } } }
+{ "msg_showcmd", "sl:1", "tick:2679", false, { { 0, "~@k" } } }
+{ "msg_showcmd", "sl:1", "tick:2681", false, { { 0, "~@k" } } }
+{ "msg_showcmd", "sl:1", "tick:2683", false, { { 0, "~@k" } } }
+{ "msg_showcmd", "sl:1", "tick:2685", false, { { 0, "~@k" } } }
+{ "msg_showcmd", "sl:1", "tick:2687", false, { { 0, "~@k" } } }
+{ "msg_showcmd", "sl:1", "tick:2689", false, { { 0, "gg" } } }
+{ "msg_showcmd", "sl:1", "tick:2691", false, { { 0, "G" } } }
+{ "msg_showcmd", "sl:1", "tick:2693", false, { { 0, "gj" } } }
+{ "msg_showcmd", "sl:1", "tick:2695", false, { { 0, ":" } } }
+{ "cmdline_show", "sl:1", "tick:2696", "mode:c", { { 0, "" } } }
+{ "cmdline_show", "sl:1", "tick:2699", "mode:c", { { 0, "q" } } }
+{ "cmdline_hide", "sl:1", "tick:2701", false, 1 }

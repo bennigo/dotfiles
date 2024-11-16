@@ -8,8 +8,8 @@ return {
 	"preservim/vim-pencil",
 	"jbyuki/quickmath.nvim",
 	"Apeiros-46B/qalc.nvim",
-	
 
+	'brenoprata10/nvim-highlight-colors',
 	-- "vim-pandoc/vim-pandoc",
 	-- "vim-pandoc/vim-pandoc-syntax",
 	-- 'vim-pandoc/vim-rmarkdown',

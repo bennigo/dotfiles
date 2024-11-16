@@ -1,7 +1,7 @@
 return {
 	"andrewferrier/wrapping.nvim",
 	after = "nvim-notify",
-	enabled = true,
+	enabled = false,
 	config = function()
 		require("wrapping").setup()
 	end,

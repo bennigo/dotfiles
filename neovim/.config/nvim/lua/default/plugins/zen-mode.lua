@@ -1,5 +1,5 @@
 return {
-	"folke/zen-mode.nvim",
+	"folke/Zen-mode.nvim",
 	opts = {
 		window = {
 			backdrop = 0.75, -- shade the backdrop of the Zen window. Set to 1 to keep the same as Normal
@@ -42,8 +42,12 @@ return {
 			font = "14", -- font size
 		},
 		-- callback where you can add custom code when the Zen window opens
-		on_open = function(win) end,
+		on_open = function()
+			vim.fn.system([[tmux set status off]])
+		end,
 		-- callback where you can add custom code when the Zen window closes
-		on_close = function() end,
+		on_close = function() 
+			vim.fn.system([[tmux set status on]])
+		end,
 	},
 }
