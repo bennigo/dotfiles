@@ -42,7 +42,7 @@ local function setup()
 			winblend = 10,
 			previewer = false,
 		}))
-	end, { desc = "[/] Fuzzily search in current buffer" })
+	end, { desc = "[?] Fuzzily search in current buffer" })
 
 	-- open buffers
 	vim.keymap.set("n", "<leader><space>", function()
@@ -54,7 +54,7 @@ local function setup()
 		})
 	end, { desc = "[spc] Find existing buffers" })
 
-	-- recently opened files
+	-- recently opened filesww
 	vim.keymap.set("n", "<leader>/", function()
 		require("telescope.builtin").oldfiles({
 			tiebreak = function()
@@ -66,14 +66,14 @@ local function setup()
 	-- search files and text
 
 	-- project files
-	vim.keymap.set("n", "<leader>gf", require("telescope.builtin").git_files, { desc = "Search [G]it [F]iles" })
+	vim.keymap.set("n", "<leader>sGf", require("telescope.builtin").git_files, { desc = "[S]earch [G]it [F]iles" })
 	vim.keymap.set(
 		"n",
 		"<leader>sw",
 		require("telescope.builtin").grep_string,
 		{ desc = "[S]earch project current [W]ord" }
 	)
-	vim.keymap.set("n", "<leader>pg", function()
+	vim.keymap.set("n", "<leader>sg", function()
 		require("telescope.builtin").live_grep({
 			follow = true,
 			previewer = true,
@@ -87,16 +87,16 @@ local function setup()
 			},
 		})
 	end, { desc = "[S]earch by [G]rep" })
-	vim.keymap.set("n", "<leader>pd", require("telescope.builtin").diagnostics, { desc = "[S]earch [D]iagnostics" })
-	vim.keymap.set("n", "<leader>pf", require("telescope.builtin").find_files, { desc = "[S]earch project [F]iles" })
-	vim.keymap.set("n", "<leader>pr", require("telescope.builtin").resume, { desc = "[S]earch [R]esume" })
+	vim.keymap.set("n", "<leader>sd", require("telescope.builtin").diagnostics, { desc = "[S]earch [D]iagnostics" })
+	vim.keymap.set("n", "<leader>sf", require("telescope.builtin").find_files, { desc = "[S]earch project [F]iles" })
+	vim.keymap.set("n", "<leader>sr", require("telescope.builtin").resume, { desc = "[S]earch [R]esume" })
 
 	-- find files in personal directories
-	vim.keymap.set("n", "<leader>Pf", function()
+	vim.keymap.set("n", "<leader>spf", function()
 		require("telescope.builtin").find_files({ cwd = "~/personal/", follow = true })
-	end, { desc = "[P]ersonal [P]rojects" })
+	end, { desc = "[S]earch [P]ersonal [F]iles" })
 
-	vim.keymap.set("n", "<leader>Pg", function()
+	vim.keymap.set("n", "<leader>spg", function()
 		require("telescope.builtin").live_grep({
 			cwd = "~/personal/",
 			follow = true,
@@ -105,19 +105,19 @@ local function setup()
 				height = 0.95,
 				width = 0.95,
 				horizontal = {
-					preview_cutoff = 50,
+					previepg_cutoff = 50,
 					preview_width = 0.6,
 				},
 			},
 		})
-	end, { desc = "[W]ork [G]grep" })
+	end, { desc = "[S]earch [P]ersonal [G]grep" })
 
 	-- find files in work directories
-	vim.keymap.set("n", "<leader>Wf", function()
+	vim.keymap.set("n", "<leader>sWf", function()
 		require("telescope.builtin").find_files({ cwd = "~/work/projects", follow = true })
-	end, { desc = "[W]ork [P]rojects" })
+	end, { desc = "[S]earch [W]ork [P]rojects" })
 
-	vim.keymap.set("n", "<leader>Wg", function()
+	vim.keymap.set("n", "<leader>sWg", function()
 		require("telescope.builtin").live_grep({
 			cwd = "~/work/projects",
 			follow = true,
@@ -131,7 +131,7 @@ local function setup()
 				},
 			},
 		})
-	end, { desc = "[W]ork [G]grep" })
+	end, { desc = "[S]earch [W]ork [G]grep" })
 
 	-- NOTE: Find nvim config files (standard location)
 	vim.api.nvim_set_keymap(
@@ -141,7 +141,8 @@ local function setup()
 		{ desc = "[N]eovim [C]olorschemes", noremap = true, silent = true }
 	)
 	-- vim.keymap.set('n', '<leader>nc', [[<cmd>Telescope colorscheme<cr>]], {noremap = true, silent = true})
-	vim.keymap.set("n", "<leader>nz", "<cmd>Telescope zoxide list<cr>", {})
+	-- vim.keymap.set("n", "<leader>nz", "<cmd>Telescope zoxide list<cr>", {})
+	vim.keymap.set("n", "<leader>nz", require("telescope").extensions.zoxide.list)
 	-- find spell suggestions of word under cursor
 	vim.keymap.set(
 		"n",
@@ -174,6 +175,22 @@ local function setup()
 			follow = true,
 		})
 	end, { desc = "[N]eovim [O]ther [G]rep" })
+
+	vim.keymap.set("n", "<leader>nlg", function()
+		require("telescope.builtin").live_grep({
+			cwd = "~/.local/share/nvim/",
+			follow = true,
+			hidden = true,
+		})
+	end, { desc = "[N]eovim [L]ocal [G]rep" })
+
+	vim.keymap.set("n", "<leader>nlf", function()
+		require("telescope.builtin").find_files({
+			cwd = "~/.local/share/nvim",
+			follow = true,
+			hidden = true,
+		})
+	end, { desc = "[N]eovim [L]ocal [F]ile" })
 
 	-- find notes
 	-- vim.keymap.set("n", "<leader>Wn", function() end, { desc = "[N]otes" })

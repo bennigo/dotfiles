@@ -22,7 +22,6 @@ return {
     },
     -- [[ Configure nvim-cmp ]]
     -- See `:help cmp`
-
     config = function()
         local cmp = require("cmp")
         local luasnip = require("luasnip")

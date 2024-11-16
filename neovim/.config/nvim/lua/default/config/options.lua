@@ -53,7 +53,7 @@ end
 
 vim.wo.colorcolumn = "80"
 vim.opt.shortmess:append("c")
-vim.opt.spell = false
+vim.opt.spell = true
 vim.opt.spelllang = "is,en_us"
 
 -- vim.cmd "set whichwrap+=<,>,[,],h,l"
