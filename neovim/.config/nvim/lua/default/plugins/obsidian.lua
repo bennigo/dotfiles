@@ -54,12 +54,12 @@ local function setup()
 				opts = { noremap = false, expr = true, buffer = true, desc = "[O]bsidian open link" },
 			},
 			-- open obsidian.
-			["<leader>oo"] = {
-				action = function()
-					return require("obsidian").util.gf_passthrough()
-				end,
-				opts = { buffer = true, desc = "[O]bsidian Toggle [C]heckbox" },
-			},
+			-- ["<leader>oo"] = {
+			-- 	action = function()
+			-- 		return require("obsidian")
+			-- 	end,
+			-- 	opts = { buffer = true, desc = "[O]bsidian Toggle [C]heckbox" },
+			-- },
 			-- Toggle check-boxes.
 			["<leader>oc"] = {
 				action = function()
@@ -140,7 +140,14 @@ local function setup()
 				note:add_alias(note.title)
 			end
 
-			local out = { id = note.id, aliases = note.aliases, tags = note.tags, area = "", project = "" }
+			local out = {
+				created = os.date("!%Y-%m-%d %H:%M", os.time()),
+				id = note.id,
+				aliases = note.aliases,
+				tags = note.tags,
+				area = "",
+				project = "",
+			}
 
 			-- `note.metadata` contains any manually added fields in the frontmatter.
 			-- So here we just make sure those fields are kept in the frontmatter.
@@ -167,10 +174,10 @@ local function setup()
 		---@param url string
 		follow_url_func = function(url)
 			-- Open the URL in the default web browser.
-			vim.fn.jobstart({ "open", url }) -- Mac OS
+			-- vim.fn.jobstart({ "open", url }) -- Mac OS
 			-- vim.fn.jobstart({"xdg-open", url})  -- linux
 			-- vim.cmd(':silent exec "!start ' .. url .. '"') -- Windows
-			-- vim.ui.open(url) -- need Neovim 0.10.0+
+			vim.ui.open(url) -- need Neovim 0.10.0+
 		end,
 
 		-- Optional, by default when you use `:ObsidianFollowLink` on a link to an image
@@ -178,7 +185,7 @@ local function setup()
 		---@param img string
 		follow_img_func = function(img)
 			-- vim.fn.jobstart({ "qlmanage", "-p", img }) -- Mac OS quick look preview
-			vim.fn.jobstart({"xdg-open", url})  -- linux
+			vim.fn.jobstart({ "xdg-open", url }) -- linux
 			-- vim.cmd(':silent exec "!start ' .. url .. '"') -- Windows
 		end,
 
@@ -187,7 +194,7 @@ local function setup()
 		use_advanced_uri = false,
 
 		-- Optional, set to true to force ':ObsidianOpen' to bring the app to the foreground.
-		open_app_foreground = false,
+		open_app_foreground = true,
 
 		picker = {
 			-- Set your preferred picker. Can be one of 'telescope.nvim', 'fzf-lua', or 'mini.pick'.
@@ -264,6 +271,7 @@ local function setup()
 				[">"] = { char = "", hl_group = "ObsidianRightArrow", order = 2 },
 				["~"] = { char = "󰰱", hl_group = "ObsidianTilde", order = 3 },
 				["!"] = { char = "", hl_group = "ObsidianImportant", order = 4 },
+				["-"] = { char = "󰥔", hl_group = "ObsidianTodo", order = 5 },
 				-- Replace the above with this if you don't have a patched font:
 				-- [" "] = { char = "☐", hl_group = "ObsidianTodo" },
 				-- ["x"] = { char = "✔", hl_group = "ObsidianDone" },
@@ -349,5 +357,21 @@ return {
 	},
 	config = function()
 		setup()
+
+		-- journaling
+		vim.keymap.set("n", "<leader>ojy", "<cmd>ObsidianYesterday<cr>" , { desc = "[O]bsidian [J]journal [Y]esterday" })
+		vim.keymap.set("n", "<leader>ojt", "<cmd>ObsidianToday<cr>" , { desc = "[O]bsidian [J]journal [T]oday" })
+		vim.keymap.set("n", "<leader>ojm", "<cmd>ObsidianTomorrow<cr>" , { desc = "[O]bsidian [J]journal to[M]ObsidianTomorrow" })
+		vim.keymap.set("n", "<leader>ojd", "<cmd>ObsidianDailies<cr>" , { desc = "[O]bsidian [J]journal [D]dailies" })
+
+		vim.keymap.set("n", "<leader>or", "<cmd>ObsidianRename<cr>" , { desc = "[O]bsidian [R]ename" })
+		vim.keymap.set("n", "<leader>ob", "<cmd>ObsidianBacklinks<cr>" , { desc = "[O]bsidian [B]backlinks" })
+		vim.keymap.set("n", "<leader>oo", "<cmd>ObsidianOpen<cr>" , { desc = "[O]bsidian [O]pen" })
+		vim.keymap.set("n", "<leader>on", "<cmd>ObsidianNew<cr>" , { desc = "[O]bsidian [N]ew" })
+		vim.keymap.set("n", "<leader>ot", "<cmd>ObsidianNewFromTemplate<cr>" , { desc = "[O]bsidian new from [T]emplate" })
+		vim.keymap.set("n", "<leader>oq", "<cmd>ObsidianQuickSwitch<cr>" , { desc = "[O]bsidian [Q]uickswich" })
+		vim.keymap.set("n", "<leader>os", "<cmd>ObsidianSearch<cr>" , { desc = "[O]bsidian [S]earch" })
+		vim.keymap.set("n", "<leader>op", "<cmd>ObsidianPasteImg<cr>" , { desc = "[O]bsidian [P]aste image" })
+
 	end,
 }

@@ -165,6 +165,33 @@ return {
 			},
 		})
 
+		require("lspconfig").ltex.setup({
+			filetypes = { "markdown", "md", "tex" },
+			flags = { debounce_text_changes = 300 },
+			settings = {
+				ltex = {
+					load_langs = { "is, en" },
+					path = vim.fn.expand("~") .. "/.config/nvim/spell",
+					language = "is",
+					setenceCacheSize = 2000,
+					additionalRules = {
+						enablePickyRules = true,
+						motherTongue = "is",
+					},
+					trace = { server = "verbose" },
+					disabledRules = {
+						["en-US"] = {
+							"MORFOLOGIK_RULE_EN_US",
+							"LIGATURES",
+						},
+					},
+					hiddenFalsePositives = {},
+					username = "x@y.z",
+					apiKey = "tete",
+				},
+			},
+			on_attach = lsp_attach,
+		})
 		-- require("lspconfig").ltex.setup({
 		-- 	on_attach = function()
 		-- 		require("ltex_extra").setup({
