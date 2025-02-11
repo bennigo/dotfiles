@@ -5,6 +5,7 @@
     font-size: 13px;
     min-height: 0;
     color: whitesmoke;
+    /* color: black; */
 }
 
 window#waybar {
@@ -49,8 +50,8 @@ window#waybar {
     font-weight: bold;
 }
 
-#battery {
-}
+/* #battery { */
+/* } */
 
 #battery icon {
     color: red;
