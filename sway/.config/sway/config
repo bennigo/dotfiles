@@ -131,6 +131,7 @@ bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
 
 # Start your launcher
     bindsym $mod+d exec $menu
+    bindsym $mod+Shift+w exec ~/.local/bin/ronema
 
     bindsym $mod+r exec /usr/bin/gnome-calculator -m advanced
     bindsym $mod+Shift+t exec $term -a "htop" htop
@@ -309,9 +310,9 @@ popup_during_fullscreen smart
 
 
 # for_window [app_id="blueman-manager"] floating enable, resize set width 400 px height 300 px, move container to workspace current, move position 900 100
-for_window [app_id="(?i)(?:blueman-manager|azote|gnome-disks)"] floating enable,  sticky enable
-for_window [app_id="(?i)(?:nvim_obsidiantoday|nvim_obsidiannew|nvim_floating|clipse|swappy)"] floating enable, resize set width 1400 px height 1000 px, move container to workspace current, move container center
-for_window [app_id="htop"] floating enable, resize set width 1900 px height 1000 px, move container to workspace current, move container center
+for_window [app_id="(?i)(?:blueman-manager|azote|gnome-disks|nm-connection-editor)"] floating enable,  sticky enable
+for_window [app_id="(?i)(?:nvim_floating|clipse|swappy)"] floating enable, resize set width 1400 px height 1000 px, move container to workspace current, move container center
+for_window [app_id="(?i)(?:htop|Zotero)"] floating enable, resize set width 1900 px height 1100 px, move container to workspace current, move container center
 
 for_window [app_id="Cisco Secure Client"] floating enable, sticky enable
 for_window [app_id="org.gnome.Calculator"] floating enable,  sticky enable
@@ -321,7 +322,7 @@ for_window [app_id="com.cisco.secureclient.gui"] mark "cisco", move scratchpad, 
 for_window [class="obsidian"] mark "obsidian", move scratchpad floating enable, resize set width 2000 px height 1250 px
 for_window [app_id="terminal_floating"] mark "terminal_fl", move scratchpad, move container to workspace current, resize set width 1500 px height 900 px
 for_window [app_id="org.pwmt.zathura"] mark "zathura", move scratchpad, move container to workspace current, resize set width 1200 px height 1180 px
-for_window [app_id="nvim_quick"] mark "quick", move scratchpad, move container to workspace current, resize set width 1900 px height 1100 px
+for_window [app_id="(?i)(?:nvim_obsidiantoday|nvim_obsidiannew|nvim_quick)"] mark "quick", move scratchpad, move container to workspace current, resize set width 1900 px height 1100 px
 # for_window [app_id="terminal_floating"] mark "terminal", move scratchpad floating enable resize set width 1400 px height 1000 px
 
 include /etc/sway/config.d/*
