@@ -124,7 +124,10 @@
        "tooltip-format-wifi": "{icon} {ifname} ({essid}): {ipaddr}",
        "tooltip-format-disconnected": "{icon} disconnected",
        "tooltip-format-disabled": "{icon} disabled",
-       "on-click": "swaymsg exec \\$flock \\$term_float nmtui connect"
+       "tooltip-format-disabled": "{icon} disabled",
+       // "on-click": "nm-applet --indicator"
+       "on-click": "bash ~/.config/waybar/scripts/ronema-toggle.sh",
+       // "on-click": "swaymsg exec ~/.local/bin/ronema"
     },
 
     // "bluetooth": {

@@ -267,11 +267,12 @@ local function setup()
 			checkboxes = {
 				-- NOTE: the 'char' value has to be a single character, and the highlight groups are defined below.
 				[" "] = { char = "󰄱", hl_group = "ObsidianTodo", order = 0 },
-				["x"] = { char = "", hl_group = "ObsidianDone", order = 1 },
-				[">"] = { char = "", hl_group = "ObsidianRightArrow", order = 2 },
-				["~"] = { char = "󰰱", hl_group = "ObsidianTilde", order = 3 },
-				["!"] = { char = "", hl_group = "ObsidianImportant", order = 4 },
-				["-"] = { char = "󰥔", hl_group = "ObsidianTodo", order = 5 },
+				["/"] = { char = "󰦕", hl_group = "Obsidianbullet", order = 1 },
+				["x"] = { char = "", hl_group = "ObsidianDone", order = 2 },
+				[">"] = { char = "", hl_group = "ObsidianRightArrow", order = 3 },
+				["~"] = { char = "󰰱", hl_group = "ObsidianTilde", order = 4 },
+				["!"] = { char = "", hl_group = "ObsidianImportant", order = 5 },
+				["-"] = { char = "󰥔", hl_group = "ObsidianTodo", order = 6 },
 				-- Replace the above with this if you don't have a patched font:
 				-- [" "] = { char = "☐", hl_group = "ObsidianTodo" },
 				-- ["x"] = { char = "✔", hl_group = "ObsidianDone" },
