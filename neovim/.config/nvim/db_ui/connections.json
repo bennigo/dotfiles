@@ -1,6 +1,30 @@
-[{"url": "postgresql://bgo:5pCMfg9un7Hf@dev.psql.vedur.is:5432/gps_metrics", "name": "dev_gps_metrics"},
- {"url": "postgresql://bgo:5pCMfg9un7Hf@dev.psql.vedur.is:5432/tos", "name": "dev_tos"}, 
- {"url": "postgresql://bgo:5pCMfg9un7Hf@dev.psql.vedur.is:5432/skjalftalisa", "name": "def_skjalftalisa"}, 
- {"url": "postgresql://bgo:5pCMfg9un7Hf@dev.psql.vedur.is:5432/epos", "name": "dev_epos"}, 
- {"url": "postgresql://postgres:482KfuXt@localhost:5432", "name": "local_db"}
+[
+  {
+    "url": "postgresql://bgo:2UgZ4FMRbFT0kse7CpdTq1vWpJ@pgread.vedur.is:5432/gas",
+    "name": "gas_read"
+  },
+  {
+    "url": "postgresql://bgo:2UgZ4FMRbFT0kse7CpdTq1vWpJ@pgread.vedur.is:5432/skjalftalisa",
+    "name": "skjalftalisa_read"
+  },
+  {
+    "url": "postgresql://bgo:2UgZ4FMRbFT0kse7CpdTq1vWpJ@pgread.vedur.is:5432/tos",
+    "name": "tos_read"
+  },
+  {
+    "url": "postgresql://bgo:2UgZ4FMRbFT0kse7CpdTq1vWpJ@pgdev.vedur.is:5432/epos",
+    "name": "epos_dev"
+  },
+  {
+    "url": "postgresql://bgo:2UgZ4FMRbFT0kse7CpdTq1vWpJ@pgdev.vedur.is:5432/gnss-europe-v0-2-9",
+    "name": "gnss-europe_dev"
+  },
+  {
+    "url": "postgresql://bgo:2UgZ4FMRbFT0kse7CpdTq1vWpJ@pgdev.vedur.is:5432/gps_metrics",
+    "name": "gps_metrics_dev"
+  },
+  {
+    "url": "postgresql://postgres:482KfuXt@localhost:5432",
+    "name": "local_db"
+  }
 ]

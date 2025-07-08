@@ -99,12 +99,26 @@ local function setup()
 			--   'highlight':       Highlight for the 'rendered' icon
 			--   'scope_highlight': Highlight for item associated with custom checkbox
 			custom = {
-				todo = { raw = "[-]", rendered = "󰥔 ", highlight = "RenderMarkdownTodo", scope_highlight = "RenderMarkdownTodo" },
-				in_progress = { raw = "[/]", rendered = "󰦕", highlight = "Obsidianbullet", scope_highlight = "RenderMarkdownTodo" },
-				arrow = { raw = "[>]", rendered =" ", highlight = "ObsidianRightArrow", scope_highlight = nil},
-				tilde = { raw = "[~]", rendered ="󰰱 ", highlight = "ObsidianTilde", scope_highlight = nil},
-				importand = { raw = "[!]", rendered =" ", highlight = "ObsidianImportant", scope_highlight = "ObsidianImportant" },
-
+				todo = {
+					raw = "[-]",
+					rendered = "󰥔 ",
+					highlight = "RenderMarkdownTodo",
+					scope_highlight = "RenderMarkdownTodo",
+				},
+				in_progress = {
+					raw = "[/]",
+					rendered = "󰦕",
+					highlight = "Obsidianbullet",
+					scope_highlight = "RenderMarkdownTodo",
+				},
+				arrow = { raw = "[>]", rendered = " ", highlight = "ObsidianRightArrow", scope_highlight = nil },
+				tilde = { raw = "[~]", rendered = "󰰱 ", highlight = "ObsidianTilde", scope_highlight = nil },
+				importand = {
+					raw = "[!]",
+					rendered = " ",
+					highlight = "ObsidianImportant",
+					scope_highlight = "ObsidianImportant",
+				},
 			},
 		},
 	})

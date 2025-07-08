@@ -2,8 +2,15 @@
     "layer": "bottom",
     "position": "top",
     "height": 20,
-    "modules-left": ["custom/menu", "sway/workspaces", "sway/window"],
-    "modules-center": ["custom/wf-recorder", "sway/mode"],
+    "modules-left": [
+        "custom/menu",
+        "sway/workspaces",
+        "sway/window"
+    ],
+    "modules-center": [
+        "custom/wf-recorder",
+        "sway/mode"
+    ],
     "modules-right": [
         "custom/weather",
         "custom/wlsunset",
@@ -24,19 +31,16 @@
         "custom/power",
         "tray"
     ],
-    
     "sway/workspaces": {
-         "disable-scroll": true,
-         "all-outputs": true
+        "disable-scroll": true,
+        "all-outputs": true
     },
-    
     "sway/language": {
         "format": " {}",
         "min-length": 5,
         "tooltip": false,
         "on-click": "swaymsg input $(swaymsg -t get_inputs --raw | jq '[.[] | select(.type == \"keyboard\")][0] | .identifier') xkb_switch_layout next"
     },
-
     "custom/clipboard": {
         "format": "",
         "interval": "once",
@@ -48,36 +52,33 @@
         "exec-if": "[ -x \"$(command -v cliphist)\" ] && [ $(cliphist list | wc -l) -gt 0 ]",
         "signal": 9
     },
-
     "custom/menu": {
         "format": "",
         "on-click": "exec nwg-drawer",
         "tooltip": false
     },
-    
     "sway/mode": {
         "format": "<span style=\"italic\">{}</span>",
         "tooltip": false
     },
-    
     "sway/window": {
         "format": "{}",
         "max-length": 50,
         "tooltip": true
     },
-
-    "backlight#icon": { 
-    "format": "{icon}",    	
-    "format-icons": [""],    	
-    "on-scroll-down": "brightnessctl -c backlight set 5%",
-    "on-scroll-up": "brightnessctl -c backlight set +5%-"
+    "backlight#icon": {
+        "format": "{icon}",
+        "format-icons": [
+            ""
+        ],
+        "on-scroll-down": "brightnessctl -c backlight set 5%",
+        "on-scroll-up": "brightnessctl -c backlight set +5%-"
     },
-
-    "backlight#value" :{ "format": "{percent}%",
-    "on-scroll-down": "brightnessctl -c backlight set 5%", 
-    "on-scroll-up": "brightnessctl -c backlight set +5%"
+    "backlight#value": {
+        "format": "{percent}%",
+        "on-scroll-down": "brightnessctl -c backlight set 5%",
+        "on-scroll-up": "brightnessctl -c backlight set +5%"
     },
-
     "idle_inhibitor": {
         "format": "{icon}",
         "format-icons": {
@@ -89,47 +90,53 @@
         "tooltip-format-activated": "power-saving disabled",
         "tooltip-format-deactivated": "power-saving enabled"
     },
-
     "pulseaudio": {
-       "format": "{icon}  {volume}% {format_source}",
-       "format-bluetooth": "{icon} {volume}%",
-       "format-muted": " {format_source}",
-       "format-source": "  {volume}%",
-       "format-source-muted": "",
-       "format-icons": {
-           "headphone": "",
-           "headset": "",
-           "default": ["", "", ""]
-       },
-       "tooltip-format": "{icon}  {volume}% {format_source}",
-       "on-click": "swaymsg exec \\$pulseaudio",
-       "on-click-middle": "swaymsg exec \\$volume_mute",
-       "on-click-right": "swaymsg exec pavucontrol",
-       "on-scroll-up": "swaymsg exec \\$volume_up",
-       "on-scroll-down": "swaymsg exec \\$volume_down"
+        "format": "{icon}  {volume}% {format_source}",
+        "format-bluetooth": "{icon} {volume}%",
+        "format-muted": " {format_source}",
+        "format-source": "  {volume}%",
+        "format-source-muted": "",
+        "format-icons": {
+            "headphone": "",
+            "headset": "",
+            "default": [
+                "",
+                "",
+                ""
+            ]
+        },
+        "tooltip-format": "{icon}  {volume}% {format_source}",
+        "on-click": "swaymsg exec \\$pulseaudio",
+        "on-click-middle": "swaymsg exec \\$volume_mute",
+        "on-click-right": "swaymsg exec pavucontrol",
+        "on-scroll-up": "swaymsg exec \\$volume_up",
+        "on-scroll-down": "swaymsg exec \\$volume_down"
     },
-    
     "battery": {
         "format": "{icon} {capacity}%",
-        "format-icons": ["", "", "", "", ""]
+        "format-icons": [
+            "",
+            "",
+            "",
+            "",
+            ""
+        ]
     },
-    
     "network": {
-       "format-wifi": " ({signalStrength}%)",
-       "format-ethernet": "",
-       "format-disconnected": "",
-       // "tooltip-format": "{ifname} ({essid}): {ipaddr}",
-       "tooltip-format": "{icon} {ifname}: {ipaddr}",
-       "tooltip-format-ethernet": "{icon} {ifname}: {ipaddr}",
-       "tooltip-format-wifi": "{icon} {ifname} ({essid}): {ipaddr}",
-       "tooltip-format-disconnected": "{icon} disconnected",
-       "tooltip-format-disabled": "{icon} disabled",
-       "tooltip-format-disabled": "{icon} disabled",
-       // "on-click": "nm-applet --indicator"
-       "on-click": "bash ~/.config/waybar/scripts/ronema-toggle.sh",
-       // "on-click": "swaymsg exec ~/.local/bin/ronema"
+        "format-wifi": " ({signalStrength}%)",
+        "format-ethernet": "",
+        "format-disconnected": "",
+        // "tooltip-format": "{ifname} ({essid}): {ipaddr}",
+        "tooltip-format": "{icon} {ifname}: {ipaddr}",
+        "tooltip-format-ethernet": "{icon} {ifname}: {ipaddr}",
+        "tooltip-format-wifi": "{icon} {ifname} ({essid}): {ipaddr}",
+        "tooltip-format-disconnected": "{icon} disconnected",
+        "tooltip-format-disabled": "{icon} disabled",
+        "tooltip-format-disabled": "{icon} disabled",
+        // "on-click": "nm-applet --indicator"
+        "on-click": "bash ~/.config/waybar/scripts/ronema-toggle.sh",
+        // "on-click": "swaymsg exec ~/.local/bin/ronema"
     },
-
     // "bluetooth": {
     //   "format": "",
     //   "format-icons": {
@@ -138,7 +145,6 @@
     //   },
     //   "on-click": "blueman-manager"
     // }
-
     "bluetooth": {
         "format": "",
         "format-disabled": "\udb80\udcb2",
@@ -147,7 +153,6 @@
         "on-click-right": "rfkill toggle bluetooth",
         "tooltip-format": "{}"
     },
-
     "clock": {
         "format": "{:%e %b %H:%M}",
         "tooltip": true,
@@ -155,39 +160,42 @@
         "interval": 5,
         "on-click": "swaymsg exec \\$calendar"
     },
-    
     "cpu": {
         "interval": 5,
         "format": " {usage}%",
         "states": {
-          "warning": 70,
-          "critical": 90
-          },
-    "on-click": "swaymsg exec \\$term_float htop"
+            "warning": 70,
+            "critical": 90
+        },
+        "on-click": "swaymsg exec \\$term_float htop"
     },
-    
     "memory": {
         "interval": 30,
         "format": " {}%",
         "states": {
-          "warning": 70,
-          "critical": 90
+            "warning": 70,
+            "critical": 90
         },
-    "on-click": "swaymsg exec \\$term_float htop"
-    
+        "on-click": "swaymsg exec \\$term_float htop"
     },
-    
     "custom/wf-recorder": {
-         "interval": "once",
-         "return-type": "json",
-         "format": "{}",
-         "tooltip-format": "{tooltip}",
-         "exec": "echo '{\"class\": \"recording\",\"text\":\"\",\"tooltip\":\"press $mod+Esc to stop recording\"}'",
-         "exec-if": "pgrep wf-recorder",
-         "on-click": "killall -s SIGINT wf-recorder",
-         "signal": 8
+        "interval": "once",
+        "return-type": "json",
+        "format": "{}",
+        "tooltip-format": "{tooltip}",
+        "exec": "echo '{\"class\": \"recording\",\"text\":\"\",\"tooltip\":\"press $mod+Esc to stop recording\"}'",
+        "exec-if": "pgrep wf-recorder",
+        "on-click": "killall -s SIGINT wf-recorder",
+        "signal": 8
     },
-
+    // "custom/spotify": {
+    //     "exec": "/usr/bin/python3 ~/.local/bin/mediaplayer.py --player spotify",
+    //     "format": "{}  ",
+    //     "return-type": "json",
+    //     "on-click": "playerctl play-pause",
+    //     "on-scroll-up": "playerctl next",
+    //     "on-scroll-down": "playerctl previous"
+    // },
     "custom/playerctl": {
         "interval": "once",
         "tooltip": true,
@@ -204,12 +212,10 @@
         "on-scroll-down": "playerctl position 10-; pkill -RTMIN+5 waybar",
         "signal": 5
     },
-
     "custom/power": {
         "format": "",
         "on-click": "nwg-bar -x"
     },
-
     "custom/dnd": {
         "interval": "once",
         "return-type": "json",
@@ -222,7 +228,6 @@
         "exec": "printf '{\"alt\":\"%s\",\"tooltip\":\"Notification mode: %s\"}' $(makoctl mode | grep -q 'do-not-disturb' && echo dnd || echo default) $(makoctl mode | tail -1)",
         "signal": 11
     },
-    
     "custom/weather": {
         "icon-size": 42,
         "format": "{icon} {}",
@@ -231,28 +236,27 @@
         "exec": "~/.config/waybar/scripts/weather.py",
         "return-type": "json",
         "format-icons": {
-           "Unknown": "✨",
-           "Cloudy": "",
-           "Fog": "🌫",
-           "HeavyRain": "🌧",
-           "HeavyShowers": "🌧",
-           "HeavySnow": "❄️",
-           "HeavySnowShowers": "❄️",
-           "LightRain": "🌦",
-           "LightShowers": "🌦",
-           "LightSleet": "🌧",
-           "LightSleetShowers": "🌧",
-           "LightSnow": "🌨",
-           "LightSnowShowers": "🌨",
-           "PartlyCloudy": "⛅️",
-           "Sunny": "☀️",
-           "ThunderyHeavyRain": "🌩",
-           "ThunderyShowers": "⛈",
-           "ThunderySnowShowers": "⛈",
-           "VeryCloudy": ""
+            "Unknown": "✨",
+            "Cloudy": "",
+            "Fog": "🌫",
+            "HeavyRain": "🌧",
+            "HeavyShowers": "🌧",
+            "HeavySnow": "❄️",
+            "HeavySnowShowers": "❄️",
+            "LightRain": "🌦",
+            "LightShowers": "🌦",
+            "LightSleet": "🌧",
+            "LightSleetShowers": "🌧",
+            "LightSnow": "🌨",
+            "LightSnowShowers": "🌨",
+            "PartlyCloudy": "⛅️",
+            "Sunny": "☀️",
+            "ThunderyHeavyRain": "🌩",
+            "ThunderyShowers": "⛈",
+            "ThunderySnowShowers": "⛈",
+            "VeryCloudy": ""
         }
     },
-
     "custom/wlsunset": {
         "interval": "once",
         "tooltip": true,
@@ -268,13 +272,11 @@
         "exec-if": "~/.config/waybar/scripts/sunset.sh check",
         "signal": 6
     },
-
     "custom/help": {
         "format": "",
         "on-click": "/usr/share/sway/scripts/help.sh --toggle",
         "tooltip": "false"
     },
-    
     "tray": {
         "icon-size": 21,
         "spacing": 10

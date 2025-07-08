@@ -1,0 +1,2 @@
+SELECT * FROM `db_ui`.`tmp`.`local_db-query-2025-04-05-16-12-07` 
+WHERE `db_ui`.`tmp`.`local_db-query-2025-04-05-16-12-07`.`id` = 1
