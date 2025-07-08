@@ -28,7 +28,10 @@ smart_gaps on
 # font
 font pango:HackNerdFont 8 
 # Your preferred terminal emulator
-set $term foot
+# set $term foot
+set $term ~/.local/bin/kitty
+#app_id = -a # for foot
+#app_id = --class # for kitty
 # Your preferred application launcher
 # Note: pass the final command to swaymsg so that the resulting window can be opened
 # on the original workspace that the command was run on.
@@ -134,23 +137,23 @@ bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
     bindsym $mod+Shift+w exec ~/.local/bin/ronema
 
     bindsym $mod+r exec /usr/bin/gnome-calculator -m advanced
-    bindsym $mod+Shift+t exec $term -a "htop" htop
+    bindsym $mod+Shift+t exec $term --class "htop" htop
 
 # nvim with obskidian
-    bindsym $mod+n exec $term -a "nvim_obsidiantoday" zsh -i ~/.local/bin/run_nvim_obsidian.sh today 
-    bindsym $mod+Shift+n exec $term -a "nvim_obsidiannew" zsh -i ~/.local/bin/run_nvim_obsidian.sh new 
-    bindsym $mod+i exec $term -a "nvim_quick" zsh -i ~/.local/bin/run_nvim_obsidian.sh quick
+    bindsym $mod+n exec $term --class "nvim_obsidiantoday" zsh -i ~/.local/bin/run_nvim_obsidian.sh today 
+    bindsym $mod+Shift+n exec $term --class "nvim_obsidiannew" zsh -i ~/.local/bin/run_nvim_obsidian.sh new 
+    bindsym $mod+i exec $term --class "nvim_quick" zsh -i ~/.local/bin/run_nvim_obsidian.sh quick
 # floating terminal
-    bindsym $mod+t exec $term -a "terminal_floating"
+    bindsym $mod+t exec $term --class "terminal_floating"
 
 # Bind floating shell with TUI selection to something nice
-    bindsym $mod+p exec $term -a "clipse" ${HOME}/.local/bin/clipse
-    bindsym $mod+Shift+p exec $term -a "clipse" zsh -i ${HOME}/.local/bin/run_swappy.sh 
+    bindsym $mod+p exec $term --class "clipse" ${HOME}/.local/bin/clipse
+    bindsym $mod+Shift+p exec $term --class "clipse" zsh -i ${HOME}/.local/bin/run_swappy.sh 
 
 # cisco secure client
     exec_always --no-startup-id gtk-launch com.cisco.secureclient.gui.desktop
     exec --no-startup-id gtk-launch obsidian.desktop
-    exec --no-startup-id $term -a "terminal_floating"
+    exec --no-startup-id $term --class "terminal_floating"
 # bindsym $mod+o exec gtk-launch obsidian.desktop
 
     bindsym $mod+z [con_mark="zathura"] scratchpad show
@@ -168,6 +171,19 @@ bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
 # Screenshot a region
     bindsym Shift+Print exec ${HOME}/.local/bin/run_screenshot.sh -c -m region
     bindsym $mod+Shift+Print exec ${HOME}/.local/bin/run_screenshot.sh -e -c -m region
+
+    # bindsym $mod+semicolon exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.PlayPause
+    # bindsym $mod+greater exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Next
+    # bindsym $mod+less exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Previous
+
+    assign [class="Spotify"] 10 
+    for_window [class="Spotify"] floating enable
+    for_window [class="Spotify"] resize set width 1800 height 1100
+
+    bindsym $mod+colon exec spotify
+    bindsym $mod+semicolon exec playerctl --player=spotify play-pause
+    bindsym $mod+less exec playerctl --player=spotify previous
+    bindsym $mod+greater exec playerctl --player=spotify next
 
 # Drag floating windows by holding down $mod and left mouse button.
 # Resize them with right mouse button + $mod.

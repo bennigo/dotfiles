@@ -1,0 +1,25 @@
+return {}
+-- return {
+--   "nvim-telescope/telescope.nvim",
+--   keys = {
+--     {
+--       "<leader>fd",
+--       function()
+--         require("telescope.builtin").find_files({ cwd = "~/.dotfiles", follow = true })
+--       end,
+--       desc = "Dotfiles",
+--     },
+--     {
+--       "<leader>fL",
+--       function()
+--         require("telescope.builtin").find_files({ cwd = "~/.local", follow = true })
+--       end,
+--       desc = "Search .locals",
+--     },
+--     -- { "<leader>fd", LazyVim.pick("files", { cwd = vim.uv.cwd() }), desc = "TEST" },
+--     -- { "<leader>fd", LazyVim.telescope(find_files", { cwd = "~/.dotfiles" }), desc = "Find Dotfiles" },
+--     -- { "<leader>fd", LazyVim.pick({ cwd = "/home/bgo/.dotfiles" }), desc = "Find Dotfiles" },
+--     -- { "<leader>fd", LazyVim.pick("find_files", { cwd = "/home/bgo/.dotfiles/" }), desc = "Find Dotfiles" },
+--     -- { "<leader>fR", LazyVim.pick("oldfiles", { cwd = vim.uv.cwd() }), desc = "Recent (cwd)" },
+--   },
+-- }

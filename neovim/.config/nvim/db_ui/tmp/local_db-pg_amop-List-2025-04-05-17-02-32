@@ -1,0 +1,1 @@
+select * from "pg_catalog"."pg_amop" LIMIT 200
