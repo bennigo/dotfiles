@@ -20,7 +20,7 @@ plug "zap-zsh/fzf"
 plug "zap-zsh/exa"
 plug "zsh-users/zsh-syntax-highlighting"
 
-export PATH="$HOME/bin:$HOME/.local/bin":$PATH
+export PATH="$HOME/bin:$HOME/.local/bi:$HOME/.local/kitty.app/bin/":$PATH
 
 # keybinds
 bindkey '^ ' autosuggest-accept

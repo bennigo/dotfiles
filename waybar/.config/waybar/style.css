@@ -97,7 +97,11 @@ window#waybar {
 }
 
 #custom-spotify {
-    color: rgb(102, 220, 105);
+    padding: 0 10px;
+    margin: 0 4px;
+    background-color: #1DB954;
+    color: black;
+    /* color: rgb(102, 220, 105); */
 }
 
 #tray {

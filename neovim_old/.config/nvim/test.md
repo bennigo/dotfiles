@@ -12,26 +12,24 @@
 - [x] checked checbox
 - [ ] checked checbox
 
-
 > [!NOTE] dlsjafl
 > dlsajfljasd
-> dslfjadslfj 
+> dslfjadslfj
 
 ```latex
 $$\frac{2}{4}$$
 ```
 
 | dskfa | sdfkj |
-| :---- | :---- | 
+| :---- | :---- |
 | ksdjfklsdjlfjadsl | dsjlfj |
 
 - dskajf
  -- jdskfj
- - [-] time
+- [-] time
 - [~] dkjsa
 
 ```python
 for i in range(5):
     print(PI)
 ```
-
