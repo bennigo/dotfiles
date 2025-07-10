@@ -1,5 +1,6 @@
 return {
-  "snacks.nvim",
+  "folke/snacks.nvim",
+  enable = true,
   opts = function(_, opts)
     table.insert(
       opts.dashboard.preset.keys,
