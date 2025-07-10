@@ -7,18 +7,46 @@ sudo apt install interception-caps2esc
 sudo systemctl enable --now udevmon
 
 # Installing sway and waybar
-sudo apt sway installfoot-themes swayidle swaylock xdg-desktop-portal-wlr waybar
+sudo apt sway install foot-themes swayidle swaylock xdg-desktop-portal-wlr waybar rofi lxqt-policykit
 sudo apt fonts-font-awsome
 sudo apt install playerctl
 sudo apt install makoctl 
 
+sudo apt install udiskie
+rm -rf /usr/local/go && tar -C /usr/local -xzf go1.24.5.linux-amd64.tar.gz
+go install github.com/savedra1/clipse@v1.1.0
+
+# for ueberzugpp
+sudo apt install libssl-dev libvips-dev libsixel-dev libchafa-dev libtbb-dev 
+sudo apt-get install libxcb-image0-dev
+sudo apt-get install libxcb-res0 libxcb-res-dev
+sudo apt-get install libopencv-dev
+
+https://github.com/jstkdng/ueberzugpp
+git clone https://github.com/jstkdng/ueberzugpp.git
+cd ueberzugpp
+mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake --build .
+
+cmake --install build
+
 
 # for anyconnect
-sudo apt-get install libwebkit2gtk-4.0.37 
 https://vpn.vedur.is
 
 sudo apt install pip
 
+sudo apt remove neovim 
+sudo apt-get install ninja-build gettext cmake unzip curl tmux vim
+
+sudo apt install cmake pkg-config libfreetype6-dev libfontconfig1-dev libxcb-xfixes0-dev libxkbcommon-dev python3
+sudo apt install clangd
+sudo apt install xclip
+sudo apt install chafa
+sudo apt-get install libssl-dev libvips-dev libsixel-dev libchafa-dev libtbb-dev extra-cmake-modules
+
+curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin
 
 curl -fsSL https://fnm.vercel.app/install | bash
 curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
@@ -30,18 +58,11 @@ cargo install zoxide
 cargo install fd-find
 cargo install viu
 
-sudo apt remove neovim 
-sudo apt-get install ninja-build gettext cmake unzip curl tmux vim
-
-sudo apt install cmake pkg-config libfreetype6-dev libfontconfig1-dev libxcb-xfixes0-dev libxkbcommon-dev python3
-sudo apt install clangd
-sudo apt install xclip
-sudo apt install chafa
-sudo apt-get install libssl-dev libvips-dev libsixel-dev libchafa-dev libtbb-dev extra-cmake-modules
-
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
 nvm install node
-curl -fsSL https://deb.nodesource.com/setup_21.x | sudo -E bash - &&\sudo apt-get install -y nodejs
+
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo bash - 
+sudo apt-get install -y nodejs
 sudo apt install build-essential libreadline-dev unzip
 sudo apt install lua5.4 luarocks
 sudo apt install ansible
@@ -55,15 +76,18 @@ git clone --depth 1 https://github.com/junegunn/fzf.git ~/.local/share/fzf
 # tmux plugin manger
 git clone https://github.com/tmux-plugins/tpm ~/.local/share/tmux/plugins/tpm
 
+# to enable testing
+sudo apt-get install graphicsmagick
+
 # setting up zsh
 chsh -s /bin/zsh
 curl -fsSL https://raw.githubusercontent.com/ronniedroid/getnf/master/install.sh | bash
 zsh <(curl -s https://raw.githubusercontent.com/zap-zsh/zap/master/install.zsh) --branch release-v1
 
 cd && mkdir -p Download/git && cd Download/git
-sudo apt-get install ninja-build gettext cmake unzip curl build-essential
 git clone git@github.com:neovim/neovim.git && cd neovim
-make CMAKE_BUILD_TYPE=Release
+make CMAKE_BUILD_TYPE=RelWithDebInfo
+# make CMAKE_BUILD_TYPE=Release
 sudo make install
 
 curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh"
@@ -74,9 +98,7 @@ git clone git@github.com:sahlberg/libnfs.git
 cd libnfs && mkdir build && cd build
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr ..
 make && sudo make install
-sudo apt install nfs-common
-sudo apt install libnfs-utils
-sudo apt install m4
+sudo apt install nfs-common libnfs-utils m4
 
 # Installing gmt
 sudo apt-get install build-essential cmake libcurl4-gnutls-dev libnetcdf-dev libgdal-dev 
@@ -89,8 +111,6 @@ sudo apt-get install graphicsmagick ffmpeg
 # to enable document viewing via gmt docs
 sudo apt-get install xdg-utils
 
-# to enable testing
-sudo apt-get install graphicsmagick
 
 # to build the documentation
 sudo apt-get install python3-sphinx

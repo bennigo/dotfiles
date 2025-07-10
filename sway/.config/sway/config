@@ -52,6 +52,8 @@ set $wallpaper $XDG_CONFIG_HOME/sway/wallpapers/mahdi-khomsaz-asset.jpg
 # output * bg $XDG_CONFIG_HOME/sway/wallpapers/mahdi-khomsaz-asset.jpg fill
 exec_always swaybg -i $wallpaper -m fit
 # automounting requres udisks2
+exec /usr/bin/lxqt-policykit-agent &
+# exec /usr/lib/policykit-1-gnome/polkit-gnome-authentication-agent-1 &
 exec udiskie 
 exec clipse -listen  # run the background listener on startup
 
@@ -326,7 +328,7 @@ popup_during_fullscreen smart
 
 
 # for_window [app_id="blueman-manager"] floating enable, resize set width 400 px height 300 px, move container to workspace current, move position 900 100
-for_window [app_id="(?i)(?:blueman-manager|azote|gnome-disks|nm-connection-editor)"] floating enable,  sticky enable
+for_window [app_id="(?i)(?:blueman-manager|azote|gnome-disks|nm-connection-editor|lxqt-policykit-agent|snap-store)"] floating enable,  sticky enable
 for_window [app_id="(?i)(?:nvim_floating|clipse|swappy)"] floating enable, resize set width 1400 px height 1000 px, move container to workspace current, move container center
 for_window [app_id="(?i)(?:htop|Zotero)"] floating enable, resize set width 1900 px height 1100 px, move container to workspace current, move container center
 
