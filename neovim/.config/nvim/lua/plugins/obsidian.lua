@@ -10,7 +10,14 @@ local function setup()
         path = "~/notes/bgovault/",
       },
     },
-
+    open = {
+      -- Optional, set to true if you use the Obsidian Advanced URI plugin.
+      -- https://github.com/Vinzent03/obsidian-advanced-uri
+      use_advanced_uri = false,
+      func = function(app_path, note_path)
+        return require("obsidian.utils").open_with_app(app_path, note_path, true)
+      end,
+    },
     -- Alternatively - and for backwards compatibility - you can set 'dir' to a single path instead of
     -- 'workspaces'. For example:
     -- dir = "~/vaults/work",
@@ -48,36 +55,28 @@ local function setup()
 
     -- Optional, configure key mappings. These are the defaults. If you don't want to set any keymappings this
     -- way then set 'mappings = {}'.
-    mappings = {
-      -- Overrides the 'gf' mapping to work on markdown/wiki links within your vault.
-      ["gx"] = {
-        action = function()
-          return require("obsidian").util.gf_passthrough()
-        end,
-        opts = { noremap = false, expr = true, buffer = true, desc = "[O]bsidian open link" },
-      },
-      -- open obsidian.
-      -- ["<leader>oo"] = {
-      -- 	action = function()
-      -- 		return require("obsidian")
-      -- 	end,
-      -- 	opts = { buffer = true, desc = "[O]bsidian Toggle [C]heckbox" },
-      -- },
-      -- Toggle check-boxes.
-      ["<leader>oc"] = {
-        action = function()
-          return require("obsidian").util.toggle_checkbox()
-        end,
-        opts = { buffer = true, desc = "[O]bsidian Toggle [C]heckbox" },
-      },
-      -- Smart action depending on context, either follow link or toggle checkbox.
-      ["<cr>"] = {
-        action = function()
-          return require("obsidian").util.smart_action()
-        end,
-        opts = { buffer = true, expr = true, desc = "[O]bsidian Smart_action" },
-      },
-    },
+    -- mappings = {
+    --   -- Overrides the 'gf' mapping to work on markdown/wiki links within your vault.
+    --   ["gx"] = {
+    --     action = function()
+    --       return require("obsidian").util.gf_passthrough()
+    --     end,
+    --     opts = { noremap = false, expr = true, buffer = true, desc = "[O]bsidian open link" },
+    --   },
+    --   ["<leader>oc"] = {
+    --     action = function()
+    --       return require("obsidian").util.toggle_checkbox()
+    --     end,
+    --     opts = { buffer = true, desc = "[O]bsidian Toggle [C]heckbox" },
+    --   },
+    --   -- Smart action depending on context, either follow link or toggle checkbox.
+    --   ["<cr>"] = {
+    --     action = function()
+    --       return require("obsidian").util.smart_action()
+    --     end,
+    --     opts = { buffer = true, expr = true, desc = "[O]bsidian Smart_action" },
+    --   },
+    -- },
 
     -- Where to put new notes. Valid options are
     --  * "current_dir" - put new notes in same directory as the current buffer.
@@ -192,12 +191,8 @@ local function setup()
       -- vim.cmd(':silent exec "!start ' .. url .. '"') -- Windows
     end,
 
-    -- Optional, set to true if you use the Obsidian Advanced URI plugin.
-    -- https://github.com/Vinzent03/obsidian-advanced-uri
-    use_advanced_uri = false,
-
     -- Optional, set to true to force ':ObsidianOpen' to bring the app to the foreground.
-    open_app_foreground = true,
+    -- open_app_foreground = true,
 
     picker = {
       -- Set your preferred picker. Can be one of 'telescope.nvim', 'fzf-lua', or 'mini.pick'.
@@ -363,6 +358,23 @@ return {
   },
   config = function()
     setup()
+
+    vim.keymap.set("n", "gf", function()
+      if require("obsidian").util.cursor_on_markdown_link() then
+        return "<cmd>ObsidianFollowLink<CR>"
+      else
+        return "gf"
+      end
+    end, { noremap = false, expr = true })
+
+    -- For other mappings:
+    vim.keymap.set("n", "<leader>oc", function()
+      return require("obsidian").util.toggle_checkbox()
+    end, { buffer = true, desc = "[O]bsidian Toggle [C]heckbox" })
+
+    vim.keymap.set("n", "<CR>", function()
+      return require("obsidian").util.smart_action()
+    end, { buffer = true, expr = true, desc = "[O]bsidian Smart_action" })
 
     -- journaling
     vim.keymap.set("n", "<leader>ojy", "<cmd>ObsidianYesterday<cr>", { desc = "[O]bsidian [J]journal [Y]esterday" })
