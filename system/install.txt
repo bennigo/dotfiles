@@ -1,10 +1,19 @@
-sudo apt install git stow zsh
+sudo apt install git stow zsh vim
+sudo usermod -a -G video bgo
+# edit sudoers
+vim /etc/sudoers
+bgo     ALL=(ALL:ALL) NOPASSWD: ALL
+
 git clone git@github.com:bennigo/dotfiles.git .dotfiles
+
+git config --global user.email "bgo@vedur.is"
+git config --global user.name "Benedikt Gunnar Ófeigsson"
 
 # for esc,ctrl on capslock overload
 sudo add-apt-repository ppa:deafmute/interception
 sudo apt install interception-caps2esc
 sudo add-apt-repository -r ppa:deafmute/interception
+
 # copy files from 
 cd ~/.dotfiles/system/
 sudo cp etc/udevmon.yaml /etc/
@@ -25,14 +34,12 @@ curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin
 cd ~/.local/bin
 ln -s /home/bgo/.local/kitty.app/bin/kitty
 ln -s /home/bgo/.local/kitty.app/bin/kitten
+source ~/.bashrc
 
 
 # Installing sway and waybar
-sudo apt sway install foot-themes swayidle swaylock xdg-desktop-portal-wlr waybar rofi lxqt-policykit
-sudo apt install fonts-font-awesome
-sudo apt install playerctl
-sudo apt install makoctl 
-sudo apt install udiskie
+sudo apt install sway foot-themes swayidle swaylock xdg-desktop-portal-wlr waybar rofi lxqt-policykit
+sudo apt install playerctl udiskie mako-notifier fonts-font-awesome
 
 cd ~/Downloads/
 wget https://go.dev/dl/go1.24.5.linux-amd64.tar.gz
