@@ -4,22 +4,28 @@ git clone git@github.com:bennigo/dotfiles.git .dotfiles
 # for esc,ctrl on capslock overload
 sudo add-apt-repository ppa:deafmute/interception
 sudo apt install interception-caps2esc
+sudo add-apt-repository -r ppa:deafmute/interception
+# copy files from .dotfiles/system/
+sudo cp etc/udevmon.yaml /etc/
+sudo cp etc/systemd/system/udevmon.service /etc/systemd/system/
 sudo systemctl enable --now udevmon
 
 # Installing sway and waybar
 sudo apt sway install foot-themes swayidle swaylock xdg-desktop-portal-wlr waybar rofi lxqt-policykit
-sudo apt fonts-font-awsome
+sudo apt install fonts-font-awesome
 sudo apt install playerctl
 sudo apt install makoctl 
-
 sudo apt install udiskie
-rm -rf /usr/local/go && tar -C /usr/local -xzf go1.24.5.linux-amd64.tar.gz
+
+cd ~/Downloads/
+wget https://go.dev/dl/go1.24.5.linux-amd64.tar.gz
+sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.24.5.linux-amd64.tar.gz
 go install github.com/savedra1/clipse@v1.1.0
 
 # for ueberzugpp
-sudo apt install libssl-dev libvips-dev libsixel-dev libchafa-dev libtbb-dev 
+sudo apt install libssl-dev libvips-dev libsixel-dev libchafa-dev libtbb-dev cmake
 sudo apt-get install libxcb-image0-dev
-sudo apt-get install libxcb-res0 libxcb-res-dev
+sudo apt-get install libxcb-res0 libxcb-res0-dev
 sudo apt-get install libopencv-dev
 
 https://github.com/jstkdng/ueberzugpp
@@ -28,9 +34,12 @@ cd ueberzugpp
 mkdir build && cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
 cmake --build .
-
 cmake --install build
 
+sudo apt install curl
+curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin
+ln -s /home/bgo/.local/kitty.app/bin/kitty
+ln -s /home/bgo/.local/kitty.app/bin/kitten
 
 # for anyconnect
 https://vpn.vedur.is
@@ -46,7 +55,6 @@ sudo apt install xclip
 sudo apt install chafa
 sudo apt-get install libssl-dev libvips-dev libsixel-dev libchafa-dev libtbb-dev extra-cmake-modules
 
-curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin
 
 curl -fsSL https://fnm.vercel.app/install | bash
 curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
@@ -84,7 +92,11 @@ chsh -s /bin/zsh
 curl -fsSL https://raw.githubusercontent.com/ronniedroid/getnf/master/install.sh | bash
 zsh <(curl -s https://raw.githubusercontent.com/zap-zsh/zap/master/install.zsh) --branch release-v1
 
-cd && mkdir -p Download/git && cd Download/git
+# latex
+sudo apt install texlive-full
+sudo apt-get install texlive-latex-base texlive-binaries texlive-fonts-recommended
+
+cd && mkdir -p Downloads/git && cd Downloads/git
 git clone git@github.com:neovim/neovim.git && cd neovim
 make CMAKE_BUILD_TYPE=RelWithDebInfo
 # make CMAKE_BUILD_TYPE=Release
@@ -115,8 +127,6 @@ sudo apt-get install xdg-utils
 # to build the documentation
 sudo apt-get install python3-sphinx
 
-# latex
-sudo apt-get install texlive-latex-base texlive-binaries texlive-fonts-recommended
 
 
 cd ~/Download/
