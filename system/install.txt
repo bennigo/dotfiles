@@ -10,6 +10,11 @@ sudo cp etc/udevmon.yaml /etc/
 sudo cp etc/systemd/system/udevmon.service /etc/systemd/system/
 sudo systemctl enable --now udevmon
 
+sudo apt install blueman
+sudo apt install brightnessctl
+sudo apt install pulseaudio pulseaudio-utils
+
+
 # Installing sway and waybar
 sudo apt sway install foot-themes swayidle swaylock xdg-desktop-portal-wlr waybar rofi lxqt-policykit
 sudo apt install fonts-font-awesome
