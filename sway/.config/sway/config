@@ -53,7 +53,6 @@ set $wallpaper $XDG_CONFIG_HOME/sway/wallpapers/mahdi-khomsaz-asset.jpg
 exec_always swaybg -i $wallpaper -m fit
 # automounting requres udisks2
 exec /usr/bin/lxqt-policykit-agent &
-# exec /usr/lib/policykit-1-gnome/polkit-gnome-authentication-agent-1 &
 exec udiskie 
 exec clipse -listen  # run the background listener on startup
 
