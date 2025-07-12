@@ -1,4 +1,5 @@
-# 
+
+#
 granit.vedur.is:/mnt/sdc1/sk2 /mnt_data/sildata nfs defaults 0 0
 granit.vedur.is:/mnt/sdd1/sil/trem /mnt_data/tremdata nfs defaults 0 0
 rawdata.vedur.is:/exports/gpsdata /mnt_data/rawgpsdata nfs defaults 0 0
