@@ -5,6 +5,12 @@ return {
       ensure_installed = {
         "r",
         "latex",
+        "css",
+        "norg",
+        "scss",
+        "svelte",
+        "typst",
+        "vue",
       },
     },
   },
