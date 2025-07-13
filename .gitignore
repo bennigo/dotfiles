@@ -2,3 +2,4 @@ zsh/.config/zsh/.zcompdump
 zsh/.config/zsh/.zsh_history
 tmux/.config/tmux/plugins/
 neovim/.config/nvim/lazy-lock.json
+connections.json
