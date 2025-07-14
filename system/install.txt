@@ -84,7 +84,7 @@ sudo apt-get install ninja-build gettext cmake unzip curl tmux vim
 
 sudo apt install cmake pkg-config libfreetype6-dev libfontconfig1-dev libxcb-xfixes0-dev libxkbcommon-dev python3
 sudo apt install clangd
-sudo apt install xclip
+sudo apt install xclip xsel
 sudo apt install chafa
 sudo apt-get install libssl-dev libvips-dev libsixel-dev libchafa-dev libtbb-dev extra-cmake-modules
 sudo apt-get install libsqlite3-dev sqlite3
