@@ -3,3 +3,4 @@ zsh/.config/zsh/.zsh_history
 tmux/.config/tmux/plugins/
 neovim/.config/nvim/lazy-lock.json
 connections.json
+system/.credentials_and_logins/
