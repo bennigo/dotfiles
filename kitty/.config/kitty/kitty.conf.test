@@ -1,0 +1,60 @@
+font_family      HackNerdFont
+bold_font        auto
+italic_font      auto
+bold_italic_font auto
+
+font_size 13.0
+enable_keyboard_protocol true
+# clipboard_control write-clipboard true
+# clipboard_control read-clipboard true
+
+
+scrollback_lines 10000
+
+# scrollback_pager less --chop-long-lines --RAW-CONTROL-CHARS +INPUT_LINE_NUMBER
+ scrollback_pager catt # --chop-long-lines --RAW-CONTROL-CHARS +INPUT_LINE_NUMBER
+
+url_style curly
+
+# Enable proper cursor positioning
+scroll_off_by 3 3
+
+# Fix cursor alignment
+force_ltr yes
+
+# Ensure proper cursor behavior
+cursor_shape block
+cursor_blink yes
+cursor_stop_blinking_after 15.0
+
+enable_audio_bell no
+visual_bell_duration 0.1
+bell_on_tab "🔔 "
+confirm_os_window_close 0
+background_opacity 0.7 
+dim_opacity 0.4
+
+allow_remote_control yes
+shell_integration enabled
+
+kitty_mod alt+shift
+
+# Replace F-key mappings with letter keys
+map kitty_mod+v launch --location=split
+map kitty_mod+n launch --location=hsplit
+map kitty_mod+z launch --location=vsplit
+
+# Keep these useful controls unchanged
+map kitty_mod+r layout_action rotate 
+map kitty_mod+. layout_action bias 80
+map kitty_mod+, layout_action bias 50
+
+# Vim-style window navigation
+map kitty_mod+h neighboring_window left
+map kitty_mod+j neighboring_window down
+map kitty_mod+k neighboring_window up
+map kitty_mod+l neighboring_window right
+
+
+include current-theme.conf
+
