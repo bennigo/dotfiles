@@ -359,7 +359,7 @@ return {
   config = function()
     setup()
 
-    vim.keymap.set("n", "gf", function()
+    vim.keymap.set("n", "gx", function()
       if require("obsidian").util.cursor_on_markdown_link() then
         return "<cmd>ObsidianFollowLink<CR>"
       else
