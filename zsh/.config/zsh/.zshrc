@@ -29,9 +29,9 @@ bindkey -s "^h" "tmux-sessionizer ~/\n"
 bindkey -s "^f" "tmux-sessionizer\n"
 bindkey -s "^l" "tmux-cht\n"
 
-if command -v batcat &>/dev/null; then
-	alias cat="batcat -pp --theme \"Visual Studio Dark+\""
-	alias catt="batcat --theme \"Visual Studio Dark+\""
+if command -v bat &>/dev/null; then
+	alias cat="bat -pp --theme \"Visual Studio Dark+\""
+	alias catt="bat --theme \"Visual Studio Dark+\""
 fi
 
 alias less="less -R"

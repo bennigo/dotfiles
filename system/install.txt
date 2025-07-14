@@ -178,21 +178,6 @@ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr ..
 make && sudo make install
 sudo apt install nfs-common libnfs-utils m4
 
-# Installing gmt
-sudo apt-get install build-essential cmake libcurl4-gnutls-dev libnetcdf-dev libgdal-dev 
-# optional for gmt
-sudo apt-get install ninja-build gdal-bin libfftw3-dev libpcre3-dev liblapack-dev libblas-dev libglib2.0-dev ghostscript
-
-# movies
-sudo apt-get install graphicsmagick ffmpeg
-
-# to enable document viewing via gmt docs
-sudo apt-get install xdg-utils
-
-
-# to build the documentation
-sudo apt-get install python3-sphinx
-
 
 # postgres
 sudo apt install -y postgresql-common
@@ -232,14 +217,36 @@ amusement_park=> INSERT INTO visitors
 amusement_park=> SELECT * FROM visitors;
 amusement_park=> EXIT;
 
+
+# Installing gmt
+sudo apt-get install build-essential cmake libcurl4-gnutls-dev libnetcdf-dev libgdal-dev 
+# optional for gmt
+sudo apt-get install ninja-build gdal-bin libfftw3-dev libpcre3-dev liblapack-dev libblas-dev libglib2.0-dev ghostscript
+
+# movies
+sudo apt-get install graphicsmagick ffmpeg
+
+# to enable document viewing via gmt docs
+sudo apt-get install xdg-utils
+
+
+# to build the documentation
+sudo apt-get install python3-sphinx
+
+
 cd ~/Download/
-wget https://github.com/GenericMappingTools/gmt/releases/download/6.5.0/gmt-6.5.0-src.tar.gz
-tar -zxf gmt-6.5.0-src.tar.gz
+# wget https://github.com/GenericMappingTools/gmt/releases/download/6.5.0/gmt-6.5.0-src.tar.gz
+# tar -zxf gmt-6.5.0-src.tar.gz
+cd ~/Downloads/git
+git clone https://github.com/GenericMappingTools/gmt.git
+cd gmt
 git clone https://github.com/GenericMappingTools/gshhg-gmt.git
 git clone https://github.com/GenericMappingTools/dcw-gmt.git
-
 # vantar að editera ConfigUser.cmake til að includa gshhg og dcw
-cd gmt-6.5.0
+cp cmake/ConfigUserTemplate.cmake ConfigUser.cmake
+set (GSHHG_PATH "../gshhg-gmt")
+set (DCW_ROOT "../dcw-gmt/")
+
 mkdir build && cd build
 cmake .. -G Ninja
 sudo cmake --build . --target install
