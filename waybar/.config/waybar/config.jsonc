@@ -123,20 +123,20 @@
         ]
     },
     "network": {
-        "format-wifi": " ({signalStrength}%)",
-        "format-ethernet": "",
+        "format-wifi": "{essid} ({signalStrength}%) ",
+        "format-ethernet": "{essid} ({signalStrength}%) ",
+        // "format-ethernet": "{ifname} ",
         "format-disconnected": "",
-        // "tooltip-format": "{ifname} ({essid}): {ipaddr}",
         "tooltip-format": "{icon} {ifname}: {ipaddr}",
         "tooltip-format-ethernet": "{icon} {ifname}: {ipaddr}",
         "tooltip-format-wifi": "{icon} {ifname} ({essid}): {ipaddr}",
         "tooltip-format-disconnected": "{icon} disconnected",
         "tooltip-format-disabled": "{icon} disabled",
-        "tooltip-format-disabled": "{icon} disabled",
-        // "on-click": "nm-applet --indicator"
-        "on-click": "bash ~/.config/waybar/scripts/ronema-toggle.sh",
-        // "on-click": "swaymsg exec ~/.local/bin/ronema"
+        "on-click": "bash ~/.config/waybar/scripts/network-menu.sh",
+        // "on-click-middle": "nm-applet --indicator",
+        // "on-click-right": "nmtui"
     },
+    // },
     // "bluetooth": {
     //   "format": "",
     //   "format-icons": {

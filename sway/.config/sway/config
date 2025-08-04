@@ -121,7 +121,8 @@ bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
 # Basics:
 #
     bindsym $mod+x exec swaylock -f -c 000000 -i $wallpaper
-    bindsym $mod+Shift+x exec swaymsg "output * power off" resume 'swaymsg "output * power on"'
+    bindsym $mod+Shift+x exec swaymsg "output * power off"
+    bindsym $mod+Shift+z exec swaymsg "output * power on"
 
     # mounting usb disks
     bindsym $mod+m exec udsikie
@@ -135,7 +136,7 @@ bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
 
 # Start your launcher
     bindsym $mod+d exec $menu
-    bindsym $mod+Shift+w exec ~/.local/bin/ronema
+    bindsym $mod+Shift+w exec ~/.config/waybar/scripts/network-menu.sh
 
     bindsym $mod+r exec /usr/bin/gnome-calculator -m advanced
     bindsym $mod+Shift+t exec $term --class "htop" htop
@@ -164,11 +165,16 @@ bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
     bindsym $mod+Shift+Return [con_mark="terminal_fl"] scratchpad show
 
 # Screenshot the monitor
-    bindsym Print exec ${HOME}/.local/bin/run_screenshot.sh 
-    bindsym Alt+Print exec ${HOME}/.local/bin/run_screenshot.sh -e
+    # take screenshot and copy to clipboard
+    bindsym Print exec ${HOME}/.local/bin/run_screenshot.sh -c
+    # take screenshot and open in open in swappy
+    bindsym Alt+Print exec ${HOME}/.local/bin/run_screenshot.sh -c -e 
+    # take screenshot and save to ~/Pictures/Screenshots/screenshot-%Y%m%d-%H%M%S.png
+    bindsym Alt+Shift+Print exec ${HOME}/.local/bin/run_screenshot.sh
 # Screenshot a window
     bindsym $mod+Print exec ${HOME}/.local/bin/run_screenshot.sh  -c -m window
     bindsym $mod+Alt+Print exec ${HOME}/.local/bin/run_screenshot.sh -e -c -m window
+    bindsym $mod+Alt+Shift+Print exec ${HOME}/.local/bin/run_screenshot.sh -m window
 # Screenshot a region
     bindsym Shift+Print exec ${HOME}/.local/bin/run_screenshot.sh -c -m region
     bindsym $mod+Shift+Print exec ${HOME}/.local/bin/run_screenshot.sh -e -c -m region
