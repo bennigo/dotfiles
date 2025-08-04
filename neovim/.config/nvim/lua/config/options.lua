@@ -7,10 +7,10 @@ local options = {
   -- hlsearch = false, -- highlight all matches on previous search pattern
   incsearch = true,
   --
-  -- number = true, -- set numbered lines
-  -- relativenumber = true, -- set relative numbered lines
+  number = true, -- set numbered lines
+  relativenumber = true, -- set relative numbered lines
   --
-  -- mouse = "a", -- allow the mouse to be used in neovim
+  mouse = "a", -- allow the mouse to be used in neovim
   --
   -- shiftwidth = 4, -- the number of spaces inserted for each indentation
   -- tabstop = 4, -- insert 2 spaces for a tab
@@ -42,8 +42,8 @@ local options = {
   -- cursorline = true, -- highlight the current line
   -- numberwidth = 2, -- set number column width to 2 {default 4}
   -- wrap = false, -- display lines as one long line
-  -- scrolloff = 99, -- is one of my fav
-  -- sidescrolloff = 8,
+  scrolloff = 20, -- is one of my fav
+  sidescrolloff = 8,
   -- guifont = "monospace:h17", -- the font used in graphical neovim applications
   -- virtualedit = "block",
   -- inccommand = "split",

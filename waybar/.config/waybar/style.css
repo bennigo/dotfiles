@@ -58,7 +58,7 @@ window#waybar {
 }
 
 #battery.charging {
-    color: green;
+    color: #1DB954;
 }
 
 @keyframes blink {
@@ -84,6 +84,7 @@ window#waybar {
 }
 
 #network {
+    background: #1DB954;
 }
 
 #network.disconnected {

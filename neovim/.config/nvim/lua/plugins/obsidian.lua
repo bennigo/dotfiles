@@ -14,9 +14,6 @@ local function setup()
       -- Optional, set to true if you use the Obsidian Advanced URI plugin.
       -- https://github.com/Vinzent03/obsidian-advanced-uri
       use_advanced_uri = false,
-      func = function(app_path, note_path)
-        return require("obsidian.utils").open_with_app(app_path, note_path, true)
-      end,
     },
     -- Alternatively - and for backwards compatibility - you can set 'dir' to a single path instead of
     -- 'workspaces'. For example:
@@ -262,21 +259,25 @@ local function setup()
       update_debounce = 200, -- update delay after a text change (in milliseconds)
       max_file_length = 5000, -- disable UI features for files with more than this many lines
       -- Define how various check-boxes are displayed
-      checkboxes = {
+      checkbox = {
         -- NOTE: the 'char' value has to be a single character, and the highlight groups are defined below.
-        [" "] = { char = "󰄱", hl_group = "ObsidianTodo", order = 0 },
-        ["/"] = { char = "󰦕", hl_group = "Obsidianbullet", order = 1 },
-        ["x"] = { char = "", hl_group = "ObsidianDone", order = 2 },
-        [">"] = { char = "", hl_group = "ObsidianRightArrow", order = 3 },
-        ["~"] = { char = "󰰱", hl_group = "ObsidianTilde", order = 4 },
-        ["!"] = { char = "", hl_group = "ObsidianImportant", order = 5 },
-        ["-"] = { char = "󰥔", hl_group = "ObsidianTodo", order = 6 },
+        [" "] = { char = "󰄱", hl_group = "ObsidianTodo" },
+        ["/"] = { char = "󰦕", hl_group = "Obsidianbullet" },
+        ["x"] = { char = "", hl_group = "ObsidianDone" },
+        [">"] = { char = "", hl_group = "ObsidianRightArrow" },
+        ["~"] = { char = "󰰱", hl_group = "ObsidianTilde" },
+        ["!"] = { char = "", hl_group = "ObsidianImportant" },
+        ["-"] = { char = "󰥔", hl_group = "ObsidianTodo" },
         -- Replace the above with this if you don't have a patched font:
         -- [" "] = { char = "☐", hl_group = "ObsidianTodo" },
         -- ["x"] = { char = "✔", hl_group = "ObsidianDone" },
 
         -- You can also add more custom ones...
+        order = { " ", "/", "x", ">", "~", "!", "-" },
       },
+      -- checkbox = {
+      --   order = { " ", "/", "x", ">", "~", "!", "-" },
+      -- },
       -- Use bullet marks for non-checkbox lists.
       bullets = { char = "•", hl_group = "ObsidianBullet" },
       external_link_icon = { char = "", hl_group = "ObsidianExtLinkIcon" },
@@ -358,16 +359,18 @@ return {
   },
   config = function()
     setup()
+    -- print(vim.inspect(require("obsidian").util))
 
-    vim.keymap.set("n", "gx", function()
-      if require("obsidian").util.cursor_on_markdown_link() then
-        return "<cmd>ObsidianFollowLink<CR>"
-      else
-        return "gf"
-      end
-    end, { noremap = false, expr = true })
+    -- vim.keymap.set("n", "gf", function()
+    --   if require("obsidian").util.cursor_on_markdown_link() then
+    --     return "<cmd>ObsidianFollowLink<CR>"
+    --   else
+    --     return "gf"
+    --   end
+    -- end, { noremap = false, expr = true })
 
     -- For other mappings:
+    -- vim.keymap.set("n", "gf", "<cmd>ObsidianFollowLink<cr>", { desc = "[O]bsidian [J]journal [Y]esterday" })
     vim.keymap.set("n", "<leader>oc", function()
       return require("obsidian").util.toggle_checkbox()
     end, { buffer = true, desc = "[O]bsidian Toggle [C]heckbox" })

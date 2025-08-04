@@ -48,7 +48,7 @@ keymap("n", "<leader>so", function()
 end, { desc = "grep dotfile" })
 
 keymap("n", "<leader>sO", function()
-  Snacks.picker.grep({ dirs = { "~/work/" }, hidden = true })
+  Snacks.picker.grep({ dirs = { "~/work/, ~/work/projects/" }, hidden = false })
   -- LazyVim.pick("files", { dirs = { "~.dotfiles/" }, hidden = true })
 end, { desc = "grep workfiles" })
 

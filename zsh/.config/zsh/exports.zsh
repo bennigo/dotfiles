@@ -21,7 +21,10 @@ export PATH="/opt/Septentrio/RxTools/bin":$PATH
 export PATH="/home/bgo/.PRIDE_PPPAR_BIN":$PATH
 export XDG_CURRENT_DESKTOP="Wayland"
 export NVM_DIR="$HOME/.config//nvm"
-export ZDOTDIR=~/.config/zsh
+export ZDOTDIR="${HOME}/.config/zsh"
+export SWAY_SCREENSHOT_DIR="${HOME}/Pictures/Screenshots"
+export GRIM_DEFAULT_DIR="${HOME}/Pictures/Screenshots"
+export GRIM_DEFAULT_QUALITY=90
 
 
 #export PATH="$PATH:./node_modules/.bin"
