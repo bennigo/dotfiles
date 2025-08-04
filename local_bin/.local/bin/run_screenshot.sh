@@ -6,6 +6,21 @@ options="[fullscreen|window|region]"
 screenshot_program="${HOME}/.local/bin/sway-screenshot"
 mode="fullscreen" # default value
 
+SCREENSHOT_DEFAULT_DIR=$HOME/Pictures/Screenshots
+
+GRIM_DEFAULT_DIR="${GRIM_DEFAULT_DIR:-$SCREENSHOT_DEFAULT_DIR}"
+GRIM_DEFAULT_QUALITY="${GRIM_DEFAULT_QUALITY:-90}"
+mkdir -p -- "$GRIM_DEFAULT_DIR"
+
+SWAY_SCREENSHOT_DIR="${SWAY_SCREENSHOT_DIR:-$SCREENSHOT_DEFAULT_DIR}"
+
+function take_screenshot() {
+  # Function to take a screenshot with a custom filename
+  local filename
+  filename="screenshot-$(date +%Y%m%d-%H%M%S).png"
+  grim "$GRIM_DEFAULT_DIR/$filename"
+}
+
 function Help() {
   cat <<EOF
 Usage: run-screenshot.sh [options ..] -m [mode] 
@@ -16,7 +31,7 @@ Options:
   -h    show help message and exit
   -m    one of: fullscreen, window, region
   -s    don't send notification when screenshot is saved
-  -c    copy screenshot to clipboard and don't save image in disk
+  -c    copy screenshot to clipboard and don't save image on disk
   -e    open screenshot with swappy -f
 
 Modes:
@@ -26,11 +41,11 @@ Modes:
 EOF
 }
 
-while getopts hecsm: flag; do
+while getopts "hecsm:" flag; do
   case "${flag}" in
   h)
     Help
-    exit
+    exit 0
     ;;
   m)
     mode=${OPTARG}
@@ -44,10 +59,15 @@ while getopts hecsm: flag; do
   c)
     clip="--clipboard-only"
     ;;
+  *)
+    echo "Invalid option: -${OPTARG}" >&2
+    Help
+    exit 1
+    ;;
   esac
 done
-# remove flag options from $@
-shift $((OPTIND - 1))
+# Remove flag options from $@
+shift "$((OPTIND - 1))"
 
 if [ $# -eq 0 ]; then
   :
@@ -56,20 +76,25 @@ elif [ -z "$1" ]; then
   exit 1
 fi
 
-# Start zsh and run the appropriate Neovim command based on the argument
 if [ "${mode}" = "fullscreen" ]; then
-  grim - | wl-copy
-  if [ -z "${cmd}" ]; then
-    :
+  if [ -n "${clip}" ]; then
+    grim - | wl-copy
+    if [ -n "${cmd}" ]; then
+      "${HOME}/.local/bin/clipse" -p | ${cmd} -
+    fi
   else
-    ${HOME}/.local/bin/clipse -p | ${cmd} -
+    take_screenshot
   fi
 
 elif [[ $mode =~ ^(window|region)$ ]]; then
   if [ -z "${cmd}" ]; then
     :
   else
-    cmd="-- "$cmd
+    cmd="-- "${cmd}
+    if [ -n "${clip}" ]; then
+      cmd=${cmd}" -"
+    fi
+
   fi
   "${screenshot_program}" ${silent} ${clip} -m ${mode} ${cmd}
 else
