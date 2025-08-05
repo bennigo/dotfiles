@@ -1,0 +1,8 @@
+⚡➜ ~ # Set NVIDIA GPU as primary                                                                        
+echo "options nvidia_drm modeset=1" | sudo tee /etc/modprobe.d/nvidia-drm.conf
+sudo update-initramfs -u
+options nvidia_drm modeset=1
+update-initramfs: Generating /boot/initrd.img-6.14.0-27-generic
+
+
+
