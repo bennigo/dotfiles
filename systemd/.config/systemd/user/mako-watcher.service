@@ -1,0 +1,11 @@
+[Unit]
+Description=mako notifications tester
+After=user-session.target
+
+[Service]
+Type=oneshot
+ExecStart=/home/bgo/.config/mako/reload.sh
+
+[Install]
+; WantedBy=default.target
+WantedBy=graphical-session.target
