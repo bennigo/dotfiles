@@ -1,0 +1,112 @@
+-- ~/.config/nvim/lua/plugins/blink.lua
+return {
+  {
+    "saghen/blink.cmp",
+    -- If you use LazyVim's Blink extra, keep optional=true. Otherwise remove it.
+    -- optional = true,
+    opts = function(_, opts)
+      -- Start from a schema-aligned baseline (no 'compat' key)
+      opts = vim.tbl_deep_extend("force", opts or {}, {
+        snippets = {
+          expand = function(snippet, _)
+            return LazyVim and LazyVim.cmp.expand(snippet) or vim.snippet.expand(snippet)
+          end,
+        },
+        appearance = {
+          use_nvim_cmp_as_default = false,
+          nerd_font_variant = "mono",
+        },
+        completion = {
+          accept = { auto_brackets = { enabled = true } },
+          menu = { draw = { treesitter = { "lsp" } } },
+          documentation = { auto_show = true, auto_show_delay_ms = 200 },
+          ghost_text = { enabled = vim.g.ai_cmp or false },
+        },
+        sources = {
+          -- Remove 'compat' entirely: it's not a recognized key by Blink's validator
+          default = { "lsp", "path", "snippets", "buffer", "timed_tasks" },
+          -- 'providers' is where custom providers are declared
+        },
+        cmdline = { enabled = false },
+        keymap = {
+          preset = "enter",
+          ["<C-Space>"] = { "show" },
+          ["<C-y>"] = { "select_and_accept" },
+        },
+      })
+
+      -- Ensure sources/providers exist
+      opts.sources = opts.sources or {}
+      opts.sources.providers = vim.tbl_deep_extend("force", opts.sources.providers or {}, {
+        timed_tasks = {
+          name = "timed_tasks",
+          module = "custom.blink_timed_tasks",
+          score_offset = 8,
+        },
+        -- If you had a 'copilot' entry with unsupported fields like 'kind', remove them.
+        -- Example (only if you have a proper module to load):
+        -- copilot = {
+        --   name = "copilot",
+        --   module = "your.copilot.provider.module", -- must be a real module
+        --   score_offset = 5,
+        -- },
+      })
+
+      -- Scrub unsupported/shadowing keys from all providers (prevents runtime crashes)
+      -- for id, provider in pairs(opts.sources.providers or {}) do
+      --   if type(provider) == "table" then
+      --     -- Remove any unknown keys you might have added (example: 'kind')
+      --     provider.kind = nil
+      --     -- Never allow runtime method names in config; they shadow instance methods
+      --     provider.cancel_completions = nil
+      --     provider.get_completions = nil
+      --     provider.enabled = nil
+      --     provider.is_available = nil
+      --   end
+      -- end
+
+      -- Preflight validate custom providers; only enable valid ones
+      -- local function provider_ok(def)
+      --   if type(def) ~= "table" or type(def.module) ~= "string" then
+      --     return false
+      --   end
+      --   local ok, mod = pcall(require, def.module)
+      --   vim.notify(vim.inspect(ok), vim.log.levels.WARN)
+      --   if not ok or type(mod) ~= "table" or type(mod.new) ~= "function" then
+      --     return false
+      --   end
+      --   local ok2, inst = pcall(mod.new, {})
+      --   if not ok2 or type(inst) ~= "table" then
+      --     return false
+      --   end
+      --   return type(inst.cancel_completions) == "function" and type(inst.get_completions) == "function"
+      -- end
+
+      -- Keep built-ins, validate customs
+      -- local filtered_default = {}
+      -- local providers = opts.sources.providers or {}
+      -- for _, id in ipairs(opts.sources.default or {}) do
+      --   local def = providers[id]
+      --   if def and def.module then
+      --     if provider_ok(def) then
+      --       table.insert(filtered_default, id)
+      --     else
+      --       vim.schedule(function()
+      --         vim.notify(string.format("[blink] skipping invalid provider '%s'", id), vim.log.levels.WARN)
+      --       end)
+      --     end
+      --   else
+      --     table.insert(filtered_default, id)
+      --   end
+      -- end
+
+      -- [HACK:] Comment out do enable all other providers
+      -- During debugging, you can isolate to only your provider:
+      -- local filtered_default = { "timed_tasks" }
+
+      opts.sources.default = filtered_default
+
+      return opts
+    end,
+  },
+}
