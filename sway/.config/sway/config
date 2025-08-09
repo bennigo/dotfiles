@@ -69,12 +69,19 @@ exec clipse -listen  # run the background listener on startup
 
 # Add to ~/.config/sway/config
 # exec systemctl restart systemd-udev-settle
-# wlr_drm_output_power_management off
-# adaptive_sync on
-# render_decorations no
+# exec env WLR_DRM_NO_POWER_MANAGEMENT=1 WLR_DRM_NO_ATOMIC=1 WLR_DRM_NO_FORMAT_MODIFIERS=1 __NV_PRIME_RENDER_OFFLOAD=1 __VK_LAYER_NV_optimus=1 NVIDIA_DRM_OUTPUTS=HDMI-A-1,eDP-1 sway $@
+# exec swaymsg "output HDMI-A-1 mode current"
+# exec swaymsg "output eDP-1 mode current"
+# exec swaymsg "output * adaptive_sync enabled"
+# exec swaymsg "output * damage_tracking none"
+
+# exec swaymsg "workspace 1 output eDP-1"
+# exec swaymsg "workspace 2 output DP-2"
+# exec swaymsg "workspace 3 output HDMI-A-1"
+
+
 
 # With resolution specification
-# output HDMI1 pos 0 0 res 1920x1080
 output HDMI1 pos 0 0 mode 1920x1080@60Hz
 output eDP1 pos 0 0 res 3840x2400
 ### Idle configuration
@@ -157,7 +164,7 @@ bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
 
 # nvim with obskidian
     bindsym $mod+n exec $term --class "nvim_obsidiantoday" zsh -i ~/.local/bin/run_nvim_obsidian.sh today 
-    bindsym $mod+Shift+n exec $term --class "nvim_obsidiannew" zsh -i ~/.local/bin/run_nvim_obsidian.sh new 
+    bindsym $mod+Shift+n exec $term --class "nvim_obsidiannew" zsh -i ~/.local/bin/run_nvim_obsidian.sh template
     bindsym $mod+i exec $term --class "nvim_quick" zsh -i ~/.local/bin/run_nvim_obsidian.sh quick
 # floating terminal
     bindsym $mod+t exec $term --class "terminal_floating"

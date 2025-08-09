@@ -1,0 +1,78 @@
+-- ~/.config/nvim/lua/plugins/blink.lua
+return {
+  -- {
+  --   "saghen/blink.cmp",
+  --   optional = true, -- only if you've enabled the LazyVim Blink extra
+  --   opts = function(_, opts)
+  -- Start from LazyVim's extra baseline
+  --     opts = vim.tbl_deep_extend("force", opts or {}, {
+  --       snippets = {
+  --         expand = function(snippet, _)
+  --           return LazyVim.cmp.expand(snippet)
+  --         end,
+  --       },
+  --       appearance = {
+  --         use_nvim_cmp_as_default = false,
+  --         nerd_font_variant = "mono",
+  --       },
+  --       completion = {
+  --         accept = {
+  --           auto_brackets = { enabled = true },
+  --         },
+  --         menu = {
+  --           draw = { treesitter = { "lsp" } },
+  --         },
+  --         documentation = {
+  --           auto_show = true,
+  --           auto_show_delay_ms = 200,
+  --         },
+  --         ghost_text = {
+  --           enabled = vim.g.ai_cmp,
+  --         },
+  --       },
+  --       sources = {
+  --         compat = {},
+  --         default = { "lsp", "path", "snippets", "buffer" },
+  --       },
+  --       cmdline = { enabled = false },
+  --       keymap = {
+  --         preset = "enter",
+  --         ["<C-y>"] = { "select_and_accept" },
+  --       },
+  --     })
+  --
+  --     -- Register your custom Blink provider (merge; do not replace)
+  --     opts.sources.providers = vim.tbl_deep_extend("force", opts.sources.providers or {}, {
+  --       timed_tasks = {
+  --         name = "timed_tasks",
+  --         module = "custom.blink_timed_tasks", -- ensure this file exists
+  --         score_offset = 8,
+  --       },
+  --     })
+  --
+  --     -- Ensure the provider is enabled by default
+  --     local present = false
+  --     for _, id in ipairs(opts.sources.default or {}) do
+  --       if id == "timed_tasks" then
+  --         present = true
+  --         break
+  --       end
+  --     end
+  --     if not present then
+  --       table.insert(opts.sources.default, 1, "timed_tasks")
+  --     end
+  --
+  --     -- Safety: never let provider config shadow instance methods
+  --     for _, provider in pairs(opts.sources.providers or {}) do
+  --       if type(provider.cancel_completions) ~= "nil" then
+  --         provider.cancel_completions = nil
+  --       end
+  --     end
+  --
+  --     -- Debug: to isolate only your provider while testing, uncomment:
+  --     -- opts.sources.default = { "timed_tasks" }
+  --
+  --     return opts
+  --   end,
+  -- },
+}

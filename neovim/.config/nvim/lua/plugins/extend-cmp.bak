@@ -1,0 +1,68 @@
+-- ~/.config/nvim/lua/plugins/cmp_tweaks.lua
+return {
+  {
+    "hrsh7th/nvim-cmp",
+    event = "InsertEnter",
+    priority = 1000, -- run after LazyVim's defaults to override/merge safely
+    opts = function(_, opts)
+      local cmp = require("cmp")
+
+      opts = opts or {}
+
+      -- Force-enable cmp for markdown/text; otherwise use LazyVim's default logic if present
+      local orig_enabled = opts.enabled
+      opts.enabled = function()
+        local ft = vim.bo.filetype
+        if ft == "markdown" or ft == "text" then
+          return true
+        end
+        if type(orig_enabled) == "function" then
+          return orig_enabled()
+        elseif orig_enabled ~= nil then
+          return orig_enabled
+        end
+        -- Fallback behavior similar to LazyVim defaults
+        local context = require("cmp.config.context")
+        if vim.api.nvim_get_option_value("buftype", { buf = 0 }) == "prompt" then
+          return false
+        end
+        return not context.in_treesitter_capture("comment") and not context.in_syntax_group("Comment")
+      end
+
+      -- Ensure snippet expansion is configured
+      opts.snippet = opts.snippet or {}
+      opts.snippet.expand = opts.snippet.expand
+        or function(args)
+          require("luasnip").lsp_expand(args.body)
+        end
+
+      -- Ensure manual trigger mappings exist and work across terminals
+      -- local mapping = opts.mapping or cmp.mapping.preset.insert({})
+      -- mapping["<C-Space>"] = cmp.mapping.complete()
+      -- mapping["<C-@>"] = cmp.mapping.complete() -- many terminals send Ctrl-Space as <C-@>
+      -- mapping["<M-Space>"] = cmp.mapping.complete() -- Alt-Space fallback
+      -- mapping["<CR>"] = mapping["<CR>"] or cmp.mapping.confirm({ select = true })
+      -- opts.mapping = mapping
+
+      -- Make short mnemonics like "tt" more likely to show (optional)
+      opts.completion = opts.completion or {}
+      opts.completion.keyword_length = math.min(opts.completion.keyword_length or 2, 2)
+
+      -- Append your source if it's not already there
+      local have = false
+      for _, s in ipairs(opts.sources or {}) do
+        if s.name == "timed_tasks" then
+          have = true
+          break
+        end
+      end
+      if not have then
+        opts.sources = cmp.config.sources(opts.sources or {}, {
+          { name = "timed_tasks", group_index = 2 },
+        })
+      end
+
+      return opts
+    end,
+  },
+}

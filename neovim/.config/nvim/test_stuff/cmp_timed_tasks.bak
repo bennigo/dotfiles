@@ -1,0 +1,134 @@
+-- ~/.config/nvim/lua/plugins/cmp_timed_tasks.lua
+return {
+  -- Merge into LazyVim's nvim-cmp config
+  {
+    "hrsh7th/nvim-cmp",
+    event = "InsertEnter",
+    priority = 1000, -- ensure this merges after LazyVim's defaults/extras
+    opts = function(_, opts)
+      local cmp = require("cmp")
+
+      opts = opts or {}
+
+      -- Register our custom source once
+      do
+        local ok_src, timed_source = pcall(require, "custom.cmp_timed_tasks")
+        if ok_src then
+          local has_get_source = type(cmp.get_source) == "function"
+          local already = has_get_source and cmp.get_source("timed_tasks") ~= nil
+          if not already then
+            pcall(cmp.register_source, "timed_tasks", timed_source.new())
+          end
+        end
+      end
+
+      -- Ensure snippet expansion (required for InsertTextFormat.Snippet)
+      opts.snippet = opts.snippet or {}
+      if type(opts.snippet.expand) ~= "function" then
+        opts.snippet.expand = function(args)
+          require("luasnip").lsp_expand(args.body)
+        end
+      end
+
+      -- Ensure manual trigger mappings exist across terminals
+      local mapping = opts.mapping or cmp.mapping.preset.insert({})
+      mapping["<C-Space>"] = cmp.mapping.complete()
+      mapping["<C-@>"] = cmp.mapping.complete() -- terminal often sends <C-@> for Ctrl-Space
+      mapping["<M-Space>"] = cmp.mapping.complete() -- Alt-Space fallback
+      mapping["<CR>"] = mapping["<CR>"] or cmp.mapping.confirm({ select = true })
+      opts.mapping = mapping
+
+      -- Make it easy to trigger on short mnemonics like "tt"
+      opts.completion = opts.completion or {}
+      -- Set a low keyword_length only if not already set
+      if opts.completion.keyword_length == nil then
+        opts.completion.keyword_length = 1
+      end
+
+      -- Append our source globally if missing (do not replace others)
+      opts.sources = opts.sources or {}
+      local has = false
+      for _, s in ipairs(opts.sources) do
+        if s.name == "timed_tasks" then
+          has = true
+          break
+        end
+      end
+      if not has then
+        table.insert(opts.sources, { name = "timed_tasks", group_index = 2 })
+      end
+
+      -- Optional: mark items from our source in the menu
+      local prev_format = opts.formatting and opts.formatting.format
+      opts.formatting = opts.formatting or {}
+      opts.formatting.format = function(entry, item)
+        if entry.source.name == "timed_tasks" then
+          item.menu = (item.menu or "") .. " [Timed]"
+          item.kind = "Snippet"
+        end
+        if prev_format then
+          return prev_format(entry, item)
+        end
+        return item
+      end
+
+      return opts
+    end,
+
+    -- Do not call cmp.setup(...) here (cmp.setup is a table in your build).
+    -- We only apply per-filetype adjustments after cmp loads.
+    config = function(_, opts)
+      local cmp = require("cmp")
+
+      -- Enforce markdown/text filetypes to be enabled and include our source
+      local function ensure_ft(ft)
+        local sources = {}
+        local seen = {}
+        local function add(list)
+          for _, s in ipairs(list) do
+            if s and s.name and not seen[s.name] then
+              table.insert(sources, s)
+              seen[s.name] = true
+            end
+          end
+        end
+        -- Prefer our source early, then reuse whatever LazyVim configured globally
+        add({ { name = "timed_tasks", group_index = 2 } })
+        add(opts.sources or {})
+
+        -- Apply per-filetype config using the table API
+        pcall(cmp.setup.filetype, ft, {
+          enabled = true,
+          sources = sources,
+        })
+      end
+
+      -- Apply immediately (after cmp loads on InsertEnter) and also on FileType event
+      ensure_ft("markdown")
+      ensure_ft("text")
+
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = { "markdown", "text" },
+        callback = function(args)
+          ensure_ft(vim.bo[args.buf].filetype)
+        end,
+      })
+    end,
+
+    dependencies = {
+      "L3MON4D3/LuaSnip",
+    },
+  },
+
+  -- Load your Lua snippets
+  {
+    "L3MON4D3/LuaSnip",
+    opts = function(_, opts)
+      opts = opts or {}
+      require("luasnip.loaders.from_lua").lazy_load({
+        paths = vim.fn.stdpath("config") .. "/lua/snippets",
+      })
+      return opts
+    end,
+  },
+}

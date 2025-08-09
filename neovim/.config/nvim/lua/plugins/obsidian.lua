@@ -1,4 +1,48 @@
 local function setup()
+  local function select_meeting_type_template()
+    local plenary_scan = require("plenary.scandir")
+    local Path = require("plenary.path")
+    local ui = vim.ui
+
+    -- 1. Find all meeting type templates
+    local vault_root = Obsidian.workspace.path
+    local template_dir = tostring(vault_root / "Templates/meeting_types/")
+    local files = plenary_scan.scan_dir(template_dir, { depth = 1, add_dirs = false })
+    local types = {}
+    for _, file in ipairs(files) do
+      local name = file:match("template_(.+)%.md$")
+      if name then
+        table.insert(types, { name = name, path = file })
+      end
+    end
+
+    -- 2. Prompt user to select a meeting type
+    ui.select(types, {
+      prompt = "Select meeting type:",
+      format_item = function(item)
+        return item.name
+      end,
+    }, function(choice)
+      if not choice then
+        return ""
+      end
+      -- 3. Read the selected template
+      local meeting_type_content = Path:new(choice.path):read()
+      vim.notify(meeting_type_content, vim.log.levels.INFO, { title = "meeting_type_content" })
+      -- 4. Insert meeting_type_content into the main template (implement this as needed)
+      local bufnr = vim.api.nvim_get_current_buf()
+      local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+      for i, line in ipairs(lines) do
+        if line:find("{{meeting_type}}") then
+          lines[i] = line:gsub("{{meeting_type}}", meeting_type_content)
+        end
+      end
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+    end)
+  end
+
+  vim.api.nvim_create_user_command("ObsidianMeetingType", select_meeting_type_template, {})
+
   require("obsidian").setup({
     workspaces = {
       -- {
@@ -32,11 +76,11 @@ local function setup()
       -- Optional, if you want to change the date format for the ID of daily notes.
       date_format = "%Y-%m-%d",
       -- Optional, if you want to change the date format of the default alias of daily notes.
-      alias_format = "%B %-d, %Y",
+      -- alias_format = "📅 %B %-d, %Y day: %j",
       -- Optional, default tags to add to each new daily note created.
-      default_tags = { "daily-notes" },
+      default_tags = { "daily/notes" },
       -- Optional, if you want to automatically insert a template from your template directory like 'daily.md'
-      template = nil,
+      template = "template_daily.md",
       -- Optional, if you want `Obsidian yesterday` to return the last work day or `Obsidian tomorrow` to return the next work day.
       workdays_only = true,
     },
@@ -44,7 +88,7 @@ local function setup()
     -- Optional, completion of wiki links, local markdown links, and tags using nvim-cmp.
     completion = {
       -- Set to false to disable completion.
-      nvim_cmp = false,
+      nvim_cmp = true,
       blink = true, -- Set to false to disable blink.
       -- Trigger completion at 2 chars.
       min_chars = 2,
@@ -145,6 +189,7 @@ local function setup()
         aliases = note.aliases,
         tags = note.tags,
         area = "",
+        Resource = "",
         project = "",
       }
 
@@ -159,13 +204,25 @@ local function setup()
       return out
     end,
 
-    -- Optional, for templates (see below).
     templates = {
       folder = "Templates",
       date_format = "%Y-%m-%d",
       time_format = "%H:%M",
       -- A map for custom variables, the key should be the variable and the value a function
-      substitutions = {},
+      substitutions = {
+
+        yesterday = function()
+          return tostring(os.date(date_format, os.time() - 86400))
+        end,
+
+        alias_heading = function()
+          return tostring(os.date("📅 %B %-d, %Y, Day: %j", os.time()))
+        end,
+
+        meeting_type = function()
+          return "TEST"
+        end,
+      },
     },
 
     -- Optional, by default when you use `:ObsidianFollowLink` on a link to an external
@@ -395,7 +452,13 @@ return {
     vim.keymap.set("n", "<leader>oo", "<cmd>ObsidianOpen<cr>", { desc = "[O]bsidian [O]pen" })
     vim.keymap.set("n", "<leader>on", "<cmd>ObsidianNew<cr>", { desc = "[O]bsidian [N]ew" })
     vim.keymap.set("n", "<leader>ot", "<cmd>ObsidianNewFromTemplate<cr>", { desc = "[O]bsidian new from [T]emplate" })
-    vim.keymap.set("n", "<leader>oq", "<cmd>ObsidianQuickSwitch<cr>", { desc = "[O]bsidian [Q]uickswich" })
+    vim.keymap.set("n", "<leader>oT", "<cmd>ObsidianTemplate<cr>", { desc = "[O]bsidian insert from [T]emplate" })
+    vim.keymap.set(
+      "n",
+      "<leader>oN",
+      "<cmd>ObsidianTemplate template_time<cr>",
+      { desc = "[O]bsidian insert now point [T]emplate" }
+    )
     vim.keymap.set("n", "<leader>os", "<cmd>ObsidianSearch<cr>", { desc = "[O]bsidian [S]earch" })
     vim.keymap.set("n", "<leader>op", "<cmd>ObsidianPasteImg<cr>", { desc = "[O]bsidian [P]aste image" })
   end,

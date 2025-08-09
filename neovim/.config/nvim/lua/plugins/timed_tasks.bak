@@ -1,0 +1,118 @@
+-- ~/.config/nvim/lua/plugins/timed_tasks.lua
+vim.schedule(function()
+  vim.notify("[timed-tasks] plugins spec file imported")
+end)
+
+return {
+  {
+    "L3MON4D3/LuaSnip",
+    opts = function(_, opts)
+      opts = opts or {}
+
+      vim.schedule(function()
+        vim.notify("[timed-tasks] LuaSnip opts running (loading snippets)")
+      end)
+
+      -- Load your snippets
+      require("luasnip.loaders.from_lua").lazy_load({
+        paths = vim.fn.stdpath("config") .. "/lua/snippets",
+      })
+
+      -- Helper: register our custom source once
+      local function register_source_if_needed()
+        local ok_cmp, cmp = pcall(require, "cmp")
+        if not ok_cmp then
+          return
+        end
+        local ok_src, timed_source = pcall(require, "custom.cmp_timed_tasks")
+        if not ok_src then
+          return
+        end
+        local has_get_source = type(cmp.get_source) == "function"
+        local already = has_get_source and cmp.get_source("timed_tasks") ~= nil
+        if not already then
+          pcall(cmp.register_source, "timed_tasks", timed_source.new())
+          vim.schedule(function()
+            vim.notify("[timed-tasks] registered source 'timed_tasks'")
+          end)
+        end
+      end
+
+      -- Ensure: for markdown/text, include our source in filetype-specific config
+      local function ensure_markdown_sources()
+        local ok_cmp, cmp = pcall(require, "cmp")
+        if not ok_cmp then
+          return
+        end
+
+        register_source_if_needed()
+
+        -- Build a sane list of sources for markdown/text that includes ours
+        local primary = {
+          { name = "timed_tasks", group_index = 2 },
+          { name = "luasnip" },
+          { name = "nvim_lsp" },
+        }
+        local extra = {
+          { name = "buffer" },
+          { name = "path" },
+          { name = "obsidian" },
+          { name = "obsidian_new" },
+          { name = "obsidian_tags" },
+          { name = "render-markdown" },
+          { name = "vim-dadbod-completion" },
+        }
+        local sources = {}
+        -- Merge while avoiding duplicates by name
+        local seen = {}
+        local function add(list)
+          for _, s in ipairs(list) do
+            if s and s.name and not seen[s.name] then
+              table.insert(sources, s)
+              seen[s.name] = true
+            end
+          end
+        end
+        add(primary)
+        add(extra)
+
+        -- IMPORTANT: your cmp.setup is a table; use filetype() API
+        local ft = vim.bo.filetype
+        pcall(cmp.setup.filetype, ft, { sources = sources })
+
+        vim.schedule(function()
+          vim.notify("[timed-tasks] cmp.setup.filetype(" .. ft .. ") applied with 'timed_tasks'")
+        end)
+      end
+
+      -- Register source once on first insert (loads cmp)
+      vim.api.nvim_create_autocmd("InsertEnter", {
+        once = true,
+        callback = function()
+          register_source_if_needed()
+        end,
+      })
+
+      -- On FileType for markdown/text, defer a bit and then enforce sources so we win over other plugins
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = { "markdown", "text" },
+        callback = function()
+          -- Defer to run after other FileType autocommands
+          vim.defer_fn(function()
+            ensure_markdown_sources()
+          end, 50)
+        end,
+      })
+
+      -- Optional: a manual command you can run to re-apply the filetype sources if needed
+      vim.api.nvim_create_user_command("TimedTasksEnable", function()
+        ensure_markdown_sources()
+      end, {})
+
+      return opts
+    end,
+  },
+
+  -- Declare nvim-cmp so lazy knows the dependency exists; we don't mutate its opts here.
+  { "hrsh7th/nvim-cmp", event = "InsertEnter", lazy = true },
+}
