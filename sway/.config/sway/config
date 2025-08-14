@@ -164,8 +164,9 @@ bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
 
 # nvim with obskidian
     bindsym $mod+n exec $term --class "nvim_obsidiantoday" zsh -i ~/.local/bin/run_nvim_obsidian.sh today 
-    bindsym $mod+Shift+n exec $term --class "nvim_obsidiannew" zsh -i ~/.local/bin/run_nvim_obsidian.sh template
+    bindsym $mod+Shift+n exec $term --class "nvim_obsidiannew" zsh -i ~/.local/bin/run_nvim_obsidian.sh new
     bindsym $mod+i exec $term --class "nvim_quick" zsh -i ~/.local/bin/run_nvim_obsidian.sh quick
+    bindsym $mod+Shift+i exec $term --class "nvim_quick" zsh -i ~/.local/bin/run_nvim_obsidian.sh template
 # floating terminal
     bindsym $mod+t exec $term --class "terminal_floating"
 
@@ -365,7 +366,7 @@ for_window [app_id="org.gnome.Calculator"] floating enable,  sticky enable
 
 
 for_window [app_id="com.cisco.secureclient.gui"] mark "cisco", move scratchpad, floating enable
-for_window [class="obsidian"] mark "obsidian", move scratchpad floating enable, resize set width 2000 px height 1250 px
+for_window [class="obsidian"] mark "obsidian", move scratchpad floating enable, resize set width 2000 px height 1190 px
 for_window [app_id="terminal_floating"] mark "terminal_fl", move scratchpad, move container to workspace current, resize set width 1500 px height 900 px
 for_window [app_id="org.pwmt.zathura"] mark "zathura", move scratchpad, move container to workspace current, resize set width 1200 px height 1180 px
 for_window [app_id="(?i)(?:nvim_obsidiantoday|nvim_obsidiannew|nvim_quick)"] mark "quick", move scratchpad, move container to workspace current, resize set width 1900 px height 1100 px
