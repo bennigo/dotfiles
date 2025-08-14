@@ -101,7 +101,7 @@ local function setup()
       custom = {
         todo = {
           raw = "[-]",
-          rendered = "󰥔 ",
+          rendered = "🕛 ",
           highlight = "RenderMarkdownTodo",
           scope_highlight = "RenderMarkdownTodo",
         },
@@ -109,7 +109,7 @@ local function setup()
           raw = "[/]",
           rendered = "󰦕",
           highlight = "Obsidianbullet",
-          scope_highlight = "RenderMarkdownTodo",
+          scope_highlight = "RenderMarkdownDeadline",
         },
         arrow = { raw = "[>]", rendered = " ", highlight = "ObsidianRightArrow", scope_highlight = nil },
         tilde = { raw = "[~]", rendered = "󰰱 ", highlight = "ObsidianTilde", scope_highlight = nil },

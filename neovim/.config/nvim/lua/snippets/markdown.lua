@@ -13,6 +13,10 @@ local function now_ts()
   return os.date("%H:%M")
 end
 
+local function now_td()
+  return os.date("%Y-%m-%d")
+end
+
 local function add_minutes(mins)
   local ts = os.time() + mins * 60
   return os.date("%Y-%m-%d %H:%M", ts)
@@ -33,57 +37,145 @@ end
 
 return {
 
+  -- dtbull -> now
+  s({ trig = "dtbull", name = "Timed bullet (now)", dscr = "Insert a Markdown bullet with current date and time" }, {
+    t("- "),
+    i(1, "Bullet point"),
+    t(" ➕ "),
+    f(function()
+      return now_dt()
+    end, {}),
+    t("  "),
+  }),
+
   -- tbull -> now
   s({ trig = "tbull", name = "Timed bullet (now)", dscr = "Insert a Markdown bullet with current time" }, {
-    t("- 🕛 "),
+    t("- "),
+    i(1, "Bullet point"),
+    t(" ➕ "),
     f(function()
       return now_ts()
     end, {}),
-    t(" "),
-    i(1, "Bullet point"),
+    t("  "),
   }),
+
+  -- dtask -> now
+  s({ trig = "dtask", name = "Timed task (creation)", dscr = "Insert a Markdown task with current date and time" }, {
+    t("- [ ] "),
+    i(1, "Task "),
+    t(" ➕ "),
+    f(function()
+      return now_dt()
+    end, {}),
+    t("  "),
+  }),
+
+  -- Keep specials that regex won't cover
+  -- s({ trig = "dtask9", name = "Timed TODO (tomorrow 09:00)" }, {
+  --   t("- [ ] ("),
+  --   f(function()
+  --     return now_ts()
+  --   end, {}),
+  --   t("): 📅 "),
+  --   f(function()
+  --     return tomorrow_at(9, 0)
+  --   end, {}),
+  --   t(" "),
+  --   i(1, "Task for tomorrow morning"),
+  -- }),
 
   -- tt -> now
   s({ trig = "tt", name = "Timed TODO (now)", dscr = "Insert a Markdown checkbox with current time" }, {
-    t("- [ ] "),
+    t("(🕛"),
     f(function()
       return now_ts()
     end, {}),
-    t(" "),
-    i(1, "Task description"),
+    t(": "),
+    i(1, "text"),
+    t(")"),
   }),
 
   -- dt -> now
   s({ trig = "dt", name = "Timed TODO (now)", dscr = "Insert a Markdown checkbox with current date and time" }, {
-    t("- [ ] "),
+    t("(📅"),
     f(function()
       return now_dt()
     end, {}),
-    t(" "),
-    i(1, "Task description"),
+    t(": "),
+    i(1, "text"),
+    t(")"),
   }),
 
-  -- Keep specials that regex won't cover
-  s({ trig = "dtt9", name = "Timed TODO (tomorrow 09:00)" }, {
-    t("- [ ] "),
+  -- td-> now
+  s({ trig = "td", name = "Timed TODO (now)", dscr = "Insert a Markdown checkbox with current date" }, {
+    t("(📅"),
     f(function()
-      return tomorrow_at(9, 0)
+      return now_td()
     end, {}),
-    t(" "),
-    i(1, "Task for tomorrow morning"),
+    t(": "),
+    i(1, "text"),
+    t(")"),
   }),
 
   -- Regex-trigger: tt<number> or tt<number>h (e.g., tt20 -> +20m, tt2h -> +120m)
   -- regTrig uses Lua patterns. wordTrig=false allows expansion even if not at a strict word boundary.
-  s({ trig = "dt(%d+)(h?)", regTrig = true, wordTrig = false, hidden = false, name = "Timed TODO (regex)" }, {
+  s({ trig = "dtask(%d+)([dhm]?)", regTrig = true, wordTrig = false, hidden = false, name = "Timed TODO (regex)" }, {
     t("- [ ] "),
+    i(1, "Task"),
+    t(" ➕ "),
     f(function(_, snip)
+      local dformat = "%Y-%m-%d"
+      local unit = snip.captures[2] or ""
+      if unit == "h" or unit == "m" then
+        dformat = "%Y-%m-%d %H:%M"
+      end
+      return os.date(dformat, os.time())
+    end, {}),
+    t(" 📅 "),
+    f(function(_, snip)
+      local dformat = "%Y-%m-%d"
       local n = tonumber(snip.captures[1] or "0") or 0
-      local is_hours = (snip.captures[2] or "") == "h"
-      local mins = is_hours and (n * 60) or n
-      return os.date("%Y-%m-%d %H:%M", os.time() + mins * 60)
+      local unit = snip.captures[2] or ""
+      if unit == "h" or unit == "m" then
+        dformat = "%Y-%m-%d %H:%M"
+      end
+
+      local mins
+      if unit == "h" then
+        mins = n * 60
+      elseif unit == "m" then
+        mins = n
+      else
+        mins = n * 24 * 60
+      end
+      return os.date(dformat, os.time() + mins * 60)
     end, {}),
     t(" "),
+  }),
+
+  -- Regex-trigger: deadl<number> or deadl<number>h (e.g., deadl20 -> +20m, deadl2h -> +120m)
+  -- regTrig uses Lua patterns. wordTrig=false allows expansion even if not at a strict word boundary.
+  s({ trig = "deadl(%d+)([dhm]?)", regTrig = true, wordTrig = false, hidden = false, name = "Timed TODO (regex)" }, {
+    t("📅 "),
+    f(function(_, snip)
+      local dformat = "%Y-%m-%d"
+      local n = tonumber(snip.captures[1] or "0") or 0
+      local unit = snip.captures[2] or ""
+      if unit == "h" or unit == "m" then
+        dformat = "%Y-%m-%d %H:%M"
+      end
+
+      local mins
+      if unit == "h" then
+        mins = n * 60
+      elseif unit == "m" then
+        mins = n
+      else
+        mins = n * 24 * 60
+      end
+      return os.date(dformat, os.time() + mins * 60)
+    end, {}),
+    t(": "),
     i(1, "Task"),
   }),
 }

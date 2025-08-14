@@ -6,7 +6,7 @@ echo "${cwd}"
 if [ $# -eq 0 ]; then
   :
 elif [ -z "$1" ]; then
-  echo "Usage: $0 [new|today|quick|normal]"
+  echo "Usage: $0 [new|today|quick|normal|template]"
   exit 1
 fi
 
