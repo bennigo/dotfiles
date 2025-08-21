@@ -1,6 +1,7 @@
 return {
   {
     "catppuccin/nvim",
+    version = "*", -- recommended, use latest release instead of latest commit
     lazy = true,
     name = "catppuccin",
     opts = {
