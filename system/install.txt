@@ -43,6 +43,8 @@ source ~/.bashrc
 sudo apt install sway foot-themes swayidle swaylock xdg-desktop-portal-wlr waybar rofi lxqt-policykit
 sudo apt install playerctl udiskie mako-notifier libnotify-bin fonts-font-awesome ueberzug 
 sudo apt install wdisplays kanshi
+sudo apt install pandoc
+
 sudo cp ~/.dotfiles/system/usr/share/wayland-sessions/sway.desktop /usr/share/wayland-sessions/
 # setting up zsh
 chsh -s /bin/zsh
