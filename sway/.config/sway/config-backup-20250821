@@ -1,0 +1,411 @@
+# Default config for sway
+#
+# Copy this to ~/.config/sway/config and edit it to your liking.
+#
+# Read `man 5 sway` for a complete reference.
+
+### Variables
+#
+# Logo key. Use Mod1 for Alt.
+set $mod Mod4
+# Home row direction keys, like vim
+set $left h
+set $down j
+set $up k
+set $right l
+
+# border & title
+for_window [title="^.*"] border pixel 0.5, title_format "<b>%app_id</b> %class"
+default_border pixel 0.5
+
+
+# gaps
+gaps inner 4
+gaps outer 2 
+smart_gaps on
+
+
+# font
+font pango:HackNerdFont 8 
+# Your preferred terminal emulator
+# set $term foot
+set $term ~/.local/bin/kitty
+set $laptop eDP-1
+#app_id = -a # for foot
+#app_id = --class # for kitty
+# Your preferred application launcher
+# Note: pass the final command to swaymsg so that the resulting window can be opened
+# on the original workspace that the command was run on.
+# set $menu dmenu_path | wmenu | xargs swaymsg exec --
+# rofi theme
+set $rofi_theme "* {lightbg: $background-color; background: $background-color; lightfg: $accent-color; foreground: $text-color; border-color: $accent-color;} window {border: 2;}"
+# Your preferred application launcher
+set $menu rofi -show combi -combi-modi "drun,run" -terminal $term -ssh-command "{terminal} {ssh-client} {host} [-p {port}]" -run-shell-command "{terminal} {cmd}" -show-icons -font "$gui-font"
+
+include /etc/sway/config-vars.d/*
+include $XDG_CONFIG_HOME/sway/config.d/*.conf
+
+set $wallpaper $XDG_CONFIG_HOME/sway/wallpapers/mahdi-khomsaz-asset.jpg
+### Output configuration
+#$XDG_CONFIG_HOME/sway/wallpapers/mahdi-khomsaz-asset.jpg
+# Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
+# output * bg $XDG_CONFIG_HOME/sway/wallpapers/mahdi-khomsaz-asset.jpg fill
+# output * bg $XDG_CONFIG_HOME/sway/wallpapers/mahdi-khomsaz-asset.jpg fill
+exec_always swaybg -i $wallpaper -m fit
+# automounting requres udisks2
+exec /usr/bin/lxqt-policykit-agent &
+exec udiskie 
+exec clipse -listen  # run the background listener on startup
+
+#
+# Example configuration:
+#
+#   output HDMI-A-1 resolution 1920x1080 position 1920,0
+#
+# You can get the names of your outputs by running: swaymsg -t get_outputs
+#
+# Basic position configuration
+# output HDMI1 pos 0 0
+# output eDP1 pos 0 0
+
+# Add to ~/.config/sway/config
+# exec systemctl restart systemd-udev-settle
+# exec env WLR_DRM_NO_POWER_MANAGEMENT=1 WLR_DRM_NO_ATOMIC=1 WLR_DRM_NO_FORMAT_MODIFIERS=1 __NV_PRIME_RENDER_OFFLOAD=1 __VK_LAYER_NV_optimus=1 NVIDIA_DRM_OUTPUTS=HDMI-A-1,eDP-1 sway $@
+# exec swaymsg "output HDMI-A-1 mode current"
+# exec swaymsg "output eDP-1 mode current"
+# exec swaymsg "output * adaptive_sync enabled"
+# exec swaymsg "output * damage_tracking none"
+
+# exec swaymsg "workspace 1 output eDP-1"
+# exec swaymsg "workspace 2 output DP-2"
+# exec swaymsg "workspace 3 output HDMI-A-1"
+
+
+# output HDMI1 pos 0 0 mode 1920x1080@60Hz
+# output eDP1 pos 0 0 res 3840x2400
+### Idle configuration
+#
+# Example configuration:
+
+### Turn off screen on lid closed
+# bindswitch lid:on output $laptop disable
+# bindswitch lid:off output $laptop enable
+
+# exec_always --no-startup-id swayidle -w
+# timeout 600 'swaylock -f -c 000000'
+# before-sleep 'swaylock -f -c 000000'
+# on-lid close 'swaymsg output eDP-1 dpms off; systemctl suspend'
+# on-lid open 'swaymsg output eDP-1 dpms on'
+
+#
+# This will lock your screen after 300 seconds of inactivity, then turn off
+# your displays after another 300 seconds, and turn your screens back on when
+# resumed. It will also lock your screen before your computer goes to sleep.
+
+# Identify laptop panel (verify with: swaymsg -t get_outputs) 
+# One swayidle instance that: 
+# - saves brightness, dims to a safe percentage 
+# - locks on idle and before sleep  
+# - re-powers the laptop panel and restores brightness after resume 
+exec_always --no-startup-id swayidle -w \
+    timeout 60 'brightnessctl -s; brightnessctl set 10%' \
+    resume 'brightnessctl -r' \
+    timeout 300 'swaylock -f -c 000000 -i $wallpaper' \
+    timeout 900 'swaymsg output $laptop power off' \
+    resume 'swaymsg output $laptop power on' \
+    before-sleep 'swaylock -f -c 000000 -i $wallpaper' \
+    after-resume 'swaymsg output $laptop power on; brightnessctl -r' 
+
+# Handle the lid entirely in Sway; do NOT also let logind do it (you already disabled it) 
+# Keep this simple: suspend on close, turn panel on + restore brightness on open 
+bindswitch --reload lid:on exec 'systemctl suspend' 
+bindswitch --reload lid:off exec 'swaymsg output $laptop power on; brightnessctl -r' 
+
+# Optional: a panic key if you ever land on a black screen 
+# Press $mod+Ctrl+b to force panel on and set 50% brightness 
+bindsym $mod+Ctrl+b exec 'swaymsg output $laptop power on; brightnessctl set 50%' 
+# Optional: if you often dock to external monitors and don’t want the laptop panel 
+# to be touched by idle, drop the 900s power off timeout above. 
+# Alternatively, increase the timeout to avoid overlap with lid events.
+
+#
+# Optional: handle lid in Sway (ensure systemd-logind is set to ignore lid) 
+
+# backlight
+# bindsym XF86MonBrightnessUp exec light -A 5
+# bindsym XF86MonBrightnessDown exec light -U 5
+bindsym XF86MonBrightnessDown exec brightnessctl set 5%-
+bindsym XF86MonBrightnessUp exec brightnessctl set 5%+
+ 
+bindsym XF86AudioRaiseVolume exec pactl set-sink-volume @DEFAULT_SINK@ +5%
+bindsym XF86AudioLowerVolume exec pactl set-sink-volume @DEFAULT_SINK@ -5%
+bindsym XF86AudioMute exec pactl set-sink-mute @DEFAULT_SINK@ toggle
+
+# Increase/Decrease microphone volume
+bindsym $mod+bracketright exec pactl set-source-volume @DEFAULT_SOURCE@ +5%
+bindsym $mod+bracketleft exec pactl set-source-volume @DEFAULT_SOURCE@ -5%
+# Mude microphone
+bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
+
+# not be the current outputactl set-sink-mute @DEFAULT_SINK@ toggle
+
+### Input configuration
+#
+# Example configuration:
+#
+#   input "2:14:SynPS/2_Synaptics_TouchPad" {
+#       dwt enabled
+#       tap enabled
+#       natural_scroll enabled
+#       middle_emulation enabled
+#   }
+#
+# You can get the names of your inputs by running: swaymsg -t get_inputs
+# Read `man 5 sway-input` for more information about this section.
+
+### Key bindings
+
+# Show shortcuts overlay 
+    # bindsym $mod+slash exec ~/.config/sway/sway-shortcuts.sh 
+    bindsym $mod+slash exec ~/.local/bin/sway-shortcuts.sh 
+
+#
+# Basics:
+#
+    bindsym $mod+x exec swaylock -f -c 000000 -i $wallpaper
+    # bindsym $mod+Shift+x exec swaymsg "output * power off"
+    # bindsym $mod+Shift+z exec swaymsg "output * power on"
+    bindsym $mod+Shift+x exec 'sudo systemctl suspend'
+    bindsym $mod+Shift+z exec 'swaymsg output $laptop power on; brightnessctl -r'
+
+    # mounting usb disks
+    bindsym $mod+m exec udsikie
+     
+    # Start a terminal
+    bindsym $mod+Return exec $term
+
+    # Kill focused window
+    bindsym $mod+q kill
+    bindsym $mod+Shift+Q exec pkill -USR1 waybar
+
+# Start your launcher
+    bindsym $mod+d exec $menu
+    bindsym $mod+Shift+w exec ~/.config/waybar/scripts/network-menu.sh
+
+    bindsym $mod+r exec /usr/bin/gnome-calculator -m advanced
+    bindsym $mod+Shift+t exec $term --class "htop" htop
+
+# nvim with obskidian
+    bindsym $mod+n exec $term --class "nvim_obsidiantoday" zsh -i ~/.local/bin/run_nvim_obsidian.sh today 
+    bindsym $mod+Shift+n exec $term --class "nvim_obsidiannew" zsh -i ~/.local/bin/run_nvim_obsidian.sh new
+    bindsym $mod+i exec $term --class "nvim_quick" zsh -i ~/.local/bin/run_nvim_obsidian.sh quick
+    bindsym $mod+Shift+i exec $term --class "nvim_quick" zsh -i ~/.local/bin/run_nvim_obsidian.sh template
+# floating terminal
+    bindsym $mod+t exec $term --class "terminal_floating"
+
+# Bind floating shell with TUI selection to something nice
+    bindsym $mod+p exec $term --class "clipse" ${HOME}/.local/bin/clipse
+    bindsym $mod+Shift+p exec $term --class "clipse" zsh -i ${HOME}/.local/bin/run_swappy.sh 
+
+# cisco secure client
+    exec_always --no-startup-id gtk-launch com.cisco.secureclient.gui.desktop
+    exec --no-startup-id gtk-launch obsidian.desktop
+    exec --no-startup-id $term --class "terminal_floating"
+# bindsym $mod+o exec gtk-launch obsidian.desktop
+
+    bindsym $mod+z [con_mark="zathura"] scratchpad show
+    bindsym $mod+c [con_mark="cisco"] scratchpad show
+    bindsym $mod+Shift+o [con_mark="obsidian"] scratchpad show
+    bindsym $mod+o [con_mark="quick"] scratchpad show
+    bindsym $mod+Shift+Return [con_mark="terminal_fl"] scratchpad show
+
+# Screenshot the monitor
+    # take screenshot and copy to clipboard
+    bindsym Print exec ${HOME}/.local/bin/run_screenshot.sh -c
+    # take screenshot and open in open in swappy
+    bindsym Alt+Print exec ${HOME}/.local/bin/run_screenshot.sh -c -e 
+    # take screenshot and save to ~/Pictures/Screenshots/screenshot-%Y%m%d-%H%M%S.png
+    bindsym Alt+Shift+Print exec ${HOME}/.local/bin/run_screenshot.sh
+# Screenshot a window
+    bindsym $mod+Print exec ${HOME}/.local/bin/run_screenshot.sh  -c -m window
+    bindsym $mod+Alt+Print exec ${HOME}/.local/bin/run_screenshot.sh -e -c -m window
+    bindsym $mod+Alt+Shift+Print exec ${HOME}/.local/bin/run_screenshot.sh -m window
+# Screenshot a region
+    bindsym Shift+Print exec ${HOME}/.local/bin/run_screenshot.sh -c -m region
+    bindsym $mod+Shift+Print exec ${HOME}/.local/bin/run_screenshot.sh -e -c -m region
+
+    # bindsym $mod+semicolon exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.PlayPause
+    # bindsym $mod+greater exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Next
+    # bindsym $mod+less exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Previous
+
+    assign [class="Spotify"] 10 
+    for_window [class="Spotify"] floating enable
+    for_window [class="Spotify"] resize set width 1800 height 1100
+
+    bindsym $mod+colon exec spotify
+    bindsym $mod+semicolon exec playerctl --player=spotify play-pause
+    bindsym $mod+less exec playerctl --player=spotify previous
+    bindsym $mod+greater exec playerctl --player=spotify next
+
+# Drag floating windows by holding down $mod and left mouse button.
+# Resize them with right mouse button + $mod.
+# Despite the name, also works for non-floating windows.
+# Change normal to inverse to use left mouse button for resizing and right
+# mouse button for dragging.
+    floating_modifier $mod normal
+
+# Reoad the configuration file
+    bindsym $mod+Shift+c reload
+
+# Exit sway (logs you out of your Wayland session)
+    bindsym $mod+Shift+e exec swaynag -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway? This will end your Wayland session.' -B 'Yes, exit sway' 'swaymsg exit'
+#
+# Moving around:
+#
+# Move your focus around
+    bindsym $mod+$left focus left
+    bindsym $mod+$down focus down
+    bindsym $mod+$up focus up
+    bindsym $mod+$right focus right
+# Or use $mod+[up|down|left|right]
+    bindsym $mod+Left focus left
+    bindsym $mod+Down focus down
+    bindsym $mod+Up focus up
+    bindsym $mod+Right focus right
+
+# Move the focused window with the same, but add Shift
+    bindsym $mod+Shift+$left move left
+    bindsym $mod+Shift+$down move down
+    bindsym $mod+Shift+$up move up
+    bindsym $mod+Shift+$right move right
+# Ditto, with arrow keys
+    bindsym $mod+Shift+Left move left
+    bindsym $mod+Shift+Down move down
+    bindsym $mod+Shift+Up move up
+    bindsym $mod+Shift+Right move right
+#
+# Workspaces:
+#
+# Switch to workspace
+    bindsym $mod+1 workspace number 1
+    bindsym $mod+2 workspace number 2
+    bindsym $mod+3 workspace number 3
+    bindsym $mod+4 workspace number 4
+    bindsym $mod+5 workspace number 5
+    bindsym $mod+6 workspace number 6
+    bindsym $mod+7 workspace number 7
+    bindsym $mod+8 workspace number 8
+    bindsym $mod+9 workspace number 9
+    bindsym $mod+0 workspace number 10
+# Move focused container to workspace
+    bindsym $mod+Shift+1 move container to workspace number 1
+    bindsym $mod+Shift+2 move container to workspace number 2
+    bindsym $mod+Shift+3 move container to workspace number 3
+    bindsym $mod+Shift+4 move container to workspace number 4
+    bindsym $mod+Shift+5 move container to workspace number 5
+    bindsym $mod+Shift+6 move container to workspace number 6
+    bindsym $mod+Shift+7 move container to workspace number 7
+    bindsym $mod+Shift+8 move container to workspace number 8
+    bindsym $mod+Shift+9 move container to workspace number 9
+    bindsym $mod+Shift+0 move container to workspace number 10
+# Note: workspaces can have any name you want, not just numbers.
+# We just use 1-10 as the default.
+#
+# Layout stuff:
+#
+# You can "split" the current object of your focus with
+# $mod+b or $mod+v, for horizontal and vertical splits
+# respectively.
+    bindsym $mod+b splith
+    bindsym $mod+v splitv
+
+# Switch the current container between different layout styles
+    bindsym $mod+s layout stacking
+    bindsym $mod+w layout tabbed
+    bindsym $mod+e layout toggle split
+
+# Make the current focus fullscreen
+    bindsym $mod+f fullscreen
+
+# Toggle the current focus between tiling and floating mode
+    bindsym $mod+Shift+space floating toggle
+
+# Swap focus between the tiling area and the floating area
+    bindsym $mod+space focus mode_toggle
+
+# Move focus to the parent container
+    bindsym $mod+a focus parent
+#
+# Scratchpad:
+#
+# Sway has a "scratchpad", which is a bag of holding for windows.
+# You can send windows there and get them back later.
+
+# Move the currently focused window to the scratchpad
+    bindsym $mod+Shift+minus move scratchpad
+
+# Show the next scratchpad window or hide the focused scratchpad window.
+# If there are multiple scratchpad windows, this command cycles through them.
+    bindsym $mod+minus scratchpad show
+#
+# Resizing containers:
+#
+    mode "resize" {
+# left will shrink the containers width
+# right will grow the containers width
+# up will shrink the containers height
+# down will grow the containers height
+        bindsym $left resize shrink width 10px
+            bindsym $down resize grow height 10px
+            bindsym $up resize shrink height 10px
+            bindsym $right resize grow width 10px
+
+# Ditto, with arrow keys
+            bindsym Left resize shrink width 10px
+            bindsym Down resize grow height 10px
+            bindsym Up resize shrink height 10px
+            bindsym Right resize grow width 10px
+
+# Return to default mode
+            bindsym Return mode "default"
+            bindsym Escape mode "default"
+    }
+bindsym $mod+Shift+r mode "resize"
+
+#
+# Status Bar:
+#
+# Read `man 5 sway-bar` for more information about this section.
+bar {
+    position top
+
+    # When the status_command prints a new line to stdout, swaybar updates.
+    # The default just shows the current date and time.
+    swaybar_command waybar
+}
+
+popup_during_fullscreen smart
+
+
+# Float and center the rofi window we launch (-normal-window with this title) 
+for_window [title="Sway Shortcuts"] floating enable, sticky enable, move position center, resize set width 1000 px height 700 px
+
+# for_window [app_id="blueman-manager"] floating enable, resize set width 400 px height 300 px, move container to workspace current, move position 900 100
+for_window [app_id="(?i)(?:blueman-manager|azote|gnome-disks|nm-connection-editor|lxqt-policykit-agent|snap-store)"] floating enable,  sticky enable
+for_window [app_id="(?i)(?:snap-store|xdg-desktop-portal-gtk)"] floating enable,  sticky enable
+# for_window [app_id="(?i)(?:snap-store|xdg-desktop-portal-gtk")"] floating enable
+for_window [app_id="(?i)(?:nvim_floating|clipse|swappy)"] floating enable, resize set width 1400 px height 1000 px, move container to workspace current, move container center
+for_window [app_id="(?i)(?:htop|Zotero)"] floating enable, resize set width 1900 px height 1100 px, move container to workspace current, move container center
+
+for_window [app_id="Cisco Secure Client"] floating enable, sticky enable
+for_window [app_id="org.gnome.Calculator"] floating enable,  sticky enable
+
+
+for_window [app_id="com.cisco.secureclient.gui"] mark "cisco", move scratchpad, floating enable
+for_window [class="obsidian"] mark "obsidian", move scratchpad floating enable, resize set width 2000 px height 1190 px
+for_window [app_id="terminal_floating"] mark "terminal_fl", move scratchpad, move container to workspace current, resize set width 1500 px height 900 px
+for_window [app_id="org.pwmt.zathura"] mark "zathura", move scratchpad, move container to workspace current, resize set width 1200 px height 1180 px
+for_window [app_id="(?i)(?:nvim_obsidiantoday|nvim_obsidiannew|nvim_quick)"] mark "quick", move scratchpad, move container to workspace current, resize set width 1900 px height 1100 px
+# for_window [app_id="terminal_floating"] mark "terminal", move scratchpad floating enable resize set width 1400 px height 1000 px
+
+include /etc/sway/config.d/*
