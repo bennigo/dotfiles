@@ -99,7 +99,7 @@ local function setup()
     end,
 
     -- Either 'wiki' or 'markdown'.
-    preferred_link_style = "wiki",
+    preferred_link_style = "markdown",
 
     -- Optional, boolean or a function that takes a filename and returns a boolean.
     -- `true` indicates that you don't want obsidian.nvim to manage frontmatter.
@@ -168,6 +168,10 @@ local function setup()
           return string.format("- [ ] Task 1 ➕ %s", os.date("%Y-%m-%d", os.time()))
         end,
 
+        property = function()
+          return "property"
+        end,
+
         meeting_type = function()
           return "TEST ⏰ 🕛"
         end,
@@ -176,6 +180,23 @@ local function setup()
       -- A map for configuring unique directories and paths for specific templates
       --- See: https://github.com/obsidian-nvim/obsidian.nvim/wiki/Template#customizations
       customizations = {
+        template_resource = {
+          note_id_func = function(title)
+            local suffix = ""
+            if title ~= nil then
+              -- If title is given, transform it into valid file name.
+              suffix = title:gsub(" ", "-"):gsub("[^A-Za-z0-9-]", ""):lower()
+            else
+              -- If title is nil, just add 4 random uppercase letters to the suffix.
+              for _ = 1, 4 do
+                suffix = suffix .. string.char(math.random(65, 90))
+              end
+            end
+            return tostring(os.time()) .. "-" .. suffix
+          end,
+          notes_subdir = "3.Resources",
+        },
+
         template_ki_stjorn_meeting = {
           -- This function currently only receives the note title as an input
           note_id_func = function(title)
@@ -339,8 +360,27 @@ local function setup()
       -- If this is a relative path it will be interpreted as relative to the vault root.
       -- You can always override this per image by passing a full path to the command instead of just a filename.
       img_folder = "Assets/attachments", -- This is the default
+
+      img_text_func = function(path)
+        -- Get the workspace root to calculate relative path
+        local workspace_root = Obsidian.dir
+        local relative_path = vim.fn.fnamemodify(tostring(path), ":s?" .. tostring(workspace_root) .. "/??")
+
+        local format_string = {
+          markdown = "![](%s)",
+          wiki = "![[%s]]",
+        }
+        local style = Obsidian.opts.preferred_link_style
+
+        if style == "markdown" then
+          relative_path = require("obsidian.util").urlencode(relative_path, { keep_path_sep = true })
+        end
+
+        return string.format(format_string[style], relative_path)
+      end,
+
       img_name_func = function()
-        return string.format("Pasted image %s", os.date("%Y%m%d%H%M%S"))
+        return string.format("Pasted_image_%s", os.date("%Y%m%d%H%M%S"))
       end,
       confirm_img_paste = true,
     },
@@ -396,35 +436,24 @@ return {
   config = function()
     setup()
 
-    -- Require helpers after setup so we can define commands that call into Obsidian. [2]
-    -- local helpers = require("user.obsidian_helpers")
+    -- Initialize your PDF helper and create its keymap (guarded).
+    do
+      -- IMPORTANT: dot notation; file should be at lua/user/obsidian_pdf.lua
+      local ok, pdf = pcall(require, "user.obsidian_pdf")
+      if ok then
+        pdf.setup({
+          pdf_folder = "Assets/pdf", -- relative to vault root
+          link_style = "wiki", -- or "markdown"
+        })
 
-    -- User command: auto-generate a title and create from template.
-    -- With no args: uses template picker (New + Template).
-    -- With one arg: treat it as the template name (skip picker).
-    -- Optional suffix can be added via a second command below, or customize helpers to parse flags.
-    -- vim.api.nvim_create_user_command("ObsidianNewFromTemplateAuto", function(cmd)
-    --   local template = cmd.fargs[1] -- optional template name; if nil, picker is used
-    --   vim.notify(vim.inspect(template), vim.log.levels.DEBUG, { title = "Using template: " })
-    --   helpers.new_from_template_auto({ mode = "timestamp", template = template })
-    -- end, {
-    --   nargs = "?",
-    --   desc = "Create a note from template with an auto-generated title (picker by default)",
-    --   complete = function()
-    --     return {}
-    --   end,
-    -- })
-    --
-    -- -- Optional: if you often want to add a suffix to the title, expose a second command
-    -- -- Usage: :ObsidianNewFromTemplateAutoSuffix meeting-notes
-    -- vim.api.nvim_create_user_command("ObsidianNewFromTemplateAutoSuffix", function(cmd)
-    --   local suffix = table.concat(cmd.fargs, " ")
-    --   helpers.new_from_template_auto({ mode = "timestamp", suffix = suffix })
-    -- end, {
-    --   nargs = "*",
-    --   desc = "Create a note (auto title + optional suffix), then pick a template to insert",
-    -- })
-
+        -- Keymap to prompt and save/insert a PDF quickly
+        vim.keymap.set("n", "<leader>od", function()
+          pdf.save_pdf({})
+        end, { desc = "Obsidian: Save PDF into vault and insert link" })
+      else
+        vim.notify("obsidian_pdf module not found: " .. tostring(pdf), vim.log.levels.WARN)
+      end
+    end
     -- For other mappings:
     -- vim.keymap.set("n", "gf", "<cmd>ObsidianFollowLink<cr>", { desc = "[O]bsidian [J]journal [Y]esterday" })
     vim.keymap.set("n", "<leader>oc", function()
@@ -435,35 +464,30 @@ return {
       return require("obsidian").util.smart_action()
     end, { buffer = true, expr = true, desc = "[O]bsidian Smart_action" })
 
+    vim.keymap.set("n", "<leader>ob", "<cmd>ObsidianBacklinks<cr>", { desc = "[O]bsidian [B]backlinks" })
+    vim.keymap.set("n", "<leader>or", "<cmd>ObsidianRename<cr>", { desc = "[O]bsidian [R]ename" })
+    vim.keymap.set("n", "<leader>oo", "<cmd>ObsidianOpen<cr>", { desc = "[O]bsidian [O]pen" })
+    vim.keymap.set("n", "<leader>oT", "<cmd>ObsidianTemplate<cr>", { desc = "[O]bsidian insert from [T]emplate" })
+
+    vim.keymap.set("n", "<leader>ot", "<cmd>ObsidianTag<cr>", { desc = "[O]bsidian search [T]ags" })
+    vim.keymap.set("n", "<leader>oq", "<cmd>ObsidianQuickSwitch<cr>", { desc = "[O]bsidian  [Q]uickSwich" })
+    vim.keymap.set("n", "<leader>os", "<cmd>ObsidianSearch<cr>", { desc = "[O]bsidian [S]earch" })
+    vim.keymap.set("n", "<leader>op", "<cmd>ObsidianPasteImg<cr>", { desc = "[O]bsidian [P]aste image" })
+
     -- journaling
     vim.keymap.set("n", "<leader>ojy", "<cmd>ObsidianYesterday<cr>", { desc = "[O]bsidian [J]journal [Y]esterday" })
     vim.keymap.set("n", "<leader>ojt", "<cmd>ObsidianToday<cr>", { desc = "[O]bsidian [J]journal [T]oday" })
     vim.keymap.set("n", "<leader>ojm", "<cmd>ObsidianTomorrow<cr>", { desc = "[O]bsidian [J]ournal [T]omorrow" })
     vim.keymap.set("n", "<leader>ojd", "<cmd>ObsidianDailies<cr>", { desc = "[O]bsidian [J]journal [D]dailies" })
 
+    -- new notes
     vim.keymap.set("n", "<leader>onn", "<cmd>ObsidianNew<cr>", { desc = "[O]bsidian [N]ew" })
     vim.keymap.set("n", "<leader>ont", "<cmd>ObsidianNewFromTemplate<cr>", { desc = "[O]bsidian new from [T]emplate" })
-    vim.keymap.set(
-      "n",
-      "<leader>ona",
-      "<cmd>ObsidianNewFromTemplateAuto<cr>",
-      { desc = "[O]bsidian new from [T]emplate (auto title)" }
-    )
-
-    vim.keymap.set("n", "<leader>ob", "<cmd>ObsidianBacklinks<cr>", { desc = "[O]bsidian [B]backlinks" })
-    vim.keymap.set("n", "<leader>or", "<cmd>ObsidianRename<cr>", { desc = "[O]bsidian [R]ename" })
-    vim.keymap.set("n", "<leader>oo", "<cmd>ObsidianOpen<cr>", { desc = "[O]bsidian [O]pen" })
-    vim.keymap.set("n", "<leader>oT", "<cmd>ObsidianTemplate<cr>", { desc = "[O]bsidian insert from [T]emplate" })
-    vim.keymap.set(
-      "n",
-      "<leader>oN",
-      "<cmd>ObsidianTemplate template_time<cr>",
-      { desc = "[O]bsidian insert now point [T]emplate" }
-    )
-
-    vim.keymap.set("n", "<leader>ot", "<cmd>ObsidianTag<cr>", { desc = "[O]bsidian search [T]ags" })
-    vim.keymap.set("n", "<leader>oq", "<cmd>ObsidianQuickSwitch<cr>", { desc = "[O]bsidian  [Q]uickSwich" })
-    vim.keymap.set("n", "<leader>os", "<cmd>ObsidianSearch<cr>", { desc = "[O]bsidian [S]earch" })
-    vim.keymap.set("n", "<leader>op", "<cmd>ObsidianPasteImg<cr>", { desc = "[O]bsidian [P]aste image" })
+    -- vim.keymap.set(
+    --   "n",
+    --   "<leader>ona",
+    --   "<cmd>ObsidianNewFromTemplateAuto<cr>",
+    --   { desc = "[O]bsidian new from [T]emplate (auto title)" }
+    -- )
   end,
 }
