@@ -30,6 +30,7 @@ font pango:HackNerdFont 8
 # Your preferred terminal emulator
 # set $term foot
 set $term ~/.local/bin/kitty
+set $laptop eDP-1
 #app_id = -a # for foot
 #app_id = --class # for kitty
 # Your preferred application launcher
@@ -80,45 +81,79 @@ exec clipse -listen  # run the background listener on startup
 # exec swaymsg "workspace 3 output HDMI-A-1"
 
 
-
-# With resolution specification
-output HDMI1 pos 0 0 mode 1920x1080@60Hz
-output eDP1 pos 0 0 res 3840x2400
+# output HDMI1 pos 0 0 mode 1920x1080@60Hz
+# output eDP1 pos 0 0 res 3840x2400
 ### Idle configuration
 #
 # Example configuration:
 
 ### Turn off screen on lid closed
-# set $laptop eDP-1
 # bindswitch lid:on output $laptop disable
 # bindswitch lid:off output $laptop enable
 
-exec_always swayidle -w \
-         timeout 60 'brightnessctl -s && brightnessctl set 10' \
-         resume 'brightnessctl -r' \
-         timeout 300 'swaylock -f -c 000000 -i $wallpaper' \
-         timeout 600 'swaymsg "output * power off"' resume 'swaymsg "output * power on"' \
-         before-sleep 'swaylock -f -c 000000 -i $wallpaper'
+# exec_always --no-startup-id swayidle -w
+# timeout 600 'swaylock -f -c 000000'
+# before-sleep 'swaylock -f -c 000000'
+# on-lid close 'swaymsg output eDP-1 dpms off; systemctl suspend'
+# on-lid open 'swaymsg output eDP-1 dpms on'
 
 #
 # This will lock your screen after 300 seconds of inactivity, then turn off
 # your displays after another 300 seconds, and turn your screens back on when
 # resumed. It will also lock your screen before your computer goes to sleep.
 
+# Identify laptop panel (verify with: swaymsg -t get_outputs) 
+# One swayidle instance that: 
+# - saves brightness, dims to a safe percentage 
+# - locks on idle and before sleep  
+# - re-powers the laptop panel and restores brightness after resume 
+exec_always --no-startup-id swayidle -w \
+    timeout 60 'brightnessctl -s; brightnessctl set 10%' \
+    resume 'brightnessctl -r' \
+    timeout 300 'swaylock -f -c 000000 -i $wallpaper' \
+    timeout 900 'swaymsg output $laptop power off' \
+    resume 'swaymsg output $laptop power on' \
+    before-sleep 'swaylock -f -c 000000 -i $wallpaper' \
+    after-resume 'swaymsg output $laptop power on; brightnessctl -r' 
+
+# Handle the lid entirely in Sway; do NOT also let logind do it (you already disabled it) 
+# Keep this simple: suspend on close, turn panel on + restore brightness on open 
+bindswitch --reload lid:on exec 'systemctl suspend' 
+bindswitch --reload lid:off exec 'swaymsg output $laptop power on; brightnessctl -r' 
+
+# Optional: a panic key if you ever land on a black screen 
+# Press $mod+Ctrl+b to force panel on and set 50% brightness 
+## Power // Force panel on and set 50% brightness // 💡 ##
+bindsym $mod+Ctrl+b exec 'swaymsg output $laptop power on; brightnessctl set 50%' 
+# Optional: if you often dock to external monitors and don’t want the laptop panel 
+# to be touched by idle, drop the 900s power off timeout above. 
+# Alternatively, increase the timeout to avoid overlap with lid events.
+
+#
+# Optional: handle lid in Sway (ensure systemd-logind is set to ignore lid) 
+
 # backlight
 # bindsym XF86MonBrightnessUp exec light -A 5
 # bindsym XF86MonBrightnessDown exec light -U 5
+## Media // Decrease screen brightness // 🔅 ##
 bindsym XF86MonBrightnessDown exec brightnessctl set 5%-
+## Media // Increase screen brightness // 🔆 ##
 bindsym XF86MonBrightnessUp exec brightnessctl set 5%+
  
+## Media // Increase volume // 🔊 ##
 bindsym XF86AudioRaiseVolume exec pactl set-sink-volume @DEFAULT_SINK@ +5%
+## Media // Decrease volume // 🔉 ##
 bindsym XF86AudioLowerVolume exec pactl set-sink-volume @DEFAULT_SINK@ -5%
+## Media // Toggle mute // 🔇 ##
 bindsym XF86AudioMute exec pactl set-sink-mute @DEFAULT_SINK@ toggle
 
 # Increase/Decrease microphone volume
+## Media // Increase microphone volume // 🎤⬆️ ##
 bindsym $mod+bracketright exec pactl set-source-volume @DEFAULT_SOURCE@ +5%
+## Media // Decrease microphone volume // 🎤⬇️ ##
 bindsym $mod+bracketleft exec pactl set-source-volume @DEFAULT_SOURCE@ -5%
 # Mude microphone
+## Media // Toggle microphone mute // 🎙️🔇 ##
 bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
 
 # not be the current outputactl set-sink-mute @DEFAULT_SINK@ toggle
@@ -138,41 +173,67 @@ bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
 # Read `man 5 sway-input` for more information about this section.
 
 ### Key bindings
+
+# Show shortcuts overlay 
+# bindsym $mod+slash exec ~/.config/sway/sway-shortcuts.sh 
+## Apps // Show shortcuts overlay // ❓ ##
+bindsym $mod+slash exec ~/.config/sway/scripts/sway-shortcuts.sh 
+
 #
 # Basics:
 #
-    bindsym $mod+x exec swaylock -f -c 000000 -i $wallpaper
-    bindsym $mod+Shift+x exec swaymsg "output * power off"
-    bindsym $mod+Shift+z exec swaymsg "output * power on"
+## System // Lock screen // 🔒 ##
+bindsym $mod+x exec swaylock -f -c 000000 -i $wallpaper
+# bindsym $mod+Shift+x exec swaymsg "output * power off"
+# bindsym $mod+Shift+z exec swaymsg "output * power on"
+## Power // Suspend system // 😴 ##
+bindsym $mod+Shift+x exec 'sudo systemctl suspend'
+## Power // Restore laptop panel power and brightness // 💡 ##
+bindsym $mod+Shift+z exec 'swaymsg output $laptop power on; brightnessctl -r'
 
-    # mounting usb disks
-    bindsym $mod+m exec udsikie
+# mounting usb disks
+## Apps // Mount external drive helper (udiskie) // 💽 ##
+bindsym $mod+m exec udsikie
      
-    # Start a terminal
-    bindsym $mod+Return exec $term
+# Start a terminal
+## Apps // Open terminal // 🖥️ ##
+bindsym $mod+Return exec $term
 
-    # Kill focused window
-    bindsym $mod+q kill
-    bindsym $mod+Shift+Q exec pkill -USR1 waybar
+# Kill focused window
+## Windows // Kill focused window // ❌ ##
+bindsym $mod+q kill
+## UI // Reload Waybar (USR1) // 🔁 ##
+bindsym $mod+Shift+Q exec pkill -USR1 waybar
 
 # Start your launcher
-    bindsym $mod+d exec $menu
-    bindsym $mod+Shift+w exec ~/.config/waybar/scripts/network-menu.sh
+## Apps // Open application launcher (rofi combi) // 🚀 ##
+bindsym $mod+d exec $menu
+## Network // Network manager menu // 🌐 ##
+bindsym $mod+Shift+w exec ~/.config/waybar/scripts/network-menu.sh
 
-    bindsym $mod+r exec /usr/bin/gnome-calculator -m advanced
-    bindsym $mod+Shift+t exec $term --class "htop" htop
+## Apps // Calculator (advanced) // ➗ ##
+bindsym $mod+r exec /usr/bin/gnome-calculator -m advanced
+## Apps // System monitor (htop) in terminal // 📈 ##
+bindsym $mod+Shift+t exec $term --class "htop" htop
 
 # nvim with obskidian
-    bindsym $mod+n exec $term --class "nvim_obsidiantoday" zsh -i ~/.local/bin/run_nvim_obsidian.sh today 
-    bindsym $mod+Shift+n exec $term --class "nvim_obsidiannew" zsh -i ~/.local/bin/run_nvim_obsidian.sh new
-    bindsym $mod+i exec $term --class "nvim_quick" zsh -i ~/.local/bin/run_nvim_obsidian.sh quick
-    bindsym $mod+Shift+i exec $term --class "nvim_quick" zsh -i ~/.local/bin/run_nvim_obsidian.sh template
+## Notes // Open Obsidian daily note (Neovim) // 📝 ##
+bindsym $mod+n exec $term --class "nvim_obsidiantoday" zsh -i ~/.local/bin/run_nvim_obsidian.sh today 
+## Notes // Create new Obsidian note (Neovim) // 🆕 ##
+bindsym $mod+Shift+n exec $term --class "nvim_obsidiannew" zsh -i ~/.local/bin/run_nvim_obsidian.sh new
+## Notes // Quick note (Neovim) // ⚡ ##
+bindsym $mod+i exec $term --class "nvim_quick" zsh -i ~/.local/bin/run_nvim_obsidian.sh quick
+## Notes // Insert from template (Neovim) // 📄 ##
+bindsym $mod+Shift+i exec $term --class "nvim_quick" zsh -i ~/.local/bin/run_nvim_obsidian.sh template
 # floating terminal
-    bindsym $mod+t exec $term --class "terminal_floating"
+## Apps // Open floating terminal // 🪟🖥️ ##
+bindsym $mod+t exec $term --class "terminal_floating"
 
 # Bind floating shell with TUI selection to something nice
-    bindsym $mod+p exec $term --class "clipse" ${HOME}/.local/bin/clipse
-    bindsym $mod+Shift+p exec $term --class "clipse" zsh -i ${HOME}/.local/bin/run_swappy.sh 
+## Clipboard // Open Clipse (clipboard/TUI) // 📋 ##
+bindsym $mod+p exec $term --class "clipse" ${HOME}/.local/bin/clipse
+## Screenshots // Screen annotate (swappy) // ✍️ ##
+bindsym $mod+Shift+p exec $term --class "clipse" zsh -i ${HOME}/.local/bin/run_swappy.sh 
 
 # cisco secure client
     exec_always --no-startup-id gtk-launch com.cisco.secureclient.gui.desktop
@@ -180,39 +241,56 @@ bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
     exec --no-startup-id $term --class "terminal_floating"
 # bindsym $mod+o exec gtk-launch obsidian.desktop
 
-    bindsym $mod+z [con_mark="zathura"] scratchpad show
-    bindsym $mod+c [con_mark="cisco"] scratchpad show
-    bindsym $mod+Shift+o [con_mark="obsidian"] scratchpad show
-    bindsym $mod+o [con_mark="quick"] scratchpad show
-    bindsym $mod+Shift+Return [con_mark="terminal_fl"] scratchpad show
+## Scratchpad // Show Zathura from scratchpad // 📚 ##
+bindsym $mod+z [con_mark="zathura"] scratchpad show
+## Scratchpad // Show Cisco client from scratchpad // 🛡️ ##
+bindsym $mod+c [con_mark="cisco"] scratchpad show
+## Scratchpad // Show Obsidian from scratchpad // 🗒️ ##
+bindsym $mod+Shift+o [con_mark="obsidian"] scratchpad show
+## Scratchpad // Show Quick (Neovim) from scratchpad // ⚡ ##
+bindsym $mod+o [con_mark="quick"] scratchpad show
+## Scratchpad // Show floating terminal // 🪟🖥️ ##
+bindsym $mod+Shift+Return [con_mark="terminal_fl"] scratchpad show
 
 # Screenshot the monitor
-    # take screenshot and copy to clipboard
-    bindsym Print exec ${HOME}/.local/bin/run_screenshot.sh -c
-    # take screenshot and open in open in swappy
-    bindsym Alt+Print exec ${HOME}/.local/bin/run_screenshot.sh -c -e 
-    # take screenshot and save to ~/Pictures/Screenshots/screenshot-%Y%m%d-%H%M%S.png
-    bindsym Alt+Shift+Print exec ${HOME}/.local/bin/run_screenshot.sh
+# take screenshot and copy to clipboard
+## Screenshots // Full screen to clipboard // 🖼️📋 ##
+bindsym Print exec ${HOME}/.local/bin/run_screenshot.sh -c
+# take screenshot and open in open in swappy
+## Screenshots // Full screen to editor (swappy) // 🖼️✍️ ##
+bindsym Alt+Print exec ${HOME}/.local/bin/run_screenshot.sh -c -e 
+# take screenshot and save to ~/Pictures/Screenshots/screenshot-%Y%m%d-%H%M%S.png
+## Screenshots // Full screen to file // 🖼️💾 ##
+bindsym Alt+Shift+Print exec ${HOME}/.local/bin/run_screenshot.sh
 # Screenshot a window
-    bindsym $mod+Print exec ${HOME}/.local/bin/run_screenshot.sh  -c -m window
-    bindsym $mod+Alt+Print exec ${HOME}/.local/bin/run_screenshot.sh -e -c -m window
-    bindsym $mod+Alt+Shift+Print exec ${HOME}/.local/bin/run_screenshot.sh -m window
+## Screenshots // Active window to clipboard // 🪟📋 ##
+bindsym $mod+Print exec ${HOME}/.local/bin/run_screenshot.sh  -c -m window
+## Screenshots // Active window to editor (swappy) // 🪟✍️ ##
+bindsym $mod+Alt+Print exec ${HOME}/.local/bin/run_screenshot.sh -e -c -m window
+## Screenshots // Active window to file // 🪟💾 ##
+bindsym $mod+Alt+Shift+Print exec ${HOME}/.local/bin/run_screenshot.sh -m window
 # Screenshot a region
-    bindsym Shift+Print exec ${HOME}/.local/bin/run_screenshot.sh -c -m region
-    bindsym $mod+Shift+Print exec ${HOME}/.local/bin/run_screenshot.sh -e -c -m region
+## Screenshots // Region to clipboard // 🔲📋 ##
+bindsym Shift+Print exec ${HOME}/.local/bin/run_screenshot.sh -c -m region
+## Screenshots // Region to editor (swappy) // 🔲✍️ ##
+bindsym $mod+Shift+Print exec ${HOME}/.local/bin/run_screenshot.sh -e -c -m region
 
-    # bindsym $mod+semicolon exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.PlayPause
-    # bindsym $mod+greater exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Next
-    # bindsym $mod+less exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Previous
+# bindsym $mod+semicolon exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.PlayPause
+# bindsym $mod+greater exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Next
+# bindsym $mod+less exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Previous
 
     assign [class="Spotify"] 10 
     for_window [class="Spotify"] floating enable
     for_window [class="Spotify"] resize set width 1800 height 1100
 
-    bindsym $mod+colon exec spotify
-    bindsym $mod+semicolon exec playerctl --player=spotify play-pause
-    bindsym $mod+less exec playerctl --player=spotify previous
-    bindsym $mod+greater exec playerctl --player=spotify next
+## Media // Launch Spotify // 🎵 ##
+bindsym $mod+colon exec spotify
+## Media // Play/Pause Spotify // ⏯️ ##
+bindsym $mod+semicolon exec playerctl --player=spotify play-pause
+## Media // Previous track (Spotify) // ⏮️ ##
+bindsym $mod+less exec playerctl --player=spotify previous
+## Media // Next track (Spotify) // ⏭️ ##
+bindsym $mod+greater exec playerctl --player=spotify next
 
 # Drag floating windows by holding down $mod and left mouse button.
 # Resize them with right mouse button + $mod.
@@ -222,59 +300,97 @@ bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
     floating_modifier $mod normal
 
 # Reoad the configuration file
-    bindsym $mod+Shift+c reload
+## System // Reload Sway config // 🔁 ##
+bindsym $mod+Shift+c reload
 
 # Exit sway (logs you out of your Wayland session)
-    bindsym $mod+Shift+e exec swaynag -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway? This will end your Wayland session.' -B 'Yes, exit sway' 'swaymsg exit'
+## System // Exit Sway (confirmation dialog) // 🚪 ##
+bindsym $mod+Shift+e exec swaynag -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway? This will end your Wayland session.' -B 'Yes, exit sway' 'swaymsg exit'
 #
 # Moving around:
 #
 # Move your focus around
-    bindsym $mod+$left focus left
-    bindsym $mod+$down focus down
-    bindsym $mod+$up focus up
-    bindsym $mod+$right focus right
+## Movement // Focus left // ◀️ ##
+bindsym $mod+$left focus left
+## Movement // Focus down // 🔻 ##
+bindsym $mod+$down focus down
+## Movement // Focus up // 🔺 ##
+bindsym $mod+$up focus up
+## Movement // Focus right // ▶️ ##
+bindsym $mod+$right focus right
 # Or use $mod+[up|down|left|right]
-    bindsym $mod+Left focus left
-    bindsym $mod+Down focus down
-    bindsym $mod+Up focus up
-    bindsym $mod+Right focus right
+## Movement // Focus left (arrow) // ◀️ ##
+bindsym $mod+Left focus left
+## Movement // Focus down (arrow) // 🔻 ##
+bindsym $mod+Down focus down
+## Movement // Focus up (arrow) // 🔺 ##
+bindsym $mod+Up focus up
+## Movement // Focus right (arrow) // ▶️ ##
+bindsym $mod+Right focus right
 
 # Move the focused window with the same, but add Shift
-    bindsym $mod+Shift+$left move left
-    bindsym $mod+Shift+$down move down
-    bindsym $mod+Shift+$up move up
-    bindsym $mod+Shift+$right move right
+## Movement // Move window left // ◀️📦 ##
+bindsym $mod+Shift+$left move left
+## Movement // Move window down // 🔻📦 ##
+bindsym $mod+Shift+$down move down
+## Movement // Move window up // 🔺📦 ##
+bindsym $mod+Shift+$up move up
+## Movement // Move window right // ▶️📦 ##
+bindsym $mod+Shift+$right move right
 # Ditto, with arrow keys
-    bindsym $mod+Shift+Left move left
-    bindsym $mod+Shift+Down move down
-    bindsym $mod+Shift+Up move up
-    bindsym $mod+Shift+Right move right
+## Movement // Move window left (arrow) // ◀️📦 ##
+bindsym $mod+Shift+Left move left
+## Movement // Move window down (arrow) // 🔻📦 ##
+bindsym $mod+Shift+Down move down
+## Movement // Move window up (arrow) // 🔺📦 ##
+bindsym $mod+Shift+Up move up
+## Movement // Move window right (arrow) // ▶️📦 ##
+bindsym $mod+Shift+Right move right
 #
 # Workspaces:
 #
 # Switch to workspace
-    bindsym $mod+1 workspace number 1
-    bindsym $mod+2 workspace number 2
-    bindsym $mod+3 workspace number 3
-    bindsym $mod+4 workspace number 4
-    bindsym $mod+5 workspace number 5
-    bindsym $mod+6 workspace number 6
-    bindsym $mod+7 workspace number 7
-    bindsym $mod+8 workspace number 8
-    bindsym $mod+9 workspace number 9
-    bindsym $mod+0 workspace number 10
+## Workspaces // Switch to workspace 1 // 1️⃣ ##
+bindsym $mod+1 workspace number 1
+## Workspaces // Switch to workspace 2 // 2️⃣ ##
+bindsym $mod+2 workspace number 2
+## Workspaces // Switch to workspace 3 // 3️⃣ ##
+bindsym $mod+3 workspace number 3
+## Workspaces // Switch to workspace 4 // 4️⃣ ##
+bindsym $mod+4 workspace number 4
+## Workspaces // Switch to workspace 5 // 5️⃣ ##
+bindsym $mod+5 workspace number 5
+## Workspaces // Switch to workspace 6 // 6️⃣ ##
+bindsym $mod+6 workspace number 6
+## Workspaces // Switch to workspace 7 // 7️⃣ ##
+bindsym $mod+7 workspace number 7
+## Workspaces // Switch to workspace 8 // 8️⃣ ##
+bindsym $mod+8 workspace number 8
+## Workspaces // Switch to workspace 9 // 9️⃣ ##
+bindsym $mod+9 workspace number 9
+## Workspaces // Switch to workspace 10 // 🔟 ##
+bindsym $mod+0 workspace number 10
 # Move focused container to workspace
-    bindsym $mod+Shift+1 move container to workspace number 1
-    bindsym $mod+Shift+2 move container to workspace number 2
-    bindsym $mod+Shift+3 move container to workspace number 3
-    bindsym $mod+Shift+4 move container to workspace number 4
-    bindsym $mod+Shift+5 move container to workspace number 5
-    bindsym $mod+Shift+6 move container to workspace number 6
-    bindsym $mod+Shift+7 move container to workspace number 7
-    bindsym $mod+Shift+8 move container to workspace number 8
-    bindsym $mod+Shift+9 move container to workspace number 9
-    bindsym $mod+Shift+0 move container to workspace number 10
+## Workspaces // Move container to workspace 1 // 1️⃣📦 ##
+bindsym $mod+Shift+1 move container to workspace number 1
+## Workspaces // Move container to workspace 2 // 2️⃣📦 ##
+bindsym $mod+Shift+2 move container to workspace number 2
+## Workspaces // Move container to workspace 3 // 3️⃣📦 ##
+bindsym $mod+Shift+3 move container to workspace number 3
+## Workspaces // Move container to workspace 4 // 4️⃣📦 ##
+bindsym $mod+Shift+4 move container to workspace number 4
+## Workspaces // Move container to workspace 5 // 5️⃣📦 ##
+bindsym $mod+Shift+5 move container to workspace number 5
+## Workspaces // Move container to workspace 6 // 6️⃣📦 ##
+bindsym $mod+Shift+6 move container to workspace number 6
+## Workspaces // Move container to workspace 7 // 7️⃣📦 ##
+bindsym $mod+Shift+7 move container to workspace number 7
+## Workspaces // Move container to workspace 8 // 8️⃣📦 ##
+bindsym $mod+Shift+8 move container to workspace number 8
+## Workspaces // Move container to workspace 9 // 9️⃣📦 ##
+bindsym $mod+Shift+9 move container to workspace number 9
+## Workspaces // Move container to workspace 10 // 🔟📦 ##
+bindsym $mod+Shift+0 move container to workspace number 10
 # Note: workspaces can have any name you want, not just numbers.
 # We just use 1-10 as the default.
 #
@@ -283,25 +399,34 @@ bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
 # You can "split" the current object of your focus with
 # $mod+b or $mod+v, for horizontal and vertical splits
 # respectively.
-    bindsym $mod+b splith
-    bindsym $mod+v splitv
+## Layout // Horizontal split // ↔️ ##
+bindsym $mod+b splith
+## Layout // Vertical split // ↕️ ##
+bindsym $mod+v splitv
 
 # Switch the current container between different layout styles
-    bindsym $mod+s layout stacking
-    bindsym $mod+w layout tabbed
-    bindsym $mod+e layout toggle split
+## Layout // Stacking layout // 🗂️ ##
+bindsym $mod+s layout stacking
+## Layout // Tabbed layout // 🗂️🗂️ ##
+bindsym $mod+w layout tabbed
+## Layout // Toggle split orientation // 🔀 ##
+bindsym $mod+e layout toggle split
 
 # Make the current focus fullscreen
-    bindsym $mod+f fullscreen
+## Windows // Toggle fullscreen // ⛶ ##
+bindsym $mod+f fullscreen
 
 # Toggle the current focus between tiling and floating mode
-    bindsym $mod+Shift+space floating toggle
+## Windows // Toggle tiling/floating // 🪟⇄ ##
+bindsym $mod+Shift+space floating toggle
 
 # Swap focus between the tiling area and the floating area
-    bindsym $mod+space focus mode_toggle
+## Windows // Toggle focus between tiling and floating areas // 🎯 ##
+bindsym $mod+space focus mode_toggle
 
 # Move focus to the parent container
-    bindsym $mod+a focus parent
+## Windows // Focus parent container // ⬆️ ##
+bindsym $mod+a focus parent
 #
 # Scratchpad:
 #
@@ -309,34 +434,47 @@ bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
 # You can send windows there and get them back later.
 
 # Move the currently focused window to the scratchpad
-    bindsym $mod+Shift+minus move scratchpad
+## Scratchpad // Move window to scratchpad // 📥 ##
+bindsym $mod+Shift+minus move scratchpad
 
 # Show the next scratchpad window or hide the focused scratchpad window.
 # If there are multiple scratchpad windows, this command cycles through them.
-    bindsym $mod+minus scratchpad show
+## Scratchpad // Show next scratchpad window // 📤 ##
+bindsym $mod+minus scratchpad show
 #
 # Resizing containers:
 #
-    mode "resize" {
+mode "resize" {
 # left will shrink the containers width
 # right will grow the containers width
 # up will shrink the containers height
 # down will grow the containers height
-        bindsym $left resize shrink width 10px
-            bindsym $down resize grow height 10px
-            bindsym $up resize shrink height 10px
-            bindsym $right resize grow width 10px
+    ## Resize Mode // Shrink width (vim-left) // ⬅️⬖ ##
+    bindsym $left resize shrink width 10px
+        ## Resize Mode // Grow height (vim-down) // ⬇️⬙ ##
+        bindsym $down resize grow height 10px
+        ## Resize Mode // Shrink height (vim-up) // ⬆️⬘ ##
+        bindsym $up resize shrink height 10px
+        ## Resize Mode // Grow width (vim-right) // ⮕⬗ ##
+        bindsym $right resize grow width 10px
 
 # Ditto, with arrow keys
-            bindsym Left resize shrink width 10px
-            bindsym Down resize grow height 10px
-            bindsym Up resize shrink height 10px
-            bindsym Right resize grow width 10px
+        ## Resize Mode // Shrink width (arrow left) // ⬅️⬖ ##
+        bindsym Left resize shrink width 10px
+        ## Resize Mode // Grow height (arrow down) // ⬇️⬙ ##
+        bindsym Down resize grow height 10px
+        ## Resize Mode // Shrink height (arrow up) // ⬆️⬘ ##
+        bindsym Up resize shrink height 10px
+        ## Resize Mode // Grow width (arrow right) // ⮕⬗ ##
+        bindsym Right resize grow width 10px
 
 # Return to default mode
-            bindsym Return mode "default"
-            bindsym Escape mode "default"
-    }
+        ## Resize Mode // Return to default mode // ↩️ ##
+        bindsym Return mode "default"
+        ## Resize Mode // Cancel and return to default // ❌ ##
+        bindsym Escape mode "default"
+}
+## Resize Mode // Enter resize mode // 📐 ##
 bindsym $mod+Shift+r mode "resize"
 
 #
@@ -353,6 +491,9 @@ bar {
 
 popup_during_fullscreen smart
 
+
+# Float and center the rofi window we launch (-normal-window with this title) 
+for_window [title="Sway Shortcuts"] floating enable, sticky enable, move position center, resize set width 1000 px height 700 px
 
 # for_window [app_id="blueman-manager"] floating enable, resize set width 400 px height 300 px, move container to workspace current, move position 900 100
 for_window [app_id="(?i)(?:blueman-manager|azote|gnome-disks|nm-connection-editor|lxqt-policykit-agent|snap-store)"] floating enable,  sticky enable
