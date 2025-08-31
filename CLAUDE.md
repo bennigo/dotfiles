@@ -18,7 +18,7 @@ Personal dotfiles repository for Sway-based Linux desktop environment. Uses modu
 - **Compositor**: Sway (Wayland-based i3-compatible)
 - **Status Bar**: Waybar with custom modules
 - **Application Launcher**: Rofi
-- **Terminal Emulators**: Kitty (primary), Foot, Alacritty
+- **Terminal Emulators**: Kitty (primary), Foot (lightweight), Alacritty (cross-platform)
 - **Notification System**: Mako
 - **Screenshot Tools**: Grim + Swappy + Slurp
 - **File Manager**: Ranger (terminal), Nautilus (GUI)
@@ -37,9 +37,18 @@ Personal dotfiles repository for Sway-based Linux desktop environment. Uses modu
 ├── sway/          # Sway compositor configuration
 ├── waybar/        # Status bar with custom modules
 ├── neovim/        # Editor configuration (LazyVim-based)
+├── neovim_old/    # Previous neovim configuration backup
 ├── tmux/          # Terminal multiplexer config
 ├── local_bin/     # Custom executable scripts
 ├── system/        # System-level configs and installation (see system/CLAUDE.md)
+├── ansible/       # System provisioning and automation
+├── kitty/         # Terminal emulator configuration
+├── foot/          # Lightweight terminal emulator
+├── alacritty/     # Cross-platform terminal emulator
+├── qutebrowser/   # Keyboard-driven web browser
+├── swappy/        # Screenshot annotation tool
+├── zsh/           # Shell configuration
+├── profile/       # Shell profile settings
 └── [app]/         # Per-application config directories
 ```
 
@@ -72,11 +81,18 @@ bindsym $mod+key command
 - **`sway/.config/sway/scripts/`**: Sway-specific automation
 - **`waybar/.config/waybar/scripts/`**: Status bar modules
 
+### System Automation
+
+- **Ansible**: Comprehensive system provisioning and configuration management
+- **Bootstrap system**: Automated setup for fresh installations
+
 ### Development Integration
 
 - **Neovim**: LazyVim-based setup with custom snippets
 - **Tmux**: Session management with plugin ecosystem
 - **Terminal**: Multiple emulator configs (kitty, foot, alacritty)
+- **Shell**: Zsh with custom profile configurations
+- **Browser**: Qutebrowser for keyboard-driven web browsing
 
 ## Common Operations
 
@@ -92,6 +108,17 @@ sway -C ~/.config/sway/config
 
 # Reload sway
 swaymsg reload
+```
+
+### System Provisioning
+
+```bash
+# Run Ansible bootstrap
+cd ~/.dotfiles/ansible
+ansible-playbook site.yml
+
+# Target specific profile/role
+ansible-playbook site.yml --tags "sway,neovim"
 ```
 
 ### Script Development
