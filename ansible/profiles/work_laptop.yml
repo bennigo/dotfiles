@@ -1,0 +1,45 @@
+---
+# Work laptop profile - Full setup with work-specific tools
+# Usage: ansible-playbook bootstrap.yml --extra-vars "@profiles/work_laptop.yml"
+
+profile: work_laptop
+
+# Force laptop-specific setup even if detection fails
+force_laptop: true
+force_nvidia: true  # Your laptop has NVIDIA GPU
+
+# Work-specific features
+features:
+  install_development_tools: true
+  install_desktop_environment: true
+  install_gaming_tools: false
+  install_media_tools: true
+  setup_credentials: true  # Will require manual GPG setup
+  deploy_work_configs: true
+
+# Additional work packages
+work_packages:
+  - postgresql-client
+  - vpnc
+  - remmina
+  - freerdp2-dev  
+  - ansible
+  - pass
+
+# Extended development environment
+development_packages:
+  - cmake
+  - pkg-config
+  - python3
+  - python3-pip
+  - python3-venv
+  - nodejs
+  - npm
+  - golang
+  - rust-all
+  - texlive-full
+  - pandoc
+
+# Skip confirmations for faster automated setup
+skip_confirmation: false  # Keep confirmation for work setup
+skip_reboot_prompt: false

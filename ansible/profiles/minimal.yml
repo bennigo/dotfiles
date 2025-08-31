@@ -1,0 +1,27 @@
+---
+# Minimal profile - Headless server or basic setup
+# Usage: ansible-playbook bootstrap.yml --extra-vars "@profiles/minimal.yml"
+
+profile: minimal
+
+# Override default settings for minimal install
+features:
+  install_development_tools: false
+  install_desktop_environment: false
+  install_gaming_tools: false
+  install_media_tools: false
+  setup_credentials: false
+  deploy_work_configs: false
+
+# Minimal package set
+base_packages:
+  - git
+  - stow  
+  - zsh
+  - vim
+  - curl
+  - wget
+
+# Skip hardware detection confirmations for automated installs
+skip_confirmation: true
+skip_reboot_prompt: false

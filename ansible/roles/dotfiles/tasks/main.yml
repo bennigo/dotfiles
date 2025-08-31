@@ -1,0 +1,131 @@
+---
+# Dotfiles deployment using GNU Stow
+# Deploys all configuration directories via stow
+
+- name: Verify dotfiles repository is present
+  stat:
+    path: "{{ directories.dotfiles }}"
+  register: dotfiles_dir
+  failed_when: not dotfiles_dir.stat.exists
+
+- name: Get list of stowable directories
+  find:
+    paths: "{{ directories.dotfiles }}"
+    file_type: directory
+    depth: 1
+  register: stow_directories
+  become: no
+
+- name: Filter directories for stow deployment
+  set_fact:
+    stowable_dirs: "{{ stow_directories.files | 
+                      map(attribute='path') | 
+                      map('basename') |
+                      reject('match', '^[.]') |
+                      reject('equalto', 'ansible') |
+                      reject('equalto', 'system') |
+                      reject('equalto', '.git') |
+                      list }}"
+
+- name: Display directories to be stowed
+  debug:
+    msg: |
+      Dotfiles directories to be deployed:
+      {{ stowable_dirs | join(', ') }}
+      
+      Skipped directories: ansible, system, .git, hidden dirs
+
+- name: Deploy dotfiles with stow
+  command: stow {{ item }}
+  args:
+    chdir: "{{ directories.dotfiles }}"
+  loop: "{{ stowable_dirs }}"
+  become: no
+  register: stow_results
+  failed_when: stow_results.rc != 0 and 'WARNING' not in stow_results.stderr
+  tags: ["dotfiles", "stow"]
+
+- name: Deploy custom local bin scripts
+  block:
+    - name: Ensure local bin directory exists
+      file:
+        path: "{{ directories.local_bin }}"
+        state: directory
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: '0755'
+      become: no
+
+    - name: Copy curated local bin scripts
+      copy:
+        src: "{{ item }}"
+        dest: "{{ directories.local_bin }}/{{ item | basename }}"
+        mode: '0755'
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+      with_fileglob:
+        - "{{ playbook_dir }}/files/local_bin/*"
+      become: no
+      tags: ["dotfiles", "local_bin"]
+
+- name: Set up shell environment integration
+  block:
+    - name: Check if .zshrc exists
+      stat:
+        path: "{{ target_home }}/.zshrc"
+      register: zshrc_exists
+      become: no
+
+    - name: Ensure PATH includes local bin
+      lineinfile:
+        path: "{{ target_home }}/.zshrc"
+        line: 'export PATH="$HOME/.local/bin:$PATH"'
+        create: yes
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+      become: no
+      when: zshrc_exists.stat.exists
+
+    - name: Source additional environment files
+      lineinfile:
+        path: "{{ target_home }}/.zshrc"
+        line: "{{ item }}"
+        create: yes
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+      loop:
+        - '# Cargo (Rust) environment'
+        - '[[ -f "$HOME/.cargo/env" ]] && source "$HOME/.cargo/env"'
+        - '# FNM (Node.js) environment'  
+        - '[[ -f "$HOME/.local/share/fnm/fnm" ]] && eval "$(fnm env --use-on-cd)"'
+        - '# FZF key bindings'
+        - '[[ -f "$HOME/.fzf.zsh" ]] && source "$HOME/.fzf.zsh"'
+      become: no
+      when: zshrc_exists.stat.exists
+  tags: ["dotfiles", "shell"]
+
+- name: Verify critical configurations are deployed
+  stat:
+    path: "{{ target_home }}/.config/{{ item }}"
+  register: config_check
+  loop:
+    - sway
+    - waybar
+    - foot
+  failed_when: not config_check.stat.exists
+  become: no
+  tags: ["dotfiles", "verify"]
+
+- name: Display dotfiles deployment summary
+  debug:
+    msg: |
+      Dotfiles deployment completed:
+      
+      ✅ Stowed directories: {{ stowable_dirs | join(', ') }}
+      ✅ Local bin scripts deployed
+      ✅ Shell environment configured
+      ✅ Critical configs verified (sway, waybar, foot)
+      
+      Configuration files are now linked from {{ directories.dotfiles }}
+      Any changes to source files will immediately affect the system.
+  tags: ["dotfiles", "summary"]

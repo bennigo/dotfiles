@@ -1,0 +1,40 @@
+---
+# NVIDIA GPU specific setup
+# Only runs when: has_nvidia_gpu=true or force_nvidia=true
+
+- name: Check if NVIDIA hardware is present
+  debug:
+    msg: "NVIDIA GPU detected or forced - proceeding with NVIDIA setup"
+  when: hardware_roles.nvidia.enabled
+
+- name: Install NVIDIA drivers and utilities
+  apt:
+    name: "{{ hardware_roles.nvidia.packages }}"
+    state: present
+    update_cache: yes
+  tags: ["nvidia", "drivers", "packages"]
+  when: hardware_roles.nvidia.enabled
+
+- name: Configure NVIDIA DRM kernel mode setting
+  copy:
+    content: "options nvidia-drm modeset=1"
+    dest: /etc/modprobe.d/nvidia-drm.conf
+    mode: '0644'
+  notify: update initramfs
+  tags: ["nvidia", "kernel", "config"]
+  when: hardware_roles.nvidia.enabled
+
+- name: Test NVIDIA installation
+  command: nvidia-smi
+  register: nvidia_test
+  failed_when: false
+  changed_when: false
+  tags: ["nvidia", "test"]
+  when: hardware_roles.nvidia.enabled
+
+- name: Display NVIDIA test results
+  debug:
+    msg: |
+      NVIDIA Test Results:
+      {{ nvidia_test.stdout if nvidia_test.rc == 0 else "NVIDIA test failed - driver may need reboot" }}
+  when: hardware_roles.nvidia.enabled

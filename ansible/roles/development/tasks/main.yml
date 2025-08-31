@@ -1,0 +1,156 @@
+---
+# Development environment setup
+# Installs languages, runtimes, and development tools from install.txt
+
+- name: Install development packages
+  apt:
+    name: "{{ development_packages }}"
+    state: present
+    update_cache: yes
+  tags: ["development", "packages"]
+
+- name: Install additional development tools  
+  apt:
+    name:
+      - cmake
+      - ninja-build
+      - gettext
+      - unzip
+      - tmux
+      - clangd
+      - xclip
+      - xsel
+      - chafa
+      - libssl-dev
+      - libvips-dev
+      - libsixel-dev
+      - libchafa-dev
+      - libtbb-dev
+      - extra-cmake-modules
+      - libsqlite3-dev
+      - sqlite3
+      - markdown
+      - build-essential
+      - libreadline-dev
+      - lua5.4
+      - luarocks
+      - python3-venv
+      - python3.12-venv
+      - lynx
+    state: present
+  tags: ["development", "packages", "extended"]
+
+- name: Install Go language
+  block:
+    - name: Download Go
+      get_url:
+        url: "https://go.dev/dl/go1.24.5.linux-amd64.tar.gz"
+        dest: "/tmp/go1.24.5.linux-amd64.tar.gz"
+        mode: '0644'
+
+    - name: Remove existing Go installation
+      file:
+        path: /usr/local/go
+        state: absent
+
+    - name: Extract Go
+      unarchive:
+        src: "/tmp/go1.24.5.linux-amd64.tar.gz"
+        dest: /usr/local
+        remote_src: yes
+        owner: root
+        group: root
+
+    - name: Install clipse via Go
+      command: /usr/local/go/bin/go install github.com/savedra1/clipse@v1.1.0
+      become: no
+      environment:
+        PATH: "/usr/local/go/bin:{{ ansible_env.PATH }}"
+        GOPATH: "{{ target_home }}/go"
+  tags: ["development", "go"]
+
+- name: Install Rust toolchain
+  block:
+    - name: Download Rust installer
+      get_url:
+        url: "https://sh.rustup.rs"
+        dest: "/tmp/rustup-init.sh"
+        mode: '0755'
+
+    - name: Install Rust
+      command: /tmp/rustup-init.sh -y --default-toolchain stable
+      become: no
+      creates: "{{ target_home }}/.cargo/bin/rustc"
+
+    - name: Install Rust tools
+      command: "{{ target_home }}/.cargo/bin/cargo install {{ item }}"
+      loop:
+        - eza
+        - bat
+        - ripgrep --features pcre2
+        - zoxide
+        - fd-find
+        - viu
+      become: no
+      ignore_errors: yes  # Some may already exist
+  tags: ["development", "rust"]
+
+- name: Install Node.js via FNM
+  block:
+    - name: Download and install fnm
+      shell: curl -fsSL https://fnm.vercel.app/install | bash
+      become: no
+      creates: "{{ target_home }}/.local/share/fnm"
+
+    - name: Install latest Node.js
+      shell: |
+        export PATH="{{ target_home }}/.local/share/fnm:$PATH"
+        eval "$(fnm env --use-on-cd)"
+        fnm install --lts
+        fnm default lts-latest
+      become: no
+      args:
+        creates: "{{ target_home }}/.local/share/fnm/node-versions"
+
+    - name: Install Node.js packages
+      npm:
+        name: "{{ item }}"
+        global: yes
+        executable: "{{ target_home }}/.local/share/fnm/aliases/lts-latest/bin/npm"
+      loop:
+        - tree-sitter-cli
+        - neovim
+        - markdownlint-cli2
+        - prettier
+        - "@mermaid-js/mermaid-cli"
+        - markdownlint-cli
+        - markdown-toc
+        - "@anthropic-ai/claude-code"
+      become: no
+      ignore_errors: yes
+  tags: ["development", "nodejs"]
+
+- name: Install Python tools
+  block:
+    - name: Install uv (Python package manager)
+      shell: curl -LsSf https://astral.sh/uv/install.sh | sh
+      become: no
+      creates: "{{ target_home }}/.cargo/bin/uv"
+
+    - name: Install pipx packages
+      pip:
+        name: "{{ item }}"
+        executable: pipx
+        extra_args: --break-system-packages
+      loop:
+        - hatch
+        - hatchling  
+        - sqlfluff
+      become: no
+
+    - name: Install pynvim
+      pip:
+        name: pynvim
+        extra_args: "--break-system-packages --user --upgrade"
+      become: no
+  tags: ["development", "python"]

@@ -1,0 +1,81 @@
+---
+# System files deployment - Copy etc/ and usr/ configurations
+# Deploys your curated system configuration files
+
+- name: Deploy system configuration files from etc/
+  copy:
+    src: "{{ item }}"
+    dest: "/{{ item }}"
+    backup: yes
+    owner: root
+    group: root
+    mode: preserve
+  with_fileglob:
+    - "{{ playbook_dir }}/../system/etc/udevmon.yaml"
+    - "{{ playbook_dir }}/../system/etc/zsh/zshenv"
+    - "{{ playbook_dir }}/../system/etc/security/pam_env.conf"
+  notify: 
+    - reload systemd
+  tags: ["system", "config"]
+
+- name: Deploy systemd service files
+  copy:
+    src: "{{ playbook_dir }}/../system/etc/systemd/system/udevmon.service"
+    dest: /etc/systemd/system/udevmon.service
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - reload systemd
+    - enable udevmon
+  tags: ["system", "systemd"]
+
+- name: Deploy modprobe configurations  
+  copy:
+    src: "{{ item }}"
+    dest: "/etc/modprobe.d/{{ item | basename }}"
+    owner: root
+    group: root
+    mode: '0644'
+  with_fileglob:
+    - "{{ playbook_dir }}/../system/etc/modprobe.d/*"
+  notify: update initramfs
+  tags: ["system", "modprobe"]
+
+- name: Deploy desktop session files
+  copy:
+    src: "{{ playbook_dir }}/../system/usr/share/wayland-sessions/sway.desktop"
+    dest: /usr/share/wayland-sessions/sway.desktop
+    owner: root
+    group: root
+    mode: '0644'
+  tags: ["system", "desktop"]
+
+- name: Deploy system files (fstab, hosts) with validation
+  block:
+    - name: Backup original fstab
+      copy:
+        src: /etc/fstab
+        dest: /etc/fstab.backup.{{ ansible_date_time.epoch }}
+        remote_src: yes
+
+    - name: Deploy custom fstab  
+      copy:
+        src: "{{ playbook_dir }}/../system/etc/fstab"
+        dest: /etc/fstab
+        owner: root
+        group: root  
+        mode: '0644'
+        backup: yes
+      when: deploy_custom_fstab | default(false)
+
+    - name: Deploy custom hosts file
+      copy:
+        src: "{{ playbook_dir }}/../system/etc/hosts"  
+        dest: /etc/hosts
+        owner: root
+        group: root
+        mode: '0644'
+        backup: yes
+      when: deploy_custom_hosts | default(false)
+  tags: ["system", "critical"]

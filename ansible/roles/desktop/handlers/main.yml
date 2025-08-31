@@ -1,0 +1,14 @@
+---
+# Desktop role handlers
+
+- name: reload udev
+  systemd:
+    name: systemd-udevd
+    state: reloaded
+
+- name: restart pulseaudio
+  systemd:
+    name: pulseaudio
+    state: restarted
+    scope: user
+  become: no
