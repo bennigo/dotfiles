@@ -1,0 +1,109 @@
+# Global variables for all hosts
+# These can be overridden in host_vars/ or via command line
+
+# User configuration
+target_user: "{{ ansible_user | default('bgo') }}"
+target_home: "/home/{{ target_user }}"
+target_email: "bgo@vedur.is"
+target_name: "Benedikt Gunnar Ófeigsson"
+
+# Installation profiles (predefined combinations)
+profiles:
+  minimal:
+    - base
+    - dotfiles
+  development:
+    - base
+    - system_files  
+    - development
+    - dotfiles
+  desktop:
+    - base
+    - system_files
+    - development
+    - desktop
+    - dotfiles
+  full:
+    - base
+    - system_files
+    - development
+    - desktop
+    - credentials
+    - dotfiles
+  work_laptop:
+    - base
+    - system_files
+    - development
+    - desktop
+    - credentials
+    - dotfiles
+    - work_tools
+
+# Hardware-specific role activation
+hardware_roles:
+  nvidia:
+    enabled: "{{ has_nvidia_gpu | default(false) or force_nvidia | default(false) }}"
+    packages:
+      - nvidia-driver-535
+      - nvidia-utils-535
+    modprobe_configs:
+      - "nvidia-drm modeset=1"
+  
+  laptop:
+    enabled: "{{ is_laptop | default(false) or force_laptop | default(false) }}"
+    packages:
+      - tlp
+      - tlp-rdw  
+      - powertop
+      - brightnessctl
+    services:
+      - tlp
+      
+  desktop:
+    enabled: "{{ is_desktop | default(true) }}"
+    packages:
+      - pulseaudio
+      - pulseaudio-utils
+
+# Feature flags (easy to toggle)
+features:
+  install_development_tools: true
+  install_desktop_environment: true
+  install_gaming_tools: false
+  install_media_tools: false
+  setup_credentials: false  # Requires manual intervention
+  deploy_work_configs: false
+  
+# Package lists (easy to extend)
+base_packages:
+  - git
+  - stow
+  - zsh
+  - vim
+  - curl
+  - wget
+  - unzip
+  - build-essential
+  
+development_packages:
+  - cmake
+  - pkg-config
+  - python3
+  - python3-pip
+  - nodejs
+  - npm
+  
+desktop_packages:
+  - sway
+  - waybar
+  - rofi
+  - mako-notifier
+  - foot
+  - wdisplays
+  - kanshi
+
+# Directory structure
+directories:
+  dotfiles: "{{ target_home }}/.dotfiles"
+  local_bin: "{{ target_home }}/.local/bin"  
+  config: "{{ target_home }}/.config"

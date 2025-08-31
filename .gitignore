@@ -4,3 +4,22 @@ tmux/.config/tmux/plugins/
 neovim/.config/nvim/lazy-lock.json
 connections.json
 system/.credentials_and_logins/
+# Unencrypted credential files (encrypted .vault files are safe to commit)
+**/credentials_template.yml
+**/credentials_unencrypted.yml
+**/credentials_backup.yml
+# Security tutorial files (contain system-specific details)
+**/emergency-recovery.md
+**/gpg-pass-tutorial.md
+**/password-memory-strategy.md
+
+# Ansible runtime files
+ansible/inventory.retry
+ansible/*.retry
+**/.ansible/
+**/ansible.log
+
+# Temporary files and backups  
+**/*.backup.*
+**/.tmp/
+**/tmp/

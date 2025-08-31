@@ -1,0 +1,51 @@
+---
+# Laptop-specific setup
+# Only runs when: is_laptop=true or force_laptop=true
+
+- name: Check if this is a laptop setup
+  debug:
+    msg: "Laptop detected or forced - proceeding with laptop-specific setup"
+  when: hardware_roles.laptop.enabled
+
+- name: Install laptop power management tools
+  apt:
+    name: "{{ hardware_roles.laptop.packages }}"
+    state: present
+    update_cache: yes
+  tags: ["laptop", "power", "packages"]
+  when: hardware_roles.laptop.enabled
+
+- name: Enable laptop power management services
+  systemd:
+    name: "{{ item }}"
+    enabled: yes
+    state: started
+  loop: "{{ hardware_roles.laptop.services }}"
+  tags: ["laptop", "services"]
+  when: hardware_roles.laptop.enabled
+
+- name: Configure TLP for battery optimization
+  copy:
+    content: |
+      # TLP configuration for laptop battery life
+      TLP_ENABLE=1
+      TLP_WARN_LEVEL=3
+      TLP_DEFAULT_MODE=BAT
+      CPU_SCALING_GOVERNOR_ON_AC=performance
+      CPU_SCALING_GOVERNOR_ON_BAT=powersave
+      WIFI_PWR_ON_AC=off
+      WIFI_PWR_ON_BAT=on
+    dest: /etc/tlp.conf
+    backup: yes
+  notify: restart tlp
+  tags: ["laptop", "power", "config"]
+  when: hardware_roles.laptop.enabled
+
+- name: Add brightness control to sudoers
+  lineinfile:
+    path: /etc/sudoers.d/brightness
+    line: "{{ target_user }} ALL=(ALL) NOPASSWD: /usr/bin/brightnessctl"
+    create: yes
+    mode: '0440'
+  tags: ["laptop", "brightness", "sudo"]
+  when: hardware_roles.laptop.enabled

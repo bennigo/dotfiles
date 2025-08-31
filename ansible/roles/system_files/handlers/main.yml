@@ -1,0 +1,16 @@
+---
+# Handlers for system file changes
+
+- name: reload systemd
+  systemd:
+    daemon_reload: yes
+
+- name: enable udevmon  
+  systemd:
+    name: udevmon
+    enabled: yes
+    state: started
+
+- name: update initramfs
+  command: update-initramfs -u
+  when: ansible_os_family == "Debian"

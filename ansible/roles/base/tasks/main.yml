@@ -1,0 +1,80 @@
+---
+# Base system setup - Essential packages and user configuration
+# This role sets up the foundation that all other roles depend on
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  tags: ["base", "packages"]
+
+- name: Install essential base packages
+  apt:
+    name: "{{ base_packages }}"
+    state: present
+  tags: ["base", "packages"]
+
+- name: Add user to video group (for GPU access)
+  user:
+    name: "{{ target_user }}"
+    groups: video
+    append: yes
+  tags: ["base", "user"]
+
+- name: Configure passwordless sudo for target user
+  lineinfile:
+    path: /etc/sudoers.d/{{ target_user }}
+    line: "{{ target_user }} ALL=(ALL:ALL) NOPASSWD: ALL"
+    create: yes
+    mode: '0440'
+    validate: 'visudo -cf %s'
+  tags: ["base", "sudo"]
+
+- name: Set up git configuration
+  git_config:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    scope: global
+  loop:
+    - { name: "user.email", value: "{{ target_email }}" }
+    - { name: "user.name", value: "{{ target_name }}" }
+  become: no
+  tags: ["base", "git"]
+
+- name: Change default shell to zsh
+  user:
+    name: "{{ target_user }}"
+    shell: /bin/zsh
+  tags: ["base", "shell"]
+
+- name: Create essential directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0755'
+  loop:
+    - "{{ target_home }}/.local/bin"
+    - "{{ target_home }}/.config"
+    - "{{ target_home }}/Downloads/git"
+  become: no
+  tags: ["base", "directories"]
+
+- name: Install interception tools for caps2esc
+  block:
+    - name: Add interception PPA
+      apt_repository:
+        repo: ppa:deafmute/interception
+        state: present
+
+    - name: Install interception caps2esc
+      apt:
+        name: interception-caps2esc
+        state: present
+
+    - name: Remove interception PPA (security practice)
+      apt_repository:
+        repo: ppa:deafmute/interception
+        state: absent
+  tags: ["base", "interception"]

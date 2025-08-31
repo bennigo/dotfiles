@@ -1,104 +1,176 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code when working with this dotfiles repository.
 
 ## Repository Overview
 
-This is a personal dotfiles repository for a Linux system using Sway (Wayland compositor) and related tools. It contains configuration files and custom scripts for a complete desktop environment setup.
+Personal dotfiles repository for Sway-based Linux desktop environment. Uses modular configuration management with GNU Stow for deployment.
 
-## Architecture and Structure
+## System Environment
 
-### Directory Organization
-- **sway/**: Sway compositor configuration with window management rules, keybindings, and custom scripts
-- **waybar/**: Status bar configuration with custom scripts for network, weather, and system controls
-- **neovim/**: Neovim editor configuration with Lua-based plugins and custom snippets
-- **tmux/**: Terminal multiplexer configuration with plugins and custom scripts
-- **system/**: System-level configuration files, installation scripts, and credentials management
-- **local_bin/**: Custom executable scripts and utilities
-- **profile/**, **zsh/**: Shell environment configuration
-- **kitty/**, **foot/**, **alacritty/**: Terminal emulator configurations
-- **qutebrowser/**: Web browser configuration
+### Linux Distribution
+- **OS**: Linux (Ubuntu-based or similar)
+- **Kernel**: Linux 6.14.0-29-generic
+- **Architecture**: x86_64
+- **Package Manager**: apt, snap, flatpak support
 
-### Key Components
+### Desktop Environment
+- **Compositor**: Sway (Wayland-based i3-compatible)
+- **Status Bar**: Waybar with custom modules
+- **Application Launcher**: Rofi
+- **Terminal Emulators**: Kitty (primary), Foot, Alacritty
+- **Notification System**: Mako
+- **Screenshot Tools**: Grim + Swappy + Slurp
+- **File Manager**: Ranger (terminal), Nautilus (GUI)
 
-#### Sway Configuration (`sway/.config/sway/config`)
-- Main configuration file with extensive keybinding definitions
-- Uses structured comment format: `## Category // Description // Icon ##`
-- Scratchpad management for floating applications (Obsidian, Cisco client, terminals)
-- Custom window rules and workspace assignments
-- Integration with screenshot tools, clipboard manager, and media controls
+### Hardware Support
+- **Display Server**: Wayland (Sway compositor)
+- **GPU**: Nvidia support configured
+- **Input**: Keyboard/mouse with custom udev rules
 
-#### Custom Scripts Directory (`sway/.config/sway/scripts/`)
-- `sway-shortcuts.sh`: Dynamic shortcut overlay generator that parses sway config comments
-- Uses rofi for interactive display of categorized shortcuts with icons
+## Architecture
 
-#### System Scripts (`local_bin/`)
-- Contains executable scripts for various system functions
-- Screenshot utilities, application launchers, and system management tools
+### Directory Structure
 
-#### Installation and Setup (`system/install.txt`)
-- Comprehensive installation script with all dependencies
-- Package manager commands for system setup
-- Development environment configuration (Node.js, Rust, Python, etc.)
-
-### Configuration Management
-
-The repository uses a modular approach where each application has its own directory containing the complete `.config` structure. This allows for easy deployment using tools like GNU Stow.
-
-### Key Features
-
-1. **Smart Shortcut System**: Sway configuration includes structured comments that are parsed by `sway-shortcuts.sh` to generate categorized, searchable shortcut overlays
-2. **Scratchpad Integration**: Pre-configured floating windows for quick access to frequently used applications
-3. **Screenshot Workflow**: Integrated screenshot system with annotation support via swappy
-4. **Development Environment**: Full setup for multiple programming languages and tools
-5. **System Integration**: Custom scripts for system management, media control, and desktop functionality
-
-## Common Commands
-
-### System Management
-```bash
-# Initial system setup (run once)
-cd ~/.dotfiles/system/
-# Follow install.txt instructions
-
-# Apply configurations using stow (example)
-stow sway waybar neovim tmux
+```
+.dotfiles/
+├── sway/          # Sway compositor configuration
+├── waybar/        # Status bar with custom modules
+├── neovim/        # Editor configuration (LazyVim-based)
+├── tmux/          # Terminal multiplexer config
+├── local_bin/     # Custom executable scripts
+├── system/        # System-level configs and installation (see system/CLAUDE.md)
+└── [app]/         # Per-application config directories
 ```
 
-### Configuration Testing
+### Configuration Pattern
+
+Each directory contains complete `.config/[app]` structure for GNU Stow deployment:
+
 ```bash
-# Reload sway configuration
-swaymsg reload
-
-# Test sway configuration syntax
-sway -C ~/.config/sway/config
-
-# Show current keybindings
-~/.config/sway/scripts/sway-shortcuts.sh
+stow sway waybar neovim tmux  # Deploy multiple configs
+stow -t ~ sway                # Deploy single config
 ```
 
-### Script Development
-When modifying custom scripts in `local_bin/` or `sway/scripts/`, ensure they are executable:
-```bash
-chmod +x ~/.local/bin/script_name.sh
-chmod +x ~/.config/sway/scripts/script_name.sh
-```
+## Key Features
 
-## Development Notes
+### Smart Shortcut System (`sway/.config/sway/config`)
 
-### Sway Shortcut Comments
-When adding new keybindings to the sway config, use the structured comment format for integration with the shortcuts overlay:
+Structured comment format for dynamic shortcut overlays:
+
 ```
 ## Category // Description // Icon ##
 bindsym $mod+key command
 ```
 
-### Script Dependencies
-Custom scripts may depend on:
-- rofi (application launcher and menus)
-- jq (JSON processing for sway IPC)
-- waybar (status bar)
-- Various command-line utilities (see install.txt for complete list)
+- Parsed by `sway-shortcuts.sh` script
+- Generates searchable, categorized rofi menus
 
-### File Modifications
-Most configuration changes should be made to the source files in the dotfiles repository, then deployed to their target locations. Avoid editing files directly in `~/.config/` as changes may be overwritten.
+### Custom Scripts
+
+- **`local_bin/`**: System utilities and application launchers
+- **`sway/.config/sway/scripts/`**: Sway-specific automation
+- **`waybar/.config/waybar/scripts/`**: Status bar modules
+
+### Development Integration
+
+- **Neovim**: LazyVim-based setup with custom snippets
+- **Tmux**: Session management with plugin ecosystem
+- **Terminal**: Multiple emulator configs (kitty, foot, alacritty)
+
+## Common Operations
+
+### Configuration Management
+
+```bash
+# Deploy configurations
+cd ~/.dotfiles
+stow sway waybar neovim
+
+# Test sway configuration
+sway -C ~/.config/sway/config
+
+# Reload sway
+swaymsg reload
+```
+
+### Script Development
+
+```bash
+# Make scripts executable
+chmod +x ~/.local/bin/new_script.sh
+chmod +x ~/.config/sway/scripts/new_script.sh
+
+# Test sway shortcuts overlay
+~/.config/sway/scripts/sway-shortcuts.sh
+```
+
+### System Services
+
+```bash
+# System services
+sudo systemctl status udevmon
+sudo systemctl restart udevmon
+
+# User services  
+systemctl --user status pipewire
+systemctl --user restart waybar
+
+# Check Wayland session
+echo $WAYLAND_DISPLAY
+loginctl show-session $(loginctl | grep $(whoami) | awk '{print $1}')
+```
+
+### Hardware Management
+
+```bash
+# Test Nvidia configuration
+./system/nvidia.test
+
+# Check GPU status
+nvidia-smi
+swaymsg -t get_outputs
+
+# Input device debugging
+udevadm monitor --environment --udev
+```
+
+## System Integration
+
+### Wayland Compatibility
+- **XWayland**: Legacy X11 application support enabled
+- **Screen sharing**: Portal-based sharing for Wayland applications
+- **Clipboard**: wl-clipboard for Wayland-native copy/paste
+
+### Performance Optimization
+- **Nvidia**: Early KMS for optimal Wayland performance
+- **Input latency**: Custom udev rules for gaming/professional input devices
+- **Resource management**: Systemd user services for session components
+
+## Cross-References
+
+- **System installation, hardware setup, and credentials**: `system/CLAUDE.md`
+- **Global workspace context**: `/home/bgo/CLAUDE.md`
+- **Project-specific contexts**: Individual project CLAUDE.md files
+
+## Development Notes
+
+### Adding Configurations
+
+1. Create new directory with `.config/[app]` structure
+2. Add application configs inside
+3. Update this CLAUDE.md if significant patterns emerge
+4. Deploy with `stow [app]`
+
+### Script Dependencies
+
+Common dependencies across custom scripts:
+
+- rofi (menus and launchers)
+- jq (JSON processing for sway IPC)
+- waybar (status bar integration)
+
+### File Editing Preference
+
+Edit source files in dotfiles repository, not deployed locations in `~/.config/`.
+

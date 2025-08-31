@@ -1,0 +1,42 @@
+---
+# Desktop-specific setup  
+# Only runs when: is_desktop=true (default for non-laptops)
+
+- name: Check if this is a desktop setup
+  debug:
+    msg: "Desktop detected - proceeding with desktop-specific setup"
+  when: hardware_roles.desktop.enabled
+
+- name: Install desktop audio system
+  apt:
+    name: "{{ hardware_roles.desktop.packages }}"
+    state: present
+    update_cache: yes
+  tags: ["desktop", "audio", "packages"]
+  when: hardware_roles.desktop.enabled
+
+- name: Configure PulseAudio for desktop use
+  copy:
+    content: |
+      # Desktop PulseAudio configuration
+      default-sample-format = s16le
+      default-sample-rate = 44100
+      default-sample-channels = 2
+      default-fragments = 4
+      default-fragment-size-msec = 25
+    dest: "{{ target_home }}/.pulse/daemon.conf"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0644'
+  tags: ["desktop", "audio", "config"]
+  when: hardware_roles.desktop.enabled
+
+- name: Enable desktop-specific systemd services
+  systemd:
+    name: pulseaudio
+    enabled: yes
+    state: started
+    scope: user
+  become: no
+  tags: ["desktop", "services"]  
+  when: hardware_roles.desktop.enabled

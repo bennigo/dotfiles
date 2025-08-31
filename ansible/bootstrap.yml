@@ -1,0 +1,143 @@
+---
+# Bootstrap playbook - Single command Ubuntu setup
+# Usage: ansible-playbook bootstrap.yml [--extra-vars "profile=desktop"]
+
+- name: Ubuntu Bootstrap - Hardware Detection and System Setup
+  hosts: localhost
+  gather_facts: yes
+  become: yes
+  
+  vars:
+    # Default profile if none specified
+    selected_profile: "{{ profile | default('desktop') }}"
+    
+  pre_tasks:
+    - name: Display system information
+      debug:
+        msg: |
+          ===========================================
+          BOOTSTRAP STARTING - SYSTEM INFORMATION
+          ===========================================
+          Hostname: {{ ansible_hostname }}
+          OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+          Architecture: {{ ansible_architecture }}
+          CPU: {{ ansible_processor[2] if ansible_processor is defined else 'Unknown' }}
+          Memory: {{ (ansible_memtotal_mb/1024) | round(1) }}GB
+          ===========================================
+          
+    - name: Detect hardware configuration
+      debug:
+        msg: |
+          HARDWARE DETECTION RESULTS:
+          - NVIDIA GPU: {{ has_nvidia_gpu }}
+          - Intel CPU/GPU: {{ has_intel_gpu }}  
+          - AMD GPU: {{ has_amd_gpu }}
+          - Laptop: {{ is_laptop }}
+          - Desktop: {{ is_desktop }}
+          - Battery Present: {{ has_battery }}
+          
+          SELECTED PROFILE: {{ selected_profile }}
+          ROLES TO INSTALL: {{ profiles[selected_profile] | join(', ') }}
+          
+    - name: Confirm hardware detection accuracy
+      pause:
+        prompt: |
+          
+          Please verify hardware detection is correct.
+          
+          Hardware flags detected:
+          - NVIDIA GPU: {{ has_nvidia_gpu }}
+          - Laptop mode: {{ is_laptop }}
+          
+          If incorrect, press Ctrl+C and restart with:
+          --extra-vars "force_nvidia=true force_laptop=true"
+          
+          Press ENTER to continue or Ctrl+C to abort
+        seconds: 10
+      when: not skip_confirmation | default(false)
+
+  roles:
+    # Core roles (always run for selected profile)
+    - role: base
+      tags: ["core", "base"]
+      when: "'base' in profiles[selected_profile]"
+      
+    - role: system_files  
+      tags: ["core", "system"]
+      when: "'system_files' in profiles[selected_profile]"
+      
+    - role: development
+      tags: ["development", "dev"]
+      when: "'development' in profiles[selected_profile]"
+      
+    - role: desktop
+      tags: ["desktop", "gui"] 
+      when: "'desktop' in profiles[selected_profile]"
+      
+    - role: credentials
+      tags: ["credentials", "security"]
+      when: "'credentials' in profiles[selected_profile]"
+      
+    - role: dotfiles
+      tags: ["dotfiles", "config"]
+      when: "'dotfiles' in profiles[selected_profile]"
+      
+    # Hardware-specific roles (conditional)
+    - role: hardware/nvidia
+      tags: ["hardware", "nvidia"]
+      when: hardware_roles.nvidia.enabled
+      
+    - role: hardware/laptop  
+      tags: ["hardware", "laptop"]
+      when: hardware_roles.laptop.enabled
+      
+    - role: hardware/desktop
+      tags: ["hardware", "desktop"] 
+      when: hardware_roles.desktop.enabled
+      
+  post_tasks:
+    - name: Bootstrap completion summary
+      debug:
+        msg: |
+          ============================================
+          BOOTSTRAP COMPLETED SUCCESSFULLY! 🎉
+          ============================================
+          
+          Profile installed: {{ selected_profile }}
+          Roles completed: {{ profiles[selected_profile] | join(', ') }}
+          
+          Hardware-specific setup:
+          {% if hardware_roles.nvidia.enabled %}
+          - ✅ NVIDIA GPU configuration applied
+          {% endif %}
+          {% if hardware_roles.laptop.enabled %}
+          - ✅ Laptop power management configured  
+          {% endif %}
+          {% if hardware_roles.desktop.enabled %}
+          - ✅ Desktop audio system configured
+          {% endif %}
+          
+          NEXT STEPS:
+          1. Reboot system to activate all changes
+          2. Log back in and verify Sway desktop loads
+          3. Run credential setup if needed:
+             cd ~/.dotfiles/system && ./scripts/setup_vault.sh
+          
+          ============================================
+
+    - name: Suggest reboot
+      pause:
+        prompt: |
+          
+          🔄 REBOOT RECOMMENDED
+          
+          The bootstrap process has modified:
+          - Kernel modules (NVIDIA, input devices)  
+          - System services (udevmon, power management)
+          - User shell (zsh)
+          - Desktop session files
+          
+          Reboot now for all changes to take effect?
+          Press ENTER to continue without reboot, or Ctrl+C to stop here
+        seconds: 5
+      when: not skip_reboot_prompt | default(false)

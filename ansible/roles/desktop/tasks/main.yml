@@ -1,0 +1,249 @@
+---
+# Desktop environment setup - Sway ecosystem and GUI applications
+# Installs Sway, waybar, rofi, and supporting desktop applications
+
+- name: Install Sway and Wayland ecosystem
+  apt:
+    name:
+      - sway
+      - foot
+      - foot-themes
+      - swayidle
+      - swaylock
+      - xdg-desktop-portal-wlr
+      - waybar
+      - rofi
+      - lxqt-policykit
+      - playerctl
+      - udiskie
+      - mako-notifier
+      - libnotify-bin
+      - fonts-font-awesome
+      - wdisplays
+      - kanshi
+      - pandoc
+    state: present
+    update_cache: yes
+  tags: ["desktop", "sway", "packages"]
+
+- name: Install additional desktop utilities
+  apt:
+    name:
+      - blueman
+      - brightnessctl
+      - pulseaudio
+      - pulseaudio-utils
+      - graphicsmagick
+      - ffmpeg
+      - xdg-utils
+      - lynx
+    state: present
+  tags: ["desktop", "utilities"]
+
+- name: Install screenshot tools dependencies
+  apt:
+    name:
+      - meson
+      - libcairo2
+      - libcairo2-dev
+      - libpango1.0-dev
+      - libgtk-3-dev
+      - libglib2.0-dev
+      - scdoc
+    state: present
+  tags: ["desktop", "screenshot"]
+
+- name: Install kitty terminal from official installer
+  block:
+    - name: Download and install kitty
+      shell: curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin
+      become: no
+      creates: "{{ target_home }}/.local/kitty.app"
+
+    - name: Create kitty symlinks in local bin
+      file:
+        src: "{{ target_home }}/.local/kitty.app/bin/{{ item }}"
+        dest: "{{ target_home }}/.local/bin/{{ item }}"
+        state: link
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+      loop:
+        - kitty
+        - kitten
+      become: no
+  tags: ["desktop", "kitty"]
+
+- name: Build and install sway-screenshot tool
+  block:
+    - name: Clone sway-screenshot repository
+      git:
+        repo: https://github.com/Gustash/sway-screenshot.git
+        dest: /tmp/sway-screenshot
+        force: yes
+
+    - name: Copy sway-screenshot to local bin
+      copy:
+        src: /tmp/sway-screenshot/sway-screenshot
+        dest: "{{ target_home }}/.local/bin/sway-screenshot"
+        mode: '0755'
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        remote_src: yes
+
+    - name: Clean up sway-screenshot source
+      file:
+        path: /tmp/sway-screenshot
+        state: absent
+  become: no
+  tags: ["desktop", "screenshot"]
+
+- name: Install ueberzugpp dependencies
+  apt:
+    name:
+      - libssl-dev
+      - libvips-dev
+      - libsixel-dev
+      - libchafa-dev
+      - libtbb-dev
+      - cmake
+      - libxcb-image0-dev
+      - libxcb-res0
+      - libxcb-res0-dev
+      - libopencv-dev
+    state: present
+  tags: ["desktop", "ueberzugpp"]
+
+- name: Build and install ueberzugpp
+  block:
+    - name: Clone ueberzugpp repository
+      git:
+        repo: https://github.com/jstkdng/ueberzugpp.git
+        dest: "{{ target_home }}/Downloads/git/ueberzugpp"
+        force: yes
+      become: no
+
+    - name: Create ueberzugpp build directory
+      file:
+        path: "{{ target_home }}/Downloads/git/ueberzugpp/build"
+        state: directory
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+      become: no
+
+    - name: Configure ueberzugpp build
+      shell: cmake -DCMAKE_BUILD_TYPE=Release ..
+      args:
+        chdir: "{{ target_home }}/Downloads/git/ueberzugpp/build"
+      become: no
+
+    - name: Build ueberzugpp
+      shell: cmake --build .
+      args:
+        chdir: "{{ target_home }}/Downloads/git/ueberzugpp/build"
+      become: no
+
+    - name: Install ueberzugpp system-wide
+      shell: cmake --install .
+      args:
+        chdir: "{{ target_home }}/Downloads/git/ueberzugpp/build"
+  tags: ["desktop", "ueberzugpp", "heavy"]
+
+- name: Install additional CLI tools and utilities
+  block:
+    - name: Install FZF
+      git:
+        repo: https://github.com/junegunn/fzf.git
+        dest: "{{ target_home }}/.local/share/fzf"
+        depth: 1
+        force: yes
+      become: no
+
+    - name: Run FZF installer
+      shell: "{{ target_home }}/.local/share/fzf/install --all"
+      become: no
+      args:
+        creates: "{{ target_home }}/.fzf.zsh"
+
+    - name: Install Nerd Fonts getter
+      shell: curl -fsSL https://raw.githubusercontent.com/ronniedroid/getnf/master/install.sh | bash
+      become: no
+      creates: "{{ target_home }}/.local/bin/getnf"
+  tags: ["desktop", "cli-tools"]
+
+- name: Install tmux plugin manager
+  git:
+    repo: https://github.com/tmux-plugins/tpm
+    dest: "{{ target_home }}/.local/share/tmux/plugins/tpm"
+    force: yes
+  become: no
+  tags: ["desktop", "tmux"]
+
+- name: Install LazyGit
+  block:
+    - name: Get latest LazyGit version
+      uri:
+        url: https://api.github.com/repos/jesseduffield/lazygit/releases/latest
+        return_content: yes
+      register: lazygit_release
+
+    - name: Extract LazyGit version
+      set_fact:
+        lazygit_version: "{{ (lazygit_release.content | from_json).tag_name | regex_replace('^v', '') }}"
+
+    - name: Download LazyGit
+      get_url:
+        url: "https://github.com/jesseduffield/lazygit/releases/download/v{{ lazygit_version }}/lazygit_{{ lazygit_version }}_Linux_x86_64.tar.gz"
+        dest: "/tmp/lazygit.tar.gz"
+
+    - name: Extract LazyGit
+      unarchive:
+        src: "/tmp/lazygit.tar.gz"
+        dest: "/tmp"
+        remote_src: yes
+        creates: "/tmp/lazygit"
+
+    - name: Install LazyGit
+      copy:
+        src: "/tmp/lazygit"
+        dest: "/usr/local/bin/lazygit"
+        mode: '0755'
+        owner: root
+        group: root
+        remote_src: yes
+
+    - name: Install git-flow
+      apt:
+        name: git-flow
+        state: present
+  tags: ["desktop", "git-tools"]
+
+- name: Install Zap (zsh plugin manager)
+  shell: zsh <(curl -s https://raw.githubusercontent.com/zap-zsh/zap/master/install.zsh) --branch release-v1
+  become: no
+  creates: "{{ target_home }}/.local/share/zap"
+  tags: ["desktop", "zsh"]
+
+- name: Configure desktop environment permissions
+  block:
+    - name: Add user to audio group
+      user:
+        name: "{{ target_user }}"
+        groups: audio
+        append: yes
+
+    - name: Add user to input group (for udev rules)
+      user:
+        name: "{{ target_user }}"
+        groups: input
+        append: yes
+
+    - name: Set up brightness control permissions
+      copy:
+        content: |
+          # Allow members of video group to control brightness
+          SUBSYSTEM=="backlight", ACTION=="add", RUN+="/bin/chgrp video /sys/class/backlight/%k/brightness"
+          SUBSYSTEM=="backlight", ACTION=="add", RUN+="/bin/chmod g+w /sys/class/backlight/%k/brightness"
+        dest: /etc/udev/rules.d/90-brightness.rules
+        mode: '0644'
+      notify: reload udev
+  tags: ["desktop", "permissions"]
