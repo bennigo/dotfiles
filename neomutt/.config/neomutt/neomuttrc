@@ -1,0 +1,62 @@
+# NeoMutt Configuration
+# Phase 1: Basic setup with Gmail account
+
+# Basic settings
+set header_cache = "~/.cache/neomutt/headers"
+set message_cachedir = "~/.cache/neomutt/messages"
+set certificate_file = "~/.cache/neomutt/certificates"
+
+# Display settings
+set sort = reverse-date
+set sort_aux = last-date-received
+set pager_index_lines = 10
+set pager_context = 3
+set menu_scroll
+set tilde
+unset markers
+set quote_regexp = "^( {0,4}[>|:#%]| {0,4}[a-z0-9]+[>|]+)+"
+
+# Composition settings
+set editor = "nvim"
+set charset = "utf-8"
+set send_charset = "utf-8"
+
+# Security settings
+set ssl_force_tls = yes
+set ssl_starttls = yes
+
+# Vim-like key bindings
+bind index,pager g noop
+bind index,pager \Cf noop
+bind index,pager,browser d half-down
+bind index,pager,browser u half-up
+bind index,pager R group-reply
+bind index <space> collapse-thread
+
+# Obsidian integration keybindings
+macro pager O '<pipe-message>~/.config/neomutt/scripts/email-to-obsidian.sh import /dev/stdin<enter>' "Export email to Obsidian"
+macro index O '<pipe-message>~/.config/neomutt/scripts/email-to-obsidian.sh import /dev/stdin<enter>' "Export email to Obsidian"
+macro index,pager \Co '<shell-escape>~/.config/neomutt/scripts/email-to-obsidian.sh inbox<enter>' "Show recent Obsidian email imports"
+macro index,pager / '<shell-escape>~/.config/neomutt/scripts/email-search.sh search<enter>' "Fuzzy search Obsidian emails"
+macro index,pager \Cs '<shell-escape>~/.config/neomutt/scripts/email-search.sh stats<enter>' "Show email system statistics"
+
+# Account switching macros (force full reconnection)
+macro index,pager \e1 '<enter-command>source ~/.config/neomutt/accounts/gmail<enter><enter-command>exec change-folder<enter>imaps://bgovedur@gmail.com@imap.gmail.com:993/INBOX<enter>' "Switch to Gmail"
+macro index,pager \e2 '<enter-command>source ~/.config/neomutt/accounts/benedikt-klifursamband<enter><enter-command>exec change-folder<enter>imaps://benedikt@klifursamband.is@imap.gmail.com:993/INBOX<enter>' "Switch to Benedikt@klifursamband"
+macro index,pager \e3 '<enter-command>source ~/.config/neomutt/accounts/afreksnefnd-klifursamband<enter><enter-command>exec change-folder<enter>imaps://afreksnefnd@klifursamband.is@imap.gmail.com:993/INBOX<enter>' "Switch to Afreksnefnd@klifursamband"
+# macro index,pager \e4 '<enter-command>source ~/.config/neomutt/accounts/bgo-vedur-direct<enter><enter-command>exec change-folder<enter>imaps://bgo@vedur.is@outlook.office365.com:993/INBOX<enter>' "Switch to Vedur.is"
+
+# Load default account (Gmail)
+source ~/.config/neomutt/accounts/gmail
+
+# Enable debug logging (remove after testing)
+set debug_level = 2
+set debug_file = "~/.cache/neomutt/debug"
+
+# HTML mail viewing
+set mailcap_path = ~/.config/neomutt/mailcap
+auto_view text/html
+alternative_order text/plain text/enriched text/html
+
+# Address book integration (future enhancement)
+# set query_command = "abook --mutt-query '%s'"

@@ -118,9 +118,8 @@ exec_always --no-startup-id swayidle -w \
 
 # Handle the lid entirely in Sway; do NOT also let logind do it (you already disabled it) 
 # Keep this simple: suspend on close, turn panel on + restore brightness on open 
-# Custom lid handling removed for Nvidia driver 580 compatibility
-# bindswitch --reload lid:on exec 'systemctl suspend' 
-# bindswitch --reload lid:off exec 'swaymsg output $laptop power on; brightnessctl -r' 
+bindswitch --reload lid:on exec 'systemctl suspend' 
+bindswitch --reload lid:off exec 'swaymsg output $laptop power on; brightnessctl -r' 
 
 # Optional: a panic key if you ever land on a black screen 
 # Press $mod+Ctrl+b to force panel on and set 50% brightness 

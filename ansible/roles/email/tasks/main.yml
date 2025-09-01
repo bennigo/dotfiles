@@ -1,0 +1,61 @@
+---
+# Email system setup - NeoMutt with multiple accounts
+# Phase 1: Basic functionality with Gmail, foundation for Office 365
+
+- name: Install core email packages
+  apt:
+    name: "{{ email_packages }}"
+    state: present
+    update_cache: yes
+  tags: ["email", "packages"]
+
+- name: Install additional email dependencies
+  apt:
+    name:
+      - ca-certificates
+      - gpg
+      - lynx  # HTML email viewing
+      - w3m   # Alternative HTML viewer
+      - urlview  # URL extraction from emails
+    state: present
+  tags: ["email", "packages", "extended"]
+
+- name: Create mail directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0700'
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+  loop:
+    - "{{ target_home }}/.local/share/mail"
+    - "{{ target_home }}/.local/share/mail/gmail"
+    - "{{ target_home }}/.cache/neomutt"
+  become: no
+  tags: ["email", "directories"]
+
+- name: Install pass for credential management
+  apt:
+    name: pass
+    state: present
+  tags: ["email", "security"]
+  when: not (ansible_facts.packages.pass is defined)
+
+- name: Check if GPG key exists for pass
+  stat:
+    path: "{{ target_home }}/.gnupg/pubring.kbx"
+  register: gpg_keyring
+  become: no
+  tags: ["email", "security"]
+
+- name: Remind about GPG setup if needed
+  debug:
+    msg: |
+      WARNING: No GPG keyring found. You'll need to set up GPG and pass before configuring email accounts.
+      
+      Quick setup:
+      1. gpg --generate-key
+      2. pass init your-gpg-key-id
+      3. Re-run email configuration
+  when: not gpg_keyring.stat.exists
+  tags: ["email", "security"]

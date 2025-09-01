@@ -1,0 +1,29 @@
+# Gmail account configuration
+# To be used with: source ~/.config/neomutt/accounts/gmail
+
+# Account identification
+set realname = "Benedikt Gunnar Ófeigsson"
+set from = "bgovedur@gmail.com"
+
+# IMAP settings
+set imap_user = "bgovedur@gmail.com"
+set imap_pass = "`pass show email/gmail`"
+set folder = "imaps://imap.gmail.com:993/"
+set spoolfile = "+INBOX"
+set postponed = "+[Gmail]/Drafts"
+set trash = "+[Gmail]/Trash"
+set record = "+[Gmail]/Sent Mail"
+
+# SMTP settings  
+set smtp_url = "smtps://bgovedur@gmail.com@smtp.gmail.com:465/"
+set smtp_pass = "`pass show email/gmail`"
+
+# Gmail-specific folder mappings
+mailboxes =INBOX =[Gmail]/Sent\ Mail =[Gmail]/Drafts =[Gmail]/Spam =[Gmail]/Trash
+
+# Gmail threading (since Gmail groups conversations)
+set sort = threads
+set sort_aux = reverse-last-date-received
+
+# Status format
+set status_format = "Gmail: %f [Msgs:%?M?%M/?%m%?n? New:%n?%?o? Old:%o?%?d? Del:%d?%?F? Flag:%F?%?t? Tag:%t?%?p? Post:%p?%?b? Inc:%b?%?l? %l?]---(%s/%S)-%>-(%P)---"

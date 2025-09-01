@@ -1,4 +1,48 @@
 local function setup()
+  local function select_meeting_type_template()
+    local plenary_scan = require("plenary.scandir")
+    local Path = require("plenary.path")
+    local ui = vim.ui
+
+    -- 1. Find all meeting type templates
+    local vault_root = Obsidian.workspace.path
+    local template_dir = tostring(vault_root / "Templates/meeting_types/")
+    local files = plenary_scan.scan_dir(template_dir, { depth = 1, add_dirs = false })
+    local types = {}
+    for _, file in ipairs(files) do
+      local name = file:match("template_(.+)%.md$")
+      if name then
+        table.insert(types, { name = name, path = file })
+      end
+    end
+
+    -- 2. Prompt user to select a meeting type
+    ui.select(types, {
+      prompt = "Select meeting type:",
+      format_item = function(item)
+        return item.name
+      end,
+    }, function(choice)
+      if not choice then
+        return ""
+      end
+      -- 3. Read the selected template
+      local meeting_type_content = Path:new(choice.path):read()
+      vim.notify(meeting_type_content, vim.log.levels.INFO, { title = "meeting_type_content" })
+      -- 4. Insert meeting_type_content into the main template (implement this as needed)
+      local bufnr = vim.api.nvim_get_current_buf()
+      local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+      for i, line in ipairs(lines) do
+        if line:find("{{meeting_type}}") then
+          lines[i] = line:gsub("{{meeting_type}}", meeting_type_content)
+        end
+      end
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+    end)
+  end
+
+  vim.api.nvim_create_user_command("ObsidianMeetingType", select_meeting_type_template, {})
+
   require("obsidian").setup({
     workspaces = {
       -- {
@@ -14,8 +58,11 @@ local function setup()
       -- Optional, set to true if you use the Obsidian Advanced URI plugin.
       -- https://github.com/Vinzent03/obsidian-advanced-uri
       use_advanced_uri = false,
-      -- func = vim.ui.open,
     },
+    -- Alternatively - and for backwards compatibility - you can set 'dir' to a single path instead of
+    -- 'workspaces'. For example:
+    -- dir = "~/vaults/work",
+
     -- Optional, if you keep notes in a specific subdirectory of your vault.
     notes_subdir = "0.Inbox",
 
@@ -29,9 +76,9 @@ local function setup()
       -- Optional, if you want to change the date format for the ID of daily notes.
       date_format = "%Y-%m-%d",
       -- Optional, if you want to change the date format of the default alias of daily notes.
-      alias_format = "📅 %B %-d, %Y day: %j",
+      -- alias_format = "📅 %B %-d, %Y day: %j",
       -- Optional, default tags to add to each new daily note created.
-      default_tags = { "type/daily-note" },
+      default_tags = { "daily/notes" },
       -- Optional, if you want to automatically insert a template from your template directory like 'daily.md'
       template = "template_daily.md",
       -- Optional, if you want `Obsidian yesterday` to return the last work day or `Obsidian tomorrow` to return the next work day.
@@ -41,13 +88,36 @@ local function setup()
     -- Optional, completion of wiki links, local markdown links, and tags using nvim-cmp.
     completion = {
       -- Set to false to disable completion.
-      nvim_cmp = false,
+      nvim_cmp = true,
       blink = true, -- Set to false to disable blink.
       -- Trigger completion at 2 chars.
       min_chars = 2,
-      -- Set to false to disable new note creation in the picker
-      create_new = true,
     },
+
+    -- Optional, configure key mappings. These are the defaults. If you don't want to set any keymappings this
+    -- way then set 'mappings = {}'.
+    -- mappings = {
+    --   -- Overrides the 'gf' mapping to work on markdown/wiki links within your vault.
+    --   ["gx"] = {
+    --     action = function()
+    --       return require("obsidian").util.gf_passthrough()
+    --     end,
+    --     opts = { noremap = false, expr = true, buffer = true, desc = "[O]bsidian open link" },
+    --   },
+    --   ["<leader>oc"] = {
+    --     action = function()
+    --       return require("obsidian").util.toggle_checkbox()
+    --     end,
+    --     opts = { buffer = true, desc = "[O]bsidian Toggle [C]heckbox" },
+    --   },
+    --   -- Smart action depending on context, either follow link or toggle checkbox.
+    --   ["<cr>"] = {
+    --     action = function()
+    --       return require("obsidian").util.smart_action()
+    --     end,
+    --     opts = { buffer = true, expr = true, desc = "[O]bsidian Smart_action" },
+    --   },
+    -- },
 
     -- Where to put new notes. Valid options are
     --  * "current_dir" - put new notes in same directory as the current buffer.
@@ -114,13 +184,13 @@ local function setup()
       end
 
       local out = {
-        id = note.id,
         created = os.date("!%Y-%m-%d %H:%M", os.time()),
+        id = note.id,
         aliases = note.aliases,
         tags = note.tags,
         area = "",
+        Resource = "",
         project = "",
-        resource = "",
       }
 
       -- `note.metadata` contains any manually added fields in the frontmatter.
@@ -130,17 +200,6 @@ local function setup()
           out[k] = v
         end
       end
-
-      -- If this is a daily note (by path), set Area to "Journal" if not already set.
-      local note_path = tostring(note.path or "")
-      if note_path:match("Journal/daily") and (out.area == nil or out.Area == "") then
-        out.Area = "Journal"
-      end
-
-      -- Ensure keys exist, even if still empty after merges.
-      out.area = out.area or ""
-      out.project = out.project or ""
-      out.resource = out.resource or ""
 
       return out
     end,
@@ -153,64 +212,16 @@ local function setup()
       substitutions = {
 
         yesterday = function()
-          return tostring(os.date("%Y-%m-%d", os.time() - 86400))
-        end,
-
-        alias_journal_heading = function(note_date)
-          return note_date.partial_note.title or tostring(os.date("📅 %B %-d, %Y, Day: %j", os.time()))
+          return tostring(os.date(date_format, os.time() - 86400))
         end,
 
         alias_heading = function()
           return tostring(os.date("📅 %B %-d, %Y, Day: %j", os.time()))
         end,
 
-        timed_task = function()
-          return string.format("- [ ] Task 1 ➕ %s", os.date("%Y-%m-%d", os.time()))
-        end,
-
-        property = function()
-          return "property"
-        end,
-
         meeting_type = function()
-          return "TEST ⏰ 🕛"
+          return "TEST"
         end,
-      },
-
-      -- A map for configuring unique directories and paths for specific templates
-      --- See: https://github.com/obsidian-nvim/obsidian.nvim/wiki/Template#customizations
-      customizations = {
-        template_resource = {
-          note_id_func = function(title)
-            local suffix = ""
-            if title ~= nil then
-              -- If title is given, transform it into valid file name.
-              suffix = title:gsub(" ", "-"):gsub("[^A-Za-z0-9-]", ""):lower()
-            else
-              -- If title is nil, just add 4 random uppercase letters to the suffix.
-              for _ = 1, 4 do
-                suffix = suffix .. string.char(math.random(65, 90))
-              end
-            end
-            return tostring(os.time()) .. "-" .. suffix
-          end,
-          notes_subdir = "3.Resources",
-        },
-
-        template_ki_stjorn_meeting = {
-          -- This function currently only receives the note title as an input
-          note_id_func = function(title)
-            local suffix = ""
-            if title ~= nil then
-              suffix = title:gsub(" ", "-"):gsub("[^A-Za-z0-9-]", ""):lower()
-            else
-              suffix = "ki_stjonarfundur"
-            end
-            vim.notify(vim.inspect(title), vim.log.levels.DEBUG, { title = "Using template: " })
-
-            return tostring(os.time()) .. "-" .. suffix
-          end,
-        },
       },
     },
 
@@ -223,7 +234,6 @@ local function setup()
       -- vim.fn.jobstart({"xdg-open", url})  -- linux
       -- vim.cmd(':silent exec "!start ' .. url .. '"') -- Windows
       vim.ui.open(url) -- need Neovim 0.10.0+
-      -- vim.ui.open(url, { cmd = { "firefox" } })
     end,
 
     -- Optional, by default when you use `:ObsidianFollowLink` on a link to an image
@@ -231,20 +241,12 @@ local function setup()
     ---@param img string
     follow_img_func = function(img)
       -- vim.fn.jobstart({ "qlmanage", "-p", img }) -- Mac OS quick look preview
-      -- vim.fn.jobstart({ "xdg-open", url }) -- linux
-      vim.ui.open(img)
-      -- vim.ui.open(img, { cmd = { "loupe" } })
-      -- vim.cmd(':silent exec "!startvim.ui.open(img)
-      -- vim.ui.open(img, { cmd = { "loupe" } }) ' .. url .. '"') -- Windows
+      vim.fn.jobstart({ "xdg-open", url }) -- linux
+      -- vim.cmd(':silent exec "!start ' .. url .. '"') -- Windows
     end,
 
-    ---@class obsidian.config.OpenOpts
-    --Opens the file with current line number
-    ---@field use_advanced_uri? boolean
-    ---
-    ---Function to do the opening, default to vim.ui.open
-    ---@field func? fun(uri: string)
-    -- open = {
+    -- Optional, set to true to force ':ObsidianOpen' to bring the app to the foreground.
+    -- open_app_foreground = true,
 
     picker = {
       -- Set your preferred picker. Can be one of 'telescope.nvim', 'fzf-lua', or 'mini.pick'.
@@ -311,10 +313,25 @@ local function setup()
     -- This requires you have `conceallevel` set to 1 or 2. See `:help conceallevel` for more details.
     ui = {
       enable = true, -- set to false to disable all additional syntax features
-      ignore_conceal_warn = false, -- set to true to disable conceallevel specific warning
       update_debounce = 200, -- update delay after a text change (in milliseconds)
       max_file_length = 5000, -- disable UI features for files with more than this many lines
       -- Define how various check-boxes are displayed
+      checkbox = {
+        -- NOTE: the 'char' value has to be a single character, and the highlight groups are defined below.
+        [" "] = { char = "󰄱", hl_group = "ObsidianTodo" },
+        ["/"] = { char = "󰦕", hl_group = "Obsidianbullet" },
+        ["x"] = { char = "", hl_group = "ObsidianDone" },
+        [">"] = { char = "", hl_group = "ObsidianRightArrow" },
+        ["~"] = { char = "󰰱", hl_group = "ObsidianTilde" },
+        ["!"] = { char = "", hl_group = "ObsidianImportant" },
+        ["-"] = { char = "🕛", hl_group = "ObsidianTodo" },
+        -- Replace the above with this if you don't have a patched font:
+        -- [" "] = { char = "☐", hl_group = "ObsidianTodo" },
+        -- ["x"] = { char = "✔", hl_group = "ObsidianDone" },
+
+        -- You can also add more custom ones...
+        order = { " ", "-", "/", "x", ">", "~", "!" },
+      },
       -- checkbox = {
       --   order = { " ", "/", "x", ">", "~", "!", "-" },
       -- },
@@ -330,7 +347,6 @@ local function setup()
       hl_groups = {
         -- The options are passed directly to `vim.api.nvim_set_hl()`. See `:help nvim_set_hl`.
         ObsidianTodo = { bold = true, fg = "#f78c6c" },
-        ObsidianDeadline = { bold = true, fg = "#A6E3A2" },
         ObsidianDone = { bold = true, fg = "#89ddff" },
         ObsidianRightArrow = { bold = true, fg = "#f78c6c" },
         ObsidianTilde = { bold = true, fg = "#ff5370" },
@@ -345,77 +361,30 @@ local function setup()
     },
 
     -- Specify how to handle attachments.
-    ---@class obsidian.config.AttachmentsOpts
-    ---Default folder to save images to, relative to the vault root.
-    ---@field img_folder? string
-    ---Default name for pasted images
-    ---@field img_name_func? fun(): string
-    ---Default text to insert for pasted images, for customizing, see: https://github.com/obsidian-nvim/obsidian.nvim/wiki/Images
-    ---@field img_text_func? fun(path: obsidian.Path): string
-    ---Whether to confirm the paste or not. Defaults to true.
-    ---@field confirm_img_paste? boolean
-
     attachments = {
       -- The default folder to place images in via `:ObsidianPasteImg`.
       -- If this is a relative path it will be interpreted as relative to the vault root.
       -- You can always override this per image by passing a full path to the command instead of just a filename.
       img_folder = "Assets/attachments", -- This is the default
 
-      img_text_func = function(path)
-        -- Get the workspace root to calculate relative path
-        local workspace_root = Obsidian.dir
-        local relative_path = vim.fn.fnamemodify(tostring(path), ":s?" .. tostring(workspace_root) .. "/??")
-
-        local format_string = {
-          markdown = "![](%s)",
-          wiki = "![[%s]]",
-        }
-        -- local style = Obsidian.opts.preferred_link_style
-        local style = "markdown"
-
-        if style == "markdown" then
-          relative_path = require("obsidian.util").urlencode(relative_path, { keep_path_sep = true })
-        end
-
-        return string.format(format_string[style], relative_path)
-      end,
-
+      -- Optional, customize the default name or prefix when pasting images via `:ObsidianPasteImg`.
+      ---@return string
       img_name_func = function()
-        return string.format("Pasted_image_%s", os.date("%Y%m%d%H%M%S"))
+        -- Prefix image names with timestamp.
+        return string.format("%s-", os.time())
       end,
+
       confirm_img_paste = true,
-    },
-
-    ---@class obsidian.config.FooterOpts
-    ---
-    ---@field enabled? boolean
-    ---@field format? string
-    ---@field hl_group? string
-    ---@field separator? string|false Set false to disable separator; set an empty string to insert a blank line separator.
-    footer = {
-      enabled = true,
-      format = "{{backlinks}} backlinks  {{properties}} properties  {{words}} words  {{chars}} chars",
-      hl_group = "Comment",
-      separator = string.rep("-", 80),
-    },
-    ---@class obsidian.config.CheckboxOpts
-    ------Order of checkbox state chars, e.g. { " ", "x" }
-    ---@field order? string[]
-    checkbox = {
-      -- NOTE: the 'char' value has to be a single character, and the highlight groups are defined below.
-      [" "] = { char = "󰄱", hl_group = "ObsidianTodo" },
-      ["-"] = { char = "🕛", hl_group = "ObsidianTodo" },
-      ["/"] = { char = "󰦕", hl_group = "Obsidianbullet" },
-      ["x"] = { char = "", hl_group = "ObsidianDone" },
-      [">"] = { char = "", hl_group = "ObsidianRightArrow" },
-      ["~"] = { char = "󰰱", hl_group = "ObsidianTilde" },
-      ["!"] = { char = "", hl_group = "ObsidianImportant" },
-      -- Replace the above with this if you don't have a patched font:
-      -- [" "] = { char = "☐", hl_group = "ObsidianTodo" },
-      -- ["x"] = { char = "✔", hl_group = "ObsidianDone" },
-
-      -- You can also add more custom ones...
-      order = { " ", "-", "/", "x", ">", "~", "!" },
+      -- A function that determines the text to insert in the note when pasting an image.
+      -- It takes two arguments, the `obsidian.Client` and an `obsidian.Path` to the image file.
+      -- This is the default implementation.
+      ---@param client obsidian.Client
+      ---@param path obsidian.Path the absolute path to the image file
+      ---@return string
+      img_text_func = function(client, path)
+        path = client:vault_relative_path(path) or path
+        return string.format("![%s](%s)", path.name, path)
+      end,
     },
   })
 end
@@ -423,38 +392,40 @@ end
 return {
   "obsidian-nvim/obsidian.nvim",
   -- "epwalsh/obsidian.nvim",
-  version = "*", -- recommended, use latest release instead of latest commit
+  -- version = "*", -- recommended, use latest release instead of latest commit
   enabled = true,
   lazy = false,
-
+  ft = "markdown",
+  -- Replace the above line with this if you only want to load obsidian.nvim for markdown files in your vault:
+  -- event = {
+  --   -- If you want to use the home shortcut '~' here you need to call 'vim.fn.expand'.
+  --   -- E.g. "BufReadPre " .. vim.fn.expand "~" .. "/my-vault/*.md"
+  --   -- refer to `:h file-pattern` for more examples
+  --   "BufReadPre path/to/my-vault/*.md",
+  --   "BufNewFile path/to/my-vault/*.md",
+  -- },
   dependencies = {
     -- Required.
     "nvim-lua/plenary.nvim",
     "ibhagwan/fzf-lua",
-    "Saghen/blink.cmp",
-    "nvim-treesitter",
+    -- "hrsh7th/nvim-cmp",
+    -- "nvim-telescope/telescope.nvim",
+    -- "nvim-treesitter",
+
+    -- see below for full list of optional dependencies 👇
   },
   config = function()
     setup()
+    -- print(vim.inspect(require("obsidian").util))
 
-    -- Initialize your PDF helper and create its keymap (guarded).
-    do
-      -- IMPORTANT: dot notation; file should be at lua/user/obsidian_pdf.lua
-      local ok, pdf = pcall(require, "user.obsidian_pdf")
-      if ok then
-        pdf.setup({
-          pdf_folder = "Assets/pdf", -- relative to vault root
-          link_style = "wiki", -- or "markdown"
-        })
+    -- vim.keymap.set("n", "gf", function()
+    --   if require("obsidian").util.cursor_on_markdown_link() then
+    --     return "<cmd>ObsidianFollowLink<CR>"
+    --   else
+    --     return "gf"
+    --   end
+    -- end, { noremap = false, expr = true })
 
-        -- Keymap to prompt and save/insert a PDF quickly
-        vim.keymap.set("n", "<leader>od", function()
-          pdf.save_pdf({})
-        end, { desc = "Obsidian: Save PDF into vault and insert link" })
-      else
-        vim.notify("obsidian_pdf module not found: " .. tostring(pdf), vim.log.levels.WARN)
-      end
-    end
     -- For other mappings:
     -- vim.keymap.set("n", "gf", "<cmd>ObsidianFollowLink<cr>", { desc = "[O]bsidian [J]journal [Y]esterday" })
     vim.keymap.set("n", "<leader>oc", function()
@@ -465,30 +436,30 @@ return {
       return require("obsidian").util.smart_action()
     end, { buffer = true, expr = true, desc = "[O]bsidian Smart_action" })
 
-    vim.keymap.set("n", "<leader>ob", "<cmd>ObsidianBacklinks<cr>", { desc = "[O]bsidian [B]backlinks" })
-    vim.keymap.set("n", "<leader>or", "<cmd>ObsidianRename<cr>", { desc = "[O]bsidian [R]ename" })
-    vim.keymap.set("n", "<leader>oo", "<cmd>ObsidianOpen<cr>", { desc = "[O]bsidian [O]pen" })
-    vim.keymap.set("n", "<leader>oT", "<cmd>ObsidianTemplate<cr>", { desc = "[O]bsidian insert from [T]emplate" })
-
-    vim.keymap.set("n", "<leader>ot", "<cmd>ObsidianTag<cr>", { desc = "[O]bsidian search [T]ags" })
-    vim.keymap.set("n", "<leader>oq", "<cmd>ObsidianQuickSwitch<cr>", { desc = "[O]bsidian  [Q]uickSwich" })
-    vim.keymap.set("n", "<leader>os", "<cmd>ObsidianSearch<cr>", { desc = "[O]bsidian [S]earch" })
-    vim.keymap.set("n", "<leader>op", "<cmd>ObsidianPasteImg<cr>", { desc = "[O]bsidian [P]aste image" })
-
     -- journaling
     vim.keymap.set("n", "<leader>ojy", "<cmd>ObsidianYesterday<cr>", { desc = "[O]bsidian [J]journal [Y]esterday" })
     vim.keymap.set("n", "<leader>ojt", "<cmd>ObsidianToday<cr>", { desc = "[O]bsidian [J]journal [T]oday" })
-    vim.keymap.set("n", "<leader>ojm", "<cmd>ObsidianTomorrow<cr>", { desc = "[O]bsidian [J]ournal [T]omorrow" })
+    vim.keymap.set(
+      "n",
+      "<leader>ojm",
+      "<cmd>ObsidianTomorrow<cr>",
+      { desc = "[O]bsidian [J]journal to[M]ObsidianTomorrow" }
+    )
     vim.keymap.set("n", "<leader>ojd", "<cmd>ObsidianDailies<cr>", { desc = "[O]bsidian [J]journal [D]dailies" })
 
-    -- new notes
-    vim.keymap.set("n", "<leader>onn", "<cmd>ObsidianNew<cr>", { desc = "[O]bsidian [N]ew" })
-    vim.keymap.set("n", "<leader>ont", "<cmd>ObsidianNewFromTemplate<cr>", { desc = "[O]bsidian new from [T]emplate" })
-    -- vim.keymap.set(
-    --   "n",
-    --   "<leader>ona",
-    --   "<cmd>ObsidianNewFromTemplateAuto<cr>",
-    --   { desc = "[O]bsidian new from [T]emplate (auto title)" }
-    -- )
+    vim.keymap.set("n", "<leader>or", "<cmd>ObsidianRename<cr>", { desc = "[O]bsidian [R]ename" })
+    vim.keymap.set("n", "<leader>ob", "<cmd>ObsidianBacklinks<cr>", { desc = "[O]bsidian [B]backlinks" })
+    vim.keymap.set("n", "<leader>oo", "<cmd>ObsidianOpen<cr>", { desc = "[O]bsidian [O]pen" })
+    vim.keymap.set("n", "<leader>on", "<cmd>ObsidianNew<cr>", { desc = "[O]bsidian [N]ew" })
+    vim.keymap.set("n", "<leader>ot", "<cmd>ObsidianNewFromTemplate<cr>", { desc = "[O]bsidian new from [T]emplate" })
+    vim.keymap.set("n", "<leader>oT", "<cmd>ObsidianTemplate<cr>", { desc = "[O]bsidian insert from [T]emplate" })
+    vim.keymap.set(
+      "n",
+      "<leader>oN",
+      "<cmd>ObsidianTemplate template_time<cr>",
+      { desc = "[O]bsidian insert now point [T]emplate" }
+    )
+    vim.keymap.set("n", "<leader>os", "<cmd>ObsidianSearch<cr>", { desc = "[O]bsidian [S]earch" })
+    vim.keymap.set("n", "<leader>op", "<cmd>ObsidianPasteImg<cr>", { desc = "[O]bsidian [P]aste image" })
   end,
 }
