@@ -1,0 +1,17 @@
+# Test benedikt with regular password authentication
+set editor = "nvim"
+set charset = "utf-8"
+
+# Account settings - try regular auth
+set realname = "Benedikt Gunnar Ófeigsson"
+set from = "benedikt@klifursamband.is"
+set imap_user = "benedikt@klifursamband.is"
+set imap_pass = "482KfuXt#23!"
+set folder = "imaps://imap.gmail.com:993/"
+set spoolfile = "+INBOX" 
+set record = "+[Gmail]/Sent Mail"
+
+# Try to allow less secure apps (if admin allows)
+set ssl_force_tls = yes
+set ssl_verify_dates = no
+set ssl_verify_host = no

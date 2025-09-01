@@ -1,0 +1,10 @@
+---
+# Test playbook for email role only
+- name: Test Email Role
+  hosts: localhost
+  gather_facts: yes
+  become: yes
+  
+  roles:
+    - role: email
+      tags: ["email"]

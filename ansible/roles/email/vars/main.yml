@@ -1,0 +1,23 @@
+---
+# Email role variables
+
+email_packages:
+  - neomutt
+  - isync        # mbsync email sync
+  - msmtp        # SMTP sending
+  - notmuch      # Email indexing
+  - procmail     # Email filtering
+  - abook        # Address book
+
+# OAuth2 dependencies (will be added in Phase 2)
+oauth2_packages:
+  - libsasl2-modules-oauthbearer  # OAuth2 SASL support
+  - python3-requests              # For OAuth2 scripts
+
+# Directory structure
+mail_directories:
+  mail_root: "{{ target_home }}/.local/share/mail"
+  gmail_dir: "{{ target_home }}/.local/share/mail/gmail"
+  office365_dir: "{{ target_home }}/.local/share/mail/office365"
+  cache_dir: "{{ target_home }}/.cache/neomutt"
+  config_dir: "{{ target_home }}/.config/neomutt"

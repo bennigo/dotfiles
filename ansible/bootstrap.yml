@@ -82,6 +82,10 @@
       tags: ["dotfiles", "config"]
       when: "'dotfiles' in profiles[selected_profile]"
       
+    - role: email
+      tags: ["email", "communication"]
+      when: "'email' in profiles[selected_profile]"
+      
     # Hardware-specific roles (conditional)
     - role: hardware/nvidia
       tags: ["hardware", "nvidia"]

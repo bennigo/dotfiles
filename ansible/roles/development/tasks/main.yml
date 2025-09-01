@@ -80,7 +80,8 @@
     - name: Install Rust
       command: /tmp/rustup-init.sh -y --default-toolchain stable
       become: no
-      creates: "{{ target_home }}/.cargo/bin/rustc"
+      args:
+        creates: "{{ target_home }}/.cargo/bin/rustc"
 
     - name: Install Rust tools
       command: "{{ target_home }}/.cargo/bin/cargo install {{ item }}"
@@ -100,7 +101,8 @@
     - name: Download and install fnm
       shell: curl -fsSL https://fnm.vercel.app/install | bash
       become: no
-      creates: "{{ target_home }}/.local/share/fnm"
+      args:
+        creates: "{{ target_home }}/.local/share/fnm"
 
     - name: Install latest Node.js
       shell: |

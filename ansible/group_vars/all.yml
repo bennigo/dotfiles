@@ -11,6 +11,7 @@ target_name: "Benedikt Gunnar Ófeigsson"
 profiles:
   minimal:
     - base
+    - email
     - dotfiles
   development:
     - base
@@ -22,12 +23,14 @@ profiles:
     - system_files
     - development
     - desktop
+    - email
     - dotfiles
   full:
     - base
     - system_files
     - development
     - desktop
+    - email
     - credentials
     - dotfiles
   work_laptop:
@@ -35,6 +38,7 @@ profiles:
     - system_files
     - development
     - desktop
+    - email
     - credentials
     - dotfiles
     - work_tools

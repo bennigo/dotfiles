@@ -1,0 +1,25 @@
+# Vedur.is account via internal mailrelay
+# Uses ut-mailrelay-p01.vedur.is which handles OAuth2 to Office365
+
+# Account settings
+set realname = "Benedikt Gunnar Ófeigsson"
+set from = "bgo@vedur.is"
+set imap_user = "bgo@vedur.is"
+set imap_pass = "`pass show email/bgo-vedur`"
+
+# Server settings - Internal mailrelay
+set folder = "imaps://ut-mailrelay-p01.vedur.is:1993/"
+set spoolfile = "+INBOX" 
+set record = "+Sent Items"
+set trash = "+Deleted Items"
+set postponed = "+Drafts"
+
+# SMTP via mailrelay (port 25 or 587)
+set smtp_url = "smtp://bgo@vedur.is:ut-mailrelay-p01.vedur.is:587/"
+set smtp_pass = "`pass show email/bgo-vedur`"
+
+# SSL settings for internal relay
+set ssl_force_tls = yes
+set ssl_starttls = yes
+set ssl_verify_dates = no  # Internal certificate
+set ssl_verify_host = no   # Internal hostname

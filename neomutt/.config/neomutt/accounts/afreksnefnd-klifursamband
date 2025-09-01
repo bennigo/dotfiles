@@ -1,0 +1,29 @@
+# afreksnefnd@klifursamband.is account configuration
+# To be used with: source ~/.config/neomutt/accounts/afreksnefnd-klifursamband
+
+# Account identification
+set realname = "Afreksnefnd Klifursambands Íslands"
+set from = "afreksnefnd@klifursamband.is"
+
+# IMAP settings (Google Workspace)
+set imap_user = "afreksnefnd@klifursamband.is"
+set imap_pass = "`pass show email/afreksnefnd-klifursamband`"
+set folder = "imaps://imap.gmail.com:993/"
+set spoolfile = "+INBOX"
+set postponed = "+[Gmail]/Drafts"
+set trash = "+[Gmail]/Trash"
+set record = "+[Gmail]/Sent Mail"
+
+# SMTP settings (Google Workspace)
+set smtp_url = "smtps://afreksnefnd@klifursamband.is@smtp.gmail.com:465/"
+set smtp_pass = "`pass show email/afreksnefnd-klifursamband`"
+
+# Gmail folder mappings (Google Workspace)
+mailboxes =INBOX =[Gmail]/Sent\ Mail =[Gmail]/Drafts =[Gmail]/Spam =[Gmail]/Trash
+
+# Custom settings for this account
+set sort = reverse-date
+set sort_aux = last-date-received
+
+# Status format
+set status_format = "Klifursamband (afreksnefnd): %f [Msgs:%?M?%M/?%m%?n? New:%n?%?o? Old:%o?%?d? Del:%d?%?F? Flag:%F?%?t? Tag:%t?%?p? Post:%p?%?b? Inc:%b?%?l? %l?]---(%s/%S)-%>-(%P)---"

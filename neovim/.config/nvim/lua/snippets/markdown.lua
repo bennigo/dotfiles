@@ -38,7 +38,7 @@ end
 return {
 
   -- tt -> now
-  s({ trig = "tt", name = "Timed TODO (now)", dscr = "Insert now statement  with current time" }, {
+  s({ trig = "tt", name = "Timed insert (🕛 HH:MM: insert)", dscr = "Insert now statement  with current time" }, {
     t("(🕛"),
     f(function()
       return now_tt()
@@ -49,7 +49,11 @@ return {
   }),
 
   -- dt -> now
-  s({ trig = "dt", name = "Timed TODO (now)", dscr = "Insert now statement with current date and time" }, {
+  s({
+    trig = "dt",
+    name = "Timed insert (➕ YYYY-mm-dd HH:MM: insert )",
+    dscr = "Insert now statement with current date and time",
+  }, {
     t("➕"),
     f(function()
       return now_dt()
@@ -60,7 +64,7 @@ return {
   }),
 
   -- cdt -> now
-  s({ trig = "cdt", name = "Timed TODO (now)", dscr = "Created now current date and time" }, {
+  s({ trig = "cdt", name = "(now)", dscr = "Created now current date and time" }, {
     t("(➕ "),
     f(function()
       return now_dt()
@@ -69,7 +73,7 @@ return {
   }),
 
   -- td-> now
-  s({ trig = "td", name = "Timed TODO (now)", dscr = "Created now: with current date" }, {
+  s({ trig = "ctd", name = "Timed TODO (now)", dscr = "Created now: with current date" }, {
     t("(➕"),
     f(function()
       return now_td()
