@@ -17,6 +17,25 @@ plug "$HOME/.config/zsh/exports.zsh"
 # Setup fzf
 # ---------
 if [[ ! "$PATH" == */home/bgo/.local/share/fzf/bin* ]]; then
+# Created by Zap installer
+[ -f "${XDG_DATA_HOME:-$HOME/.local/share}/zap/zap.zsh" ] && source "${XDG_DATA_HOME:-$HOME/.local/share}/zap/zap.zsh"
+plug "zsh-users/zsh-autosuggestions"
+plug "zap-zsh/supercharge"
+plug "zap-zsh/zap-prompt"
+plug "zsh-users/zsh-syntax-highlighting"
+
+# Load and initialise completion system
+autoload -Uz compinit
+compinit
+export PATH="$HOME/.local/bin:$PATH"
+# Cargo (Rust) environment
+[[ -f "$HOME/.cargo/env" ]] && source "$HOME/.cargo/env"
+# FNM (Node.js) environment
+[[ -f "$HOME/.local/share/fnm/fnm" ]] && eval "$(fnm env --use-on-cd)"
+# FZF key bindings
+[[ -f "$HOME/.fzf.zsh" ]] && source "$HOME/.fzf.zsh"
+
+. "$HOME/.local/bin/env"
   PATH="${PATH:+${PATH}:}/home/bgo/.local/share/fzf/bin"
   source <(fzf --zsh)
 
@@ -86,8 +105,14 @@ unset __mamba_setup
 
 
 # fnm
-FNM_PATH="/home/bgo/.local/share//fnm"
+FNM_PATH="$HOME/.local/share/fnm"
 if [ -d "$FNM_PATH" ]; then
-  export PATH="/home/bgo/.local/share//fnm:$PATH"
+  export PATH="$FNM_PATH:$PATH"
+  eval "`fnm env`"
+fi
+# npm
+NPM_PATH="$HOME/.local/share/npm-global/bin"
+if [ -d "$NPM_PATH" ]; then
+  export PATH="$NPM_PATH:$PATH"
   eval "`fnm env`"
 fi

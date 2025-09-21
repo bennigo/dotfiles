@@ -63,18 +63,65 @@
 
 - name: Install interception tools for caps2esc
   block:
-    - name: Add interception PPA
-      apt_repository:
-        repo: ppa:deafmute/interception
-        state: present
-
-    - name: Install interception caps2esc
+    - name: Check if interception-caps2esc is available in main repos
+      shell: apt-cache search interception-caps2esc
+      register: interception_available
+      changed_when: false
+      failed_when: false
+      
+    - name: Install interception-caps2esc from main repos if available
       apt:
         name: interception-caps2esc
         state: present
-
-    - name: Remove interception PPA (security practice)
-      apt_repository:
-        repo: ppa:deafmute/interception
+      when: "'interception-caps2esc' in interception_available.stdout"
+      
+    - name: Install build dependencies for interception tools
+      apt:
+        name:
+          - build-essential
+          - cmake
+          - libudev-dev
+          - libevdev-dev
+        state: present
+      when: "'interception-caps2esc' not in interception_available.stdout"
+      
+    - name: Clone interception-tools repository
+      git:
+        repo: https://gitlab.com/interception/linux/tools.git
+        dest: /tmp/interception-tools
+        force: yes
+      when: "'interception-caps2esc' not in interception_available.stdout"
+      
+    - name: Build and install interception-tools
+      shell: |
+        cd /tmp/interception-tools
+        cmake -B build -DCMAKE_BUILD_TYPE=Release
+        cmake --build build
+        cmake --install build
+      when: "'interception-caps2esc' not in interception_available.stdout"
+      
+    - name: Clone caps2esc repository
+      git:
+        repo: https://gitlab.com/interception/linux/plugins/caps2esc.git
+        dest: /tmp/caps2esc
+        force: yes
+      when: "'interception-caps2esc' not in interception_available.stdout"
+      
+    - name: Build and install caps2esc
+      shell: |
+        cd /tmp/caps2esc
+        cmake -B build -DCMAKE_BUILD_TYPE=Release
+        cmake --build build
+        cmake --install build
+      when: "'interception-caps2esc' not in interception_available.stdout"
+      
+    - name: Clean up build directories
+      file:
+        path: "{{ item }}"
         state: absent
+      loop:
+        - /tmp/interception-tools
+        - /tmp/caps2esc
+      when: "'interception-caps2esc' not in interception_available.stdout"
+      
   tags: ["base", "interception"]

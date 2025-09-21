@@ -1,7 +1,7 @@
+[Unit]
 Description=udevmon
 Wants=systemd-udev-settle.service
 After=systemd-udev-settle.service
-
 
 # Use `nice` to start the `udevmon` program with very high priority,
 # using `/etc/udevmon.yaml` as the configuration file

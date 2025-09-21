@@ -2,7 +2,6 @@ all:
   hosts:
     localhost:
       ansible_connection: local
-      ansible_become_password: "{{ ansible_sudo_pass }}"
   vars:
     # Hardware detection will be populated by gather_facts
     # These can be overridden via command line or host_vars/
@@ -12,10 +11,11 @@ all:
     has_intel_gpu: "{{ ansible_facts['processor'] | select('match', '.*Intel.*') | list | length > 0 if ansible_facts is defined else false }}"
     has_amd_gpu: "{{ ansible_facts['devices'] | dict2items | selectattr('value.model', 'match', '.*AMD.*') | list | length > 0 if ansible_facts is defined else false }}"
     
-    # System type detection
-    is_laptop: "{{ ansible_facts['form_factor'] == 'Laptop' or ansible_facts['chassis'] == 'laptop' if ansible_facts is defined else false }}"
+    # System type detection - fix the chassis reference
+    is_laptop: "{{ ansible_facts.get('form_factor') == 'Laptop' or ansible_facts.get('system_vendor', '') | lower in ['lenovo', 'dell', 'hp', 'asus', 'acer', 'toshiba', 'sony', 'samsung'] if ansible_facts is defined else false }}"
     is_desktop: "{{ not is_laptop }}"
-    has_battery: "{{ ansible_facts['power_supplies'] | selectattr('type', 'equalto', 'Battery') | list | length > 0 if ansible_facts is defined else false }}"
+    has_battery: "{{ ansible_facts.get('power_supplies', []) | selectattr('type', 'equalto', 'Battery') | list | length > 0 if ansible_facts is defined else false }}"
+
     
     # Manual overrides (set these in host_vars/ or command line)
     # force_nvidia: false
