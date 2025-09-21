@@ -210,3 +210,60 @@
         extra_args: "--break-system-packages --user --upgrade"
       become: no
   tags: ["development", "python"]
+
+- name: Set up Obsidian vault
+  block:
+    - name: Create notes directory
+      file:
+        path: "{{ target_home }}/notes"
+        state: directory
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: '0755'
+      become: no
+
+    - name: Clone Obsidian vault repository
+      git:
+        repo: "git@github.com:bennigo/bgovault.git"
+        dest: "{{ target_home }}/notes/bgovault"
+        version: main
+        force: no
+        accept_hostkey: yes
+      become: no
+      register: vault_clone_result
+      failed_when: false
+
+    - name: Display vault clone results
+      debug:
+        msg: |
+          Obsidian vault clone: {{ 'SUCCESS' if vault_clone_result.rc == 0 else 'FAILED' }}
+          {% if vault_clone_result.rc != 0 %}
+          Error: {{ vault_clone_result.msg | default('Unknown error') }}
+          Note: SSH keys must be set up and GitHub access configured
+          {% else %}
+          Vault cloned to: {{ target_home }}/notes/bgovault
+          {% endif %}
+
+    - name: Set proper ownership for vault directory
+      file:
+        path: "{{ target_home }}/notes/bgovault"
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        recurse: yes
+      become: no
+      when: vault_clone_result.rc == 0
+
+    - name: Configure git settings for vault
+      git_config:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        scope: local
+        repo: "{{ target_home }}/notes/bgovault"
+      loop:
+        - { name: "user.name", value: "bgo" }
+        - { name: "user.email", value: "bgo@vedur.is" }
+        - { name: "pull.rebase", value: "false" }
+        - { name: "init.defaultBranch", value: "main" }
+      become: no
+      when: vault_clone_result.rc == 0
+  tags: ["development", "obsidian", "notes"]
