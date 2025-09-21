@@ -6,6 +6,7 @@
   apt:
     name:
       - sway
+      - swaybg
       - foot
       - foot-themes
       - swayidle
@@ -245,3 +246,36 @@
         mode: '0644'
       notify: reload udev
   tags: ["desktop", "permissions"]
+
+- name: Create sway session script for proper startup
+  copy:
+    content: |
+      #!/bin/bash
+      # Clean up any existing swaybg processes before starting sway
+      pkill -f swaybg 2>/dev/null || true
+      # Start sway
+      exec sway "$@"
+    dest: "{{ target_home }}/.local/bin/sway-session"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0755'
+  become: no
+  tags: ["desktop", "sway"]
+
+- name: Ensure sway configuration is valid
+  shell: |
+    export XDG_CONFIG_HOME="{{ target_home }}/.config"
+    sway -C {{ target_home }}/.config/sway/config --validate
+  become: no
+  register: sway_config_check
+  failed_when: false
+  tags: ["desktop", "sway"]
+
+- name: Display sway configuration validation results
+  debug:
+    msg: |
+      Sway config validation: {{ 'PASSED' if sway_config_check.rc == 0 else 'FAILED' }}
+      {% if sway_config_check.rc != 0 %}
+      Error: {{ sway_config_check.stderr }}
+      {% endif %}
+  tags: ["desktop", "sway"]

@@ -18,12 +18,13 @@
 
 - name: Filter directories for stow deployment
   set_fact:
-    stowable_dirs: "{{ stow_directories.files | 
-                      map(attribute='path') | 
+    stowable_dirs: "{{ stow_directories.files |
+                      map(attribute='path') |
                       map('basename') |
                       reject('match', '^[.]') |
                       reject('equalto', 'ansible') |
                       reject('equalto', 'system') |
+                      reject('equalto', 'sway-remix') |
                       reject('equalto', '.git') |
                       list }}"
 
@@ -33,7 +34,7 @@
       Dotfiles directories to be deployed:
       {{ stowable_dirs | join(', ') }}
       
-      Skipped directories: ansible, system, .git, hidden dirs
+      Skipped directories: ansible, system, sway-remix, .git, hidden dirs
 
 - name: Deploy dotfiles with stow
   command: stow {{ item }}
