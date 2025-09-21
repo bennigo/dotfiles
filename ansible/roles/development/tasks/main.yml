@@ -247,6 +247,16 @@
           {% endif %}
   tags: ["development", "r"]
 
+- name: Install ImageMagick and LaTeX for Neovim
+  apt:
+    name:
+      - imagemagick
+      - texlive-full
+      - texlive-lang-european
+    state: present
+    update_cache: yes
+  tags: ["development", "neovim-deps"]
+
 - name: Build and install Neovim from source
   block:
     - name: Remove any existing neovim package
