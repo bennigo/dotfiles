@@ -279,3 +279,45 @@
       Error: {{ sway_config_check.stderr }}
       {% endif %}
   tags: ["desktop", "sway"]
+
+- name: Install Obsidian
+  block:
+    - name: Install Obsidian via snap
+      snap:
+        name: obsidian
+        channel: stable
+        classic: true
+        state: present
+      register: obsidian_install_result
+
+    - name: Display Obsidian installation results
+      debug:
+        msg: |
+          Obsidian installation: {{ 'SUCCESS' if obsidian_install_result.changed or obsidian_install_result.failed == false else 'FAILED' }}
+          {% if obsidian_install_result.failed %}
+          Error: {{ obsidian_install_result.msg | default('Unknown error') }}
+          {% else %}
+          Obsidian installed and ready to use
+          Vault location: {{ target_home }}/notes/bgovault
+          {% endif %}
+
+    - name: Create Obsidian desktop shortcut
+      copy:
+        content: |
+          [Desktop Entry]
+          Name=Obsidian
+          Comment=A powerful knowledge base that works on top of a local folder of plain text Markdown files
+          Exec=obsidian --no-sandbox %u
+          Icon=obsidian
+          Type=Application
+          Categories=Office;TextEditor;
+          MimeType=x-scheme-handler/obsidian;
+          StartupWMClass=obsidian
+          StartupNotify=true
+        dest: "{{ target_home }}/.local/share/applications/obsidian.desktop"
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: '0644'
+      become: no
+      when: obsidian_install_result.failed == false
+  tags: ["desktop", "obsidian", "applications"]
