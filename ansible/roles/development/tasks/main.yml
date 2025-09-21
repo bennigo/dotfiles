@@ -139,9 +139,49 @@
         - markdown-toc
         - "@anthropic-ai/claude-code"
       become: no
-      ignore_errors: yes 
+      ignore_errors: yes
   tags: ["development", "nodejs"]
-  
+
+- name: Configure Claude Code API key
+  block:
+    - name: Extract Claude API key from vault
+      shell: |
+        if [ -f "{{ directories.dotfiles }}/system/credentials.vault" ]; then
+          ansible-vault view --vault-password-file "{{ directories.dotfiles }}/system/scripts/ansible-vault-pass.sh" "{{ directories.dotfiles }}/system/credentials.vault" | grep -A1 "claude_api_key:" | tail -n1 | sed 's/^[[:space:]]*//' | tr -d '"'
+        fi
+      register: claude_api_key_result
+      become: no
+      failed_when: false
+      no_log: true
+      tags: ["development", "claude", "credentials"]
+
+    - name: Set up Claude Code API key
+      copy:
+        content: |
+          {
+            "api_key": "{{ claude_api_key_result.stdout | trim }}"
+          }
+        dest: "{{ target_home }}/.config/claude-code/config.json"
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: '0600'
+      become: no
+      when:
+        - claude_api_key_result.stdout is defined
+        - claude_api_key_result.stdout | trim | length > 0
+      tags: ["development", "claude", "credentials"]
+
+    - name: Create Claude Code config directory if needed
+      file:
+        path: "{{ target_home }}/.config/claude-code"
+        state: directory
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: '0700'
+      become: no
+      tags: ["development", "claude"]
+  tags: ["development", "claude"]
+
 - name: Install Python tools
   block:
     - name: Install uv (Python package manager)
