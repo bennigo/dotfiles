@@ -25,6 +25,7 @@
                       reject('equalto', 'ansible') |
                       reject('equalto', 'system') |
                       reject('equalto', 'sway-remix') |
+                      reject('equalto', 'i3') |
                       reject('equalto', '.git') |
                       list }}"
 
@@ -33,8 +34,8 @@
     msg: |
       Dotfiles directories to be deployed:
       {{ stowable_dirs | join(', ') }}
-      
-      Skipped directories: ansible, system, sway-remix, .git, hidden dirs
+
+      Skipped directories: ansible, system, sway-remix, i3, .git, hidden dirs
 
 - name: Deploy dotfiles with stow
   command: stow {{ item }}
