@@ -4,10 +4,17 @@ return {
     version = "*", -- recommended, use latest release instead of latest commit
     lazy = true,
     name = "catppuccin",
-    opts = {
-      transparent_background = true,
-      treesitter = true,
-    },
+    opts = function(_, opts)
+      -- Official LazyVim fix for bufferline integration
+      local module = require("catppuccin.groups.integrations.bufferline")
+      if module then
+        module.get_theme = module.get -- Compatibility layer for LazyVim
+      end
+      return {
+        transparent_background = true,
+        treesitter = true,
+      }
+    end,
   },
 
   {
@@ -21,17 +28,6 @@ return {
     },
   },
 
-  specs = {
-    {
-      "akinsho/bufferline.nvim",
-      optional = true,
-      opts = function(_, opts)
-        if (vim.g.colors_name or ""):find("catppuccin") then
-          opts.highlights = require("catppuccin.groups.integrations.bufferline").get()
-        end
-      end,
-    },
-  },
 
   -- add gruvbox
   { "ellisonleao/gruvbox.nvim" },
