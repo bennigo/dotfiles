@@ -200,7 +200,7 @@
         pipx install {{ item }}
       loop:
         - hatch
-        - hatchling  
+        - hatchling
         - sqlfluff
       become: no
       ignore_errors: yes
@@ -210,6 +210,54 @@
         extra_args: "--break-system-packages --user --upgrade"
       become: no
   tags: ["development", "python"]
+
+- name: Install Mamba (fast conda package manager)
+  block:
+    - name: Download Mambaforge installer
+      get_url:
+        url: "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-x86_64.sh"
+        dest: "/tmp/mambaforge-installer.sh"
+        mode: '0755'
+        timeout: 60
+
+    - name: Install Mambaforge
+      shell: |
+        /tmp/mambaforge-installer.sh -b -p {{ target_home }}/.mambaforge
+      become: no
+      args:
+        creates: "{{ target_home }}/.mambaforge"
+
+    - name: Initialize Mamba for bash and zsh
+      shell: |
+        {{ target_home }}/.mambaforge/bin/mamba init bash
+        {{ target_home }}/.mambaforge/bin/mamba init zsh
+      become: no
+      args:
+        creates: "{{ target_home }}/.bashrc.bak"
+
+    - name: Verify Mamba installation
+      shell: "{{ target_home }}/.mambaforge/bin/mamba --version"
+      register: mamba_version_check
+      become: no
+      failed_when: false
+
+    - name: Display Mamba installation results
+      debug:
+        msg: |
+          Mamba installation: {{ 'SUCCESS' if mamba_version_check.rc == 0 else 'FAILED' }}
+          {% if mamba_version_check.rc == 0 %}
+          Version: {{ mamba_version_check.stdout }}
+          Location: {{ target_home }}/.mambaforge
+          Note: Restart shell or run 'source ~/.bashrc' to use mamba
+          {% else %}
+          Error: {{ mamba_version_check.stderr | default('Installation failed') }}
+          {% endif %}
+
+    - name: Clean up installer
+      file:
+        path: "/tmp/mambaforge-installer.sh"
+        state: absent
+  tags: ["development", "python", "mamba"]
 
 - name: Install R statistical computing environment
   block:
