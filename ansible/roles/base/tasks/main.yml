@@ -47,6 +47,16 @@
     shell: /bin/zsh
   tags: ["base", "shell"]
 
+- name: Configure PAM environment variables
+  copy:
+    src: "{{ playbook_dir }}/../system/etc/security/pam_env.conf"
+    dest: /etc/security/pam_env.conf
+    owner: root
+    group: root
+    mode: '0644'
+    backup: yes
+  tags: ["base", "environment"]
+
 - name: Create essential directories
   file:
     path: "{{ item }}"
