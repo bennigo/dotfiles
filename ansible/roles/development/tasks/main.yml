@@ -211,6 +211,69 @@
       become: no
   tags: ["development", "python"]
 
+- name: Build and install Neovim from source
+  block:
+    - name: Remove any existing neovim package
+      apt:
+        name: neovim
+        state: absent
+
+    - name: Create build directory for Neovim
+      file:
+        path: "{{ target_home }}/Downloads/git"
+        state: directory
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: '0755'
+      become: no
+
+    - name: Clone Neovim repository
+      git:
+        repo: "https://github.com/neovim/neovim.git"
+        dest: "{{ target_home }}/Downloads/git/neovim"
+        version: stable
+        force: no
+        accept_hostkey: yes
+      become: no
+      register: neovim_clone_result
+
+    - name: Build Neovim with RelWithDebInfo
+      shell: |
+        cd {{ target_home }}/Downloads/git/neovim
+        make CMAKE_BUILD_TYPE=RelWithDebInfo
+      become: no
+      when: neovim_clone_result.changed or not ansible_check_mode
+      register: neovim_build_result
+
+    - name: Install Neovim system-wide
+      shell: |
+        cd {{ target_home }}/Downloads/git/neovim
+        make install
+      when: neovim_build_result.rc is defined and neovim_build_result.rc == 0
+
+    - name: Verify Neovim installation
+      shell: nvim --version
+      register: neovim_version_check
+      failed_when: false
+
+    - name: Display Neovim installation results
+      debug:
+        msg: |
+          Neovim installation: {{ 'SUCCESS' if neovim_version_check.rc == 0 else 'FAILED' }}
+          {% if neovim_version_check.rc == 0 %}
+          Version: {{ neovim_version_check.stdout_lines[0] }}
+          {% else %}
+          Error: {{ neovim_version_check.stderr | default('Build or installation failed') }}
+          {% endif %}
+
+    - name: Clean up Neovim build directory
+      file:
+        path: "{{ target_home }}/Downloads/git/neovim"
+        state: absent
+      become: no
+      when: neovim_version_check.rc == 0
+  tags: ["development", "neovim", "build"]
+
 - name: Set up Obsidian vault
   block:
     - name: Create notes directory
