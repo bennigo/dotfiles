@@ -132,7 +132,7 @@ return {
   cmd = { "RenderMarkdown" },
   -- main = "render-markdown",
   -- name = "render-markdown", -- Only needed if you have another plugin named markdown.nvim
-  dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-tree/nvim-web-devicons", "echasnovski/mini.nvim" }, -- if you use the mini.nvim suite
+  dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-tree/nvim-web-devicons", "nvim-mini/mini.nvim" }, -- if you use the mini.nvim suite
   -- dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-tree/nvim-web-devicons" }, -- if you use the mini.nvim suite
   ---@module 'render-markdown',
   ---@type render.md.UserConfig
