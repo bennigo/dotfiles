@@ -76,6 +76,17 @@
       register: zshrc_exists
       become: no
 
+    - name: Create .zshrc with source line if it doesn't exist
+      copy:
+        content: |
+          source ~/.config/zsh/.zshrc
+        dest: "{{ target_home }}/.zshrc"
+        force: no
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+      become: no
+      when: not zshrc_exists.stat.exists
+
     - name: Ensure PATH includes local bin
       lineinfile:
         path: "{{ target_home }}/.zshrc"
@@ -84,7 +95,6 @@
         owner: "{{ target_user }}"
         group: "{{ target_user }}"
       become: no
-      when: zshrc_exists.stat.exists
 
     - name: Source additional environment files
       lineinfile:
@@ -101,7 +111,6 @@
         - '# FZF key bindings'
         - '[[ -f "$HOME/.fzf.zsh" ]] && source "$HOME/.fzf.zsh"'
       become: no
-      when: zshrc_exists.stat.exists
   tags: ["dotfiles", "shell"]
 
 - name: Verify critical configurations are deployed

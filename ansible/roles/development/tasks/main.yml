@@ -9,6 +9,11 @@
     update_cache: yes
   tags: ["development", "packages"]
 
+- name: Get Python3 version
+  shell: python3 --version | grep -oP '\d+\.\d+'
+  register: python_version
+  changed_when: false
+
 - name: Install additional development tools  
   apt:
     name:
@@ -35,7 +40,7 @@
       - lua5.4
       - luarocks
       - python3-venv
-      - python3.12-venv
+      - "python{{ python_version.stdout }}-venv"
       - lynx
     state: present
   tags: ["development", "packages", "extended"]
@@ -103,7 +108,6 @@
       become: no
       args:
         creates: "{{ target_home }}/.local/share/fnm"
-
     - name: Install latest Node.js
       shell: |
         export PATH="{{ target_home }}/.local/share/fnm:$PATH"
@@ -113,12 +117,18 @@
       become: no
       args:
         creates: "{{ target_home }}/.local/share/fnm/node-versions"
-
+    - name: Configure npm to use local directory for global packages
+      shell: |
+        export PATH="{{ target_home }}/.local/share/fnm:$PATH"
+        eval "$(fnm env --use-on-cd)"
+        npm config set prefix "{{ target_home }}/.local/share/npm-global"
+        mkdir -p "{{ target_home }}/.local/share/npm-global"
+      become: no
     - name: Install Node.js packages
-      npm:
-        name: "{{ item }}"
-        global: yes
-        executable: "{{ target_home }}/.local/share/fnm/aliases/lts-latest/bin/npm"
+      shell: |
+        export PATH="{{ target_home }}/.local/share/fnm:$PATH"
+        eval "$(fnm env --use-on-cd)"
+        npm install --global {{ item }}
       loop:
         - tree-sitter-cli
         - neovim
@@ -129,27 +139,31 @@
         - markdown-toc
         - "@anthropic-ai/claude-code"
       become: no
-      ignore_errors: yes
+      ignore_errors: yes 
   tags: ["development", "nodejs"]
-
+  
 - name: Install Python tools
   block:
     - name: Install uv (Python package manager)
       shell: curl -LsSf https://astral.sh/uv/install.sh | sh
       become: no
-      creates: "{{ target_home }}/.cargo/bin/uv"
-
-    - name: Install pipx packages
+      args:
+        creates: "{{ target_home }}/.cargo/bin/uv"
+    - name: Install pipx
       pip:
-        name: "{{ item }}"
-        executable: pipx
-        extra_args: --break-system-packages
+        name: pipx
+        extra_args: "--break-system-packages --user"
+      become: no
+    - name: Install pipx packages
+      shell: |
+        export PATH="{{ target_home }}/.local/bin:$PATH"
+        pipx install {{ item }}
       loop:
         - hatch
         - hatchling  
         - sqlfluff
       become: no
-
+      ignore_errors: yes
     - name: Install pynvim
       pip:
         name: pynvim

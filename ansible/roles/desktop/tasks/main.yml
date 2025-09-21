@@ -58,8 +58,8 @@
     - name: Download and install kitty
       shell: curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin
       become: no
-      creates: "{{ target_home }}/.local/kitty.app"
-
+      args:
+        creates: "{{ target_home }}/.local/kitty.app"
     - name: Create kitty symlinks in local bin
       file:
         src: "{{ target_home }}/.local/kitty.app/bin/{{ item }}"
@@ -80,7 +80,6 @@
         repo: https://github.com/Gustash/sway-screenshot.git
         dest: /tmp/sway-screenshot
         force: yes
-
     - name: Copy sway-screenshot to local bin
       copy:
         src: /tmp/sway-screenshot/sway-screenshot
@@ -89,7 +88,6 @@
         owner: "{{ target_user }}"
         group: "{{ target_user }}"
         remote_src: yes
-
     - name: Clean up sway-screenshot source
       file:
         path: /tmp/sway-screenshot
@@ -121,7 +119,6 @@
         dest: "{{ target_home }}/Downloads/git/ueberzugpp"
         force: yes
       become: no
-
     - name: Create ueberzugpp build directory
       file:
         path: "{{ target_home }}/Downloads/git/ueberzugpp/build"
@@ -129,19 +126,16 @@
         owner: "{{ target_user }}"
         group: "{{ target_user }}"
       become: no
-
     - name: Configure ueberzugpp build
       shell: cmake -DCMAKE_BUILD_TYPE=Release ..
       args:
         chdir: "{{ target_home }}/Downloads/git/ueberzugpp/build"
       become: no
-
     - name: Build ueberzugpp
       shell: cmake --build .
       args:
         chdir: "{{ target_home }}/Downloads/git/ueberzugpp/build"
       become: no
-
     - name: Install ueberzugpp system-wide
       shell: cmake --install .
       args:
@@ -157,17 +151,16 @@
         depth: 1
         force: yes
       become: no
-
     - name: Run FZF installer
       shell: "{{ target_home }}/.local/share/fzf/install --all"
       become: no
       args:
         creates: "{{ target_home }}/.fzf.zsh"
-
     - name: Install Nerd Fonts getter
       shell: curl -fsSL https://raw.githubusercontent.com/ronniedroid/getnf/master/install.sh | bash
       become: no
-      creates: "{{ target_home }}/.local/bin/getnf"
+      args:
+        creates: "{{ target_home }}/.local/bin/getnf"
   tags: ["desktop", "cli-tools"]
 
 - name: Install tmux plugin manager
@@ -185,23 +178,19 @@
         url: https://api.github.com/repos/jesseduffield/lazygit/releases/latest
         return_content: yes
       register: lazygit_release
-
     - name: Extract LazyGit version
       set_fact:
         lazygit_version: "{{ (lazygit_release.content | from_json).tag_name | regex_replace('^v', '') }}"
-
     - name: Download LazyGit
       get_url:
         url: "https://github.com/jesseduffield/lazygit/releases/download/v{{ lazygit_version }}/lazygit_{{ lazygit_version }}_Linux_x86_64.tar.gz"
         dest: "/tmp/lazygit.tar.gz"
-
     - name: Extract LazyGit
       unarchive:
         src: "/tmp/lazygit.tar.gz"
         dest: "/tmp"
         remote_src: yes
         creates: "/tmp/lazygit"
-
     - name: Install LazyGit
       copy:
         src: "/tmp/lazygit"
@@ -210,7 +199,6 @@
         owner: root
         group: root
         remote_src: yes
-
     - name: Install git-flow
       apt:
         name: git-flow
@@ -218,9 +206,21 @@
   tags: ["desktop", "git-tools"]
 
 - name: Install Zap (zsh plugin manager)
-  shell: zsh <(curl -s https://raw.githubusercontent.com/zap-zsh/zap/master/install.zsh) --branch release-v1
-  become: no
-  creates: "{{ target_home }}/.local/share/zap"
+  block:
+    - name: Download Zap installer
+      get_url:
+        url: https://raw.githubusercontent.com/zap-zsh/zap/master/install.zsh
+        dest: /tmp/zap-install.zsh
+        mode: '0755'
+    - name: Run Zap installer
+      shell: zsh /tmp/zap-install.zsh --branch release-v1
+      become: no
+      args:
+        creates: "{{ target_home }}/.local/share/zap"
+    - name: Clean up Zap installer
+      file:
+        path: /tmp/zap-install.zsh
+        state: absent
   tags: ["desktop", "zsh"]
 
 - name: Configure desktop environment permissions
@@ -230,13 +230,11 @@
         name: "{{ target_user }}"
         groups: audio
         append: yes
-
     - name: Add user to input group (for udev rules)
       user:
         name: "{{ target_user }}"
         groups: input
         append: yes
-
     - name: Set up brightness control permissions
       copy:
         content: |

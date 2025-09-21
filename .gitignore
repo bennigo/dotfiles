@@ -8,10 +8,12 @@ system/.credentials_and_logins/
 **/credentials_template.yml
 **/credentials_unencrypted.yml
 **/credentials_backup.yml
-# Security tutorial files (contain system-specific details)
-**/emergency-recovery.md
-**/gpg-pass-tutorial.md
-**/password-memory-strategy.md
+**/credentials_populated.yml
+
+# Temporary credential files
+/tmp/*vault*
+/tmp/*pass*
+/tmp/gpg_*
 
 # Ansible runtime files
 ansible/inventory.retry
