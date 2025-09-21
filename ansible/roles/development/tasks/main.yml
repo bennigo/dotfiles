@@ -211,6 +211,42 @@
       become: no
   tags: ["development", "python"]
 
+- name: Install R statistical computing environment
+  block:
+    - name: Install R base packages
+      apt:
+        name:
+          - r-base
+          - r-base-dev
+          - libblas-dev
+          - liblapack-dev
+        state: present
+        update_cache: yes
+    - name: Create R user library directory
+      file:
+        path: "{{ target_home }}/R/x86_64-pc-linux-gnu-library/4.4"
+        state: directory
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: '0755'
+      become: no
+    - name: Install R languageserver package
+      shell: |
+        R --slave -e "install.packages('languageserver', repos='https://cran.rstudio.com/', lib='~/R/x86_64-pc-linux-gnu-library/4.4')"
+      become: no
+      args:
+        creates: "{{ target_home }}/R/x86_64-pc-linux-gnu-library/4.4/languageserver"
+      register: r_languageserver_install
+      ignore_errors: yes
+    - name: Display R installation results
+      debug:
+        msg: |
+          R installation: {{ 'SUCCESS' if r_languageserver_install.rc == 0 else 'PARTIAL' }}
+          {% if r_languageserver_install.rc != 0 %}
+          Note: languageserver may still be installing - check with: R -e "library(languageserver)"
+          {% endif %}
+  tags: ["development", "r"]
+
 - name: Build and install Neovim from source
   block:
     - name: Remove any existing neovim package
