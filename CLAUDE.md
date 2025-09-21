@@ -36,7 +36,7 @@ Personal dotfiles repository for Sway-based Linux desktop environment. Uses modu
 .dotfiles/
 ├── sway/          # Sway compositor configuration
 ├── waybar/        # Status bar with custom modules
-├── neovim/        # Editor configuration (LazyVim-based)
+├── neovim/        # Editor configuration (LazyVim-based, built from source)
 ├── neovim_old/    # Previous neovim configuration backup
 ├── tmux/          # Terminal multiplexer config
 ├── local_bin/     # Custom executable scripts
@@ -49,6 +49,7 @@ Personal dotfiles repository for Sway-based Linux desktop environment. Uses modu
 ├── swappy/        # Screenshot annotation tool
 ├── zsh/           # Shell configuration
 ├── profile/       # Shell profile settings
+├── i3/            # Legacy i3 configuration (excluded from stow)
 └── [app]/         # Per-application config directories
 ```
 
@@ -85,14 +86,19 @@ bindsym $mod+key command
 
 - **Ansible**: Comprehensive system provisioning and configuration management
 - **Bootstrap system**: Automated setup for fresh installations
+- **Credentials management**: Encrypted vault with GPG/pass integration
+- **SSH key automation**: Automated extraction and deployment from vault
 
 ### Development Integration
 
-- **Neovim**: LazyVim-based setup with custom snippets
+- **Neovim**: LazyVim-based setup with custom snippets, built from source with full dependencies
+- **Claude Code**: Integrated AI coding assistant with API key management
 - **Tmux**: Session management with plugin ecosystem
 - **Terminal**: Multiple emulator configs (kitty, foot, alacritty)
 - **Shell**: Zsh with custom profile configurations
 - **Browser**: Qutebrowser for keyboard-driven web browsing
+- **Languages**: Go, Rust, Node.js/FNM, Python/uv, R statistical computing
+- **Notes**: Obsidian vault integration with PARA method organization
 
 ## Common Operations
 
@@ -113,12 +119,15 @@ swaymsg reload
 ### System Provisioning
 
 ```bash
-# Run Ansible bootstrap
+# Run complete Ansible bootstrap (fresh installation)
 cd ~/.dotfiles/ansible
 ansible-playbook site.yml
 
-# Target specific profile/role
-ansible-playbook site.yml --tags "sway,neovim"
+# Target specific roles
+ansible-playbook site.yml --tags "development"        # Dev tools only
+ansible-playbook site.yml --tags "sway,neovim"       # Desktop + editor
+ansible-playbook site.yml --tags "dotfiles"          # Stow deployment only
+ansible-playbook site.yml --tags "credentials"       # Vault management only
 ```
 
 ### Script Development
@@ -173,6 +182,7 @@ udevadm monitor --environment --udev
 - **Nvidia**: Early KMS for optimal Wayland performance
 - **Input latency**: Custom udev rules for gaming/professional input devices
 - **Resource management**: Systemd user services for session components
+- **Environment variables**: PAM-based XDG configuration for consistent paths
 
 ## Cross-References
 
@@ -200,4 +210,26 @@ Common dependencies across custom scripts:
 ### File Editing Preference
 
 Edit source files in dotfiles repository, not deployed locations in `~/.config/`.
+
+### Stow Configuration
+
+Ansible automatically deploys all stowable directories except:
+- `ansible/` (build system)
+- `system/` (system configs)
+- `i3/` (legacy configuration, unused)
+- `sway-remix/` (experimental)
+- `.git/` (version control)
+- Hidden directories (starting with `.`)
+
+### Recent System Improvements
+
+- **Fresh install automation**: Complete Ansible bootstrap for clean deployments
+- **Neovim source build**: Latest features with full dependency management
+- **Plugin compatibility**: Updated LazyVim with catppuccin integration fixes
+- **Environment consistency**: PAM-based XDG variables for reliable path resolution
+- **R integration**: Statistical computing environment with language server support
+- **LaTeX support**: Full TeX Live distribution with Icelandic language support
+- **Claude Code integration**: AI assistant with secure API key management
+- **Vault automation**: Encrypted credential storage with SSH key deployment
+- **Obsidian integration**: Personal knowledge management with PARA organization
 
