@@ -134,6 +134,69 @@
           Note: Network filesystems require network connectivity and proper credentials
   tags: ["base", "filesystem", "network"]
 
+- name: Append network host configurations to hosts file
+  block:
+    - name: Check if dotfiles hosts content already exists in system hosts
+      shell: grep -q "vedur.is network hosts" /etc/hosts
+      register: hosts_content_exists
+      failed_when: false
+      changed_when: false
+
+    - name: Backup existing hosts file
+      copy:
+        src: /etc/hosts
+        dest: /etc/hosts.backup.{{ ansible_date_time.epoch }}
+        remote_src: yes
+        owner: root
+        group: root
+        mode: '0644'
+      when: hosts_content_exists.rc != 0
+
+    - name: Append dotfiles hosts content to system hosts file
+      blockinfile:
+        path: /etc/hosts
+        block: |
+          # vedur.is network hosts added from dotfiles configuration
+          #
+          #vedur
+          #130.208.84.248    oskugos.vedur.is       oskugos
+          10.91.10.129      oskugos.vedur.is       oskugos
+          #10.91.10.191      klosigar.dyn.vedur.is  klosigar
+          10.91.10.243      eldkeila.vedur.is      eldkeila
+          10.91.10.236      aska.vedur.is          aska
+          10.170.100.187    vi-tos-api.vedur.is    tos
+
+          # servers
+          10.170.80.8	      gpsplot.vedur.is       gpsplot
+          10.170.80.4       rtk.vedur.is           rtk
+          10.170.80.6       bernese.vedur.is       bernese
+          10.170.80.7       rek.vedur.is           rek
+          #10.170.80.2       rekold.vedur.is        rekold
+          10.250.251.5      hildur.vedur.is        hildur
+          10.170.80.3       okada.vedur.is         okada
+          10.170.100.38     sarpur.vedur.is        sarpur
+          130.208.87.145	  brunnur.vedur.is       brunnur
+
+          # servers DMZ
+          130.208.87.160    ntrcaster.vedur.is     ntrcaster
+
+          #Hí
+          130.208.140.137   strokkur.raunvis.hi.is strokkur
+          130.208.143.214   dyngja.rhi.hi.is       dyngja
+          130.208.165.26	  askja.rhi.hi.is	 askja
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - Network hosts"
+        insertafter: EOF
+        backup: yes
+      when: hosts_content_exists.rc != 0
+
+    - name: Display hosts configuration results
+      debug:
+        msg: |
+          Network hosts configuration: {{ 'ALREADY EXISTS' if hosts_content_exists.rc == 0 else 'ADDED' }}
+          Added vedur.is infrastructure hosts and external research servers
+          Includes GPS servers, seismic monitoring, and University of Iceland systems
+  tags: ["base", "network", "hosts"]
+
 - name: Create essential directories
   file:
     path: "{{ item }}"
