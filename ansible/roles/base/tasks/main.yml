@@ -57,6 +57,83 @@
     backup: yes
   tags: ["base", "environment"]
 
+- name: Append network filesystem configurations to fstab
+  block:
+    - name: Check if dotfiles fstab content already exists in system fstab
+      shell: grep -q "Network filesystems added from dotfiles configuration" /etc/fstab
+      register: fstab_content_exists
+      failed_when: false
+      changed_when: false
+
+    - name: Backup existing fstab
+      copy:
+        src: /etc/fstab
+        dest: /etc/fstab.backup.{{ ansible_date_time.epoch }}
+        remote_src: yes
+        owner: root
+        group: root
+        mode: '0644'
+      when: fstab_content_exists.rc != 0
+
+    - name: Append dotfiles fstab content to system fstab
+      blockinfile:
+        path: /etc/fstab
+        block: |
+          # Network filesystems added from dotfiles configuration
+          #
+          granit.vedur.is:/mnt/sdc1/sk2 /mnt_data/sildata nfs defaults 0 0
+          granit.vedur.is:/mnt/sdd1/sil/trem /mnt_data/tremdata nfs defaults 0 0
+          rawdata.vedur.is:/exports/gpsdata /mnt_data/rawgpsdata nfs defaults 0 0
+          rawdata.vedur.is:/exports/extension_meters_data /mnt_data/extension_meters_data nfs defaults 0 0
+          frumgogn02.vedur.is:/home/vmfrum/vmgogn01/frumgogn /mnt_data/hytrodata nfs defaults 0 0
+          # #gpsplot.vedur.is:/home/gpsops/rtklib-run/data /mnt_data/rtgpsdata nfs defaults 0 0
+          rtk.vedur.is:/home/gpsops/rtklib-run/data /mnt_data/rtgpsdata nfs defaults 0 0
+          #
+          # gpsplot.vedur.is:/exports/gpstimes /mnt_data/gpsdata nfs defaults 0 0
+          okada.vedur.is:/D/GMT/TOT/ /mnt_data/gpsdata nfs defaults 0 0
+          gpsplot.vedur.is:/exports/share /mnt_data/datashare nfs defaults 0 0
+          gpsplot.vedur.is:/home/gpsops/gamit-times /mnt_data/gps nfs defaults 0 0
+          gpsplot.vedur.is:/home/gpsops/.gpsconfig /mnt_data/gpsconfig nfs defaults 0 0
+
+          #nas
+          #//nas.vedur.is/export/joklar /mnt/joklar cifs credentials=/root/.smbcredentials,iocharset=utf8,sec=ntlm,_netdev,domain=vi 0 0
+          #//nas.vedur.is/vatn /mnt/nas/vatn cifs credentials=/root/.smbcredentials,iocharset=utf8,sec=ntlm,_netdev,domain=VI,vers=1.0 0 0
+          #//nas.vedur.is/vatn /mnt/nas/vatn cifs credentials=/root/.smbcredentials,iocharset=utf8,domain=VI,vers=1.0 0 0
+          #nas.vedur.is:/export/joklar /mnt/joklar nfs defaults 0 0
+          #nas.vedur.is:/export/luk/gogn/haedarlikon/ /mnt/haedarlikon nfs defaults 0 0
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - Network filesystems"
+        insertafter: EOF
+        backup: yes
+      when: fstab_content_exists.rc != 0
+
+    - name: Create mount point directories for network filesystems
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+      loop:
+        - /mnt_data/sildata
+        - /mnt_data/tremdata
+        - /mnt_data/rawgpsdata
+        - /mnt_data/extension_meters_data
+        - /mnt_data/hytrodata
+        - /mnt_data/rtgpsdata
+        - /mnt_data/gpsdata
+        - /mnt_data/datashare
+        - /mnt_data/gps
+        - /mnt_data/gpsconfig
+      ignore_errors: yes
+
+    - name: Display fstab configuration results
+      debug:
+        msg: |
+          Network filesystem configuration: {{ 'ALREADY EXISTS' if fstab_content_exists.rc == 0 else 'ADDED' }}
+          Mount points created for network shares
+          Note: Network filesystems require network connectivity and proper credentials
+  tags: ["base", "filesystem", "network"]
+
 - name: Create essential directories
   file:
     path: "{{ item }}"
