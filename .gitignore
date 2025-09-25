@@ -25,4 +25,3 @@ ansible/*.retry
 **/*.backup.*
 **/.tmp/
 **/tmp/
-claude-private/
