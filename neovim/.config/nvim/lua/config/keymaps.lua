@@ -146,3 +146,24 @@ keymap("v", "K", ":m '<-2<CR>gv=gv")
 -- keymap('x', '<leader>p', [["_dP]])
 keymap("x", "p", [["_dP]])
 keymap("n", "<leader>X", "<cmd>!chmod +x %<CR>", { silent = true })
+
+-- Mermaid diagram preview with Zathura
+keymap("n", "<leader>mp", function()
+  local file = vim.api.nvim_buf_get_name(0)
+  if not file:match('%.mmd$') then
+    vim.notify("Not a Mermaid file", vim.log.levels.WARN)
+    return
+  end
+
+  local pdf_file = file:gsub('%.mmd$', '.pdf')
+
+  -- Check if PDF exists, if not generate it first
+  if vim.fn.filereadable(pdf_file) == 0 then
+    vim.notify("Generating PDF first...", vim.log.levels.INFO)
+    vim.fn.system('mmdc -i "' .. file .. '" -o "' .. pdf_file .. '" -t default -b white -f -p ~/.config/mermaid-puppeteer.json')
+  end
+
+  -- Open with zathura in background
+  vim.fn.jobstart({'zathura', pdf_file}, { detach = true })
+  vim.notify("Opened: " .. vim.fn.fnamemodify(pdf_file, ':t'), vim.log.levels.INFO)
+end, { desc = "Preview Mermaid PDF with Zathura" })

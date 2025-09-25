@@ -182,6 +182,42 @@
       tags: ["development", "claude"]
   tags: ["development", "claude"]
 
+- name: Install Deno (JavaScript/TypeScript runtime)
+  block:
+    - name: Download and install Deno
+      shell: curl -fsSL https://deno.land/install.sh | sh
+      become: no
+      args:
+        creates: "{{ target_home }}/.deno/bin/deno"
+
+    - name: Add Deno to PATH in zsh exports
+      lineinfile:
+        path: "{{ target_home }}/.config/zsh/exports.zsh"
+        line: 'export PATH="$HOME/.deno/bin:$PATH"'
+        regexp: '^export PATH="\$HOME/\.deno/bin:\$PATH"'
+        create: yes
+        backup: yes
+      become: no
+
+    - name: Verify Deno installation
+      shell: "{{ target_home }}/.deno/bin/deno --version"
+      register: deno_version_check
+      become: no
+      failed_when: false
+
+    - name: Display Deno installation results
+      debug:
+        msg: |
+          Deno installation: {{ 'SUCCESS' if deno_version_check.rc == 0 else 'FAILED' }}
+          {% if deno_version_check.rc == 0 %}
+          Version: {{ deno_version_check.stdout_lines[0] }}
+          Location: {{ target_home }}/.deno/bin/deno
+          Note: Restart shell or run 'source ~/.config/zsh/exports.zsh' to use deno
+          {% else %}
+          Error: {{ deno_version_check.stderr | default('Installation failed') }}
+          {% endif %}
+  tags: ["development", "javascript", "deno"]
+
 - name: Install Python tools
   block:
     - name: Install uv (Python package manager)
@@ -424,3 +460,13 @@
       become: no
       when: vault_clone_result.rc == 0
   tags: ["development", "obsidian", "notes"]
+
+- name: Deploy mermaid-multi script for diagram processing
+  copy:
+    src: mermaid-multi
+    dest: "{{ target_home }}/.local/bin/mermaid-multi"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0755'
+  become: no
+  tags: ["development", "mermaid", "scripts"]
