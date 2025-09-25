@@ -470,3 +470,107 @@
     mode: '0755'
   become: no
   tags: ["development", "mermaid", "scripts"]
+
+- name: Set up Claude private configuration repository
+  block:
+    - name: Check if claude-private submodule exists
+      stat:
+        path: "{{ directories.dotfiles }}/claude-private/.git"
+      register: claude_private_exists
+
+    - name: Initialize claude-private git submodule (if exists)
+      shell: |
+        cd {{ directories.dotfiles }}
+        git submodule update --init --recursive claude-private
+      when: claude_private_exists.stat.exists
+      become: no
+      ignore_errors: yes
+
+    - name: Unlock git-crypt in claude-private
+      shell: |
+        cd {{ directories.dotfiles }}/claude-private
+        git-crypt unlock
+      when: claude_private_exists.stat.exists
+      become: no
+      ignore_errors: yes
+      register: claude_crypt_unlock
+
+    - name: Deploy claude-private configs with stow
+      shell: |
+        cd {{ directories.dotfiles }}/claude-private
+        stow --target={{ target_home }} .
+      when: claude_private_exists.stat.exists and claude_crypt_unlock.rc == 0
+      become: no
+      ignore_errors: yes
+
+    - name: Create main CLAUDE.md if it doesn't exist
+      copy:
+        dest: "{{ target_home }}/CLAUDE.md"
+        content: |
+          # Global Claude Code Context
+
+          This file provides top-level context for Claude Code when working in `{{ target_home }}`.
+
+          ## Directory Structure & Context Overview
+
+          For comprehensive home directory structure and detailed context mappings, see:
+          - **Complete Documentation**: `~/.claude/HOME_DIRECTORY_OVERVIEW.md` (encrypted)
+
+          ## Quick Context References
+
+          ### System Configuration
+          - **Main Dotfiles**: `.dotfiles/CLAUDE.md` - Sway desktop environment configuration
+          - **System Setup**: `.dotfiles/system/CLAUDE.md` - Hardware and installation procedures
+
+          ### Active Development Projects
+          - **GPS Library Ecosystem** (`work/projects/gps/gpslibrary_new/`):
+            - `gps_parser/` - Configuration management for 173-station GNSS network
+            - `receivers/` - Direct receiver communication and bulk downloads
+            - `gtimes/` - GPS time processing and conversions
+            - `tostools/` - GPS metadata quality control and TOS API integration
+
+          ### Knowledge Management
+          - **Obsidian Vault** (`notes/bgovault/`): Personal knowledge management with PARA organization
+
+          ### Development Tools
+          - **Claude Code Neovim Plugin**: `~/.local/share/nvim/lazy/claudecode.nvim/`
+          - **Development Environment**: Multi-language setup (Python, Rust, Go, Node.js, R)
+
+          ## Environment Summary
+
+          - **OS**: Linux with Sway (Wayland compositor)
+          - **Configuration Management**: GNU Stow with Ansible automation
+          - **Security**: GPG-encrypted credentials, SSH key automation
+          - **Development**: XDG-compliant, configuration-driven workflow
+
+          ## Private Configuration
+
+          This directory contains a private encrypted repository at `.dotfiles/claude-private/`:
+          - **Encryption**: git-crypt with GPG key (requires unlock)
+          - **Deployment**: Stow-managed to `~/.claude/`
+          - **Contents**: Sensitive documentation and detailed context mappings
+
+          ---
+
+          **Created**: {{ ansible_date_time.date }}
+          **Purpose**: Top-level context for Claude Code interactions
+          **Private Details**: See `~/.claude/HOME_DIRECTORY_OVERVIEW.md`
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: '0644'
+        force: no
+      become: no
+
+    - name: Display claude-private setup results
+      debug:
+        msg: |
+          Claude private config setup: {{ 'SUCCESS' if claude_private_exists.stat.exists else 'SKIPPED (no submodule)' }}
+          {% if claude_private_exists.stat.exists %}
+          Git-crypt unlock: {{ 'SUCCESS' if claude_crypt_unlock.rc == 0 else 'FAILED (manual unlock needed)' }}
+          Location: {{ directories.dotfiles }}/claude-private/
+          Deployed to: {{ target_home }}/.claude/
+          Note: Run 'git-crypt unlock' manually if unlock failed
+          {% else %}
+          Note: claude-private submodule not found - this is normal for fresh installs
+          {% endif %}
+  tags: ["development", "claude", "private-config"]
