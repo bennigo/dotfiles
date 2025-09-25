@@ -96,6 +96,7 @@ development_packages:
   - python3-pip
   - nodejs
   - npm
+  - git-crypt
   
 desktop_packages:
   - sway
