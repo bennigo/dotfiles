@@ -87,3 +87,7 @@ CYGWIN* | MINGW32* | MSYS* | MINGW*)
 	# echo 'Other OS'
 	;;
 esac
+
+# Mermaid diagram viewers
+alias mermaid-pdf="mmdc -p /tmp/puppeteer-config.json -i \$1 -o diagram.pdf && zathura diagram-1.pdf &"
+alias mermaid-hq="mmdc -p /tmp/puppeteer-config.json -i \$1 -o diagram_hq.png -s 3 -w 1600 -H 1200 -b transparent && eog diagram_hq-1.png &"

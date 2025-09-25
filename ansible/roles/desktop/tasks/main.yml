@@ -23,6 +23,9 @@
       - wdisplays
       - kanshi
       - pandoc
+      - zathura
+      - poppler-utils
+      - eog
     state: present
     update_cache: yes
   tags: ["desktop", "sway", "packages"]
@@ -38,8 +41,34 @@
       - ffmpeg
       - xdg-utils
       - lynx
+      - flatpak
     state: present
   tags: ["desktop", "utilities"]
+
+- name: Set up Flatpak
+  block:
+    - name: Add Flathub repository
+      flatpak_remote:
+        name: flathub
+        state: present
+        flatpakrepo_url: https://flathub.org/repo/flathub.flatpakrepo
+        method: system
+
+    - name: Install LibreOffice via Flatpak
+      flatpak:
+        name: org.libreoffice.LibreOffice
+        remote: flathub
+        state: present
+        method: system
+
+    - name: Display Flatpak installation results
+      debug:
+        msg: |
+          Flatpak setup complete:
+          - Flathub repository added
+          - LibreOffice installed via Flatpak
+          Note: Flatpak applications may require logout/login to appear in menus
+  tags: ["desktop", "flatpak", "office"]
 
 - name: Install screenshot tools dependencies
   apt:

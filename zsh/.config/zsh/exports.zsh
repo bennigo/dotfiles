@@ -26,6 +26,11 @@ export SWAY_SCREENSHOT_DIR="${HOME}/Pictures/Screenshots"
 export GRIM_DEFAULT_DIR="${HOME}/Pictures/Screenshots"
 export GRIM_DEFAULT_QUALITY=90
 
+# Add miniforge3 bin to PATH for mamba/conda
+export PATH="$HOME/.local/share/miniforge3/bin:$PATH"
+
+# Add Deno to PATH
+export PATH="$HOME/.deno/bin:$PATH"
 
 #export PATH="$PATH:./node_modules/.bin"
 #source <(fzf --zsh)

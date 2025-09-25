@@ -1,0 +1,76 @@
+-- lua/plugins/peek-mermaid.lua
+-- Mermaid diagram preview plugin for real-time visualization
+return {
+  {
+    "toppair/peek.nvim",
+    event = { "VeryLazy" },
+    build = function()
+      -- Check if deno is available, if not provide helpful message
+      if vim.fn.executable("deno") == 0 then
+        vim.notify("Deno not found. Install with: curl -fsSL https://deno.land/install.sh | sh", vim.log.levels.WARN)
+        return
+      end
+      vim.fn.system("deno task --quiet build:fast")
+    end,
+    ft = { "markdown" },
+    config = function()
+      require("peek").setup({
+        auto_load = true, -- Auto-load when opening markdown files
+        close_on_bufleave = true, -- Close preview when leaving buffer
+        syntax = true, -- Enable syntax highlighting in preview
+        theme = "dark", -- Theme: 'dark' or 'light'
+        update_on_change = true, -- Update preview on file changes
+        app = "firefox", -- Preview app: 'webview', 'browser', 'firefox', 'chromium'
+        filetype = { "markdown" }, -- Filetypes to enable preview for
+        throttle_at = 200000, -- Throttle updates for large files (200KB)
+        throttle_time = "auto", -- Auto throttle time calculation
+        -- Enable Mermaid diagram rendering
+        preview_options = {
+          mermaid = {
+            theme = "dark"
+          }
+        }
+      })
+    end,
+    keys = {
+      -- Use <leader>m prefix for markdown operations
+      {
+        "<leader>mo",
+        function()
+          require("peek").open()
+        end,
+        desc = "Markdown Preview Open",
+      },
+      {
+        "<leader>mc",
+        function()
+          require("peek").close()
+        end,
+        desc = "Markdown Preview Close",
+      },
+      {
+        "<leader>mt",
+        function()
+          local peek = require("peek")
+          if peek.is_open() then
+            peek.close()
+          else
+            peek.open()
+          end
+        end,
+        desc = "Markdown Preview Toggle",
+      },
+    },
+  },
+  -- Optional: Extend which-key to show markdown group
+  {
+    "folke/which-key.nvim",
+    optional = true,
+    opts = {
+      spec = {
+        { "<leader>m", group = "markdown", icon = "📝" },
+      },
+    },
+  },
+}
+
