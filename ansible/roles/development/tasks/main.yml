@@ -471,6 +471,16 @@
   become: no
   tags: ["development", "mermaid", "scripts"]
 
+- name: Deploy dotfiles-sync script for intelligent repository synchronization
+  copy:
+    src: dotfiles-sync
+    dest: "{{ target_home }}/.local/bin/dotfiles-sync"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0755'
+  become: no
+  tags: ["development", "dotfiles", "scripts", "sync"]
+
 - name: Set up Claude private configuration repository
   block:
     - name: Check if claude-private submodule exists
