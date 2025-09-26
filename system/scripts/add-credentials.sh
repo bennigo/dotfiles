@@ -291,7 +291,7 @@ show_diff() {
 # Function to encrypt vault
 encrypt_vault() {
     print_status "Encrypting vault file..."
-    if ansible-vault encrypt --vault-password-file "$VAULT_PASS_SCRIPT" --output "$VAULT_FILE" "$TEMP_FILE"; then
+    if ansible-vault encrypt --vault-password-file "$VAULT_PASS_SCRIPT" --encrypt-vault-id default --output "$VAULT_FILE" "$TEMP_FILE"; then
         print_success "Vault encrypted successfully"
     else
         print_error "Failed to encrypt vault"
