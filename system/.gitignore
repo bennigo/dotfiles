@@ -1,0 +1,7 @@
+# Sensitive credential files - never commit to git
+*.json
+client_secret_*
+*secret*
+*credential*
+*.key
+*.pem
