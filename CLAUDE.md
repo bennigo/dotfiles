@@ -98,6 +98,7 @@ bindsym $mod+key command
 - **Shell**: Zsh with custom profile configurations
 - **Browser**: Qutebrowser for keyboard-driven web browsing
 - **Languages**: Go, Rust, Node.js/FNM, Python/uv, R statistical computing
+- **Database**: PostgreSQL with secure credential management via GPG-encrypted `pass`
 - **Notes**: Obsidian vault integration with PARA method organization
 
 ## Common Operations
@@ -121,13 +122,17 @@ swaymsg reload
 ```bash
 # Run complete Ansible bootstrap (fresh installation)
 cd ~/.dotfiles/ansible
-ansible-playbook site.yml
+ansible-playbook bootstrap.yml --extra-vars "profile=work_laptop"
+
+# Target specific profiles
+ansible-playbook bootstrap.yml --extra-vars "profile=development"  # Dev tools + database
+ansible-playbook bootstrap.yml --extra-vars "profile=desktop"      # Full desktop + database
 
 # Target specific roles
-ansible-playbook site.yml --tags "development"        # Dev tools only
-ansible-playbook site.yml --tags "sway,neovim"       # Desktop + editor
-ansible-playbook site.yml --tags "dotfiles"          # Stow deployment only
-ansible-playbook site.yml --tags "credentials"       # Vault management only
+ansible-playbook bootstrap.yml --tags "development"        # Dev tools only
+ansible-playbook bootstrap.yml --tags "database"           # PostgreSQL + credential scripts
+ansible-playbook bootstrap.yml --tags "dotfiles"           # Stow deployment only
+ansible-playbook bootstrap.yml --tags "credentials"        # Vault management only
 ```
 
 ### Script Development
@@ -155,6 +160,26 @@ systemctl --user restart waybar
 # Check Wayland session
 echo $WAYLAND_DISPLAY
 loginctl show-session $(loginctl | grep $(whoami) | awk '{print $1}')
+```
+
+### Database Management
+
+```bash
+# Setup database credentials from password store
+git clone git@github.com:bennigo/bgo-pstore.git ~/.password-store
+update-pgpass
+
+# Database operations
+psql bgo                    # Connect to default database
+createdb myproject          # Create new database
+psql myproject             # Connect to specific database
+
+# Neovim database UI
+nvim                       # Database connections via db_ui (:DBUI)
+
+# Update credentials
+pass edit database/vedur_password
+update-pgpass              # Regenerate .pgpass file
 ```
 
 ### Hardware Management
@@ -186,6 +211,7 @@ udevadm monitor --environment --udev
 
 ## Cross-References
 
+- **Database setup and credential management**: `ansible/DATABASE_SETUP.md`
 - **System installation, hardware setup, and credentials**: `system/CLAUDE.md`
 - **Global workspace context**: `/home/bgo/CLAUDE.md`
 - **Project-specific contexts**: Individual project CLAUDE.md files
@@ -231,5 +257,7 @@ Ansible automatically deploys all stowable directories except:
 - **LaTeX support**: Full TeX Live distribution with Icelandic language support
 - **Claude Code integration**: AI assistant with secure API key management
 - **Vault automation**: Encrypted credential storage with SSH key deployment
+- **Database infrastructure**: PostgreSQL 18 with secure credential management via `pass`
+- **Password management**: GPG-encrypted password store with version control (private repo)
 - **Obsidian integration**: Personal knowledge management with PARA organization
 
