@@ -1,0 +1,47 @@
+---
+# Default variables for database role
+# PostgreSQL installation and configuration
+
+# PostgreSQL version (will be automatically detected, but can be overridden)
+postgresql_version: "16"
+
+# PostgreSQL packages to install
+database_packages:
+  - postgresql
+  - postgresql-contrib
+  - postgresql-client
+  - libpq-dev
+  - python3-psycopg2  # Required for Ansible PostgreSQL modules
+
+# Development settings
+postgresql_development_settings:
+  max_connections: 100
+  shared_buffers: "128MB"
+  effective_cache_size: "4GB"
+  maintenance_work_mem: "64MB"
+  checkpoint_completion_target: 0.7
+  wal_buffers: "16MB"
+  default_statistics_target: 100
+
+# Authentication settings
+postgresql_auth_method: "peer"  # For local development
+postgresql_listen_addresses: "localhost"
+postgresql_port: 5432
+
+# Logging settings for development
+postgresql_logging:
+  log_statement: "none"  # Can be 'all', 'ddl', 'mod', or 'none'
+  log_min_messages: "warning"
+  log_min_error_statement: "error"
+  log_connections: false
+  log_disconnections: false
+  log_duration: false
+
+# Development user settings
+create_development_user: true
+development_user_privileges:
+  - CREATEDB
+  - CREATEROLE
+
+# Database settings
+create_user_database: true

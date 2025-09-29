@@ -1,0 +1,179 @@
+---
+# Database (PostgreSQL) installation and configuration
+# Installs PostgreSQL with official repository for latest versions
+
+- name: Install prerequisites for PostgreSQL repository
+  apt:
+    name:
+      - curl
+      - ca-certificates
+      - lsb-release
+      - gnupg
+    state: present
+    update_cache: yes
+  tags: ["database", "postgresql", "repository"]
+
+- name: Download PostgreSQL official GPG key
+  get_url:
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    dest: /usr/share/keyrings/postgresql-archive-keyring.asc
+    mode: '0644'
+  tags: ["database", "postgresql", "repository"]
+
+- name: Convert GPG key to keyring format
+  shell: |
+    gpg --dearmor < /usr/share/keyrings/postgresql-archive-keyring.asc > /usr/share/keyrings/postgresql-archive-keyring.gpg
+  args:
+    creates: /usr/share/keyrings/postgresql-archive-keyring.gpg
+  tags: ["database", "postgresql", "repository"]
+
+- name: Add PostgreSQL official repository
+  apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/postgresql-archive-keyring.gpg] https://apt.postgresql.org/pub/repos/apt {{ ansible_distribution_release }}-pgdg main"
+    state: present
+    update_cache: yes
+  tags: ["database", "postgresql", "repository"]
+
+- name: Install PostgreSQL packages
+  apt:
+    name: "{{ database_packages }}"
+    state: present
+    update_cache: yes
+  tags: ["database", "postgresql", "packages"]
+
+- name: Get installed PostgreSQL version
+  shell: |
+    apt list --installed | grep "^postgresql/" | head -1 | grep -oP '\d+' | head -1
+  register: detected_postgresql_version
+  changed_when: false
+  tags: ["database", "postgresql", "setup"]
+
+- name: Set PostgreSQL version fact
+  set_fact:
+    postgresql_version: "{{ detected_postgresql_version.stdout }}"
+  tags: ["database", "postgresql", "setup"]
+
+- name: Ensure PostgreSQL service is enabled and started
+  systemd:
+    name: postgresql
+    enabled: yes
+    state: started
+  tags: ["database", "postgresql", "service"]
+
+- name: Create PostgreSQL development user
+  postgresql_user:
+    name: "{{ target_user }}"
+    role_attr_flags: CREATEDB,CREATEROLE
+    state: present
+  become_user: postgres
+  tags: ["database", "postgresql", "user"]
+
+- name: Create development database for user
+  postgresql_db:
+    name: "{{ target_user }}"
+    owner: "{{ target_user }}"
+    state: present
+  become_user: postgres
+  tags: ["database", "postgresql", "database"]
+
+- name: Configure PostgreSQL authentication for development
+  lineinfile:
+    path: "/etc/postgresql/{{ postgresql_version }}/main/pg_hba.conf"
+    regexp: '^local\s+all\s+{{ target_user }}\s+'
+    line: "local   all             {{ target_user }}                                peer"
+    insertafter: '# Database administrative login by Unix domain socket'
+  notify: restart postgresql
+  tags: ["database", "postgresql", "authentication"]
+
+- name: Configure PostgreSQL to accept local connections
+  lineinfile:
+    path: "/etc/postgresql/{{ postgresql_version }}/main/pg_hba.conf"
+    regexp: '^local\s+all\s+all\s+'
+    line: "local   all             all                                     peer"
+    backup: yes
+  notify: restart postgresql
+  tags: ["database", "postgresql", "authentication"]
+
+- name: Configure PostgreSQL basic settings
+  lineinfile:
+    path: "/etc/postgresql/{{ postgresql_version }}/main/postgresql.conf"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    backup: yes
+  loop:
+    - { regexp: '^#listen_addresses', line: "listen_addresses = 'localhost'" }
+    - { regexp: '^#port', line: "port = 5432" }
+    - { regexp: '^#log_line_prefix', line: "log_line_prefix = '%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h '" }
+    - { regexp: '^#logging_collector', line: "logging_collector = on" }
+  notify: restart postgresql
+  tags: ["database", "postgresql", "configuration"]
+
+- name: Verify PostgreSQL installation and user access
+  shell: |
+    sudo -u {{ target_user }} psql -c "SELECT version();" {{ target_user }}
+  register: postgres_test_result
+  failed_when: false
+  tags: ["database", "postgresql", "verification"]
+
+- name: Display PostgreSQL installation results
+  debug:
+    msg: |
+      PostgreSQL installation: {{ 'SUCCESS' if postgres_test_result.rc == 0 else 'PARTIAL' }}
+      {% if postgres_test_result.rc == 0 %}
+      Version check: {{ postgres_test_result.stdout_lines[1] if postgres_test_result.stdout_lines|length > 1 else 'Connected successfully' }}
+      User: {{ target_user }} can connect to database
+      Development workflow:
+        - Connect: psql {{ target_user }}
+        - Create DB: createdb myproject
+        - Connect to DB: psql myproject
+      {% else %}
+      Setup completed but verification failed. Manual verification needed:
+        sudo -u {{ target_user }} psql -c "SELECT version();" {{ target_user }}
+      {% endif %}
+  tags: ["database", "postgresql", "verification"]
+
+# Database credential management setup
+- name: Deploy update-pgpass script for secure credential management
+  copy:
+    src: update-pgpass
+    dest: "{{ target_home }}/.local/bin/update-pgpass"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0755'
+  become: no
+  tags: ["database", "credentials", "scripts"]
+
+- name: Deploy nvim-db wrapper script (optional alternative approach)
+  copy:
+    src: nvim-db
+    dest: "{{ target_home }}/.local/bin/nvim-db"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0755'
+  become: no
+  tags: ["database", "credentials", "scripts"]
+
+- name: Display database credential management information
+  debug:
+    msg: |
+      🔐 DATABASE CREDENTIAL MANAGEMENT SETUP COMPLETE
+
+      Scripts installed:
+      - {{ target_home }}/.local/bin/update-pgpass
+      - {{ target_home }}/.local/bin/nvim-db (optional)
+
+      Next steps for secure credential management:
+      1. Store database passwords in pass:
+         pass insert database/local_dev_password
+         pass insert database/vedur_password
+
+      2. Generate .pgpass file:
+         update-pgpass
+
+      3. Use databases securely:
+         - Regular psql: Works automatically with .pgpass
+         - Neovim db_ui: Works with secure connections.json
+         - Command line: No hardcoded passwords needed
+
+      Your database configuration is now version-control safe! 🎉
+  tags: ["database", "credentials", "information"]
