@@ -55,11 +55,11 @@ ansible-playbook bootstrap.yml --extra-vars "skip_hardware_specific=true" -K
 
 | Profile | Description | Includes |
 |---------|-------------|----------|
-| `minimal` | Headless/server | base, dotfiles |  
-| `development` | Dev environment | base, system_files, development, dotfiles |
-| `desktop` | Full desktop | base, system_files, development, desktop, dotfiles |
-| `full` | Everything | All roles including credentials |
-| `work_laptop` | Work-specific | Full + work tools + laptop optimizations |
+| `minimal` | Headless/server | base, dotfiles |
+| `development` | Dev environment | base, system_files, development, database, dotfiles |
+| `desktop` | Full desktop | base, system_files, development, database, desktop, dotfiles |
+| `full` | Everything | All roles including credentials and database |
+| `work_laptop` | Work-specific | Full + work tools + laptop optimizations + database |
 
 ## 🔧 Hardware Detection
 
@@ -77,8 +77,9 @@ Hardware-specific roles are automatically enabled based on detection.
 ```
 roles/
 ├── base/              # User setup, essential packages
-├── system_files/      # Deploy /etc and /usr configurations  
+├── system_files/      # Deploy /etc and /usr configurations
 ├── development/       # Language runtimes, dev tools
+├── database/          # PostgreSQL with secure credential management
 ├── desktop/          # Sway desktop environment
 ├── credentials/      # GPG, pass, vault setup
 ├── dotfiles/         # Stow deployment
@@ -172,5 +173,27 @@ ansible-playbook bootstrap.yml -vvv -K
 
 ### Custom Hooks
 Place files in `roles/*/files/hooks/` for custom pre/post setup logic.
+
+## 🗄️ Database Setup
+
+The database role installs PostgreSQL with secure credential management:
+
+```bash
+# Database-only installation
+ansible-playbook bootstrap.yml --tags "database"
+
+# Setup credentials after installation
+git clone git@github.com:bennigo/bgo-pstore.git ~/.password-store
+update-pgpass
+```
+
+**Features:**
+- PostgreSQL 18 from official repository
+- Development user with appropriate privileges
+- Secure credential storage using GPG-encrypted `pass`
+- Version control safe configuration (no hardcoded passwords)
+- Native PostgreSQL authentication via `.pgpass`
+
+**Documentation:** See [DATABASE_SETUP.md](DATABASE_SETUP.md) for complete setup guide.
 
 The system is designed to be easily extensible while maintaining the single-command bootstrap experience.
