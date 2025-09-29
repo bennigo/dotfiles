@@ -1,0 +1,12 @@
+#!/bin/bash
+#
+# Secure Neovim launcher for database connections
+# Sources database passwords from `pass` and launches nvim with environment variables
+#
+
+# Source database passwords from pass
+export VEDUR_DB_PASSWORD=$(pass database/vedur_password)
+export LOCAL_DB_PASSWORD=$(pass database/local_dev_password)
+
+# Launch neovim with database credentials available
+exec nvim "$@"

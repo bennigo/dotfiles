@@ -1,0 +1,43 @@
+#!/bin/bash
+#
+# Update .pgpass file from pass credentials
+# This creates PostgreSQL's native credential file from secure pass storage
+#
+
+PGPASS_FILE="$HOME/.pgpass"
+
+echo "🔑 Updating PostgreSQL credentials from pass..."
+
+# Create/update .pgpass file with credentials from pass
+{
+    echo "# PostgreSQL password file - generated from pass"
+    echo "# Format: hostname:port:database:username:password"
+    echo "# Generated on $(date)"
+    echo ""
+
+    # Local database (check if password exists)
+    if pass show database/local_dev_password >/dev/null 2>&1; then
+        echo "localhost:5432:*:bgo:$(pass database/local_dev_password)"
+        echo "✅ Added local database credentials"
+    else
+        echo "⚠️  Skipping local database - password not found in pass"
+        echo "   Run: pass insert database/local_dev_password"
+    fi
+
+    # Vedur databases
+    if pass show database/vedur_password >/dev/null 2>&1; then
+        echo "pgread.vedur.is:5432:*:bgo:$(pass database/vedur_password)"
+        echo "pgdev.vedur.is:5432:*:bgo:$(pass database/vedur_password)"
+        echo "✅ Added Vedur database credentials"
+    else
+        echo "⚠️  Skipping Vedur databases - password not found in pass"
+        echo "   Run: pass insert database/vedur_password"
+    fi
+
+} > "$PGPASS_FILE"
+
+# Set proper permissions (required by PostgreSQL)
+chmod 600 "$PGPASS_FILE"
+
+echo "✅ Updated $PGPASS_FILE with available credentials from pass"
+echo "📍 Location: $PGPASS_FILE"

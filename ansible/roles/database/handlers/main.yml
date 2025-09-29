@@ -1,0 +1,29 @@
+---
+# Database role handlers
+# Service management for PostgreSQL
+
+- name: restart postgresql
+  systemd:
+    name: postgresql
+    state: restarted
+    enabled: yes
+  tags: ["database", "postgresql", "service"]
+
+- name: reload postgresql
+  systemd:
+    name: postgresql
+    state: reloaded
+  tags: ["database", "postgresql", "service"]
+
+- name: start postgresql
+  systemd:
+    name: postgresql
+    state: started
+    enabled: yes
+  tags: ["database", "postgresql", "service"]
+
+- name: stop postgresql
+  systemd:
+    name: postgresql
+    state: stopped
+  tags: ["database", "postgresql", "service"]

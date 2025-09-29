@@ -15,13 +15,15 @@ profiles:
     - dotfiles
   development:
     - base
-    - system_files  
+    - system_files
     - development
+    - database
     - dotfiles
   desktop:
     - base
     - system_files
     - development
+    - database
     - desktop
     - email
     - dotfiles
@@ -29,6 +31,7 @@ profiles:
     - base
     - system_files
     - development
+    - database
     - desktop
     - email
     - credentials
@@ -37,6 +40,7 @@ profiles:
     - base
     - system_files
     - development
+    - database
     - desktop
     - email
     - credentials

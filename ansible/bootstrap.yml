@@ -69,7 +69,11 @@
     - role: development
       tags: ["development", "dev"]
       when: "'development' in profiles[selected_profile]"
-      
+
+    - role: database
+      tags: ["database", "postgresql"]
+      when: "'database' in profiles[selected_profile]"
+
     - role: desktop
       tags: ["desktop", "gui"] 
       when: "'desktop' in profiles[selected_profile]"
