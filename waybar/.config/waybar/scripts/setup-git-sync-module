@@ -145,8 +145,8 @@ if [[ "$skip_config" != true ]]; then
             sed -i '/"tray": {/{ N; s/}\n/},\n/ }' "$WAYBAR_CONFIG"
         fi
 
-        # Insert git-sync module before tray
-        sed -i '/"tray": {/i\    "custom/git-sync": {\n        "exec": "~/.config/waybar/scripts/git-sync-status",\n        "return-type": "json",\n        "interval": 60,\n        "on-click": "'"${terminal}"' -e ~/.local/bin/dotfiles-sync",\n        "on-click-right": "'"${terminal}"' -e ~/.local/bin/dotfiles-sync --status",\n        "tooltip": true,\n        "format": " {}"\n    },' "$WAYBAR_CONFIG"
+        # Insert git-sync module before tray (using absolute paths - Waybar doesn't expand ~)
+        sed -i '/"tray": {/i\    "custom/git-sync": {\n        "exec": "'"$HOME"'/.config/waybar/scripts/git-sync-status",\n        "return-type": "json",\n        "interval": 60,\n        "on-click": "'"${terminal}"' -e '"$HOME"'/.local/bin/dotfiles-sync",\n        "on-click-right": "'"${terminal}"' -e '"$HOME"'/.local/bin/dotfiles-sync --status",\n        "tooltip": true,\n        "format": "{}"\n    },' "$WAYBAR_CONFIG"
         log_success "Added module configuration"
     fi
 fi
