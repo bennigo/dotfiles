@@ -1,12 +1,13 @@
 #!/bin/bash
 set -euo pipefail
 
-# Dotfiles and Claude Private Configuration Sync Script
-# Intelligently syncs both main dotfiles and claude-private submodule
+# Enhanced Dotfiles Sync Script with Password Store Support
+# Syncs: dotfiles + claude-private + password-store
 # Generates meaningful commit messages based on actual changes
 
 DOTFILES_DIR="$HOME/.dotfiles"
 CLAUDE_PRIVATE_DIR="$DOTFILES_DIR/claude-private"
+PASSWORD_STORE_DIR="${PASSWORD_STORE_DIR:-$HOME/.password-store}"
 
 # Colors for output
 RED='\033[0;31m'
@@ -136,6 +137,129 @@ generate_commit_message() {
     echo "$message"
 }
 
+# Generate intelligent commit message for password-store
+generate_pass_commit_message() {
+    local repo_dir="$1"
+    cd "$repo_dir"
+
+    local modified_files=$(git diff --cached --name-only)
+    local new_files=$(git diff --cached --name-only --diff-filter=A)
+    local deleted_files=$(git diff --cached --name-only --diff-filter=D)
+
+    if [ -z "$modified_files" ]; then
+        echo "Update password store"
+        return
+    fi
+
+    local details=()
+
+    # Analyze which credential categories changed
+    if echo "$modified_files" | grep -q "^database/"; then
+        details+=("database credentials")
+    fi
+    if echo "$modified_files" | grep -q "^ansible/"; then
+        details+=("ansible vault")
+    fi
+    if echo "$modified_files" | grep -q "^accounts/"; then
+        details+=("account credentials")
+    fi
+    if echo "$modified_files" | grep -q "^tokens/"; then
+        details+=("API tokens")
+    fi
+
+    # Count operations
+    local new_count=$(echo "$new_files" | grep -c . || echo 0)
+    local del_count=$(echo "$deleted_files" | grep -c . || echo 0)
+    local mod_count=$(($(echo "$modified_files" | wc -l) - new_count - del_count))
+
+    # Build message
+    local message=""
+    if [ ${#details[@]} -eq 0 ]; then
+        if [ "$new_count" -gt 0 ]; then
+            message="Add $new_count new credential(s)"
+        elif [ "$del_count" -gt 0 ]; then
+            message="Remove $del_count credential(s)"
+        else
+            message="Update password store credentials"
+        fi
+    else
+        case ${#details[@]} in
+            1)
+                message="Update ${details[0]}"
+                ;;
+            2)
+                message="Update ${details[0]} and ${details[1]}"
+                ;;
+            *)
+                message="Update $(IFS=', '; echo "${details[*]:0:$((${#details[@]}-1))}") and ${details[-1]}"
+                ;;
+        esac
+    fi
+
+    # Add operation counts if significant
+    if [ "$new_count" -gt 0 ] || [ "$del_count" -gt 0 ]; then
+        local ops=""
+        [ "$new_count" -gt 0 ] && ops="$new_count added"
+        [ "$del_count" -gt 0 ] && ops="${ops:+$ops, }$del_count removed"
+        [ "$mod_count" -gt 0 ] && ops="${ops:+$ops, }$mod_count modified"
+        message="$message ($ops)"
+    fi
+
+    echo "$message"
+}
+
+# Sync password-store repository
+sync_password_store() {
+    if [[ ! -d "$PASSWORD_STORE_DIR" ]]; then
+        log_warning "Password store directory not found: $PASSWORD_STORE_DIR"
+        return 0
+    fi
+
+    if ! is_git_repo "$PASSWORD_STORE_DIR"; then
+        log_warning "Password store is not a git repository"
+        return 0
+    fi
+
+    log_info "Checking password-store for changes..."
+    cd "$PASSWORD_STORE_DIR"
+
+    # Pull latest changes first
+    log_info "Pulling latest password-store changes..."
+    if ! git pull --rebase --autostash 2>&1 | grep -v "Already up to date"; then
+        log_warning "Pull had minor issues (likely up to date)"
+    fi
+
+    # Check if there are any local changes
+    if git diff --quiet && git diff --cached --quiet; then
+        log_info "No changes in password-store"
+        return 0
+    fi
+
+    # Stage all changes
+    git add .
+
+    # Check if there are staged changes
+    if git diff --cached --quiet; then
+        log_info "No staged changes in password-store"
+        return 0
+    fi
+
+    # Generate and apply commit message
+    local commit_msg=$(generate_pass_commit_message "$PASSWORD_STORE_DIR")
+
+    log_info "Committing password-store changes: $commit_msg"
+    git commit -m "$commit_msg"
+
+    # Push changes
+    log_info "Pushing password-store changes..."
+    if git push; then
+        log_success "Password-store changes pushed successfully"
+    else
+        log_error "Failed to push password-store changes"
+        return 1
+    fi
+}
+
 # Sync claude-private repository
 sync_claude_private() {
     if ! is_git_repo "$CLAUDE_PRIVATE_DIR"; then
@@ -223,12 +347,98 @@ sync_dotfiles() {
     fi
 }
 
+# Show status of all repositories
+show_status() {
+    log_info "Checking repository status..."
+    echo
+
+    # Password Store
+    echo -e "${BLUE}Password Store:${NC} $PASSWORD_STORE_DIR"
+    if [[ -d "$PASSWORD_STORE_DIR" ]] && is_git_repo "$PASSWORD_STORE_DIR"; then
+        cd "$PASSWORD_STORE_DIR"
+        if git diff --quiet && git diff --cached --quiet; then
+            echo -e "  ${GREEN}✓${NC} No uncommitted changes"
+        else
+            echo -e "  ${YELLOW}⚠${NC} Uncommitted changes present"
+        fi
+
+        local ahead=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo "0")
+        local behind=$(git rev-list --count HEAD..@{u} 2>/dev/null || echo "0")
+
+        if [ "$ahead" -gt 0 ]; then
+            echo -e "  ${YELLOW}↑${NC} $ahead commit(s) ahead of remote"
+        fi
+        if [ "$behind" -gt 0 ]; then
+            echo -e "  ${YELLOW}↓${NC} $behind commit(s) behind remote"
+        fi
+        if [ "$ahead" -eq 0 ] && [ "$behind" -eq 0 ]; then
+            echo -e "  ${GREEN}✓${NC} Synced with remote"
+        fi
+    else
+        echo -e "  ${RED}✗${NC} Not a git repository"
+    fi
+    echo
+
+    # Claude Private
+    echo -e "${BLUE}Claude Private:${NC} $CLAUDE_PRIVATE_DIR"
+    if [[ -d "$CLAUDE_PRIVATE_DIR" ]] && is_git_repo "$CLAUDE_PRIVATE_DIR"; then
+        cd "$CLAUDE_PRIVATE_DIR"
+        if git diff --quiet && git diff --cached --quiet; then
+            echo -e "  ${GREEN}✓${NC} No uncommitted changes"
+        else
+            echo -e "  ${YELLOW}⚠${NC} Uncommitted changes present"
+        fi
+
+        local ahead=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo "0")
+        local behind=$(git rev-list --count HEAD..@{u} 2>/dev/null || echo "0")
+
+        if [ "$ahead" -gt 0 ]; then
+            echo -e "  ${YELLOW}↑${NC} $ahead commit(s) ahead of remote"
+        fi
+        if [ "$behind" -gt 0 ]; then
+            echo -e "  ${YELLOW}↓${NC} $behind commit(s) behind remote"
+        fi
+        if [ "$ahead" -eq 0 ] && [ "$behind" -eq 0 ]; then
+            echo -e "  ${GREEN}✓${NC} Synced with remote"
+        fi
+    else
+        echo -e "  ${YELLOW}⚠${NC} Not a git repository"
+    fi
+    echo
+
+    # Main Dotfiles
+    echo -e "${BLUE}Main Dotfiles:${NC} $DOTFILES_DIR"
+    if [[ -d "$DOTFILES_DIR" ]] && is_git_repo "$DOTFILES_DIR"; then
+        cd "$DOTFILES_DIR"
+        if git diff --quiet && git diff --cached --quiet; then
+            echo -e "  ${GREEN}✓${NC} No uncommitted changes"
+        else
+            echo -e "  ${YELLOW}⚠${NC} Uncommitted changes present"
+        fi
+
+        local ahead=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo "0")
+        local behind=$(git rev-list --count HEAD..@{u} 2>/dev/null || echo "0")
+
+        if [ "$ahead" -gt 0 ]; then
+            echo -e "  ${YELLOW}↑${NC} $ahead commit(s) ahead of remote"
+        fi
+        if [ "$behind" -gt 0 ]; then
+            echo -e "  ${YELLOW}↓${NC} $behind commit(s) behind remote"
+        fi
+        if [ "$ahead" -eq 0 ] && [ "$behind" -eq 0 ]; then
+            echo -e "  ${GREEN}✓${NC} Synced with remote"
+        fi
+    else
+        echo -e "  ${RED}✗${NC} Not a git repository"
+    fi
+}
+
 # Show usage
 show_usage() {
     cat << EOF
 Usage: dotfiles-sync [OPTIONS]
 
-Intelligently sync dotfiles and claude-private repositories with smart commit messages.
+Intelligently sync dotfiles, claude-private, and password-store repositories.
 
 OPTIONS:
     -h, --help          Show this help message
@@ -236,11 +446,20 @@ OPTIONS:
     -n, --dry-run       Show what would be done without making changes
     -c, --claude-only   Sync only claude-private repository
     -d, --dotfiles-only Sync only main dotfiles repository
+    -p, --pass-only     Sync only password-store repository
+    -a, --all           Sync all repositories (default)
+    -s, --status        Show status of all repositories
 
 EXAMPLES:
-    dotfiles-sync                    # Sync both repositories
-    dotfiles-sync --claude-only      # Sync only claude-private
-    dotfiles-sync --dry-run          # Preview changes without committing
+    dotfiles-sync                    # Sync all repositories
+    dotfiles-sync --pass-only        # Sync only password-store
+    dotfiles-sync --status           # Check status without syncing
+    dotfiles-sync --dry-run          # Preview changes
+
+REPOSITORIES MANAGED:
+    - Main dotfiles:     $DOTFILES_DIR
+    - Claude private:    $CLAUDE_PRIVATE_DIR
+    - Password store:    $PASSWORD_STORE_DIR
 
 EOF
 }
@@ -250,6 +469,8 @@ DRY_RUN=false
 VERBOSE=false
 CLAUDE_ONLY=false
 DOTFILES_ONLY=false
+PASS_ONLY=false
+SHOW_STATUS=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -273,6 +494,18 @@ while [[ $# -gt 0 ]]; do
             DOTFILES_ONLY=true
             shift
             ;;
+        -p|--pass-only)
+            PASS_ONLY=true
+            shift
+            ;;
+        -a|--all)
+            # Default behavior, do nothing
+            shift
+            ;;
+        -s|--status)
+            SHOW_STATUS=true
+            shift
+            ;;
         *)
             log_error "Unknown option: $1"
             show_usage
@@ -281,10 +514,10 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Validate conflicting options
-if [[ "$CLAUDE_ONLY" == true && "$DOTFILES_ONLY" == true ]]; then
-    log_error "Cannot specify both --claude-only and --dotfiles-only"
-    exit 1
+# Handle status check
+if [[ "$SHOW_STATUS" == true ]]; then
+    show_status
+    exit 0
 fi
 
 # Main execution
@@ -304,7 +537,17 @@ main() {
     # Sync repositories
     local exit_code=0
 
-    if [[ "$DOTFILES_ONLY" != true ]]; then
+    # Sync password-store first (credentials may be needed)
+    if [[ "$DOTFILES_ONLY" != true && "$CLAUDE_ONLY" != true ]]; then
+        if [[ "$DRY_RUN" == true ]]; then
+            log_info "[DRY RUN] Would sync password-store repository"
+        else
+            sync_password_store || exit_code=$?
+        fi
+    fi
+
+    # Sync claude-private
+    if [[ "$DOTFILES_ONLY" != true && "$PASS_ONLY" != true ]]; then
         if [[ "$DRY_RUN" == true ]]; then
             log_info "[DRY RUN] Would sync claude-private repository"
         else
@@ -312,7 +555,8 @@ main() {
         fi
     fi
 
-    if [[ "$CLAUDE_ONLY" != true ]]; then
+    # Sync main dotfiles
+    if [[ "$CLAUDE_ONLY" != true && "$PASS_ONLY" != true ]]; then
         if [[ "$DRY_RUN" == true ]]; then
             log_info "[DRY RUN] Would sync main dotfiles repository"
         else
