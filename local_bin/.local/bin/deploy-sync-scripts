@@ -1,0 +1,99 @@
+#!/bin/bash
+set -euo pipefail
+
+# Deploy sync scripts from dotfiles to ~/.local/bin
+# Handles replacing Ansible-deployed version with Stow-managed version
+
+BLUE='\033[0;34m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+echo -e "${BLUE}Deploying sync scripts from dotfiles...${NC}"
+echo
+
+# Check current status
+if [[ -L "$HOME/.local/bin/dotfiles-sync" ]]; then
+    echo -e "${GREEN}✓${NC} dotfiles-sync is already a symlink (stow-managed)"
+elif [[ -f "$HOME/.local/bin/dotfiles-sync" ]]; then
+    echo -e "${YELLOW}⚠${NC} dotfiles-sync exists as regular file (Ansible-deployed)"
+    echo "   Will be replaced with symlink to dotfiles version"
+else
+    echo -e "${BLUE}ℹ${NC} dotfiles-sync not yet deployed"
+fi
+echo
+
+# Show size comparison
+if [[ -f "$HOME/.local/bin/dotfiles-sync" ]] && [[ -f "$HOME/.dotfiles/local_bin/.local/bin/dotfiles-sync" ]]; then
+    old_size=$(du -h "$HOME/.local/bin/dotfiles-sync" | cut -f1)
+    new_size=$(du -h "$HOME/.dotfiles/local_bin/.local/bin/dotfiles-sync" | cut -f1)
+    echo "Size comparison:"
+    echo "  Old (Ansible):  $old_size"
+    echo "  New (Enhanced): $new_size"
+    echo
+fi
+
+read -p "Continue with deployment? (Y/n): " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Nn]$ ]]; then
+    echo "Deployment cancelled"
+    exit 0
+fi
+
+# Deploy with stow (adopt will handle existing files)
+cd ~/.dotfiles
+
+echo -e "${BLUE}Running stow...${NC}"
+if stow --adopt local_bin 2>&1; then
+    echo -e "${GREEN}✓${NC} Stow deployment successful"
+else
+    echo -e "${YELLOW}⚠${NC} Stow had warnings (likely minor)"
+fi
+
+echo
+
+# Verify deployment
+echo -e "${BLUE}Verifying deployment...${NC}"
+
+if [[ -L "$HOME/.local/bin/dotfiles-sync" ]]; then
+    target=$(readlink "$HOME/.local/bin/dotfiles-sync")
+    echo -e "${GREEN}✓${NC} dotfiles-sync is now a symlink"
+    echo "   → $target"
+else
+    echo -e "${YELLOW}⚠${NC} dotfiles-sync is not a symlink"
+fi
+
+if [[ -L "$HOME/.local/bin/setup-sync" ]]; then
+    echo -e "${GREEN}✓${NC} setup-sync deployed"
+else
+    echo -e "${YELLOW}⚠${NC} setup-sync not found"
+fi
+
+if [[ -L "$HOME/.local/bin/setup-sync-complete" ]]; then
+    echo -e "${GREEN}✓${NC} setup-sync-complete deployed"
+else
+    echo -e "${YELLOW}⚠${NC} setup-sync-complete not found"
+fi
+
+echo
+
+# Test the command
+echo -e "${BLUE}Testing dotfiles-sync...${NC}"
+if ~/.local/bin/dotfiles-sync --help >/dev/null 2>&1; then
+    echo -e "${GREEN}✓${NC} Command works!"
+
+    # Show version/size
+    size=$(du -h "$HOME/.local/bin/dotfiles-sync" | cut -f1)
+    echo "   Size: $size (enhanced version with password-store support)"
+else
+    echo -e "${YELLOW}⚠${NC} Command test failed"
+fi
+
+echo
+echo -e "${GREEN}Deployment complete!${NC}"
+echo
+echo "Available commands:"
+echo "  dotfiles-sync --help          - Show help"
+echo "  dotfiles-sync --status        - Check sync status"
+echo "  setup-sync                    - Basic setup"
+echo "  setup-sync-complete           - Complete interactive setup"

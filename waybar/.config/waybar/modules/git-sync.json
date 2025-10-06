@@ -1,0 +1,11 @@
+{
+    "custom/git-sync": {
+        "exec": "~/.config/waybar/scripts/git-sync-status",
+        "return-type": "json",
+        "interval": 60,
+        "on-click": "~/.local/bin/dotfiles-sync",
+        "on-click-right": "~/.local/bin/dotfiles-sync --status | zenity --text-info --title='Git Sync Status' --width=600 --height=400",
+        "tooltip": true,
+        "format": " {}"
+    }
+}

@@ -1,0 +1,18 @@
+---
+# Docker role handlers
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+
+- name: Restart Docker
+  systemd:
+    name: docker
+    state: restarted
+
+- name: Remind user to relogin
+  debug:
+    msg: |
+      ⚠️  User added to docker group
+      You need to log out and back in for group membership to take effect
+      Or run: newgrp docker

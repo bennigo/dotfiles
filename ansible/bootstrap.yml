@@ -74,6 +74,10 @@
       tags: ["database", "postgresql"]
       when: "'database' in profiles[selected_profile]"
 
+    - role: docker
+      tags: ["docker", "container"]
+      when: "'docker' in profiles[selected_profile]"
+
     - role: desktop
       tags: ["desktop", "gui"] 
       when: "'desktop' in profiles[selected_profile]"

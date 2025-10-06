@@ -1,0 +1,66 @@
+# Docker Compose template for Python development projects
+# Copy this template and customize for your project
+#
+# Usage:
+#   cp ~/.dotfiles/docker/templates/compose-python-dev.yml docker-compose.yml
+#   # Edit docker-compose.yml with your project details
+#   docker compose up -d
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ${PROJECT_NAME:-myapp}
+    volumes:
+      # Mount source code for development
+      - .:/app
+      # Preserve Python cache
+      - python-cache:/root/.cache/pip
+    environment:
+      # Python environment
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      # Add your environment variables here
+      - DATABASE_URL=postgresql://user:pass@db:5432/dbname
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    # Run with hot reload for development
+    command: python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  db:
+    image: postgres:18-alpine
+    container_name: ${PROJECT_NAME:-myapp}-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mydb}
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+    name: ${PROJECT_NAME:-myapp}-postgres-data
+  python-cache:
+    name: ${PROJECT_NAME:-myapp}-python-cache
+
+networks:
+  app-network:
+    name: ${PROJECT_NAME:-myapp}-network
+    driver: bridge

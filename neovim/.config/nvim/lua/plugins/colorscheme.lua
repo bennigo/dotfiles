@@ -1,19 +1,16 @@
 return {
+  -- Extend LazyVim's catppuccin config with custom opts
   {
     "catppuccin/nvim",
-    version = "*", -- recommended, use latest release instead of latest commit
-    lazy = true,
-    name = "catppuccin",
     opts = function(_, opts)
-      -- Official LazyVim fix for bufferline integration
-      local module = require("catppuccin.groups.integrations.bufferline")
-      if module then
-        module.get_theme = module.get -- Compatibility layer for LazyVim
-      end
-      return {
-        transparent_background = true,
-        treesitter = true,
+      -- Extend LazyVim's opts with our customizations
+      opts.transparent_background = true
+      opts.treesitter = true
+      -- New in catppuccin: separate floating window transparency control
+      opts.float = {
+        transparent = true, -- enable transparent floating windows
       }
+      return opts
     end,
   },
 
@@ -28,11 +25,10 @@ return {
     },
   },
 
-
   -- add gruvbox
   { "ellisonleao/gruvbox.nvim" },
 
-  -- Configure LazyVim to load gruvbox
+  -- Configure LazyVim to load catppuccin
   {
     "LazyVim/LazyVim",
     opts = {

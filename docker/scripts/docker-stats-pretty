@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# Pretty Docker stats with color and formatting
+# Usage: docker-stats-pretty [container...]
+
+set -euo pipefail
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Check if containers are specified
+if [ $# -eq 0 ]; then
+  CONTAINERS=""
+else
+  CONTAINERS="$@"
+fi
+
+# Clear screen and show header
+clear
+echo -e "${BLUE}╔══════════════════════════════════════════════════════════════════════════════╗${NC}"
+echo -e "${BLUE}║                        Docker Container Statistics                          ║${NC}"
+echo -e "${BLUE}╚══════════════════════════════════════════════════════════════════════════════╝${NC}"
+echo ""
+
+# Run docker stats with formatting
+docker stats --no-stream --format \
+  "table {{.Name}}\t{{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}\t{{.NetIO}}\t{{.BlockIO}}" \
+  $CONTAINERS | \
+  awk -v red="$RED" -v green="$GREEN" -v yellow="$YELLOW" -v blue="$BLUE" -v nc="$NC" '
+  BEGIN {
+    print ""
+  }
+  NR==1 {
+    # Header row
+    print blue $0 nc
+    print ""
+  }
+  NR>1 {
+    # Extract CPU and Memory percentages
+    cpu = $3
+    mem = $5
+
+    # Remove % sign for comparison
+    gsub(/%/, "", cpu)
+    gsub(/%/, "", mem)
+
+    # Color based on usage
+    color = green
+    if (cpu > 50 || mem > 50) color = yellow
+    if (cpu > 80 || mem > 80) color = red
+
+    print color $0 nc
+  }'
+
+echo ""
+echo -e "${BLUE}System Summary:${NC}"
+docker system df --format "  {{.Type}}: {{.TotalCount}} total, {{.Size}} ({{.Reclaimable}} reclaimable)"
+echo ""

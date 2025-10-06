@@ -1,0 +1,114 @@
+# Docker Compose template for web application with Nginx reverse proxy
+# Suitable for production-ready deployments
+#
+# Usage:
+#   cp ~/.dotfiles/docker/templates/compose-web-nginx.yml docker-compose.yml
+#   # Customize for your application
+#   docker compose up -d
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: ${PROJECT_NAME:-webapp}-nginx
+    volumes:
+      # Nginx configuration
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx-site.conf:/etc/nginx/conf.d/default.conf:ro
+      # Static files
+      - ./static:/usr/share/nginx/html/static:ro
+      # SSL certificates (if using HTTPS)
+      # - ./certs:/etc/nginx/certs:ro
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    depends_on:
+      - app
+    networks:
+      - frontend
+      - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: ${PROJECT_NAME:-webapp}-app
+    environment:
+      - APP_ENV=production
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - app-data:/app/data
+      - app-logs:/app/logs
+    expose:
+      - "8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  db:
+    image: postgres:18-alpine
+    container_name: ${PROJECT_NAME:-webapp}-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-webapp}
+      POSTGRES_USER: ${POSTGRES_USER:-webapp}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-webapp}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: ${PROJECT_NAME:-webapp}-redis
+    volumes:
+      - redis-data:/data
+    networks:
+      - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: redis-server --appendonly yes
+
+volumes:
+  postgres-data:
+    name: ${PROJECT_NAME:-webapp}-postgres-data
+  redis-data:
+    name: ${PROJECT_NAME:-webapp}-redis-data
+  app-data:
+    name: ${PROJECT_NAME:-webapp}-app-data
+  app-logs:
+    name: ${PROJECT_NAME:-webapp}-app-logs
+
+networks:
+  frontend:
+    name: ${PROJECT_NAME:-webapp}-frontend
+    driver: bridge
+  backend:
+    name: ${PROJECT_NAME:-webapp}-backend
+    driver: bridge
+    internal: true  # Backend network not accessible from host

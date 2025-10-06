@@ -1,0 +1,251 @@
+#!/bin/bash
+set -euo pipefail
+
+# Automated setup script for git-sync Waybar module
+# Adds the module to config and styling automatically
+
+WAYBAR_CONFIG="$HOME/.config/waybar/config.jsonc"
+WAYBAR_STYLE="$HOME/.config/waybar/style.css"
+WAYBAR_SCRIPT="$HOME/.config/waybar/scripts/git-sync-status"
+
+# Colors
+BLUE='\033[0;34m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
+log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
+log_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
+log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
+
+echo -e "${BLUE}=== Git Sync Waybar Module Setup ===${NC}"
+echo
+
+# Check prerequisites
+log_info "Checking prerequisites..."
+
+if [[ ! -f "$WAYBAR_CONFIG" ]]; then
+    log_error "Waybar config not found: $WAYBAR_CONFIG"
+    exit 1
+fi
+
+if [[ ! -f "$WAYBAR_STYLE" ]]; then
+    log_error "Waybar style not found: $WAYBAR_STYLE"
+    exit 1
+fi
+
+if [[ ! -x "$WAYBAR_SCRIPT" ]]; then
+    if [[ -f "$WAYBAR_SCRIPT" ]]; then
+        chmod +x "$WAYBAR_SCRIPT"
+        log_success "Made git-sync-status script executable"
+    else
+        log_error "Git sync status script not found: $WAYBAR_SCRIPT"
+        exit 1
+    fi
+fi
+
+log_success "All prerequisites found"
+echo
+
+# Test the script
+log_info "Testing git-sync-status script..."
+if output=$("$WAYBAR_SCRIPT" 2>&1); then
+    log_success "Script works! Output: ${output:0:50}..."
+else
+    log_error "Script failed to run"
+    exit 1
+fi
+echo
+
+# Backup files
+log_info "Creating backups..."
+cp "$WAYBAR_CONFIG" "${WAYBAR_CONFIG}.backup-$(date +%Y%m%d-%H%M%S)"
+cp "$WAYBAR_STYLE" "${WAYBAR_STYLE}.backup-$(date +%Y%m%d-%H%M%S)"
+log_success "Backups created in ~/.config/waybar/"
+echo
+
+# Check if module already exists
+if grep -q '"custom/git-sync"' "$WAYBAR_CONFIG"; then
+    log_warning "Module already exists in config"
+    read -p "Replace existing module? (y/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        log_info "Skipping config modification"
+        skip_config=true
+    else
+        skip_config=false
+    fi
+else
+    skip_config=false
+fi
+
+# Add module to config
+if [[ "$skip_config" != true ]]; then
+    log_info "Adding module to Waybar config..."
+
+    # Detect terminal emulator
+    terminal="kitty"
+    if ! command -v kitty &>/dev/null; then
+        if command -v foot &>/dev/null; then
+            terminal="foot"
+        elif command -v alacritty &>/dev/null; then
+            terminal="alacritty"
+        else
+            log_warning "No supported terminal found, using 'kitty' (may not work)"
+        fi
+    fi
+    log_info "Using terminal: $terminal"
+
+    # Check if custom/git-sync already in modules-right
+    if grep -A 30 '"modules-right"' "$WAYBAR_CONFIG" | grep -q '"custom/git-sync"'; then
+        log_info "Module already in modules-right array"
+    else
+        # Add to modules-right array (after custom/clipboard if it exists, otherwise after sway/language)
+        if grep -A 30 '"modules-right"' "$WAYBAR_CONFIG" | grep -q '"custom/clipboard"'; then
+            # Add after clipboard
+            sed -i '/"custom\/clipboard",/a\        "custom/git-sync",' "$WAYBAR_CONFIG"
+            log_success "Added to modules-right (after custom/clipboard)"
+        elif grep -A 30 '"modules-right"' "$WAYBAR_CONFIG" | grep -q '"sway/language"'; then
+            # Add after language
+            sed -i '/"sway\/language",/a\        "custom/git-sync",' "$WAYBAR_CONFIG"
+            log_success "Added to modules-right (after sway/language)"
+        else
+            log_warning "Could not find insertion point, please add manually"
+            log_info "Add '\"custom/git-sync\",' to modules-right array"
+        fi
+    fi
+
+    # Add module configuration if not exists
+    if grep -q '"custom/git-sync": {' "$WAYBAR_CONFIG"; then
+        log_info "Module configuration already exists"
+    else
+        # Find last closing brace and add module config before it
+        # Create the module config
+        cat >> "/tmp/git-sync-module.jsonc" << EOF
+    "custom/git-sync": {
+        "exec": "~/.config/waybar/scripts/git-sync-status",
+        "return-type": "json",
+        "interval": 60,
+        "on-click": "${terminal} -e ~/.local/bin/dotfiles-sync",
+        "on-click-right": "${terminal} -e ~/.local/bin/dotfiles-sync --status",
+        "tooltip": true,
+        "format": " {}"
+    },
+EOF
+
+        # Insert before the last closing brace
+        # This is a bit tricky, but should work for most configs
+        # Find line with just "}" at end of file
+        lastline=$(grep -n "^}" "$WAYBAR_CONFIG" | tail -1 | cut -d: -f1)
+        if [[ -n "$lastline" ]]; then
+            # Insert before last line
+            sed -i "${lastline}i\\    ,\"custom/git-sync\": {\\n        \"exec\": \"~/.config/waybar/scripts/git-sync-status\",\\n        \"return-type\": \"json\",\\n        \"interval\": 60,\\n        \"on-click\": \"${terminal} -e ~/.local/bin/dotfiles-sync\",\\n        \"on-click-right\": \"${terminal} -e ~/.local/bin/dotfiles-sync --status\",\\n        \"tooltip\": true,\\n        \"format\": \" {}\"\\n    }" "$WAYBAR_CONFIG"
+            log_success "Added module configuration"
+        else
+            log_warning "Could not auto-add config, please add manually"
+            log_info "See: ~/.config/waybar/modules/git-sync.json for reference"
+        fi
+        rm -f "/tmp/git-sync-module.jsonc"
+    fi
+fi
+echo
+
+# Add CSS styling
+log_info "Checking CSS styling..."
+if grep -q "#custom-git-sync" "$WAYBAR_STYLE"; then
+    log_info "CSS styling already exists"
+else
+    log_info "Adding CSS styling..."
+    cat >> "$WAYBAR_STYLE" << 'EOF'
+
+/* Git Sync Status Module */
+#custom-git-sync {
+    padding: 0 10px;
+    margin: 0 4px;
+    border-radius: 4px;
+}
+
+#custom-git-sync.synced {
+    color: #a6da95;  /* Green - all synced */
+}
+
+#custom-git-sync.pending {
+    color: #eed49f;  /* Yellow - needs sync */
+    animation: pulse 2s ease-in-out infinite;
+}
+
+#custom-git-sync.error {
+    color: #ed8796;  /* Red - error */
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+EOF
+    log_success "CSS styling added"
+fi
+echo
+
+# Validate JSON (if jq available)
+if command -v jq &>/dev/null; then
+    log_info "Validating JSON config..."
+    # Remove comments for validation
+    if sed 's://.*::g' "$WAYBAR_CONFIG" | jq empty 2>/dev/null; then
+        log_success "Config is valid JSON"
+    else
+        log_error "Config has JSON errors! Restoring backup..."
+        mv "${WAYBAR_CONFIG}.backup-"* "$WAYBAR_CONFIG"
+        exit 1
+    fi
+fi
+echo
+
+# Ask to reload Waybar
+log_success "Setup complete!"
+echo
+echo -e "${GREEN}Module added:${NC}"
+echo "  - Config: modules-right includes custom/git-sync"
+echo "  - Styling: CSS colors for synced/pending/error states"
+echo "  - Actions: Left-click to sync, right-click for status"
+echo
+echo -e "${BLUE}Backups created:${NC}"
+ls -t ~/.config/waybar/*.backup-* | head -2
+echo
+
+read -p "Reload Waybar now? (Y/n): " -n 1 -r
+echo
+if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+    log_info "Reloading Waybar..."
+
+    # Try systemd first
+    if systemctl --user is-active waybar &>/dev/null; then
+        systemctl --user restart waybar
+        log_success "Waybar restarted via systemd"
+    else
+        # Manual restart
+        if pgrep -x waybar >/dev/null; then
+            killall waybar
+            sleep 0.5
+        fi
+        waybar </dev/null &>/dev/null &
+        log_success "Waybar restarted manually"
+    fi
+
+    echo
+    log_success "Done! Check your Waybar for the git-sync module"
+    log_info "Status format: P:✓ C:✓ D:✓ (Password Store | Claude | Dotfiles)"
+else
+    log_info "Skipped reload. Run 'killall waybar; waybar &' when ready"
+fi
+
+echo
+echo -e "${BLUE}Next steps:${NC}"
+echo "  1. Look for the  icon in your Waybar"
+echo "  2. Hover to see detailed status"
+echo "  3. Left-click to sync all repositories"
+echo "  4. Right-click to see status report"
+echo
+echo -e "${BLUE}Documentation:${NC} ~/.config/waybar/SETUP_GIT_SYNC.md"
