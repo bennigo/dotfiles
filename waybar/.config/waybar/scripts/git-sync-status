@@ -3,8 +3,8 @@
 # Git Sync Status Module for Waybar
 # Shows status of dotfiles, claude-private, and password-store repositories
 
-# Redirect all errors to /dev/null to prevent contaminating JSON output
-exec 2>/dev/null
+# Debug: Save output to temp file to see what Waybar receives
+# exec 2>/dev/null
 
 DOTFILES_DIR="$HOME/.dotfiles"
 CLAUDE_PRIVATE_DIR="$DOTFILES_DIR/claude-private"
@@ -69,12 +69,9 @@ if [ $pass_exit -ne 0 ] || [ $claude_exit -ne 0 ] || [ $dotfiles_exit -ne 0 ]; t
     overall_exit=1
 fi
 
-# Build output for Waybar (simplified text for debugging)
-# Using simple ASCII to ensure rendering works
-text="GIT-SYNC"
-tooltip="Password Store: $pass_status | Claude: $claude_status | Dotfiles: $dotfiles_status\n\nClick to sync all repositories"
-# Original text (commented for now):
-# text="P:$pass_status C:$claude_status D:$dotfiles_status"
+# Build output for Waybar
+text="P:$pass_status C:$claude_status D:$dotfiles_status"
+tooltip="Password Store: $pass_status | Claude: $claude_status | Dotfiles: $dotfiles_status\\n\\nClick to sync all repositories"
 
 # Determine CSS class
 class="synced"
@@ -84,14 +81,8 @@ elif [ $pass_exit -eq 2 ] || [ $claude_exit -eq 2 ] || [ $dotfiles_exit -eq 2 ];
     class="error"
 fi
 
-# Output JSON for Waybar
-cat << EOF
-{
-    "text": "$text",
-    "tooltip": "$tooltip",
-    "class": "$class"
-}
-EOF
+# Output JSON for Waybar (using printf to avoid any trailing newlines/whitespace issues)
+printf '{"text":"%s","tooltip":"%s","class":"%s"}\n' "$text" "$tooltip" "$class"
 
 # Always exit 0 for Waybar - status is conveyed via JSON, not exit code
 # Waybar may hide modules that exit with non-zero codes
