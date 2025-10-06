@@ -87,4 +87,6 @@ cat << EOF
 }
 EOF
 
-exit $overall_exit
+# Always exit 0 for Waybar - status is conveyed via JSON, not exit code
+# Waybar may hide modules that exit with non-zero codes
+exit 0
