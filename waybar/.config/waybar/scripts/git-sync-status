@@ -3,6 +3,9 @@
 # Git Sync Status Module for Waybar
 # Shows status of dotfiles, claude-private, and password-store repositories
 
+# Redirect all errors to /dev/null to prevent contaminating JSON output
+exec 2>/dev/null
+
 DOTFILES_DIR="$HOME/.dotfiles"
 CLAUDE_PRIVATE_DIR="$DOTFILES_DIR/claude-private"
 PASSWORD_STORE_DIR="${PASSWORD_STORE_DIR:-$HOME/.password-store}"
@@ -66,9 +69,12 @@ if [ $pass_exit -ne 0 ] || [ $claude_exit -ne 0 ] || [ $dotfiles_exit -ne 0 ]; t
     overall_exit=1
 fi
 
-# Build output for Waybar
-text="P:$pass_status C:$claude_status D:$dotfiles_status"
+# Build output for Waybar (simplified text for debugging)
+# Using simple ASCII to ensure rendering works
+text="GIT-SYNC"
 tooltip="Password Store: $pass_status | Claude: $claude_status | Dotfiles: $dotfiles_status\n\nClick to sync all repositories"
+# Original text (commented for now):
+# text="P:$pass_status C:$claude_status D:$dotfiles_status"
 
 # Determine CSS class
 class="synced"
