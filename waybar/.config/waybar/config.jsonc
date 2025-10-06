@@ -20,6 +20,7 @@
         "custom/dnd",
         "sway/language",
         "custom/clipboard",
+        "custom/git-sync",
         "cpu",
         "memory",
         "battery",
@@ -276,6 +277,15 @@
         "format": "",
         "on-click": "/usr/share/sway/scripts/help.sh --toggle",
         "tooltip": "false"
+    },
+    "custom/git-sync": {
+        "exec": "~/.config/waybar/scripts/git-sync-status",
+        "return-type": "json",
+        "interval": 60,
+        "on-click": "kitty -e ~/.local/bin/dotfiles-sync",
+        "on-click-right": "kitty -e ~/.local/bin/dotfiles-sync --status",
+        "tooltip": true,
+        "format": " {}"
     },
     "tray": {
         "icon-size": 21,
