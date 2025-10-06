@@ -108,3 +108,28 @@ window#waybar {
 #tray {
 }
 
+
+/* Git Sync Status Module */
+#custom-git-sync {
+    padding: 0 10px;
+    margin: 0 4px;
+    border-radius: 4px;
+}
+
+#custom-git-sync.synced {
+    color: #a6da95;  /* Green - all synced */
+}
+
+#custom-git-sync.pending {
+    color: #eed49f;  /* Yellow - needs sync */
+    animation: pulse 2s ease-in-out infinite;
+}
+
+#custom-git-sync.error {
+    color: #ed8796;  /* Red - error */
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}

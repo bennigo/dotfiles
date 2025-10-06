@@ -51,10 +51,26 @@ echo
 
 # Test the script
 log_info "Testing git-sync-status script..."
-if output=$("$WAYBAR_SCRIPT" 2>&1); then
-    log_success "Script works! Output: ${output:0:50}..."
+# The script returns exit codes: 0=synced, 1=pending, 2=error
+# Exit code 1 is expected when repos need syncing, so we allow it
+# Temporarily disable errexit to capture output even with exit code 1
+set +e
+output=$("$WAYBAR_SCRIPT" 2>&1)
+exit_code=$?
+set -e
+
+# Check if output looks like valid JSON (check for key fields on separate lines)
+if echo "$output" | grep -q '"text"' && echo "$output" | grep -q '"tooltip"'; then
+    if [[ $exit_code -eq 0 ]]; then
+        log_success "Script works! All repos synced"
+    elif [[ $exit_code -eq 1 ]]; then
+        log_success "Script works! Repos need syncing (expected)"
+    else
+        log_error "Script failed with exit code $exit_code"
+        exit 1
+    fi
 else
-    log_error "Script failed to run"
+    log_error "Script output doesn't look like JSON: ${output:0:100}"
     exit 1
 fi
 echo
@@ -121,33 +137,17 @@ if [[ "$skip_config" != true ]]; then
     if grep -q '"custom/git-sync": {' "$WAYBAR_CONFIG"; then
         log_info "Module configuration already exists"
     else
-        # Find last closing brace and add module config before it
-        # Create the module config
-        cat >> "/tmp/git-sync-module.jsonc" << EOF
-    "custom/git-sync": {
-        "exec": "~/.config/waybar/scripts/git-sync-status",
-        "return-type": "json",
-        "interval": 60,
-        "on-click": "${terminal} -e ~/.local/bin/dotfiles-sync",
-        "on-click-right": "${terminal} -e ~/.local/bin/dotfiles-sync --status",
-        "tooltip": true,
-        "format": " {}"
-    },
-EOF
-
-        # Insert before the last closing brace
-        # This is a bit tricky, but should work for most configs
-        # Find line with just "}" at end of file
-        lastline=$(grep -n "^}" "$WAYBAR_CONFIG" | tail -1 | cut -d: -f1)
-        if [[ -n "$lastline" ]]; then
-            # Insert before last line
-            sed -i "${lastline}i\\    ,\"custom/git-sync\": {\\n        \"exec\": \"~/.config/waybar/scripts/git-sync-status\",\\n        \"return-type\": \"json\",\\n        \"interval\": 60,\\n        \"on-click\": \"${terminal} -e ~/.local/bin/dotfiles-sync\",\\n        \"on-click-right\": \"${terminal} -e ~/.local/bin/dotfiles-sync --status\",\\n        \"tooltip\": true,\\n        \"format\": \" {}\"\\n    }" "$WAYBAR_CONFIG"
-            log_success "Added module configuration"
-        else
-            log_warning "Could not auto-add config, please add manually"
-            log_info "See: ~/.config/waybar/modules/git-sync.json for reference"
+        # Find the "tray" module (last one) and add before it
+        # First, add comma to previous module if it doesn't have one
+        if grep -B1 '"tray": {' "$WAYBAR_CONFIG" | head -1 | grep -q '}$' && \
+           ! grep -B1 '"tray": {' "$WAYBAR_CONFIG" | head -1 | grep -q '},$'; then
+            # Add comma to the closing brace of previous module
+            sed -i '/"tray": {/{ N; s/}\n/},\n/ }' "$WAYBAR_CONFIG"
         fi
-        rm -f "/tmp/git-sync-module.jsonc"
+
+        # Insert git-sync module before tray
+        sed -i '/"tray": {/i\    "custom/git-sync": {\n        "exec": "~/.config/waybar/scripts/git-sync-status",\n        "return-type": "json",\n        "interval": 60,\n        "on-click": "'"${terminal}"' -e ~/.local/bin/dotfiles-sync",\n        "on-click-right": "'"${terminal}"' -e ~/.local/bin/dotfiles-sync --status",\n        "tooltip": true,\n        "format": " {}"\n    },' "$WAYBAR_CONFIG"
+        log_success "Added module configuration"
     fi
 fi
 echo
@@ -189,18 +189,9 @@ EOF
 fi
 echo
 
-# Validate JSON (if jq available)
-if command -v jq &>/dev/null; then
-    log_info "Validating JSON config..."
-    # Remove comments for validation
-    if sed 's://.*::g' "$WAYBAR_CONFIG" | jq empty 2>/dev/null; then
-        log_success "Config is valid JSON"
-    else
-        log_error "Config has JSON errors! Restoring backup..."
-        mv "${WAYBAR_CONFIG}.backup-"* "$WAYBAR_CONFIG"
-        exit 1
-    fi
-fi
+# Skip JSON validation - Waybar uses JSONC which allows comments and trailing commas
+# The strict JSON validator would fail on valid JSONC
+log_info "Skipping strict JSON validation (Waybar supports JSONC format)"
 echo
 
 # Ask to reload Waybar
