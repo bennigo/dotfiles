@@ -282,8 +282,8 @@
         "exec": "/home/bgo/.config/waybar/scripts/git-sync-status",
         "return-type": "json",
         "interval": 60,
-        "on-click": "kitty --class=git_sync_float -e /home/bgo/.local/bin/dotfiles-sync",
-        "on-click-right": "kitty --class=git_sync_float -e /home/bgo/.local/bin/dotfiles-sync --status",
+        "on-click": "kitty --app-id=git_sync_float -e /home/bgo/.local/bin/dotfiles-sync",
+        "on-click-right": "kitty --app-id=git_sync_float -e /home/bgo/.local/bin/dotfiles-sync --status",
         "tooltip": true,
         "format": "{}"
     },
