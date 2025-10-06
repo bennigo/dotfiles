@@ -231,7 +231,19 @@ sync_password_store() {
 
     # Check if there are any local changes
     if git diff --quiet && git diff --cached --quiet; then
-        log_info "No changes in password-store"
+        # No new changes, but check if we're ahead
+        local ahead=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo "0")
+        if [ "$ahead" -gt 0 ]; then
+            log_info "Password-store has $ahead commit(s) to push (no new changes)"
+            if git push; then
+                log_success "Password-store pushed $ahead existing commit(s)"
+            else
+                log_error "Failed to push password-store"
+                return 1
+            fi
+        else
+            log_info "No changes in password-store"
+        fi
         return 0
     fi
 
