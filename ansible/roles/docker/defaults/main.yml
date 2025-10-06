@@ -1,0 +1,10 @@
+---
+# Docker role default variables
+
+# User to add to docker group (inherited from all.yml)
+# target_user: "bgo"
+
+# Docker daemon configuration
+docker_log_max_size: "10m"
+docker_log_max_files: 3
+docker_storage_driver: "overlay2"

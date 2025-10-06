@@ -1,0 +1,83 @@
+# Docker Compose template for standalone PostgreSQL
+# Useful for local development when you need a quick database
+#
+# Usage:
+#   cp ~/.dotfiles/docker/templates/compose-postgres-standalone.yml docker-compose.yml
+#   docker compose up -d
+#   psql -h localhost -U myuser -d mydb
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: ${PROJECT_NAME:-postgres}-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mydb}
+      POSTGRES_USER: ${POSTGRES_USER:-myuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      # Optional: enable extensions
+      # POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
+    volumes:
+      # Persist data
+      - postgres-data:/var/lib/postgresql/data
+      # Optional: mount SQL initialization scripts
+      # - ./init-scripts:/docker-entrypoint-initdb.d
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-myuser}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    # Optional: performance tuning
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=200"
+      - "-c"
+      - "shared_buffers=256MB"
+      - "-c"
+      - "effective_cache_size=1GB"
+      - "-c"
+      - "maintenance_work_mem=64MB"
+      - "-c"
+      - "checkpoint_completion_target=0.9"
+      - "-c"
+      - "wal_buffers=16MB"
+      - "-c"
+      - "default_statistics_target=100"
+
+  # Optional: pgAdmin for database management
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: ${PROJECT_NAME:-postgres}-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@localhost}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    profiles:
+      - tools  # Start with: docker compose --profile tools up
+
+volumes:
+  postgres-data:
+    name: ${PROJECT_NAME:-postgres}-data
+  pgadmin-data:
+    name: ${PROJECT_NAME:-postgres}-pgadmin-data
+
+# Example .env file:
+# PROJECT_NAME=myproject
+# POSTGRES_DB=mydb
+# POSTGRES_USER=myuser
+# POSTGRES_PASSWORD=SecurePassword123
+# POSTGRES_PORT=5432
+# PGADMIN_EMAIL=admin@example.com
+# PGADMIN_PASSWORD=admin123
+# PGADMIN_PORT=5050

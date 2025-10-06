@@ -18,12 +18,14 @@ profiles:
     - system_files
     - development
     - database
+    - docker
     - dotfiles
   desktop:
     - base
     - system_files
     - development
     - database
+    - docker
     - desktop
     - email
     - dotfiles
@@ -32,6 +34,7 @@ profiles:
     - system_files
     - development
     - database
+    - docker
     - desktop
     - email
     - credentials
@@ -41,6 +44,7 @@ profiles:
     - system_files
     - development
     - database
+    - docker
     - desktop
     - email
     - credentials

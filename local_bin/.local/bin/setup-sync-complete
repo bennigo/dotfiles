@@ -1,0 +1,206 @@
+#!/bin/bash
+set -euo pipefail
+
+# Complete Sync System Setup
+# Sets up dotfiles-sync, aliases, waybar module, and optionally systemd timer
+
+BLUE='\033[0;34m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+clear
+cat << "EOF"
+╔═══════════════════════════════════════════════════════════╗
+║     Git Sync System - Complete Setup                     ║
+║     Dotfiles + Password Store + Claude Private           ║
+╚═══════════════════════════════════════════════════════════╝
+EOF
+echo
+
+echo -e "${BLUE}This will set up:${NC}"
+echo "  1. ✓ dotfiles-sync command with password-store support"
+echo "  2. ✓ Shell aliases (sync, sync-pass, sync-status, etc.)"
+echo "  3. ✓ Waybar visual status indicator (optional)"
+echo "  4. ✓ Systemd automatic sync timer (optional)"
+echo "  5. ✓ Shell reminders for uncommitted changes (optional)"
+echo
+read -p "Continue with setup? (Y/n): " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Nn]$ ]]; then
+    echo "Setup cancelled"
+    exit 0
+fi
+
+# Step 1: Core sync command
+echo
+echo -e "${BLUE}[1/5] Core Sync Command${NC}"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# Check if it's already a symlink (stow-managed)
+if [[ -L "$HOME/.local/bin/dotfiles-sync" ]]; then
+    echo -e "${GREEN}✓${NC} dotfiles-sync already deployed (stow-managed)"
+elif [[ -f "$HOME/.local/bin/dotfiles-sync" ]]; then
+    echo -e "${YELLOW}⚠${NC} Old version found (Ansible-deployed)"
+    echo "   Replacing with enhanced version..."
+    cd ~/.dotfiles
+    stow --adopt local_bin
+    echo -e "${GREEN}✓${NC} Enhanced dotfiles-sync deployed"
+else
+    echo "Installing dotfiles-sync..."
+    cd ~/.dotfiles
+    stow local_bin
+    echo -e "${GREEN}✓${NC} dotfiles-sync installed"
+fi
+
+# Test it
+if ~/.local/bin/dotfiles-sync --status >/dev/null 2>&1; then
+    size=$(du -h ~/.local/bin/dotfiles-sync | cut -f1)
+    echo -e "${GREEN}✓${NC} dotfiles-sync command works ($size - with password-store support)"
+else
+    echo -e "${YELLOW}⚠${NC} dotfiles-sync test failed (check manually)"
+fi
+
+# Step 2: Shell aliases
+echo
+echo -e "${BLUE}[2/5] Shell Aliases${NC}"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+if [[ -f "$HOME/.config/zsh/aliases-sync.zsh" ]]; then
+    echo -e "${GREEN}✓${NC} Aliases file already exists"
+else
+    cd ~/.dotfiles
+    stow zsh
+    echo -e "${GREEN}✓${NC} Aliases file deployed"
+fi
+
+# Check if sourced in .zshrc
+ZSHRC="${ZDOTDIR:-$HOME/.config/zsh}/.zshrc"
+if grep -q "aliases-sync.zsh" "$ZSHRC" 2>/dev/null; then
+    echo -e "${GREEN}✓${NC} Aliases already sourced in .zshrc"
+else
+    echo "source ~/.config/zsh/aliases-sync.zsh" >> "$ZSHRC"
+    echo -e "${GREEN}✓${NC} Added aliases to .zshrc"
+fi
+
+echo -e "${BLUE}Available aliases:${NC} sync, sync-pass, sync-status, pass-status"
+
+# Step 3: Waybar module (optional)
+echo
+echo -e "${BLUE}[3/5] Waybar Visual Indicator (Optional)${NC}"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+if [[ -f "$HOME/.config/waybar/config.jsonc" ]]; then
+    read -p "Add git-sync module to Waybar? (Y/n): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+        # Deploy waybar files first
+        cd ~/.dotfiles
+        stow waybar
+
+        # Run waybar setup
+        if [[ -x "$HOME/.config/waybar/scripts/setup-git-sync-module" ]]; then
+            ~/.config/waybar/scripts/setup-git-sync-module
+        else
+            echo -e "${YELLOW}⚠${NC} Waybar setup script not found"
+        fi
+    else
+        echo -e "${BLUE}ℹ${NC} Skipped Waybar module"
+        echo "  Run later: ~/.config/waybar/scripts/setup-git-sync-module"
+    fi
+else
+    echo -e "${YELLOW}⚠${NC} Waybar config not found - skipping"
+fi
+
+# Step 4: Systemd timer (optional)
+echo
+echo -e "${BLUE}[4/5] Automatic Sync Timer (Optional)${NC}"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+echo "Systemd timer runs automatic sync every 4 hours"
+read -p "Enable automatic sync? (y/N): " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    # Deploy systemd files
+    cd ~/.dotfiles
+    stow systemd
+
+    # Enable timer
+    systemctl --user daemon-reload
+    systemctl --user enable --now password-store-sync.timer
+
+    echo -e "${GREEN}✓${NC} Automatic sync enabled"
+    echo "  Check status: systemctl --user status password-store-sync.timer"
+else
+    echo -e "${BLUE}ℹ${NC} Automatic sync not enabled"
+    echo "  Enable later: systemctl --user enable --now password-store-sync.timer"
+fi
+
+# Step 5: Shell reminders (optional)
+echo
+echo -e "${BLUE}[5/5] Shell Reminders (Optional)${NC}"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+echo "Shell hooks can remind you every 4 hours about uncommitted changes"
+read -p "Enable shell reminders? (y/N): " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    HOOKS_FILE="$HOME/.config/zsh/hooks-sync.zsh"
+    if [[ -f "$HOOKS_FILE" ]]; then
+        # Uncomment the check_sync_status line
+        if grep -q "^# check_sync_status" "$HOOKS_FILE"; then
+            sed -i 's/^# check_sync_status/check_sync_status/' "$HOOKS_FILE"
+            echo -e "${GREEN}✓${NC} Shell reminders enabled"
+        else
+            echo -e "${GREEN}✓${NC} Shell reminders already enabled"
+        fi
+
+        # Source hooks in .zshrc if not already
+        if grep -q "hooks-sync.zsh" "$ZSHRC" 2>/dev/null; then
+            echo -e "${GREEN}✓${NC} Hooks already sourced"
+        else
+            echo "source ~/.config/zsh/hooks-sync.zsh" >> "$ZSHRC"
+            echo -e "${GREEN}✓${NC} Added hooks to .zshrc"
+        fi
+    else
+        echo -e "${YELLOW}⚠${NC} Hooks file not found"
+    fi
+else
+    echo -e "${BLUE}ℹ${NC} Shell reminders not enabled"
+    echo "  Enable later: edit ~/.config/zsh/hooks-sync.zsh"
+fi
+
+# Summary
+echo
+echo "╔═══════════════════════════════════════════════════════════╗"
+echo "║                   Setup Complete!                        ║"
+echo "╚═══════════════════════════════════════════════════════════╝"
+echo
+echo -e "${GREEN}✓ What's Installed:${NC}"
+echo
+
+# Check what's enabled
+[[ -x "$HOME/.local/bin/dotfiles-sync" ]] && echo "  ✓ dotfiles-sync command" || echo "  ✗ dotfiles-sync command"
+[[ -f "$HOME/.config/zsh/aliases-sync.zsh" ]] && echo "  ✓ Shell aliases" || echo "  ✗ Shell aliases"
+grep -q "custom/git-sync" "$HOME/.config/waybar/config.jsonc" 2>/dev/null && echo "  ✓ Waybar module" || echo "  ○ Waybar module (optional)"
+systemctl --user is-enabled password-store-sync.timer &>/dev/null && echo "  ✓ Automatic sync (every 4h)" || echo "  ○ Automatic sync (manual only)"
+grep -q "^check_sync_status" "$HOME/.config/zsh/hooks-sync.zsh" 2>/dev/null && echo "  ✓ Shell reminders" || echo "  ○ Shell reminders (disabled)"
+
+echo
+echo -e "${BLUE}Quick Commands:${NC}"
+echo "  sync               - Sync all repositories"
+echo "  sync-status        - Check sync status"
+echo "  sync-pass          - Sync password-store only"
+echo "  pass-status        - Check password-store git status"
+echo
+echo -e "${BLUE}Next Steps:${NC}"
+echo "  1. Reload shell:  exec zsh"
+echo "  2. Test commands: sync-status"
+echo "  3. First sync:    sync"
+echo
+echo -e "${BLUE}Documentation:${NC}"
+echo "  ~/.dotfiles/SYNC_WORKFLOW.md         - Complete guide"
+echo "  ~/.dotfiles/SYNC_QUICK_REFERENCE.md  - Quick reference"
+echo "  ~/.config/waybar/SETUP_GIT_SYNC.md   - Waybar setup"
+echo
+echo -e "${GREEN}Happy syncing! 🚀${NC}"

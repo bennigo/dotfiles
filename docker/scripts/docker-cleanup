@@ -1,0 +1,98 @@
+#!/usr/bin/env bash
+# Docker cleanup script - removes unused containers, images, and volumes
+# Usage: docker-cleanup [--all] [--force]
+
+set -euo pipefail
+
+REMOVE_ALL=false
+FORCE=false
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --all|-a)
+      REMOVE_ALL=true
+      shift
+      ;;
+    --force|-f)
+      FORCE=true
+      shift
+      ;;
+    --help|-h)
+      echo "Usage: docker-cleanup [--all] [--force]"
+      echo ""
+      echo "Options:"
+      echo "  --all, -a     Remove all unused images (not just dangling)"
+      echo "  --force, -f   Skip confirmation prompt"
+      echo "  --help, -h    Show this help message"
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1"
+      echo "Use --help for usage information"
+      exit 1
+      ;;
+  esac
+done
+
+# Show what will be cleaned
+echo "🧹 Docker Cleanup Summary"
+echo "========================="
+echo ""
+echo "📦 Stopped containers:"
+docker ps -a -f status=exited --format "  - {{.Names}} ({{.Image}})" | head -10
+echo ""
+echo "🗑️  Dangling images:"
+docker images -f dangling=true --format "  - {{.Repository}}:{{.Tag}} ({{.Size}})" | head -10
+echo ""
+if [ "$REMOVE_ALL" = true ]; then
+  echo "⚠️  ALL unused images will be removed (--all flag set)"
+  echo ""
+fi
+echo "💾 Unused volumes:"
+docker volume ls -f dangling=true --format "  - {{.Name}}" | head -10
+echo ""
+echo "🌐 Unused networks:"
+docker network ls --format "  - {{.Name}} ({{.Driver}})" | grep -v "bridge\|host\|none" | head -10 || echo "  (none)"
+echo ""
+
+# Confirm unless --force
+if [ "$FORCE" = false ]; then
+  read -p "Continue with cleanup? [y/N] " -n 1 -r
+  echo
+  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo "Cleanup cancelled"
+    exit 0
+  fi
+fi
+
+echo ""
+echo "🚀 Starting cleanup..."
+echo ""
+
+# Remove stopped containers
+echo "Removing stopped containers..."
+docker container prune -f
+
+# Remove unused images
+if [ "$REMOVE_ALL" = true ]; then
+  echo "Removing all unused images..."
+  docker image prune -a -f
+else
+  echo "Removing dangling images..."
+  docker image prune -f
+fi
+
+# Remove unused volumes
+echo "Removing unused volumes..."
+docker volume prune -f
+
+# Remove unused networks
+echo "Removing unused networks..."
+docker network prune -f
+
+echo ""
+echo "✅ Cleanup complete!"
+echo ""
+echo "💾 Current disk usage:"
+docker system df

@@ -134,3 +134,4 @@ unset __conda_setup
 
 
 . "$HOME/.local/share//../bin/env"
+source ~/.config/zsh/aliases-sync.zsh

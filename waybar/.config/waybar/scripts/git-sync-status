@@ -1,0 +1,90 @@
+#!/bin/bash
+
+# Git Sync Status Module for Waybar
+# Shows status of dotfiles, claude-private, and password-store repositories
+
+DOTFILES_DIR="$HOME/.dotfiles"
+CLAUDE_PRIVATE_DIR="$DOTFILES_DIR/claude-private"
+PASSWORD_STORE_DIR="${PASSWORD_STORE_DIR:-$HOME/.password-store}"
+
+# Icons
+ICON_SYNCED="✓"
+ICON_AHEAD="↑"
+ICON_BEHIND="↓"
+ICON_DIRTY="⚠"
+ICON_ERROR="✗"
+
+# Check git repository status
+check_repo_status() {
+    local repo_dir="$1"
+    local repo_name="$2"
+
+    if [[ ! -d "$repo_dir" ]] || [[ ! -d "$repo_dir/.git" ]] && [[ ! -f "$repo_dir/.git" ]]; then
+        echo "$ICON_ERROR"
+        return 2
+    fi
+
+    cd "$repo_dir" || return 2
+
+    # Check for uncommitted changes
+    if ! git diff --quiet || ! git diff --cached --quiet; then
+        echo "$ICON_DIRTY"
+        return 1
+    fi
+
+    # Check if ahead or behind remote
+    local ahead=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo "0")
+    local behind=$(git rev-list --count HEAD..@{u} 2>/dev/null || echo "0")
+
+    if [ "$ahead" -gt 0 ]; then
+        echo "$ICON_AHEAD"
+        return 1
+    fi
+
+    if [ "$behind" -gt 0 ]; then
+        echo "$ICON_BEHIND"
+        return 1
+    fi
+
+    echo "$ICON_SYNCED"
+    return 0
+}
+
+# Get status for all repositories
+pass_status=$(check_repo_status "$PASSWORD_STORE_DIR" "pass")
+pass_exit=$?
+
+claude_status=$(check_repo_status "$CLAUDE_PRIVATE_DIR" "claude")
+claude_exit=$?
+
+dotfiles_status=$(check_repo_status "$DOTFILES_DIR" "dotfiles")
+dotfiles_exit=$?
+
+# Determine overall status
+overall_exit=0
+if [ $pass_exit -ne 0 ] || [ $claude_exit -ne 0 ] || [ $dotfiles_exit -ne 0 ]; then
+    overall_exit=1
+fi
+
+# Build output for Waybar
+text="P:$pass_status C:$claude_status D:$dotfiles_status"
+tooltip="Password Store: $pass_status | Claude: $claude_status | Dotfiles: $dotfiles_status\n\nClick to sync all repositories"
+
+# Determine CSS class
+class="synced"
+if [ $pass_exit -eq 1 ] || [ $claude_exit -eq 1 ] || [ $dotfiles_exit -eq 1 ]; then
+    class="pending"
+elif [ $pass_exit -eq 2 ] || [ $claude_exit -eq 2 ] || [ $dotfiles_exit -eq 2 ]; then
+    class="error"
+fi
+
+# Output JSON for Waybar
+cat << EOF
+{
+    "text": "$text",
+    "tooltip": "$tooltip",
+    "class": "$class"
+}
+EOF
+
+exit $overall_exit

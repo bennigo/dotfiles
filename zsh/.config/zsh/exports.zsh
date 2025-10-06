@@ -32,8 +32,36 @@ export PATH="$HOME/.local/share/miniforge3/bin:$PATH"
 # Add Deno to PATH
 export PATH="$HOME/.deno/bin:$PATH"
 
+
 #export PATH="$PATH:./node_modules/.bin"
 #source <(fzf --zsh)
 eval "$(fnm env)"
 eval "$(zoxide init zsh)"
 eval `pip completion --zsh`
+
+#API_KEYS and credentials from pass
+export BRAVE_API_KEY=$(pass show tokens/brave_api 2>/dev/null || echo "")
+
+  # PostgreSQL connection URL builder from ~/.pgpass
+  function pg_url() {
+    local host=$1
+    local db=$2
+    local line=$(grep "^${host}:" ~/.pgpass | grep ":${db}:")
+    if [[ -n "$line" ]]; then
+      IFS=':' read -r h p d u pw <<< "$line"
+      echo "postgresql://${u}:${pw}@${h}:${p}/${d}"
+    fi
+  }
+
+  # Local database - WRITE access
+  export LOCAL_POSTGRES_URL=$(pg_url "localhost" "bgo")
+
+  # Production read-only databases
+  export PROD_GAS_URL=$(pg_url "pgread.vedur.is" "gas")
+  export PROD_SKJALFTALISA_URL=$(pg_url "pgread.vedur.is" "skjalftalisa")
+  export PROD_TOS_URL=$(pg_url "pgread.vedur.is" "tos")
+
+  # Development databases - READ ONLY (treat as production)
+  export DEV_EPOS_URL=$(pg_url "pgdev.vedur.is" "epos")
+  export DEV_GNSS_URL=$(pg_url "pgdev.vedur.is" "gnss-europe-v0-2-9")
+  export DEV_METRICS_URL=$(pg_url "pgdev.vedur.is" "gps_metrics")

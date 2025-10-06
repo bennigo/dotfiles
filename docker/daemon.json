@@ -1,0 +1,24 @@
+{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+  },
+  "storage-driver": "overlay2",
+  "bip": "172.18.0.1/16",
+  "default-address-pools": [
+    {
+      "base": "172.31.0.0/16",
+      "size": 24
+    },
+    {
+      "base": "172.32.0.0/12",
+      "size": 24
+    }
+  ],
+  "dns": [
+    "8.8.8.8",
+    "1.1.1.1",
+    "10.170.255.10"
+  ]
+}

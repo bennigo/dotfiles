@@ -249,30 +249,30 @@
 
 - name: Install Mamba (fast conda package manager)
   block:
-    - name: Download Mambaforge installer
+    - name: Download Miniforge installer
       get_url:
-        url: "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-x86_64.sh"
-        dest: "/tmp/mambaforge-installer.sh"
+        url: "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh"
+        dest: "/tmp/miniforge-installer.sh"
         mode: '0755'
         timeout: 60
 
-    - name: Install Mambaforge
+    - name: Install Miniforge
       shell: |
-        /tmp/mambaforge-installer.sh -b -p {{ target_home }}/.mambaforge
+        /tmp/miniforge-installer.sh -b -p {{ target_home }}/.miniforge
       become: no
       args:
-        creates: "{{ target_home }}/.mambaforge"
+        creates: "{{ target_home }}/.miniforge"
 
     - name: Initialize Mamba for bash and zsh
       shell: |
-        {{ target_home }}/.mambaforge/bin/mamba init bash
-        {{ target_home }}/.mambaforge/bin/mamba init zsh
+        {{ target_home }}/.miniforge/bin/mamba init bash
+        {{ target_home }}/.miniforge/bin/mamba init zsh
       become: no
       args:
         creates: "{{ target_home }}/.bashrc.bak"
 
     - name: Verify Mamba installation
-      shell: "{{ target_home }}/.mambaforge/bin/mamba --version"
+      shell: "{{ target_home }}/.miniforge/bin/mamba --version"
       register: mamba_version_check
       become: no
       failed_when: false
@@ -283,7 +283,7 @@
           Mamba installation: {{ 'SUCCESS' if mamba_version_check.rc == 0 else 'FAILED' }}
           {% if mamba_version_check.rc == 0 %}
           Version: {{ mamba_version_check.stdout }}
-          Location: {{ target_home }}/.mambaforge
+          Location: {{ target_home }}/.miniforge
           Note: Restart shell or run 'source ~/.bashrc' to use mamba
           {% else %}
           Error: {{ mamba_version_check.stderr | default('Installation failed') }}
@@ -291,7 +291,7 @@
 
     - name: Clean up installer
       file:
-        path: "/tmp/mambaforge-installer.sh"
+        path: "/tmp/miniforge-installer.sh"
         state: absent
   tags: ["development", "python", "mamba"]
 
