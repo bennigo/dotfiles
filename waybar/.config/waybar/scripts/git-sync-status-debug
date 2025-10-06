@@ -1,0 +1,5 @@
+#!/bin/bash
+# Debug wrapper to capture what the script outputs
+output=$(/home/bgo/.config/waybar/scripts/git-sync-status 2>&1)
+echo "$output" > /tmp/git-sync-debug.log
+echo "$output"
