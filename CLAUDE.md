@@ -36,12 +36,12 @@ Personal dotfiles repository for Sway-based Linux desktop environment. Uses modu
 .dotfiles/
 ├── sway/          # Sway compositor configuration
 ├── waybar/        # Status bar with custom modules
-├── neovim/        # Editor configuration (LazyVim-based, built from source)
+├── neovim/        # Editor configuration (LazyVim-based, built from source) - see neovim/.config/nvim/CLAUDE.md
 ├── neovim_old/    # Previous neovim configuration backup
 ├── tmux/          # Terminal multiplexer config
 ├── local_bin/     # Custom executable scripts
 ├── system/        # System-level configs and installation (see system/CLAUDE.md)
-├── ansible/       # System provisioning and automation
+├── ansible/       # System provisioning and automation (includes PostgreSQL 18 setup)
 ├── kitty/         # Terminal emulator configuration
 ├── foot/          # Lightweight terminal emulator
 ├── alacritty/     # Cross-platform terminal emulator
@@ -49,6 +49,12 @@ Personal dotfiles repository for Sway-based Linux desktop environment. Uses modu
 ├── swappy/        # Screenshot annotation tool
 ├── zsh/           # Shell configuration
 ├── profile/       # Shell profile settings
+├── docker/        # Docker Engine configuration, scripts, and compose templates (see docker/CLAUDE.md)
+├── claude-code/   # Claude Code CLI and MCP server configurations (see claude-code/README.md)
+├── containers/    # Container/Podman configuration (minimal - only registries.conf)
+├── ranger/        # File manager (minimal - needs proper configuration)
+├── systemd/       # User systemd services (basic - mako-watcher only)
+├── neomutt/       # Email client (structure present, needs post-reinstall setup)
 ├── i3/            # Legacy i3 configuration (excluded from stow)
 └── [app]/         # Per-application config directories
 ```
@@ -91,14 +97,17 @@ bindsym $mod+key command
 
 ### Development Integration
 
-- **Neovim**: LazyVim-based setup with custom snippets, built from source with full dependencies
-- **Claude Code**: Integrated AI coding assistant with API key management
+- **Neovim**: LazyVim-based setup (75+ plugins) with Claude Code, Database UI, Obsidian integration - see `neovim/.config/nvim/CLAUDE.md`
+- **PostgreSQL 18**: Production database with secure credential management via `pass` - see `ansible/DATABASE_SETUP.md`
+- **Docker Engine 28.4.0**: Container orchestration with Compose v2, utility scripts, templates - see `docker/CLAUDE.md`
+- **Claude Code**: Integrated AI coding assistant with MCP server integrations - see `claude-code/README.md`
+- **Database UI**: vim-dadbod-ui integration in Neovim for direct database access
 - **Tmux**: Session management with plugin ecosystem
 - **Terminal**: Multiple emulator configs (kitty, foot, alacritty)
 - **Shell**: Zsh with custom profile configurations
 - **Browser**: Qutebrowser for keyboard-driven web browsing
 - **Languages**: Go, Rust, Node.js/FNM, Python/uv, R statistical computing
-- **Database**: PostgreSQL with secure credential management via GPG-encrypted `pass`
+- **Containerization**: Docker with VPN-friendly networking, GPS receivers scheduler
 - **Notes**: Obsidian vault integration with PARA method organization
 
 ## Common Operations
@@ -162,25 +171,58 @@ echo $WAYLAND_DISPLAY
 loginctl show-session $(loginctl | grep $(whoami) | awk '{print $1}')
 ```
 
-### Database Management
+### Database Management (PostgreSQL 18)
 
 ```bash
 # Setup database credentials from password store
 git clone git@github.com:bennigo/bgo-pstore.git ~/.password-store
-update-pgpass
+update-pgpass              # Generates ~/.pgpass from pass credentials
 
 # Database operations
 psql bgo                    # Connect to default database
 createdb myproject          # Create new database
 psql myproject             # Connect to specific database
 
-# Neovim database UI
-nvim                       # Database connections via db_ui (:DBUI)
+# Neovim database UI (vim-dadbod-ui)
+nvim                       # Database connections via db_ui (:DBUI or <leader>D)
+                           # Saved queries in ~/.config/nvim/db_ui/
 
 # Update credentials
 pass edit database/vedur_password
 update-pgpass              # Regenerate .pgpass file
+
+# Database status
+sudo systemctl status postgresql
+psql --version             # PostgreSQL 18.0
 ```
+
+**See detailed documentation**: `ansible/DATABASE_SETUP.md`
+
+### Docker Container Management
+
+```bash
+# Container operations
+docker ps                           # List running containers
+docker compose up -d                # Start services in background
+docker compose down                 # Stop and remove containers
+docker-logs-follow web db           # Follow logs from multiple containers
+
+# Cleanup and maintenance
+docker-cleanup                      # Interactive cleanup (custom script)
+docker-cleanup --all --force        # Remove all unused images, no confirmation
+docker-stats-pretty                 # Colorized container statistics
+
+# Using compose templates
+cp ~/.dotfiles/docker/templates/compose-python-dev.yml docker-compose.yml
+cp ~/.dotfiles/docker/templates/.env.example .env
+# Edit .env and docker-compose.yml, then:
+docker compose up -d
+
+# Current running containers
+docker ps -f name=gps-receivers    # GPS receivers scheduler
+```
+
+**See detailed documentation**: `docker/CLAUDE.md`
 
 ### Hardware Management
 
@@ -211,7 +253,9 @@ udevadm monitor --environment --udev
 
 ## Cross-References
 
-- **Database setup and credential management**: `ansible/DATABASE_SETUP.md`
+- **Neovim plugin ecosystem and configuration**: `neovim/.config/nvim/CLAUDE.md` (75+ plugins, LazyVim-based)
+- **Docker Engine configuration and workflows**: `docker/CLAUDE.md` (daemon config, scripts, compose templates)
+- **Database setup and credential management**: `ansible/DATABASE_SETUP.md` (PostgreSQL 18)
 - **System installation, hardware setup, and credentials**: `system/CLAUDE.md`
 - **Global workspace context**: `/home/bgo/CLAUDE.md`
 - **Project-specific contexts**: Individual project CLAUDE.md files
@@ -249,15 +293,25 @@ Ansible automatically deploys all stowable directories except:
 
 ### Recent System Improvements
 
+- **PostgreSQL 18 Integration**: Production database with secure credential management via GPG-encrypted `pass` store
+  - Full Ansible automation for installation and user setup
+  - Neovim Database UI (vim-dadbod-ui) for direct database access
+  - Password-less connections via `~/.pgpass` (auto-generated from `pass`)
+  - See: `ansible/DATABASE_SETUP.md` for complete documentation
+- **Neovim Ecosystem**: 75+ plugins documented in dedicated `neovim/.config/nvim/CLAUDE.md`
+  - Built from source (v0.11.4) with full dependency management
+  - LazyVim foundation with extensive customization
+  - Claude Code, Database UI, Obsidian, R statistical computing integrations
+  - Multi-language support: Python, R, LaTeX, Lua, Markdown
 - **Fresh install automation**: Complete Ansible bootstrap for clean deployments
-- **Neovim source build**: Latest features with full dependency management
-- **Plugin compatibility**: Updated LazyVim with catppuccin integration fixes
 - **Environment consistency**: PAM-based XDG variables for reliable path resolution
-- **R integration**: Statistical computing environment with language server support
-- **LaTeX support**: Full TeX Live distribution with Icelandic language support
 - **Claude Code integration**: AI assistant with secure API key management
 - **Vault automation**: Encrypted credential storage with SSH key deployment
-- **Database infrastructure**: PostgreSQL 18 with secure credential management via `pass`
 - **Password management**: GPG-encrypted password store with version control (private repo)
-- **Obsidian integration**: Personal knowledge management with PARA organization
+
+### Configuration Gaps (Post-Reinstall TODO)
+
+- **Neomutt**: Structure present, needs configuration after laptop reinstallation
+- **Ranger**: Minimal configuration (only rc.conf), needs proper setup
+- **Systemd user services**: Basic setup (mako-watcher only), could be expanded
 
