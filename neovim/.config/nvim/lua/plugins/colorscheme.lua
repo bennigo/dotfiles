@@ -6,10 +6,6 @@ return {
       -- Extend LazyVim's opts with our customizations
       opts.transparent_background = true
       opts.treesitter = true
-      -- New in catppuccin: separate floating window transparency control
-      opts.float = {
-        transparent = true, -- enable transparent floating windows
-      }
       return opts
     end,
   },
