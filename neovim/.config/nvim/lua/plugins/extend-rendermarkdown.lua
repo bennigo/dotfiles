@@ -142,7 +142,13 @@ return {
     --     ui = { enable = false },
     -- })
     require("obsidian").get_client().opts.ui.enable = false
-    vim.api.nvim_buf_clear_namespace(0, vim.api.nvim_get_namespaces()["ObsidianUI"], 0, -1)
+
+    -- Get the namespace ID properly
+    local namespaces = vim.api.nvim_get_namespaces()
+    if namespaces["ObsidianUI"] then
+      vim.api.nvim_buf_clear_namespace(0, namespaces["ObsidianUI"], 0, -1)
+    end
+
     setup()
     -- require("render-markdown").setup({})
   end,

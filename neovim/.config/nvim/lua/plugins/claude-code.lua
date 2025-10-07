@@ -17,9 +17,12 @@ return {
           -- Floating window configuration (active)
           snacks_win_opts = {
             position = "float",
-            width = 0.85, -- 85% of screen width
-            height = 0.9, -- 90% of screen height
+            width = 0.95, -- 95% of screen width (enlarged)
+            height = 0.95, -- 95% of screen height (enlarged)
             border = "rounded",
+            wo = {
+              winblend = 30, -- transparency (0-100)
+            },
           },
         },
         -- Diff configuration to prevent focus stealing
@@ -31,15 +34,15 @@ return {
         },
       })
 
-      -- Simple toggle function that just works
-      vim.keymap.set({ "n", "i", "t" }, "<M-c>", "<cmd>ClaudeCodeFocus<cr>", { desc = "Toggle Claude Code" })
-      
+      -- Alt+c for Claude Code (primary)
+      vim.keymap.set({ "n", "i", "t" }, "<M-c>", "<cmd>ClaudeCodeFocus<cr>", { desc = "Toggle Claude Code (Max)" })
+
       -- Fallback: Quick return to Claude window (useful if diff steals focus)
       vim.keymap.set({ "n", "i" }, "<C-M-c>", "<cmd>ClaudeCodeFocus<cr>", { desc = "Return to Claude Code" })
     end,
     keys = {
-      -- Universal Claude Code toggle that works in all modes
-      { "<M-c>", "<cmd>ClaudeCodeFocus<cr>", desc = "Toggle Claude Code", mode = { "n", "i", "t" } },
+      -- Universal Claude Code toggle - Alt+c
+      { "<M-c>", "<cmd>ClaudeCodeFocus<cr>", desc = "Toggle Claude Code (Max)", mode = { "n", "i", "t" } },
     },
   },
 
@@ -58,12 +61,12 @@ return {
             return require("which-key.extras").expand.buf()
           end,
         },
-        { "<leader>ai", "<cmd>ClaudeCode<cr>", desc = "Toggle Claude Code", icon = "🤖" },
-        { "<leader>ac", "<cmd>ClaudeCodeFocus<cr>", desc = "Focus Claude Code", icon = "💬" },
-        { "<leader>as", "<cmd>ClaudeCodeSend<cr>", desc = "Send to Claude Code", mode = { "n", "v" }, icon = "📤" },
-        { "<leader>am", "<cmd>ClaudeCodeSelectModel<cr>", desc = "Select Claude Model", icon = "⚙️" },
-        { "<leader>ad", "<cmd>ClaudeCodeDiffAccept<cr>", desc = "Accept Claude Diff", icon = "✅" },
-        { "<leader>aD", "<cmd>ClaudeCodeDiffDeny<cr>", desc = "Reject Claude Diff", icon = "❌" },
+        { "<leader>aci", "<cmd>ClaudeCode<cr>", desc = "Toggle Claude Code", icon = "🤖" },
+        { "<leader>acc", "<cmd>ClaudeCodeFocus<cr>", desc = "Focus Claude Code", icon = "💬" },
+        { "<leader>acs", "<cmd>ClaudeCodeSend<cr>", desc = "Send to Claude Code", mode = { "n", "v" }, icon = "📤" },
+        { "<leader>acm", "<cmd>ClaudeCodeSelectModel<cr>", desc = "Select Claude Model", icon = "⚙️" },
+        { "<leader>acd", "<cmd>ClaudeCodeDiffAccept<cr>", desc = "Accept Claude Diff", icon = "✅" },
+        { "<leader>acD", "<cmd>ClaudeCodeDiffDeny<cr>", desc = "Reject Claude Diff", icon = "❌" },
       })
 
       opts.spec = spec
