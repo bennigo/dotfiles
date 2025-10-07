@@ -6,6 +6,19 @@ return {
       -- Extend LazyVim's opts with our customizations
       opts.transparent_background = true
       opts.treesitter = true
+
+      -- Custom highlight overrides for transparency
+      opts.custom_highlights = function(colors)
+        return {
+          -- Make floating windows transparent
+          NormalFloat = { bg = "NONE" },
+          FloatBorder = { bg = "NONE" },
+          -- Terminal transparency
+          NormalTerm = { bg = "NONE" },
+          TermCursor = { bg = colors.sky, fg = colors.base },
+        }
+      end
+
       return opts
     end,
   },
