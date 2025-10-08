@@ -96,6 +96,7 @@ base_packages:
   - wget
   - unzip
   - build-essential
+  - nfs-common  # Required for NFS network mounts in fstab
   
 development_packages:
   - cmake
