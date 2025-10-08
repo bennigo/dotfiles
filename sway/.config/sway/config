@@ -102,25 +102,24 @@ exec clipse -listen  # run the background listener on startup
 # your displays after another 300 seconds, and turn your screens back on when
 # resumed. It will also lock your screen before your computer goes to sleep.
 
-# Identify laptop panel (verify with: swaymsg -t get_outputs) 
-# One swayidle instance that: 
-# - saves brightness, dims to a safe percentage 
-# - locks on idle and before sleep  
-# - re-powers the laptop panel and restores brightness after resume 
-exec_always --no-startup-id swayidle -w \
-    timeout 60 'brightnessctl -s; brightnessctl set 10%' \
-    resume 'brightnessctl -r' \
-    timeout 300 'swaylock -f -c 000000 -i $wallpaper' \
-    timeout 900 'swaymsg output $laptop power off' \
-    resume 'swaymsg output $laptop power on' \
-    before-sleep 'swaylock -f -c 000000 -i $wallpaper' \
-    after-resume 'swaymsg output $laptop power on; brightnessctl -r' 
+# Power-Aware Idle and Suspend Management
+#
+# Uses custom script that adapts behavior based on AC/battery status:
+# - On AC: Dim (60s) → Lock (5min) → Screen off (15min) → Stay awake (30min)
+# - On Battery: Dim (60s) → Lock (5min) → Screen off (15min) → Suspend (30min)
+#
+# The script checks power status before suspend to avoid interrupting work when plugged in.
+exec_always --no-startup-id ~/.config/sway/scripts/swayidle-power-aware.sh
 
-# Handle the lid entirely in Sway; do NOT also let logind do it (you already disabled it) 
-# Keep this simple: suspend on close, turn panel on + restore brightness on open 
-# Custom lid handling removed for Nvidia driver 580 compatibility
-# bindswitch --reload lid:on exec 'systemctl suspend' 
-# bindswitch --reload lid:off exec 'swaymsg output $laptop power on; brightnessctl -r' 
+# Power-Aware Lid Switch Handling
+#
+# Uses custom script that adapts to AC/battery status:
+# - On AC: Close lid → Screen off only (keep system running for downloads/tasks)
+# - On Battery: Close lid → Lock + Suspend (save power)
+#
+# Note: Requires systemd-logind to ignore lid events (see /etc/systemd/logind.conf.d/90-sway-lid.conf)
+bindswitch --reload lid:on exec ~/.config/sway/scripts/lid-handler.sh close
+bindswitch --reload lid:off exec ~/.config/sway/scripts/lid-handler.sh open 
 
 # Optional: a panic key if you ever land on a black screen 
 # Press $mod+Ctrl+b to force panel on and set 50% brightness 
