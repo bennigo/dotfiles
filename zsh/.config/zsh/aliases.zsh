@@ -91,3 +91,17 @@ esac
 # Mermaid diagram viewers
 alias mermaid-pdf="mmdc -p /tmp/puppeteer-config.json -i \$1 -o diagram.pdf && zathura diagram-1.pdf &"
 alias mermaid-hq="mmdc -p /tmp/puppeteer-config.json -i \$1 -o diagram_hq.png -s 3 -w 1600 -H 1200 -b transparent && eog diagram_hq-1.png &"
+
+# Screenshot helpers - Claude Code integration
+# Take screenshot and analyze with Claude
+alias snap='grim - | wl-copy && echo "Screenshot copied to clipboard - paste into Claude Code with Ctrl+V"'
+alias snap-region='grim -g "$(slurp)" - | wl-copy && echo "Screenshot copied - paste into Claude Code with Ctrl+V"'
+alias snap-window='~/.local/bin/run_screenshot.sh -c -m window && echo "Window screenshot copied - paste into Claude Code with Ctrl+V"'
+
+# Screenshot shortcuts with immediate Claude Code prompts (examples)
+# Usage: Take screenshot, then describe what you want Claude to do
+alias bug-report='snap && echo "Now in Claude Code: Ctrl+V \"Analyze this bug and suggest a fix\""'
+alias ui-review='snap && echo "Now in Claude Code: Ctrl+V \"Review this UI for accessibility and design improvements\""'
+alias code-review='snap && echo "Now in Claude Code: Ctrl+V \"Review this code for best practices and potential issues\""'
+alias explain-ui='snap && echo "Now in Claude Code: Ctrl+V \"Explain what this interface does and how to use it\""'
+alias extract-text='snap && echo "Now in Claude Code: Ctrl+V \"Extract all text from this image as markdown\""'

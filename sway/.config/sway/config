@@ -499,7 +499,7 @@ for_window [title="Sway Shortcuts"] floating enable, sticky enable, move positio
 for_window [app_id="(?i)(?:blueman-manager|azote|gnome-disks|nm-connection-editor|lxqt-policykit-agent|snap-store)"] floating enable,  sticky enable
 for_window [app_id="(?i)(?:snap-store|xdg-desktop-portal-gtk)"] floating enable,  sticky enable
 # for_window [app_id="(?i)(?:snap-store|xdg-desktop-portal-gtk")"] floating enable
-for_window [app_id="(?i)(?:nvim_floating|clipse|swappy)"] floating enable, resize set width 1400 px height 1000 px, move container to workspace current, move container center
+for_window [app_id="(?i)(?:nvim_floating|clipse|swappy)"] floating enable, resize set width 1400 px height 1000 px, move container to workspace current, move container center, focus
 for_window [app_id="(?i)(?:htop|Zotero)"] floating enable, resize set width 1900 px height 1100 px, move container to workspace current, move container center
 
 for_window [app_id="Cisco Secure Client"] floating enable, sticky enable

@@ -54,7 +54,7 @@ while getopts "hecsm:" flag; do
     silent="-s"
     ;;
   e)
-    cmd="${HOME}/.local/bin/swappy -f"
+    cmd="swappy -f"
     ;;
   c)
     clip="--clipboard-only"
@@ -80,7 +80,7 @@ if [ "${mode}" = "fullscreen" ]; then
   if [ -n "${clip}" ]; then
     grim - | wl-copy
     if [ -n "${cmd}" ]; then
-      "${HOME}/.local/bin/clipse" -p | ${cmd} -
+      wl-paste | ${cmd} -
     fi
   else
     take_screenshot

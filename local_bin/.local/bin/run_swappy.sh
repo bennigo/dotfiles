@@ -1,3 +1,3 @@
 #!/bin/bash
 
-/home/bgo/.local/bin/clipse -p | swappy -f -
+clipse -p | swappy -f -
