@@ -9,5 +9,5 @@ if pgrep -x "soffice.bin" > /dev/null; then
 else
     # LibreOffice not running, launch it
     # Use Writer by default, but you can change to --calc or --impress
-    gtk-launch libreoffice-writer.desktop
+    gtk-launch org.libreoffice.LibreOffice.writer.desktop
 fi

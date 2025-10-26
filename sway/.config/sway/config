@@ -510,7 +510,7 @@ for_window [app_id="org.gnome.Calculator"] floating enable,  sticky enable
 
 for_window [app_id="com.cisco.secureclient.gui"] mark "cisco", move scratchpad, floating enable
 for_window [class="obsidian"] mark "obsidian", move scratchpad floating enable, resize set width 2000 px height 1190 px
-for_window [app_id="org.libreoffice.LibreOffice"] mark "libreoffice", move scratchpad, floating enable, resize set width 2000 px height 1190 px
+for_window [app_id="^libreoffice"] mark "libreoffice", move scratchpad, floating enable, resize set width 2000 px height 1190 px
 for_window [app_id="terminal_floating"] mark "terminal_fl", move scratchpad, move container to workspace current, resize set width 1500 px height 900 px
 for_window [app_id="git_sync_float"] floating enable, resize set width 1200 px height 800 px, move position center
 for_window [app_id="org.pwmt.zathura"] mark "zathura", move scratchpad, move container to workspace current, resize set width 1200 px height 1180 px
