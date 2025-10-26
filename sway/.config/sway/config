@@ -249,6 +249,8 @@ bindsym $mod+c [con_mark="cisco"] scratchpad show
 bindsym $mod+Shift+o [con_mark="obsidian"] scratchpad show
 ## Scratchpad // Show Quick (Neovim) from scratchpad // ⚡ ##
 bindsym $mod+o [con_mark="quick"] scratchpad show
+## Scratchpad // Toggle LibreOffice scratchpad // 📄 ##
+bindsym $mod+Shift+l exec ~/.local/bin/toggle-libreoffice.sh
 ## Scratchpad // Show floating terminal // 🪟🖥️ ##
 bindsym $mod+Shift+Return [con_mark="terminal_fl"] scratchpad show
 
@@ -508,6 +510,7 @@ for_window [app_id="org.gnome.Calculator"] floating enable,  sticky enable
 
 for_window [app_id="com.cisco.secureclient.gui"] mark "cisco", move scratchpad, floating enable
 for_window [class="obsidian"] mark "obsidian", move scratchpad floating enable, resize set width 2000 px height 1190 px
+for_window [app_id="org.libreoffice.LibreOffice"] mark "libreoffice", move scratchpad, floating enable, resize set width 2000 px height 1190 px
 for_window [app_id="terminal_floating"] mark "terminal_fl", move scratchpad, move container to workspace current, resize set width 1500 px height 900 px
 for_window [app_id="git_sync_float"] floating enable, resize set width 1200 px height 800 px, move position center
 for_window [app_id="org.pwmt.zathura"] mark "zathura", move scratchpad, move container to workspace current, resize set width 1200 px height 1180 px
