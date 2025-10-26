@@ -250,7 +250,7 @@ bindsym $mod+Shift+o [con_mark="obsidian"] scratchpad show
 ## Scratchpad // Show Quick (Neovim) from scratchpad // ⚡ ##
 bindsym $mod+o [con_mark="quick"] scratchpad show
 ## Scratchpad // Toggle LibreOffice scratchpad // 📄 ##
-bindsym $mod+F12 exec /home/bgo/.local/bin/toggle-libreoffice.sh
+bindsym $mod+Shift+d exec /home/bgo/.local/bin/toggle-libreoffice.sh
 ## Scratchpad // Show floating terminal // 🪟🖥️ ##
 bindsym $mod+Shift+Return [con_mark="terminal_fl"] scratchpad show
 
