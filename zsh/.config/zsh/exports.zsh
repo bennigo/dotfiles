@@ -32,6 +32,8 @@ export PATH="$HOME/.local/share/miniforge3/bin:$PATH"
 # Add Deno to PATH
 export PATH="$HOME/.deno/bin:$PATH"
 
+# Add Flatpak applications to PATH
+export PATH="/var/lib/flatpak/exports/bin:$PATH"
 
 #export PATH="$PATH:./node_modules/.bin"
 #source <(fzf --zsh)
