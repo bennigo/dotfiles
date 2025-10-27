@@ -1,0 +1,3 @@
+#!/bin/bash
+# LibreOffice wrapper for Flatpak version
+exec flatpak run org.libreoffice.LibreOffice "$@" 2>/dev/null
