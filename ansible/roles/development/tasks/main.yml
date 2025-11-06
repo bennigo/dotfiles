@@ -459,6 +459,24 @@
         - { name: "init.defaultBranch", value: "main" }
       become: no
       when: vault_clone_result.rc == 0
+
+    - name: Install Python dependencies for sign-pdf utility
+      pip:
+        name:
+          - pypdf
+          - pillow
+          - reportlab
+        extra_args: "--break-system-packages --user"
+      become: no
+
+    - name: Deploy sign-pdf utility for PDF signature annotation
+      copy:
+        src: sign-pdf
+        dest: "{{ target_home }}/.local/bin/sign-pdf"
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: '0755'
+      become: no
   tags: ["development", "obsidian", "notes"]
 
 - name: Deploy mermaid-multi script for diagram processing

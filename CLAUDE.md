@@ -224,6 +224,19 @@ docker ps -f name=gps-receivers    # GPS receivers scheduler
 
 **See detailed documentation**: `docker/CLAUDE.md`
 
+### PDF Document Management
+
+```bash
+# Sign PDF documents with signature image
+sign-pdf input.pdf signature.png output.pdf                    # Sign at bottom-right corner
+sign-pdf input.pdf sig.png output.pdf --position 100 100       # Sign at specific position
+sign-pdf input.pdf sig.png output.pdf --page -1                # Sign last page
+sign-pdf input.pdf sig.png output.pdf --width 200 --height 80  # Custom signature size
+
+# View help and examples
+sign-pdf --help
+```
+
 ### Hardware Management
 
 ```bash
@@ -303,6 +316,10 @@ Ansible automatically deploys all stowable directories except:
   - LazyVim foundation with extensive customization
   - Claude Code, Database UI, Obsidian, R statistical computing integrations
   - Multi-language support: Python, R, LaTeX, Lua, Markdown
+- **Obsidian Workflow Tools**: Integrated PDF signing utility (`sign-pdf`)
+  - CLI tool for adding signature images to PDF documents
+  - Deployed via Ansible with automatic dependency management
+  - Python-based with pypdf, Pillow, and ReportLab
 - **Fresh install automation**: Complete Ansible bootstrap for clean deployments
 - **Environment consistency**: PAM-based XDG variables for reliable path resolution
 - **Claude Code integration**: AI assistant with secure API key management
@@ -314,9 +331,4 @@ Ansible automatically deploys all stowable directories except:
 - **Neomutt**: Structure present, needs configuration after laptop reinstallation
 - **Ranger**: Minimal configuration (only rc.conf), needs proper setup
 - **Systemd user services**: Basic setup (mako-watcher only), could be expanded
-- **sign-pdf utility**: Add to Obsidian playbook setup in Ansible
-  - Script location: `~/.local/bin/sign-pdf`
-  - Dependencies: `pypdf`, `pillow`, `reportlab` (installed via pip/uv)
-  - Purpose: CLI tool to add signature images to PDF documents
-  - Created: 2025-11-06
 
