@@ -284,7 +284,7 @@
         "interval": 60,
         "exec-on-event": false,
         "on-click": "/home/bgo/.config/waybar/scripts/git-sync-run",
-        "on-click-right": "notify-send 'Right Click' 'Testing right click'",
+        "on-click-right": "/home/bgo/.config/waybar/scripts/git-sync-status-window",
         "tooltip": true,
         "format": " {}"
     },
