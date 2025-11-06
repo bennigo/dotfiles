@@ -1,0 +1,182 @@
+#!/usr/bin/env python3
+"""
+Script to add a signature image to a PDF document.
+Usage: python sign_pdf.py <input.pdf> <signature.png> <output.pdf> [--position x y] [--page N]
+"""
+import sys
+from pathlib import Path
+from pypdf import PdfReader, PdfWriter, PageObject
+from PIL import Image
+import io
+
+
+def add_signature_to_pdf(
+    input_pdf: str,
+    signature_image: str,
+    output_pdf: str,
+    position: tuple[float, float] = None,
+    page_num: int = 0,
+    signature_width: float = 150,
+    signature_height: float = 50,
+):
+    """
+    Add a signature image to a PDF.
+
+    Args:
+        input_pdf: Path to input PDF file
+        signature_image: Path to signature image (PNG recommended)
+        output_pdf: Path to output PDF file
+        position: (x, y) position in points from bottom-left corner.
+                  If None, defaults to bottom-right corner
+        page_num: Page number to sign (0-indexed). Default is first page.
+        signature_width: Width of signature in points (default 150)
+        signature_height: Height of signature in points (default 50)
+    """
+    # Read the input PDF
+    reader = PdfReader(input_pdf)
+    writer = PdfWriter()
+
+    # Get the page to sign
+    if page_num >= len(reader.pages):
+        print(f"Warning: Page {page_num} doesn't exist. Using last page.")
+        page_num = len(reader.pages) - 1
+
+    # Process each page
+    for i, page in enumerate(reader.pages):
+        if i == page_num:
+            # Get page dimensions
+            page_width = float(page.mediabox.width)
+            page_height = float(page.mediabox.height)
+
+            # Calculate position if not specified (bottom-right with 20pt margin)
+            if position is None:
+                x = page_width - signature_width - 20
+                y = 20
+            else:
+                x, y = position
+
+            # Load and prepare signature image
+            img = Image.open(signature_image)
+
+            # Convert to RGB if necessary (remove transparency)
+            if img.mode in ('RGBA', 'LA', 'P'):
+                # Create white background
+                background = Image.new('RGB', img.size, (255, 255, 255))
+                if img.mode == 'P':
+                    img = img.convert('RGBA')
+                if 'A' in img.mode:
+                    background.paste(img, mask=img.split()[-1])  # Use alpha channel as mask
+                else:
+                    background.paste(img)
+                img = background
+
+            # Resize image to fit signature dimensions while maintaining aspect ratio
+            img.thumbnail((signature_width, signature_height), Image.Resampling.LANCZOS)
+
+            # Save to bytes
+            img_bytes = io.BytesIO()
+            img.save(img_bytes, format='PNG')
+            img_bytes.seek(0)
+
+            # Create a new PDF page with the signature
+            from pypdf.generic import NameObject, DictionaryObject, ArrayObject, NumberObject
+
+            # Add image to page
+            page.merge_page(page)  # This is a workaround to ensure proper page handling
+
+            # Alternative approach: use reportlab to create overlay
+            try:
+                from reportlab.pdfgen import canvas
+                from reportlab.lib.utils import ImageReader
+
+                # Create overlay PDF with signature
+                overlay_buffer = io.BytesIO()
+                c = canvas.Canvas(overlay_buffer, pagesize=(page_width, page_height))
+                c.drawImage(ImageReader(Image.open(signature_image)),
+                           x, y, width=signature_width, height=signature_height,
+                           mask='auto', preserveAspectRatio=True)
+                c.save()
+
+                # Merge overlay with original page
+                overlay_buffer.seek(0)
+                overlay_pdf = PdfReader(overlay_buffer)
+                page.merge_page(overlay_pdf.pages[0])
+
+            except ImportError:
+                print("Warning: reportlab not installed. Signature may not be added correctly.")
+                print("Install with: uv pip install --system reportlab")
+
+        writer.add_page(page)
+
+    # Write output PDF
+    with open(output_pdf, 'wb') as output_file:
+        writer.write(output_file)
+
+    print(f"✓ Signed PDF saved to: {output_pdf}")
+    print(f"  Signature added to page {page_num + 1} at position ({x:.1f}, {y:.1f})")
+
+
+def main():
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Add signature image to PDF document",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Sign first page at bottom-right corner
+  python sign_pdf.py input.pdf signature.png output.pdf
+
+  # Sign specific position
+  python sign_pdf.py input.pdf signature.png output.pdf --position 100 100
+
+  # Sign last page
+  python sign_pdf.py input.pdf signature.png output.pdf --page -1
+
+  # Custom signature size
+  python sign_pdf.py input.pdf signature.png output.pdf --width 200 --height 80
+        """
+    )
+
+    parser.add_argument("input_pdf", help="Input PDF file")
+    parser.add_argument("signature_image", help="Signature image file (PNG/JPG)")
+    parser.add_argument("output_pdf", help="Output PDF file")
+    parser.add_argument("--position", nargs=2, type=float, metavar=("X", "Y"),
+                       help="Position in points from bottom-left corner (default: bottom-right)")
+    parser.add_argument("--page", type=int, default=0,
+                       help="Page number to sign (0-indexed, -1 for last page)")
+    parser.add_argument("--width", type=float, default=150,
+                       help="Signature width in points (default: 150)")
+    parser.add_argument("--height", type=float, default=50,
+                       help="Signature height in points (default: 50)")
+
+    args = parser.parse_args()
+
+    # Validate files
+    if not Path(args.input_pdf).exists():
+        print(f"Error: Input PDF not found: {args.input_pdf}")
+        sys.exit(1)
+
+    if not Path(args.signature_image).exists():
+        print(f"Error: Signature image not found: {args.signature_image}")
+        sys.exit(1)
+
+    # Handle negative page numbers
+    if args.page < 0:
+        reader = PdfReader(args.input_pdf)
+        args.page = len(reader.pages) + args.page
+
+    # Add signature
+    add_signature_to_pdf(
+        args.input_pdf,
+        args.signature_image,
+        args.output_pdf,
+        position=tuple(args.position) if args.position else None,
+        page_num=args.page,
+        signature_width=args.width,
+        signature_height=args.height,
+    )
+
+
+if __name__ == "__main__":
+    main()
