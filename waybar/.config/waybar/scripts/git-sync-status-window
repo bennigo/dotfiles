@@ -1,4 +1,8 @@
 #!/bin/bash
 # Wrapper script to show dotfiles-sync status in floating kitty terminal
 
-kitty --app-id=git_sync_float -e sh -c '/home/bgo/.local/bin/dotfiles-sync --status; echo ""; read -p "Press enter to close..."'
+# Make sure we're in a proper environment
+export PATH="/usr/local/bin:/usr/bin:/bin:$HOME/.local/bin"
+
+# Launch kitty with explicit detach from waybar process
+setsid -f kitty --app-id=git_sync_float -e sh -c '/home/bgo/.local/bin/dotfiles-sync --status; echo ""; read -p "Press enter to close..."' >/dev/null 2>&1
