@@ -1,0 +1,26 @@
+# Gmail account - Local Maildir with notmuch
+set from = "bgovedur@gmail.com"
+set realname = "Benedikt Gunnar Ófeigsson"
+
+# Maildir settings
+set folder = "~/.local/share/mail/gmail"
+set spoolfile = "+INBOX"
+set postponed = "+[Gmail]/Drafts"
+set trash = "+[Gmail]/Trash"
+set record = "+[Gmail]/Sent Mail"
+
+# Mailboxes to show in sidebar
+mailboxes =INBOX ="[Gmail]/Sent Mail" ="[Gmail]/Starred" ="[Gmail]/All Mail"
+
+# notmuch integration
+set nm_default_url = "notmuch://$HOME/.local/share/mail"
+set nm_query_type = "threads"
+set virtual_spool_file = yes
+
+# SMTP settings (for sending)
+set smtp_url = "smtps://bgovedur@gmail.com@smtp.gmail.com:465"
+set smtp_pass = "tbnhzsumupteeibb"
+set smtp_authenticators = "plain"
+
+# Save current account for scripts
+run 'echo "gmail-local" > ~/.config/neomutt/current-account'
