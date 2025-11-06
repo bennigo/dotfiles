@@ -329,6 +329,14 @@ Ansible automatically deploys all stowable directories except:
 ### Configuration Gaps (Post-Reinstall TODO)
 
 - **Neomutt**: Structure present, needs configuration after laptop reinstallation
+  - [ ] **mbsync setup complete**: `.mbsyncrc` created for Gmail
+  - [ ] **TODO**: Add Gmail app password to pass: `pass insert email/bgovedur@gmail.com`
+    - Get app password from: https://myaccount.google.com/apppasswords
+    - Create "Mail" app password (16 characters)
+  - [ ] **TODO**: Run initial sync: `mbsync -a` (will take 5-10 min first time)
+  - [ ] **TODO**: Add other accounts (benedikt@klifursamband.is, afreksnefnd@klifursamband.is) to `.mbsyncrc`
+  - [ ] **TODO**: Set up notmuch for email indexing and search
+  - [ ] **Reference**: See `/home/bgo/notes/bgovault/2.Areas/Linux/NeoMutt_Email_System_Guide.md`
 - **Ranger**: Minimal configuration (only rc.conf), needs proper setup
 - **Systemd user services**: Basic setup (mako-watcher only), could be expanded
 

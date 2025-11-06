@@ -40,14 +40,18 @@ macro index,pager \Co '<shell-escape>~/.config/neomutt/scripts/email-to-obsidian
 macro index,pager / '<shell-escape>~/.config/neomutt/scripts/email-search.sh search<enter>' "Fuzzy search Obsidian emails"
 macro index,pager \Cs '<shell-escape>~/.config/neomutt/scripts/email-search.sh stats<enter>' "Show email system statistics"
 
-# Account switching macros (force full reconnection)
-macro index,pager \e1 '<enter-command>source ~/.config/neomutt/accounts/gmail<enter><enter-command>exec change-folder<enter>imaps://bgovedur@gmail.com@imap.gmail.com:993/INBOX<enter>' "Switch to Gmail"
-macro index,pager \e2 '<enter-command>source ~/.config/neomutt/accounts/benedikt-klifursamband<enter><enter-command>exec change-folder<enter>imaps://benedikt@klifursamband.is@imap.gmail.com:993/INBOX<enter>' "Switch to Benedikt@klifursamband"
-macro index,pager \e3 '<enter-command>source ~/.config/neomutt/accounts/afreksnefnd-klifursamband<enter><enter-command>exec change-folder<enter>imaps://afreksnefnd@klifursamband.is@imap.gmail.com:993/INBOX<enter>' "Switch to Afreksnefnd@klifursamband"
-# macro index,pager \e4 '<enter-command>source ~/.config/neomutt/accounts/bgo-vedur-direct<enter><enter-command>exec change-folder<enter>imaps://bgo@vedur.is@outlook.office365.com:993/INBOX<enter>' "Switch to Vedur.is"
+# Account switching macros - Local Maildir accounts
+macro index,pager \e1 '<enter-command>source ~/.config/neomutt/accounts/gmail-local<enter><change-folder>=INBOX<enter>' "Switch to Gmail (local)"
+macro index,pager \e2 '<enter-command>source ~/.config/neomutt/accounts/benedikt-klifursamband-local<enter><change-folder>=INBOX<enter>' "Switch to Benedikt@klifursamband (local)"
+macro index,pager \e3 '<enter-command>source ~/.config/neomutt/accounts/afreksnefnd-klifursamband-local<enter><change-folder>=INBOX<enter>' "Switch to Afreksnefnd@klifursamband (local)"
 
-# Load default account (Gmail)
-source ~/.config/neomutt/accounts/gmail
+# Old IMAP accounts (commented out, keep for reference)
+# macro index,pager \e1 '<enter-command>source ~/.config/neomutt/accounts/gmail<enter><enter-command>exec change-folder<enter>imaps://bgovedur@gmail.com@imap.gmail.com:993/INBOX<enter>' "Switch to Gmail"
+# macro index,pager \e2 '<enter-command>source ~/.config/neomutt/accounts/benedikt-klifursamband<enter><enter-command>exec change-folder<enter>imaps://benedikt@klifursamband.is@imap.gmail.com:993/INBOX<enter>' "Switch to Benedikt@klifursamband"
+# macro index,pager \e3 '<enter-command>source ~/.config/neomutt/accounts/afreksnefnd-klifursamband<enter><enter-command>exec change-folder<enter>imaps://afreksnefnd@klifursamband.is@imap.gmail.com:993/INBOX<enter>' "Switch to Afreksnefnd@klifursamband"
+
+# Load default account (Gmail - Local)
+source ~/.config/neomutt/accounts/gmail-local
 
 # Enable debug logging (remove after testing)
 set debug_level = 2

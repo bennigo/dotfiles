@@ -1,0 +1,26 @@
+# Afreksnefnd@klifursamband.is - Local Maildir with notmuch
+set from = "afreksnefnd@klifursamband.is"
+set realname = "Afreksnefnd Klifursambands Íslands"
+
+# Maildir settings
+set folder = "~/.local/share/mail/klifur-afreksnefnd"
+set spoolfile = "+INBOX"
+set postponed = "+[Gmail]/Drafts"
+set trash = "+[Gmail]/Trash"
+set record = "+[Gmail]/Sent Mail"
+
+# Mailboxes to show in sidebar
+mailboxes =INBOX ="[Gmail]/Sent Mail" ="[Gmail]/Starred" ="[Gmail]/All Mail"
+
+# notmuch integration
+set nm_default_url = "notmuch://$HOME/.local/share/mail"
+set nm_query_type = "threads"
+set virtual_spool_file = yes
+
+# SMTP settings (for sending)
+set smtp_url = "smtps://afreksnefnd@klifursamband.is@smtp.gmail.com:465"
+set smtp_pass = "biswvuozevmenadk"
+set smtp_authenticators = "plain"
+
+# Save current account for scripts
+run 'echo "afreksnefnd-klifursamband-local" > ~/.config/neomutt/current-account'
