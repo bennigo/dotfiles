@@ -1,19 +1,10 @@
 #!/bin/bash
 # Wrapper script to run dotfiles-sync in floating kitty terminal
 
-notify-send "Git Sync" "Launching dotfiles-sync..." &
-
 # Make sure we're in a proper environment
 export PATH="/usr/local/bin:/usr/bin:/bin:$HOME/.local/bin"
 export DISPLAY="${DISPLAY:-:0}"
 export WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-0}"
 
-# Log for debugging
-echo "$(date): Starting kitty launch" >> /tmp/waybar-git-sync.log
-echo "PATH: $PATH" >> /tmp/waybar-git-sync.log
-echo "WAYLAND_DISPLAY: $WAYLAND_DISPLAY" >> /tmp/waybar-git-sync.log
-
-# Launch kitty with full error logging
-kitty --app-id=git_sync_float -e /home/bgo/.local/bin/dotfiles-sync >> /tmp/waybar-git-sync.log 2>&1 &
-
-echo "$(date): Kitty launch command executed, PID: $!" >> /tmp/waybar-git-sync.log
+# Launch kitty in background
+kitty --app-id=git_sync_float -e /home/bgo/.local/bin/dotfiles-sync &
