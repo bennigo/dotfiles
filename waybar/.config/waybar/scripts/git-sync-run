@@ -4,5 +4,5 @@
 # Make sure we're in a proper environment
 export PATH="/usr/local/bin:/usr/bin:/bin:$HOME/.local/bin"
 
-# Launch kitty with explicit detach from waybar process
-setsid -f kitty --app-id=git_sync_float -e /home/bgo/.local/bin/dotfiles-sync >/dev/null 2>&1
+# Launch kitty in background
+kitty --app-id=git_sync_float -e /home/bgo/.local/bin/dotfiles-sync &

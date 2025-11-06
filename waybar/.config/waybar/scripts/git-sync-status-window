@@ -4,10 +4,10 @@
 # Make sure we're in a proper environment
 export PATH="/usr/local/bin:/usr/bin:/bin:$HOME/.local/bin"
 
-# Launch kitty with explicit detach from waybar process
-setsid -f kitty --app-id=git_sync_float -e sh -c '
+# Launch kitty in background but keep it running
+kitty --app-id=git_sync_float -e sh -c '
     /home/bgo/.local/bin/dotfiles-sync --status
     echo ""
     echo "Press ENTER or ESC to close..."
     read -n 1 -s
-' >/dev/null 2>&1
+' &
