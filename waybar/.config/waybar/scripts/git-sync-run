@@ -1,8 +1,14 @@
 #!/bin/bash
 # Wrapper script to run dotfiles-sync in floating kitty terminal
 
+notify-send "Git Sync" "Launching dotfiles-sync..." &
+
 # Make sure we're in a proper environment
 export PATH="/usr/local/bin:/usr/bin:/bin:$HOME/.local/bin"
 
-# Launch kitty and replace this script process with it
-exec kitty --app-id=git_sync_float -e /home/bgo/.local/bin/dotfiles-sync
+# Try different approaches to launch kitty
+# Approach 1: Direct execution (without swaymsg)
+kitty --app-id=git_sync_float -e /home/bgo/.local/bin/dotfiles-sync &
+
+# Log for debugging
+echo "$(date): Launched kitty from waybar" >> /tmp/waybar-git-sync.log
