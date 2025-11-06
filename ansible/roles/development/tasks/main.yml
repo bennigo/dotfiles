@@ -429,8 +429,8 @@
     - name: Display vault clone results
       debug:
         msg: |
-          Obsidian vault clone: {{ 'SUCCESS' if vault_clone_result.rc == 0 else 'FAILED' }}
-          {% if vault_clone_result.rc != 0 %}
+          Obsidian vault clone: {{ 'SUCCESS' if vault_clone_result.failed == false else 'FAILED' }}
+          {% if vault_clone_result.failed %}
           Error: {{ vault_clone_result.msg | default('Unknown error') }}
           Note: SSH keys must be set up and GitHub access configured
           {% else %}
@@ -444,7 +444,7 @@
         group: "{{ target_user }}"
         recurse: yes
       become: no
-      when: vault_clone_result.rc == 0
+      when: vault_clone_result.failed == false
 
     - name: Configure git settings for vault
       git_config:
@@ -458,7 +458,7 @@
         - { name: "pull.rebase", value: "false" }
         - { name: "init.defaultBranch", value: "main" }
       become: no
-      when: vault_clone_result.rc == 0
+      when: vault_clone_result.failed == false
 
     - name: Install Python dependencies for sign-pdf utility
       pip:
