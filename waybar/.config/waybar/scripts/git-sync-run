@@ -1,0 +1,4 @@
+#!/bin/bash
+# Wrapper script to run dotfiles-sync in floating kitty terminal
+
+kitty --app-id=git_sync_float -e /home/bgo/.local/bin/dotfiles-sync
