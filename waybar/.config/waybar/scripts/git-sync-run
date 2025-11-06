@@ -4,5 +4,5 @@
 # Make sure we're in a proper environment
 export PATH="/usr/local/bin:/usr/bin:/bin:$HOME/.local/bin"
 
-# Launch kitty in background
-kitty --app-id=git_sync_float -e /home/bgo/.local/bin/dotfiles-sync &
+# Launch kitty and replace this script process with it
+exec kitty --app-id=git_sync_float -e /home/bgo/.local/bin/dotfiles-sync
