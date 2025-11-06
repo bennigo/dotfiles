@@ -314,4 +314,9 @@ Ansible automatically deploys all stowable directories except:
 - **Neomutt**: Structure present, needs configuration after laptop reinstallation
 - **Ranger**: Minimal configuration (only rc.conf), needs proper setup
 - **Systemd user services**: Basic setup (mako-watcher only), could be expanded
+- **sign-pdf utility**: Add to Obsidian playbook setup in Ansible
+  - Script location: `~/.local/bin/sign-pdf`
+  - Dependencies: `pypdf`, `pillow`, `reportlab` (installed via pip/uv)
+  - Purpose: CLI tool to add signature images to PDF documents
+  - Created: 2025-11-06
 
