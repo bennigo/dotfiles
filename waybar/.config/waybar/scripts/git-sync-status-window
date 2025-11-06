@@ -3,11 +3,13 @@
 
 # Make sure we're in a proper environment
 export PATH="/usr/local/bin:/usr/bin:/bin:$HOME/.local/bin"
+export DISPLAY="${DISPLAY:-:0}"
+export WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-0}"
 
-# Launch kitty and wait for it (don't background the script itself)
-exec kitty --app-id=git_sync_float -e sh -c '
+# Launch kitty with status and wait for keypress
+kitty --app-id=git_sync_float -e bash -c '
     /home/bgo/.local/bin/dotfiles-sync --status
     echo ""
     echo "Press ENTER or ESC to close..."
     read -n 1 -s
-'
+' &
