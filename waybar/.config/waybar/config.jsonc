@@ -282,8 +282,8 @@
         "exec": "/home/bgo/.config/waybar/scripts/git-sync-status",
         "return-type": "json",
         "interval": 60,
-        "on-click": "kitty --app-id=git_sync_float -e /home/bgo/.local/bin/dotfiles-sync",
-        "on-click-right": "kitty --app-id=git_sync_float -e sh -c '/home/bgo/.local/bin/dotfiles-sync --status; read -p \"Press enter to close...\"'",
+        "on-click": "/home/bgo/.config/waybar/scripts/git-sync-run",
+        "on-click-right": "/home/bgo/.config/waybar/scripts/git-sync-status-window",
         "tooltip": true,
         "format": " {}"
     },
