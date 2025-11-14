@@ -58,5 +58,12 @@ vim.opt.shortmess:append("c")
 vim.opt.spell = true
 vim.opt.spelllang = "is,en_us"
 
+-- Set ZDOTDIR so zsh finds .zshrc in non-standard location
+vim.env.ZDOTDIR = vim.env.HOME .. "/.config/zsh"
+
+-- Configure shell (conda environment is handled via TermOpen autocmd)
+vim.opt.shell = "/bin/zsh"
+-- Keep default shellcmdflag to avoid zle errors
+
 -- vim.cmd "set whichwrap+=<,>,[,],h,l"
 vim.cmd([[set iskeyword+=-]])
