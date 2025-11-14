@@ -7,6 +7,21 @@
 -- Or remove existing autocmds by their group name (which is prefixed with `lazyvim_` for the defaults)
 -- e.g. vim.api.nvim_del_augroup_by_name("lazyvim_wrap_spell")
 
+-- Auto-activate conda environment in terminal buffers
+-- DISABLED: Auto-activation removed per user preference
+-- vim.api.nvim_create_autocmd("TermOpen", {
+--   pattern = "*",
+--   callback = function()
+--     -- Get the current conda environment from the parent shell
+--     local conda_env = vim.env.CONDA_DEFAULT_ENV
+--     if conda_env and conda_env ~= "" then
+--       -- Send command to activate the conda environment in the new terminal
+--       vim.fn.chansend(vim.b.terminal_job_id, string.format("conda activate %s\n", conda_env))
+--     end
+--   end,
+--   desc = "Auto-activate conda environment in terminals"
+-- })
+
 -- Mermaid diagram auto-generation
 -- Auto-generate PDF when saving .mmd files
 vim.api.nvim_create_autocmd("BufWritePost", {
