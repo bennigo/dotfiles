@@ -6,7 +6,9 @@ export EDITOR="nvim"
 export TERMINAL="foot"
 # export BROWSER="qutebrowser"
 export BROWSER="firefox"
-export PATH="$HOME/.local/bin":$PATH
+
+# Base PATH - must come first
+export PATH="$HOME/bin:$HOME/.local/bin:$PATH"
 export PATH="/home/bgo/.local/share/fnm:$PATH"
 export MANPAGER='nvim +Man!'
 export MANWIDTH=999
@@ -17,7 +19,7 @@ export PATH=$HOME/.fnm:$PATH
 export PATH="$HOME/.local/share/neovim/bin":$PATH
 export PATH="$HOME/.cargo/bin":$PATH
 export PATH="/usr/local/go/bin":$PATH
-export PATH="/opt/Septentrio/RxTools/bin":$PATH
+export PATH="/usr/local/rxtools/bin":$PATH
 export PATH="/home/bgo/.PRIDE_PPPAR_BIN":$PATH
 export XDG_CURRENT_DESKTOP="Wayland"
 export NVM_DIR="$HOME/.config//nvm"
