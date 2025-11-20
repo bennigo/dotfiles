@@ -11,6 +11,8 @@ HISTFILE="$HOME/.config/zsh/zsh_history"
 # source
 plug "$HOME/.config/zsh/aliases.zsh"
 plug "$HOME/.config/zsh/exports.zsh"
+# Ensure exports are loaded (fallback if plug doesn't work)
+[ -f "$HOME/.config/zsh/exports.zsh" ] && source "$HOME/.config/zsh/exports.zsh"
 
 # [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
@@ -27,7 +29,6 @@ plug "zsh-users/zsh-syntax-highlighting"
 # Load and initialise completion system
 autoload -Uz compinit
 compinit
-export PATH="$HOME/.local/bin:$PATH"
 # Cargo (Rust) environment
 [[ -f "$HOME/.cargo/env" ]] && source "$HOME/.cargo/env"
 # FNM (Node.js) environment
@@ -61,9 +62,6 @@ plug "zap-zsh/zap-prompt"
 plug "zap-zsh/fzf"
 plug "zap-zsh/exa"
 plug "zsh-users/zsh-syntax-highlighting"
-
-
-export PATH="$HOME/bin:$HOME/.local/bin":$PATH
 
 # keybinds
 bindkey '^ ' autosuggest-accept
