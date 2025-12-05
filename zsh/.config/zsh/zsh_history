@@ -1,51 +1,52 @@
-: 1707653427:0;ls vim zshrc
-: 1707653464:1;rm .config/zsh/.zshrc
-: 1707653542:33;vimdiff zshrc .config/zsh/.zshrc
-: 1707653907:1;vim zshrc
-: 1707653910:1;rm zshrc
-: 1707653966:0;sl
-: 1707654089:2;sudo apt install zoxide
-: 1707654140:0;echo "sudo apt install zoxide" >> .dotfiles/install.txt
-: 1707654165:0;sudo apt install fnm
-: 1707654245:0;cd .config/
-: 1707654380:9;vim zsh/.zshrc
-: 1707654400:2;sudo apt install ripgrep
-: 1707654466:0;echo "sudo apt install ripgrep" >> ~/.dotfiles/install.txt
-: 1707654483:17;sudo apt install pip
-: 1707654530:0;echo "sudo apt install pip" >> ~/.dotfiles/install.txt
-: 1707654533:0;cd
-: 1707654624:2;curl -fsSL https://fnm.vercel.app/install | bash
-: 1707654671:0;echo "curl -fsSL https://fnm.vercel.app/install | bash" >> .dotfiles/install.txt
-: 1707654720:0;sudo apt install eza
-: 1707654749:0;cd .dotfiles
-: 1707654752:0;cd zsh
-: 1707654760:0;cd .config/zsh
-: 1707654798:0;fnm
-: 1707654813:5;vim exports.zsh
-: 1707654821:0;fnm env
-: 1707655312:0;cd .dotfiles/zsh/.config/zsh
-: 1707655381:8759;vim .zshrc
-: 1708270302:0;python rtk_gps.py
-: 1708270313:0;python plotrtk.py
-: 1708270389:0;z project
-: 1708270391:0;cd gps
-: 1708270410:0;cd gpslibrary
-: 1708270416:0;cd scripts
-: 1708270421:5;v gen_ref_pages.py
-: 1708270440:2;v mkdocs.yml
-: 1708270482:0;ls;
-: 1708270486:3;v README.md
-: 1708270491:2;v requirements.txt
-: 1708270512:0;cd src
-: 1708270552:0;cd geofunc
-: 1708270591:0;cd ..
-: 1708270598:0;cd test
-: 1708270618:46;v test_geo_dataread.py
-: 1708270674:37;conda install pytest
-: 1708270724:1;mamba activate py312
-: 1708270725:0;ls
-: 1708270730:0;python test_geo_dataread.py
-: 1708270738:9;mamba install pytet
-: 1708270766:0;source $ZSHRC
-: 1708270768:31;mamba install pytest
-: 1708270806:0;exit
+ls vim zshrc
+rm .config/zsh/.zshrc
+vimdiff zshrc .config/zsh/.zshrc
+vim zshrc
+rm zshrc
+sl
+sudo apt install zoxide
+echo "sudo apt install zoxide" >> .dotfiles/install.txt
+sudo apt install fnm
+cd .config/
+vim zsh/.zshrc
+sudo apt install ripgrep
+echo "sudo apt install ripgrep" >> ~/.dotfiles/install.txt
+sudo apt install pip
+echo "sudo apt install pip" >> ~/.dotfiles/install.txt
+cd
+curl -fsSL https://fnm.vercel.app/install | bash
+echo "curl -fsSL https://fnm.vercel.app/install | bash" >> .dotfiles/install.txt
+sudo apt install eza
+cd .dotfiles
+cd zsh
+cd .config/zsh
+fnm
+vim exports.zsh
+fnm env
+cd .dotfiles/zsh/.config/zsh
+vim .zshrc
+python rtk_gps.py
+python plotrtk.py
+z project
+cd gps
+cd gpslibrary
+cd scripts
+v gen_ref_pages.py
+v mkdocs.yml
+ls;
+v README.md
+v requirements.txt
+cd src
+cd geofunc
+cd ..
+cd test
+v test_geo_dataread.py
+conda install pytest
+mamba activate py312
+ls
+python test_geo_dataread.py
+mamba install pytet
+source $ZSHRC
+mamba install pytest
+exit
+exit
