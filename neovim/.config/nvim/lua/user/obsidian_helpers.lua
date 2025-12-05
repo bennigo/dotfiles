@@ -3,10 +3,11 @@
 -- Note: Namespaced under "user" to avoid colliding with the plugin's "obsidian" module.
 
 local M = {}
-local Obsidian = require("obsidian.search")
-local files = Obsidian.build_find_cmd("/home/bgo/notes/bgovault/Templates/")
 
-vim.notify(files, vim.log.levels.DEBUG, { title = "Obsidian: " })
+-- NOTE: Removed code that ran at require time:
+-- local Obsidian = require("obsidian.search")
+-- local files = Obsidian.build_find_cmd("/home/bgo/notes/bgovault/Templates/")
+-- vim.notify(files, vim.log.levels.DEBUG, { title = "Obsidian: " })
 
 -- Simple, ASCII-oriented slugify
 function M.slugify(str)
