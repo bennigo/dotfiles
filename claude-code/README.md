@@ -4,7 +4,7 @@ Configuration for Claude Code CLI tool and MCP (Model Context Protocol) servers.
 
 ## Files
 
-- `mcp.json` - MCP server configurations for Claude Code integrations
+- `.mcp.json` - MCP server configurations (deployed to `~/.mcp.json` for user scope)
 
 ## MCP Servers
 
@@ -60,7 +60,11 @@ cd ~/.dotfiles
 stow claude-code
 ```
 
+This creates `~/.mcp.json` → `.dotfiles/claude-code/.mcp.json` symlink.
+
 Ansible bootstrap automatically deploys this with other dotfiles.
+
+**Important**: The file must be at `~/.mcp.json` (user scope), NOT `~/.config/claude-code/mcp.json`.
 
 ## Usage
 
