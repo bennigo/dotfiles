@@ -96,12 +96,61 @@ roles/
 # Custom package lists
 --extra-vars "additional_base_packages=['custom-tool','another-tool']"
 
-# Feature toggles  
+# Feature toggles
 --extra-vars "install_gaming_tools=true install_media_tools=false"
 
 # Hardware overrides
 --extra-vars "force_nvidia=true force_laptop=false"
 ```
+
+## 👥 Multi-User Support
+
+The playbook automatically detects the current user and adjusts configuration paths accordingly.
+
+### Target User Detection
+```bash
+# Automatically uses current $USER
+ansible-playbook bootstrap.yml -K
+
+# Override for a different user
+ansible-playbook bootstrap.yml -K --extra-vars "target_user=johndoe"
+```
+
+**Important:** Always use `ansible-playbook -K` (asks for sudo password), not `sudo ansible-playbook` which would set USER to root.
+
+### Personal vs Generic Configuration
+
+Some configuration is specific to the repository owner (bgo) and is automatically skipped for other users:
+
+| Feature | Controlled By | Default |
+|---------|---------------|---------|
+| Obsidian vault (bgovault) | `features.setup_personal_repos` | `true` for bgo, `false` for others |
+| Personal git settings | `features.setup_personal_repos` | `true` for bgo, `false` for others |
+
+```bash
+# For other users - personal repos automatically skipped
+ansible-playbook bootstrap.yml -K  # Just works!
+
+# Force skip personal even for bgo
+ansible-playbook bootstrap.yml -K --skip-tags personal
+
+# Or via extra vars
+ansible-playbook bootstrap.yml -K --extra-vars '{"features": {"setup_personal_repos": false}}'
+```
+
+### Customizing for Your Own Use
+
+To adapt this playbook for your own personal repositories:
+
+1. Fork/copy the repository
+2. Edit `group_vars/all.yml`:
+   ```yaml
+   target_email: "your@email.com"
+   target_name: "Your Name"
+   features:
+     setup_personal_repos: "{{ target_user == 'yourusername' }}"
+   ```
+3. Update repository URLs in `roles/development/tasks/main.yml`
 
 ### Custom Profiles
 Create `profiles/custom.yml`:
@@ -158,6 +207,24 @@ sudo apt update
 # Run with verbose output to see which package failed
 ansible-playbook bootstrap.yml -vvv -K
 ```
+
+### Mamba/Miniforge Issues
+
+The playbook installs Miniforge (mamba) for Python environment management. If you encounter issues:
+
+```bash
+# Re-run just the mamba installation
+ansible-playbook bootstrap.yml --tags "mamba" -K
+
+# Manual installation (if ansible fails)
+wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh
+bash Miniforge3-Linux-x86_64.sh -b -p ~/.miniforge
+~/.miniforge/bin/mamba shell init --shell bash --root-prefix ~/.miniforge
+~/.miniforge/bin/mamba shell init --shell zsh --root-prefix ~/.miniforge
+source ~/.bashrc
+```
+
+**Note:** Mamba 2.x uses `mamba shell init --shell bash --root-prefix <path>` instead of the old `mamba init bash` syntax.
 
 ## 📈 Extending the System
 

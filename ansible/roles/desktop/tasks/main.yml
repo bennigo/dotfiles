@@ -395,7 +395,7 @@
           Error: {{ obsidian_install_result.msg | default('Unknown error') }}
           {% else %}
           Obsidian installed and ready to use
-          Vault location: {{ target_home }}/notes/bgovault
+          Create or clone your vault to: {{ target_home }}/notes/
           {% endif %}
 
     - name: Create Obsidian desktop shortcut
