@@ -102,7 +102,7 @@
 
     - name: Download clipse
       get_url:
-        url: "https://github.com/savedra1/clipse/releases/download/{{ clipse_version }}/clipse_{{ clipse_version | regex_replace('^v', '') }}_linux_amd64.tar.gz"
+        url: "https://github.com/savedra1/clipse/releases/download/{{ clipse_version }}/clipse_{{ clipse_version }}_linux_amd64.tar.gz"
         dest: "/tmp/clipse.tar.gz"
 
     - name: Extract clipse
