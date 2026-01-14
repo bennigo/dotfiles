@@ -87,6 +87,8 @@ features:
   install_media_tools: false
   setup_credentials: false  # Requires manual intervention
   deploy_work_configs: false
+  # Personal configuration (bgo-specific) - disable for other users
+  setup_personal_repos: "{{ target_user == 'bgo' }}"
   
 # Package lists (easy to extend)
 base_packages:

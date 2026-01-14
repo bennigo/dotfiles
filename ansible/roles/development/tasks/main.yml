@@ -452,7 +452,7 @@
       when: neovim_version_check.rc == 0
   tags: ["development", "neovim", "build"]
 
-- name: Set up Obsidian vault
+- name: Set up personal Obsidian vault (bgo-specific)
   block:
     - name: Create notes directory
       file:
@@ -474,15 +474,22 @@
       register: vault_clone_result
       failed_when: false
 
+    - name: Check if vault repository exists
+      stat:
+        path: "{{ target_home }}/notes/bgovault/.git"
+      register: vault_git_dir
+      become: no
+
     - name: Display vault clone results
       debug:
         msg: |
-          Obsidian vault clone: {{ 'SUCCESS' if vault_clone_result.failed == false else 'FAILED' }}
-          {% if vault_clone_result.failed %}
-          Error: {{ vault_clone_result.msg | default('Unknown error') }}
-          Note: SSH keys must be set up and GitHub access configured
+          Obsidian vault clone: {{ 'SUCCESS' if vault_git_dir.stat.exists else 'FAILED/SKIPPED' }}
+          {% if not vault_git_dir.stat.exists %}
+          Note: Vault not cloned. SSH keys must be set up and GitHub access configured.
+          You can manually clone later with:
+            git clone git@github.com:bennigo/bgovault.git {{ target_home }}/notes/bgovault
           {% else %}
-          Vault cloned to: {{ target_home }}/notes/bgovault
+          Vault location: {{ target_home }}/notes/bgovault
           {% endif %}
 
     - name: Set proper ownership for vault directory
@@ -492,7 +499,7 @@
         group: "{{ target_user }}"
         recurse: yes
       become: no
-      when: vault_clone_result.failed == false
+      when: vault_git_dir.stat.exists
 
     - name: Configure git settings for vault
       git_config:
@@ -501,13 +508,17 @@
         scope: local
         repo: "{{ target_home }}/notes/bgovault"
       loop:
-        - { name: "user.name", value: "bgo" }
-        - { name: "user.email", value: "bgo@vedur.is" }
+        - { name: "user.name", value: "{{ target_name }}" }
+        - { name: "user.email", value: "{{ target_email }}" }
         - { name: "pull.rebase", value: "false" }
         - { name: "init.defaultBranch", value: "main" }
       become: no
-      when: vault_clone_result.failed == false
+      when: vault_git_dir.stat.exists
+  when: features.setup_personal_repos | default(false)
+  tags: ["development", "obsidian", "notes", "personal"]
 
+- name: Install PDF utility dependencies
+  block:
     - name: Install Python dependencies for sign-pdf utility
       pip:
         name:
@@ -525,7 +536,7 @@
         group: "{{ target_user }}"
         mode: '0755'
       become: no
-  tags: ["development", "obsidian", "notes"]
+  tags: ["development", "pdf", "scripts"]
 
 - name: Deploy mermaid-multi script for diagram processing
   copy:
