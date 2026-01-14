@@ -24,34 +24,38 @@
           CPU: {{ ansible_processor[2] if ansible_processor is defined else 'Unknown' }}
           Memory: {{ (ansible_memtotal_mb/1024) | round(1) }}GB
           ===========================================
-          
+          TARGET USER: {{ target_user }}
+          TARGET HOME: {{ target_home }}
+          ===========================================
+
     - name: Detect hardware configuration
       debug:
         msg: |
           HARDWARE DETECTION RESULTS:
           - NVIDIA GPU: {{ has_nvidia_gpu }}
-          - Intel CPU/GPU: {{ has_intel_gpu }}  
+          - Intel CPU/GPU: {{ has_intel_gpu }}
           - AMD GPU: {{ has_amd_gpu }}
           - Laptop: {{ is_laptop }}
           - Desktop: {{ is_desktop }}
           - Battery Present: {{ has_battery }}
-          
+
           SELECTED PROFILE: {{ selected_profile }}
           ROLES TO INSTALL: {{ profiles[selected_profile] | join(', ') }}
-          
+
     - name: Confirm hardware detection accuracy
       pause:
         prompt: |
-          
-          Please verify hardware detection is correct.
-          
-          Hardware flags detected:
-          - NVIDIA GPU: {{ has_nvidia_gpu }}
-          - Laptop mode: {{ is_laptop }}
-          
+
+          Please verify detection is correct.
+
+          Target user: {{ target_user }}
+          Target home: {{ target_home }}
+          NVIDIA GPU: {{ has_nvidia_gpu }}
+          Laptop mode: {{ is_laptop }}
+
           If incorrect, press Ctrl+C and restart with:
-          --extra-vars "force_nvidia=true force_laptop=true"
-          
+          --extra-vars "target_user=USERNAME force_nvidia=true force_laptop=true"
+
           Press ENTER to continue or Ctrl+C to abort
         seconds: 10
       when: not skip_confirmation | default(false)

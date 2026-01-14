@@ -249,33 +249,81 @@
 
 - name: Install Mamba (fast conda package manager)
   block:
+    - name: Check if Mamba is already installed
+      stat:
+        path: "{{ target_home }}/.miniforge/bin/mamba"
+      register: mamba_binary
+      become: no
+
     - name: Download Miniforge installer
       get_url:
         url: "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh"
         dest: "/tmp/miniforge-installer.sh"
         mode: '0755'
-        timeout: 60
+        timeout: 120
+      when: not mamba_binary.stat.exists
+      register: miniforge_download
+
+    - name: Verify installer was downloaded
+      stat:
+        path: "/tmp/miniforge-installer.sh"
+      register: installer_file
+      when: not mamba_binary.stat.exists
+
+    - name: Fail if installer download failed
+      fail:
+        msg: "Miniforge installer download failed or file is too small ({{ installer_file.stat.size | default(0) }} bytes)"
+      when:
+        - not mamba_binary.stat.exists
+        - installer_file.stat.size | default(0) < 1000000
+
+    - name: Remove existing broken miniforge installation
+      file:
+        path: "{{ target_home }}/.miniforge"
+        state: absent
+      become: no
+      when:
+        - not mamba_binary.stat.exists
+        - miniforge_download is changed
 
     - name: Install Miniforge
       shell: |
         /tmp/miniforge-installer.sh -b -p {{ target_home }}/.miniforge
       become: no
-      args:
-        creates: "{{ target_home }}/.miniforge"
+      when: not mamba_binary.stat.exists
+      register: miniforge_install
+
+    - name: Verify Mamba binary exists after installation
+      stat:
+        path: "{{ target_home }}/.miniforge/bin/mamba"
+      register: mamba_installed
+      become: no
+
+    - name: Fail if Mamba installation failed
+      fail:
+        msg: "Miniforge installation completed but mamba binary not found at {{ target_home }}/.miniforge/bin/mamba"
+      when: not mamba_installed.stat.exists
+
+    - name: Check if shell is already initialized
+      shell: grep -q 'mamba initialize' {{ target_home }}/.bashrc || grep -q 'mamba shell init' {{ target_home }}/.bashrc
+      register: shell_initialized
+      become: no
+      failed_when: false
+      changed_when: false
 
     - name: Initialize Mamba for bash and zsh
       shell: |
-        {{ target_home }}/.miniforge/bin/mamba init bash
-        {{ target_home }}/.miniforge/bin/mamba init zsh
+        {{ target_home }}/.miniforge/bin/mamba shell init --shell bash --root-prefix {{ target_home }}/.miniforge
+        {{ target_home }}/.miniforge/bin/mamba shell init --shell zsh --root-prefix {{ target_home }}/.miniforge
       become: no
-      args:
-        creates: "{{ target_home }}/.bashrc.bak"
+      when: shell_initialized.rc != 0
 
     - name: Verify Mamba installation
       shell: "{{ target_home }}/.miniforge/bin/mamba --version"
       register: mamba_version_check
       become: no
       failed_when: false
+      changed_when: false
 
     - name: Display Mamba installation results
       debug:
