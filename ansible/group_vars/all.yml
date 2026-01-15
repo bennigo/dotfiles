@@ -11,6 +11,9 @@ target_name: "Benedikt Gunnar Ófeigsson"
 
 # Installation profiles (predefined combinations)
 profiles:
+  # User-only setup (for additional users on already-configured systems)
+  user:
+    - dotfiles
   minimal:
     - base
     - email

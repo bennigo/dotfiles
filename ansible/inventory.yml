@@ -3,18 +3,18 @@ all:
     localhost:
       ansible_connection: local
   vars:
-    # Hardware detection will be populated by gather_facts
-    # These can be overridden via command line or host_vars/
-    
-    # Hardware flags (auto-detected or manually set)
-    has_nvidia_gpu: "{{ ansible_facts['devices'] | dict2items | selectattr('value.model', 'match', '.*NVIDIA.*') | list | length > 0 if ansible_facts is defined else false }}"
-    has_intel_gpu: "{{ ansible_facts['processor'] | select('match', '.*Intel.*') | list | length > 0 if ansible_facts is defined else false }}"
-    has_amd_gpu: "{{ ansible_facts['devices'] | dict2items | selectattr('value.model', 'match', '.*AMD.*') | list | length > 0 if ansible_facts is defined else false }}"
-    
-    # System type detection - fix the chassis reference
-    is_laptop: "{{ ansible_facts.get('form_factor') == 'Laptop' or ansible_facts.get('system_vendor', '') | lower in ['lenovo', 'dell', 'hp', 'asus', 'acer', 'toshiba', 'sony', 'samsung'] if ansible_facts is defined else false }}"
-    is_desktop: "{{ not is_laptop }}"
-    has_battery: "{{ ansible_facts.get('power_supplies', []) | selectattr('type', 'equalto', 'Battery') | list | length > 0 if ansible_facts is defined else false }}"
+    # Hardware detection - with safe defaults
+    # These can be overridden via command line: --extra-vars "force_nvidia=true"
+
+    # Hardware flags (auto-detected with fallback to false)
+    has_nvidia_gpu: "{{ (ansible_facts.get('devices', {}) | dict2items | selectattr('value.model', 'defined') | selectattr('value.model', 'match', '.*NVIDIA.*') | list | length > 0) | default(false) }}"
+    has_intel_gpu: "{{ (ansible_facts.get('processor', []) | select('match', '.*Intel.*') | list | length > 0) | default(false) }}"
+    has_amd_gpu: "{{ (ansible_facts.get('devices', {}) | dict2items | selectattr('value.model', 'defined') | selectattr('value.model', 'match', '.*AMD.*') | list | length > 0) | default(false) }}"
+
+    # System type detection
+    is_laptop: "{{ ansible_facts.get('form_factor', '') == 'Laptop' or ansible_facts.get('system_vendor', '') | lower in ['lenovo', 'dell', 'hp', 'asus', 'acer', 'toshiba', 'sony', 'samsung'] | default(false) }}"
+    is_desktop: "{{ not (is_laptop | default(false)) }}"
+    has_battery: "{{ (ansible_facts.get('power_supplies', []) | selectattr('type', 'defined') | selectattr('type', 'equalto', 'Battery') | list | length > 0) | default(false) }}"
 
     
     # Manual overrides (set these in host_vars/ or command line)
