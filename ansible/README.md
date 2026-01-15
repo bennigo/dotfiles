@@ -138,6 +138,28 @@ ansible-playbook bootstrap.yml -K --skip-tags personal
 ansible-playbook bootstrap.yml -K --extra-vars '{"features": {"setup_personal_repos": false}}'
 ```
 
+### Setting Up Additional Users
+
+For additional users on an already-configured system (packages already installed):
+
+```bash
+# IMPORTANT: Run from the ansible directory!
+cd ~/.dotfiles/ansible
+
+# Step 1: Deploy dotfiles only (lightweight, no packages)
+ansible-playbook bootstrap.yml -K --extra-vars "profile=user"
+
+# Step 2: Install per-user applications (kitty, etc.)
+ansible-playbook bootstrap.yml -K --tags "kitty"
+```
+
+**Why two commands?** The `profile=user` only runs the `dotfiles` role, but kitty is in the `desktop` role. Tags filter tasks *within* roles, so you need separate runs.
+
+**Per-user applications** (installed to ~/.local, need to run for each user):
+- `kitty` - Terminal emulator
+- `fnm` - Node.js version manager
+- `cargo/rust` - Rust toolchain
+
 ### Customizing for Your Own Use
 
 To adapt this playbook for your own personal repositories:
