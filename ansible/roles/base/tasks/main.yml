@@ -30,7 +30,7 @@
     validate: 'visudo -cf %s'
   tags: ["base", "sudo"]
 
-- name: Set up git configuration
+- name: Set up git configuration (bgo only - other users configure manually)
   git_config:
     name: "{{ item.name }}"
     value: "{{ item.value }}"
@@ -39,6 +39,17 @@
     - { name: "user.email", value: "{{ target_email }}" }
     - { name: "user.name", value: "{{ target_name }}" }
   become: no
+  when: features.setup_personal_repos | default(false)
+  tags: ["base", "git", "personal"]
+
+- name: Remind non-bgo users to configure git
+  debug:
+    msg: |
+      Git user configuration skipped (not bgo user).
+      Configure manually with:
+        git config --global user.name "Your Name"
+        git config --global user.email "your@email.com"
+  when: not (features.setup_personal_repos | default(false))
   tags: ["base", "git"]
 
 - name: Change default shell to zsh
