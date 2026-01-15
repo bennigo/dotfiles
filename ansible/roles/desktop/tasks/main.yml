@@ -113,7 +113,7 @@
 
     - name: Install clipse system-wide
       copy:
-        src: "/tmp/clipse"
+        src: "/tmp/clipse-linux-wayland-amd64"
         dest: "/usr/local/bin/clipse"
         mode: '0755'
         remote_src: yes
@@ -124,7 +124,7 @@
         state: absent
       loop:
         - /tmp/clipse.tar.gz
-        - /tmp/clipse
+        - /tmp/clipse-linux-wayland-amd64
   tags: ["desktop", "clipboard", "clipse"]
 
 - name: Install claude-code-kitty-paste for image pasting
