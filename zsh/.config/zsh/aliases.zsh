@@ -105,3 +105,10 @@ alias ui-review='snap && echo "Now in Claude Code: Ctrl+V \"Review this UI for a
 alias code-review='snap && echo "Now in Claude Code: Ctrl+V \"Review this code for best practices and potential issues\""'
 alias explain-ui='snap && echo "Now in Claude Code: Ctrl+V \"Explain what this interface does and how to use it\""'
 alias extract-text='snap && echo "Now in Claude Code: Ctrl+V \"Extract all text from this image as markdown\""'
+
+# RxTools aliases - use wrappers to avoid Qt version conflicts
+alias rxcontrol='/usr/local/rxtools/bin/runRxcontrol'
+alias rxdownload='/usr/local/rxtools/bin/runRxdownload'
+alias rxlogger='/usr/local/rxtools/bin/runRxlogger'
+alias sbfanalyzer='/usr/local/rxtools/bin/runSbfanalyzer'
+alias sbfconverter='/usr/local/rxtools/bin/runSbfconverter'
