@@ -68,7 +68,7 @@
     backup: yes
   tags: ["base", "environment"]
 
-- name: Append network filesystem configurations to fstab
+- name: Append network filesystem configurations to fstab (work infrastructure)
   block:
     - name: Check if dotfiles fstab content already exists in system fstab
       shell: grep -q "Network filesystems added from dotfiles configuration" /etc/fstab
@@ -143,9 +143,18 @@
           Network filesystem configuration: {{ 'ALREADY EXISTS' if fstab_content_exists.rc == 0 else 'ADDED' }}
           Mount points created for network shares
           Note: Network filesystems require network connectivity and proper credentials
+  when: features.setup_work_infrastructure | default(false)
+  tags: ["base", "filesystem", "network", "work"]
+
+- name: Skip network filesystem configuration (not work infrastructure)
+  debug:
+    msg: |
+      Network filesystem configuration skipped (not work infrastructure setup).
+      To enable, run with: --extra-vars '{"features": {"setup_work_infrastructure": true}}'
+  when: not (features.setup_work_infrastructure | default(false))
   tags: ["base", "filesystem", "network"]
 
-- name: Append network host configurations to hosts file
+- name: Append network host configurations to hosts file (work infrastructure)
   block:
     - name: Check if dotfiles hosts content already exists in system hosts
       shell: grep -q "vedur.is network hosts" /etc/hosts
@@ -206,6 +215,15 @@
           Network hosts configuration: {{ 'ALREADY EXISTS' if hosts_content_exists.rc == 0 else 'ADDED' }}
           Added vedur.is infrastructure hosts and external research servers
           Includes GPS servers, seismic monitoring, and University of Iceland systems
+  when: features.setup_work_infrastructure | default(false)
+  tags: ["base", "network", "hosts", "work"]
+
+- name: Skip network hosts configuration (not work infrastructure)
+  debug:
+    msg: |
+      Network hosts configuration skipped (not work infrastructure setup).
+      To enable, run with: --extra-vars '{"features": {"setup_work_infrastructure": true}}'
+  when: not (features.setup_work_infrastructure | default(false))
   tags: ["base", "network", "hosts"]
 
 - name: Create essential directories
