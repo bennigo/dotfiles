@@ -126,16 +126,26 @@ Some configuration is specific to the repository owner (bgo) and is automaticall
 |---------|---------------|---------|
 | Obsidian vault (bgovault) | `features.setup_personal_repos` | `true` for bgo, `false` for others |
 | Personal git settings | `features.setup_personal_repos` | `true` for bgo, `false` for others |
+| Claude private config | `features.setup_personal_repos` | `true` for bgo, `false` for others |
+| NFS mounts (vedur.is) | `features.setup_work_infrastructure` | `true` for bgo, `false` for others |
+| /etc/hosts entries | `features.setup_work_infrastructure` | `true` for bgo, `false` for others |
 
 ```bash
-# For other users - personal repos automatically skipped
+# For other users - personal repos and work infrastructure automatically skipped
 ansible-playbook bootstrap.yml -K  # Just works!
 
 # Force skip personal even for bgo
 ansible-playbook bootstrap.yml -K --skip-tags personal
 
+# Force skip work infrastructure
+ansible-playbook bootstrap.yml -K --skip-tags work
+
 # Or via extra vars
 ansible-playbook bootstrap.yml -K --extra-vars '{"features": {"setup_personal_repos": false}}'
+ansible-playbook bootstrap.yml -K --extra-vars '{"features": {"setup_work_infrastructure": false}}'
+
+# Enable work infrastructure for non-bgo user (e.g., coworker)
+ansible-playbook bootstrap.yml -K --extra-vars '{"features": {"setup_work_infrastructure": true}}'
 ```
 
 ### Setting Up Additional Users

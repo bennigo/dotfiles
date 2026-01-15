@@ -452,7 +452,7 @@
       when: neovim_version_check.rc == 0
   tags: ["development", "neovim", "build"]
 
-- name: Set up personal Obsidian vault (bgo-specific)
+- name: Set up personal Obsidian vault (personal user only)
   block:
     - name: Create notes directory
       file:
@@ -465,9 +465,9 @@
 
     - name: Clone Obsidian vault repository
       git:
-        repo: "git@github.com:bennigo/bgovault.git"
-        dest: "{{ target_home }}/notes/bgovault"
-        version: main
+        repo: "{{ personal_repos.obsidian_vault.url }}"
+        dest: "{{ personal_repos.obsidian_vault.dest }}"
+        version: "{{ personal_repos.obsidian_vault.branch }}"
         force: no
         accept_hostkey: yes
       become: no
@@ -476,7 +476,7 @@
 
     - name: Check if vault repository exists
       stat:
-        path: "{{ target_home }}/notes/bgovault/.git"
+        path: "{{ personal_repos.obsidian_vault.dest }}/.git"
       register: vault_git_dir
       become: no
 
@@ -487,14 +487,14 @@
           {% if not vault_git_dir.stat.exists %}
           Note: Vault not cloned. SSH keys must be set up and GitHub access configured.
           You can manually clone later with:
-            git clone git@github.com:bennigo/bgovault.git {{ target_home }}/notes/bgovault
+            git clone {{ personal_repos.obsidian_vault.url }} {{ personal_repos.obsidian_vault.dest }}
           {% else %}
-          Vault location: {{ target_home }}/notes/bgovault
+          Vault location: {{ personal_repos.obsidian_vault.dest }}
           {% endif %}
 
     - name: Set proper ownership for vault directory
       file:
-        path: "{{ target_home }}/notes/bgovault"
+        path: "{{ personal_repos.obsidian_vault.dest }}"
         owner: "{{ target_user }}"
         group: "{{ target_user }}"
         recurse: yes
@@ -506,7 +506,7 @@
         name: "{{ item.name }}"
         value: "{{ item.value }}"
         scope: local
-        repo: "{{ target_home }}/notes/bgovault"
+        repo: "{{ personal_repos.obsidian_vault.dest }}"
       loop:
         - { name: "user.name", value: "{{ target_name }}" }
         - { name: "user.email", value: "{{ target_email }}" }
@@ -558,7 +558,7 @@
   become: no
   tags: ["development", "dotfiles", "scripts", "sync"]
 
-- name: Set up Claude private configuration repository
+- name: Set up Claude private configuration repository (personal user only)
   block:
     - name: Check if claude-private submodule exists
       stat:
@@ -590,64 +590,6 @@
       become: no
       ignore_errors: yes
 
-    - name: Create main CLAUDE.md if it doesn't exist
-      copy:
-        dest: "{{ target_home }}/CLAUDE.md"
-        content: |
-          # Global Claude Code Context
-
-          This file provides top-level context for Claude Code when working in `{{ target_home }}`.
-
-          ## Directory Structure & Context Overview
-
-          For comprehensive home directory structure and detailed context mappings, see:
-          - **Complete Documentation**: `~/.claude/HOME_DIRECTORY_OVERVIEW.md` (encrypted)
-
-          ## Quick Context References
-
-          ### System Configuration
-          - **Main Dotfiles**: `.dotfiles/CLAUDE.md` - Sway desktop environment configuration
-          - **System Setup**: `.dotfiles/system/CLAUDE.md` - Hardware and installation procedures
-
-          ### Active Development Projects
-          - **GPS Library Ecosystem** (`work/projects/gps/gpslibrary_new/`):
-            - `gps_parser/` - Configuration management for 173-station GNSS network
-            - `receivers/` - Direct receiver communication and bulk downloads
-            - `gtimes/` - GPS time processing and conversions
-            - `tostools/` - GPS metadata quality control and TOS API integration
-
-          ### Knowledge Management
-          - **Obsidian Vault** (`notes/bgovault/`): Personal knowledge management with PARA organization
-
-          ### Development Tools
-          - **Claude Code Neovim Plugin**: `~/.local/share/nvim/lazy/claudecode.nvim/`
-          - **Development Environment**: Multi-language setup (Python, Rust, Go, Node.js, R)
-
-          ## Environment Summary
-
-          - **OS**: Linux with Sway (Wayland compositor)
-          - **Configuration Management**: GNU Stow with Ansible automation
-          - **Security**: GPG-encrypted credentials, SSH key automation
-          - **Development**: XDG-compliant, configuration-driven workflow
-
-          ## Private Configuration
-
-          This directory contains a private encrypted repository at `.dotfiles/claude-private/`:
-          - **Encryption**: git-crypt with GPG key (requires unlock)
-          - **Deployment**: Stow-managed to `~/.claude/`
-          - **Contents**: Sensitive documentation and detailed context mappings
-
-          ---
-
-          **Created**: {{ ansible_date_time.date }}
-          **Purpose**: Top-level context for Claude Code interactions
-          **Private Details**: See `~/.claude/HOME_DIRECTORY_OVERVIEW.md`
-        owner: "{{ target_user }}"
-        group: "{{ target_user }}"
-        mode: '0644'
-        force: no
-      become: no
-
     - name: Display claude-private setup results
       debug:
         msg: |
@@ -660,4 +602,99 @@
           {% else %}
           Note: claude-private submodule not found - this is normal for fresh installs
           {% endif %}
-  tags: ["development", "claude", "private-config"]
+  when: features.setup_personal_repos | default(false)
+  tags: ["development", "claude", "private-config", "personal"]
+
+- name: Create generic CLAUDE.md for non-personal users
+  copy:
+    dest: "{{ target_home }}/CLAUDE.md"
+    content: |
+      # Global Claude Code Context
+
+      This file provides top-level context for Claude Code when working in `{{ target_home }}`.
+
+      ## Environment Summary
+
+      - **OS**: Linux with Sway (Wayland compositor)
+      - **Configuration Management**: GNU Stow with Ansible automation
+      - **Development**: XDG-compliant, configuration-driven workflow
+
+      ## Directory Structure
+
+      ### System Configuration
+      - **Main Dotfiles**: `.dotfiles/CLAUDE.md` - Sway desktop environment configuration
+
+      ### Development Tools
+      - **Development Environment**: Multi-language setup (Python, Rust, Go, Node.js, R)
+
+      ---
+
+      **Created**: {{ ansible_date_time.date }}
+      **Purpose**: Top-level context for Claude Code interactions
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0644'
+    force: no
+  become: no
+  when: not (features.setup_personal_repos | default(false))
+  tags: ["development", "claude"]
+
+- name: Create personal CLAUDE.md with full context (personal user only)
+  copy:
+    dest: "{{ target_home }}/CLAUDE.md"
+    content: |
+      # Global Claude Code Context
+
+      This file provides top-level context for Claude Code when working in `{{ target_home }}`.
+
+      ## Directory Structure & Context Overview
+
+      For comprehensive home directory structure and detailed context mappings, see:
+      - **Complete Documentation**: `~/.claude/HOME_DIRECTORY_OVERVIEW.md` (encrypted)
+
+      ## Quick Context References
+
+      ### System Configuration
+      - **Main Dotfiles**: `.dotfiles/CLAUDE.md` - Sway desktop environment configuration
+      - **System Setup**: `.dotfiles/system/CLAUDE.md` - Hardware and installation procedures
+
+      ### Active Development Projects
+      - **GPS Library Ecosystem** (`work/projects/gps/gpslibrary_new/`):
+        - `gps_parser/` - Configuration management for 173-station GNSS network
+        - `receivers/` - Direct receiver communication and bulk downloads
+        - `gtimes/` - GPS time processing and conversions
+        - `tostools/` - GPS metadata quality control and TOS API integration
+
+      ### Knowledge Management
+      - **Obsidian Vault** (`notes/bgovault/`): Personal knowledge management with PARA organization
+
+      ### Development Tools
+      - **Claude Code Neovim Plugin**: `~/.local/share/nvim/lazy/claudecode.nvim/`
+      - **Development Environment**: Multi-language setup (Python, Rust, Go, Node.js, R)
+
+      ## Environment Summary
+
+      - **OS**: Linux with Sway (Wayland compositor)
+      - **Configuration Management**: GNU Stow with Ansible automation
+      - **Security**: GPG-encrypted credentials, SSH key automation
+      - **Development**: XDG-compliant, configuration-driven workflow
+
+      ## Private Configuration
+
+      This directory contains a private encrypted repository at `.dotfiles/claude-private/`:
+      - **Encryption**: git-crypt with GPG key (requires unlock)
+      - **Deployment**: Stow-managed to `~/.claude/`
+      - **Contents**: Sensitive documentation and detailed context mappings
+
+      ---
+
+      **Created**: {{ ansible_date_time.date }}
+      **Purpose**: Top-level context for Claude Code interactions
+      **Private Details**: See `~/.claude/HOME_DIRECTORY_OVERVIEW.md`
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0644'
+    force: no
+  become: no
+  when: features.setup_personal_repos | default(false)
+  tags: ["development", "claude", "personal"]

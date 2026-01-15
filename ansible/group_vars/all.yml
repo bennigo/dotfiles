@@ -92,6 +92,15 @@ features:
   deploy_work_configs: false
   # Personal configuration (bgo-specific) - disable for other users
   setup_personal_repos: "{{ target_user == 'bgo' }}"
+  # Work infrastructure (vedur.is) - NFS mounts, internal hosts
+  setup_work_infrastructure: "{{ target_user == 'bgo' }}"
+
+# Personal repository configuration (only used when setup_personal_repos is true)
+personal_repos:
+  obsidian_vault:
+    url: "git@github.com:bennigo/bgovault.git"
+    dest: "{{ target_home }}/notes/bgovault"
+    branch: "main"
   
 # Package lists (easy to extend)
 base_packages:
