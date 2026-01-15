@@ -39,9 +39,9 @@ export PATH="/var/lib/flatpak/exports/bin:$PATH"
 
 #export PATH="$PATH:./node_modules/.bin"
 #source <(fzf --zsh)
-eval "$(fnm env)"
-eval "$(zoxide init zsh)"
-eval `pip completion --zsh`
+command -v fnm >/dev/null 2>&1 && eval "$(fnm env)"
+command -v zoxide >/dev/null 2>&1 && eval "$(zoxide init zsh)"
+command -v pip >/dev/null 2>&1 && eval "$(pip completion --zsh 2>/dev/null)"
 
 #API_KEYS and credentials from pass
 export BRAVE_API_KEY=$(pass show tokens/brave_api 2>/dev/null || echo "")
