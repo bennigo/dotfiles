@@ -26,5 +26,9 @@
   {
     "url": "postgresql://bgo@localhost:5432/bgo",
     "name": "local_db"
+  },
+  {
+    "url": "postgresql://bgo@localhost:5432/gps_health",
+    "name": "gps_health"
   }
 ]
