@@ -31,10 +31,15 @@ local function create_floating_window(opts)
     row = row,
     style = "minimal", -- No borders or extra UI elements
     border = "rounded",
+    zindex = 50, -- Higher z-index to render above other floating windows
   }
 
   -- Create the floating window
   local win = vim.api.nvim_open_win(buf, true, win_config)
+
+  -- Set window options for solid background
+  vim.api.nvim_set_option_value("winhighlight", "Normal:NormalFloat,NormalFloat:NormalFloat", { win = win })
+  vim.api.nvim_set_option_value("winblend", 0, { win = win })
 
   return { buf = buf, win = win }
 end
@@ -48,6 +53,10 @@ local toggle_terminal = function()
   else
     vim.api.nvim_win_hide(state.floating.win)
   end
+  -- Defer redraw with small delay for Kitty terminal compatibility
+  vim.defer_fn(function()
+    vim.cmd("mode")
+  end, 10)
 end
 
 -- Example usage:
