@@ -20,9 +20,8 @@ return {
             width = 0.95, -- 95% of screen width (enlarged)
             height = 0.95, -- 95% of screen height (enlarged)
             border = "rounded",
-            zindex = 50, -- Higher z-index to render above other floating windows
             wo = {
-              winblend = 0, -- no transparency (fixes rendering artifacts)
+              winblend = 30, -- transparency (0-100)
             },
           },
         },
@@ -35,35 +34,15 @@ return {
         },
       })
 
-      -- Alt+c for Claude Code (primary) - with deferred redraw for Kitty compatibility
-      vim.keymap.set({ "n", "i", "t" }, "<M-c>", function()
-        vim.cmd("ClaudeCodeFocus")
-        vim.defer_fn(function()
-          vim.cmd("mode")
-        end, 10)
-      end, { desc = "Toggle Claude Code (Max)" })
+      -- Alt+c for Claude Code (primary)
+      vim.keymap.set({ "n", "i", "t" }, "<M-c>", "<cmd>ClaudeCodeFocus<cr>", { desc = "Toggle Claude Code (Max)" })
 
       -- Fallback: Quick return to Claude window (useful if diff steals focus)
-      vim.keymap.set({ "n", "i" }, "<C-M-c>", function()
-        vim.cmd("ClaudeCodeFocus")
-        vim.defer_fn(function()
-          vim.cmd("mode")
-        end, 10)
-      end, { desc = "Return to Claude Code" })
+      vim.keymap.set({ "n", "i" }, "<C-M-c>", "<cmd>ClaudeCodeFocus<cr>", { desc = "Return to Claude Code" })
     end,
     keys = {
-      -- Universal Claude Code toggle - Alt+c (with deferred redraw for Kitty compatibility)
-      {
-        "<M-c>",
-        function()
-          vim.cmd("ClaudeCodeFocus")
-          vim.defer_fn(function()
-            vim.cmd("mode")
-          end, 10)
-        end,
-        desc = "Toggle Claude Code (Max)",
-        mode = { "n", "i", "t" },
-      },
+      -- Universal Claude Code toggle - Alt+c
+      { "<M-c>", "<cmd>ClaudeCodeFocus<cr>", desc = "Toggle Claude Code (Max)", mode = { "n", "i", "t" } },
     },
   },
 
