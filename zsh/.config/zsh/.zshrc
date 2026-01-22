@@ -76,23 +76,21 @@ export NVM_DIR="$HOME/.config/nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
-# >>> mamba initialize >>>
-# !! Contents within this block are managed by 'mamba shell init' !!
-export MAMBA_EXE="$HOME/.miniforge/bin/mamba"
-export MAMBA_ROOT_PREFIX="$HOME/.miniforge"
-if [ -f "$MAMBA_EXE" ]; then
-  __mamba_setup="$("$MAMBA_EXE" shell hook --shell zsh --root-prefix "$MAMBA_ROOT_PREFIX" 2> /dev/null)"
-  if [ $? -eq 0 ]; then
-    eval "$__mamba_setup"
-  else
-    alias mamba="$MAMBA_EXE"
-  fi
-  unset __mamba_setup
-fi
-# <<< mamba initialize <<<
 
 # Conda alias (use mamba instead)
 alias conda="mamba"
 
 # Additional custom aliases
 [ -f "$HOME/.config/zsh/aliases-sync.zsh" ] && source "$HOME/.config/zsh/aliases-sync.zsh"
+# >>> mamba initialize >>>
+# !! Contents within this block are managed by 'mamba shell init' !!
+export MAMBA_EXE='/home/bgo/.miniforge/bin/mamba';
+export MAMBA_ROOT_PREFIX='/home/bgo/.miniforge';
+__mamba_setup="$("$MAMBA_EXE" shell hook --shell zsh --root-prefix "$MAMBA_ROOT_PREFIX" 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__mamba_setup"
+else
+    alias mamba="$MAMBA_EXE"  # Fallback on help from mamba activate
+fi
+unset __mamba_setup
+# <<< mamba initialize <<<
