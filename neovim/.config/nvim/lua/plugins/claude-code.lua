@@ -2,6 +2,7 @@ return {
   -- Add Claude Code integration to AI ecosystem
   {
     "coder/claudecode.nvim",
+    dependencies = { "folke/snacks.nvim" }, -- Required for terminal support
     enabled = true,
     event = "VeryLazy",
     config = function()
@@ -22,6 +23,17 @@ return {
             border = "rounded",
             wo = {
               winblend = 30, -- transparency (0-100)
+            },
+            -- Allow hiding from within terminal using Alt+c
+            keys = {
+              claude_hide = {
+                "<M-c>",
+                function(self)
+                  self:hide()
+                end,
+                mode = "t",
+                desc = "Hide Claude Code",
+              },
             },
           },
         },
