@@ -14,3 +14,6 @@
 - name: update initramfs
   command: update-initramfs -u
   when: ansible_os_family == "Debian"
+
+- name: reload udev rules
+  command: udevadm control --reload-rules

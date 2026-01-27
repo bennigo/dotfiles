@@ -17,6 +17,45 @@ Complete installation procedures including:
 - **`scripts/`**: System management and automation scripts
 - **Credentials management**: Ansible Vault integration with GPG/pass
 
+### MTP Device Automounting (YoloBox, etc.)
+
+Automatic mounting of MTP devices (Android-based devices like YoloBox) to convenient paths in `/media/$USER/`.
+
+**Components:**
+- `~/.local/bin/mtp-automount` - Main automount script
+- `~/.local/bin/mount-yolobox` / `umount-yolobox` - Convenience wrappers
+- `/etc/udev/rules.d/99-mtp-automount.rules` - Udev rules for auto-detection
+- `/usr/local/bin/mtp-automount-helper` - Udev helper script
+- `~/.config/systemd/user/mtp-automount@.service` - Systemd user service
+
+**Installation:**
+```bash
+# Deploy system files (requires sudo)
+sudo cp ~/.dotfiles/system/etc/udev/rules.d/99-mtp-automount.rules /etc/udev/rules.d/
+sudo cp ~/.dotfiles/system/usr/local/bin/mtp-automount-helper /usr/local/bin/
+sudo chmod +x /usr/local/bin/mtp-automount-helper
+sudo udevadm control --reload-rules
+
+# User files are deployed via stow (local_bin, systemd)
+cd ~/.dotfiles && stow local_bin systemd
+systemctl --user daemon-reload
+```
+
+**Usage:**
+```bash
+mtp-automount mount              # Mount first available MTP device
+mtp-automount mount YoloBox      # Mount YoloBox specifically
+mtp-automount unmount YoloBox    # Unmount YoloBox
+mtp-automount list               # List known devices
+mtp-automount status             # Show mount status
+
+# Or use convenience wrappers:
+mount-yolobox
+umount-yolobox
+```
+
+**Adding new devices:** Edit `~/.local/bin/mtp-automount` and add entries to `MTP_DEVICES` array.
+
 ### Hardware and Performance Configuration
 
 #### GPU Configuration

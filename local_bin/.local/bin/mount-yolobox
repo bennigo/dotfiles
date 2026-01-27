@@ -1,0 +1,3 @@
+#!/bin/bash
+# Convenience wrapper for mounting YoloBox
+exec ~/.local/bin/mtp-automount mount YoloBox "$@"

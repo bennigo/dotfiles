@@ -52,9 +52,9 @@ set $wallpaper $XDG_CONFIG_HOME/sway/wallpapers/mahdi-khomsaz-asset.jpg
 # output * bg $XDG_CONFIG_HOME/sway/wallpapers/mahdi-khomsaz-asset.jpg fill
 # output * bg $XDG_CONFIG_HOME/sway/wallpapers/mahdi-khomsaz-asset.jpg fill
 exec_always swaybg -i $wallpaper -m fit
-# automounting requres udisks2
+# automounting requires udisks2
 exec /usr/bin/lxqt-policykit-agent &
-exec udiskie 
+exec udiskie --smart-tray --notify
 exec clipse -listen  # run the background listener on startup
 
 #
@@ -192,8 +192,8 @@ bindsym $mod+Shift+x exec 'sudo systemctl suspend'
 bindsym $mod+Shift+z exec 'swaymsg output $laptop power on; brightnessctl -r'
 
 # mounting usb disks
-## Apps // Mount external drive helper (udiskie) // 💽 ##
-bindsym $mod+m exec udsikie
+## Apps // Mount/Unmount menu (USB + MTP) // 💽 ##
+bindsym $mod+m exec ~/.local/bin/rofi-mount-menu
      
 # Start a terminal
 ## Apps // Open terminal // 🖥️ ##
