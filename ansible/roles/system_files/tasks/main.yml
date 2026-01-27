@@ -51,6 +51,25 @@
     mode: '0644'
   tags: ["system", "desktop"]
 
+- name: Deploy MTP automount udev rules
+  copy:
+    src: "{{ playbook_dir }}/../system/etc/udev/rules.d/99-mtp-automount.rules"
+    dest: /etc/udev/rules.d/99-mtp-automount.rules
+    owner: root
+    group: root
+    mode: '0644'
+  notify: reload udev rules
+  tags: ["system", "udev", "mtp"]
+
+- name: Deploy MTP automount helper script
+  copy:
+    src: "{{ playbook_dir }}/../system/usr/local/bin/mtp-automount-helper"
+    dest: /usr/local/bin/mtp-automount-helper
+    owner: root
+    group: root
+    mode: '0755'
+  tags: ["system", "mtp"]
+
 - name: Deploy system files (fstab, hosts) with validation
   block:
     - name: Backup original fstab

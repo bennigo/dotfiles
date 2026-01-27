@@ -1,0 +1,26 @@
+#!/bin/bash
+# Helper script for udev to trigger user-space MTP automount
+# This runs as root from udev, so we need to run the actual mount as the user
+
+ACTION="$1"
+DEVICE_NAME="$2"
+
+# Find the active user session
+USER_ID=$(loginctl list-sessions --no-legend | awk '{print $3}' | head -1)
+if [[ -z "$USER_ID" ]]; then
+    logger -t mtp-automount-helper "No active user session found"
+    exit 0
+fi
+
+USER_HOME=$(getent passwd "$USER_ID" | cut -d: -f6)
+USER_UID=$(id -u "$USER_ID")
+
+case "$ACTION" in
+    remove)
+        # Run unmount as the user
+        sudo -u "$USER_ID" \
+            DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/${USER_UID}/bus" \
+            XDG_RUNTIME_DIR="/run/user/${USER_UID}" \
+            "${USER_HOME}/.local/bin/mtp-automount" unmount "$DEVICE_NAME"
+        ;;
+esac

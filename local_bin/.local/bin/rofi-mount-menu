@@ -1,0 +1,180 @@
+#!/bin/bash
+# Rofi-based mount/unmount menu for USB and MTP devices
+# Combines udiskie (USB mass storage) with mtp-automount (MTP devices)
+
+set -euo pipefail
+
+# Get list of USB-connected disk devices (transport = usb)
+get_usb_disks() {
+    lsblk -rno NAME,TRAN 2>/dev/null | awk '$2 == "usb" {print $1}'
+}
+
+# Get USB/external block devices
+get_usb_devices() {
+    local usb_disks
+    usb_disks=$(get_usb_disks)
+
+    if [[ -z "$usb_disks" ]]; then
+        return
+    fi
+
+    # Use JSON output for reliable parsing
+    lsblk -Jpo "name,type,size,mountpoint,label,fstype" 2>/dev/null | \
+    python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+usb_disks = '''$usb_disks'''.strip().split('\n')
+
+def process_device(dev, usb_disks):
+    name = dev.get('name', '')
+    dtype = dev.get('type', '')
+    size = dev.get('size', '')
+    mp = dev.get('mountpoint') or ''
+    label = dev.get('label') or 'Unlabeled'
+    fs = dev.get('fstype') or ''
+
+    # Check if this is a partition on a USB disk
+    if dtype == 'part':
+        import os
+        disk_name = os.path.basename(name.rstrip('0123456789'))
+        if disk_name in usb_disks:
+            # Skip system paths
+            if mp and (mp.startswith('/snap') or mp.startswith('/boot') or mp == '/'):
+                return
+
+            if mp:
+                print(f'📁 Unmount: {label} ({size}) [{mp}]')
+            elif fs and fs not in ('swap', ''):
+                print(f'💽 Mount: {label} ({size}) [{name}]')
+
+    # Process children
+    for child in dev.get('children', []):
+        process_device(child, usb_disks)
+
+for dev in data.get('blockdevices', []):
+    process_device(dev, usb_disks)
+"
+}
+
+# Get MTP devices
+get_mtp_devices() {
+    local mtp_info
+    mtp_info=$(gio mount -li 2>/dev/null | grep -B5 "activation_root=mtp://" || true)
+
+    if [[ -n "$mtp_info" ]]; then
+        # Use friendly name if available
+        local friendly_name="MTP Device"
+        if echo "$mtp_info" | grep -qi "KALAMAP\|QUALCOMM"; then
+            friendly_name="YoloBox"
+        fi
+
+        # Check if mounted
+        if gio mount -l 2>/dev/null | grep -q "Mount.*mtp://"; then
+            echo "📱 Unmount MTP: $friendly_name"
+        else
+            echo "📱 Mount MTP: $friendly_name"
+        fi
+    fi
+}
+
+# Build menu
+build_menu() {
+    echo "🔄 Refresh"
+    echo "───── USB & MTP Devices ─────"
+
+    local usb_devices mtp_devices
+    usb_devices=$(get_usb_devices)
+    mtp_devices=$(get_mtp_devices)
+
+    if [[ -n "$usb_devices" ]] || [[ -n "$mtp_devices" ]]; then
+        [[ -n "$usb_devices" ]] && echo "$usb_devices"
+        [[ -n "$mtp_devices" ]] && echo "$mtp_devices"
+    else
+        echo "  (no removable devices detected)"
+    fi
+
+    echo "───── Daemon Control ─────"
+    if pgrep -x udiskie > /dev/null; then
+        echo "🛑 Stop udiskie daemon (running)"
+    else
+        echo "⚙️ Start udiskie daemon"
+    fi
+}
+
+# Handle selection
+handle_selection() {
+    local selection="$1"
+
+    case "$selection" in
+        "🔄 Refresh")
+            exec "$0"
+            ;;
+        "📁 Unmount:"*)
+            local mountpoint
+            mountpoint=$(echo "$selection" | grep -oP '\[[^\]]+\]' | tr -d '[]')
+            if [[ -n "$mountpoint" ]]; then
+                notify-send "Unmounting" "$mountpoint"
+                if udiskie-umount "$mountpoint" 2>&1; then
+                    notify-send "✓ Unmounted" "$mountpoint"
+                else
+                    notify-send "✗ Failed" "Could not unmount $mountpoint"
+                fi
+            fi
+            ;;
+        "💽 Mount:"*)
+            local device
+            device=$(echo "$selection" | grep -oP '\[/dev/[^\]]+\]' | tr -d '[]')
+            if [[ -n "$device" ]]; then
+                notify-send "Mounting" "$device"
+                if udiskie-mount "$device" 2>&1; then
+                    notify-send "✓ Mounted" "$device"
+                else
+                    notify-send "✗ Failed" "Could not mount $device"
+                fi
+            fi
+            ;;
+        "📱 Mount MTP:"*)
+            notify-send "Mounting MTP Device" "Please wait..."
+            if ~/.local/bin/mtp-automount mount 2>&1; then
+                notify-send "✓ MTP Mounted" "Device available in /media/$USER/"
+            else
+                notify-send "✗ MTP Mount Failed" "Try unplugging and reconnecting"
+            fi
+            ;;
+        "📱 Unmount MTP:"*)
+            if ~/.local/bin/mtp-automount unmount 2>&1; then
+                notify-send "✓ MTP Unmounted" "Device safely removed"
+            else
+                notify-send "✗ MTP Unmount Failed" "Check if device is in use"
+            fi
+            ;;
+        "⚙️ Start udiskie"*)
+            udiskie --smart-tray --notify &
+            notify-send "udiskie" "Daemon started"
+            ;;
+        "🛑 Stop udiskie"*)
+            if pkill -x udiskie; then
+                notify-send "udiskie" "Daemon stopped"
+            else
+                notify-send "udiskie" "Not running"
+            fi
+            ;;
+        *"no removable devices"*|"─"*)
+            ;;
+        *)
+            notify-send "Unknown selection" "$selection"
+            ;;
+    esac
+}
+
+# Main
+main() {
+    local selection
+    selection=$(build_menu | rofi -dmenu -i -p "💽 Mount" -theme-str 'window {width: 40%;}' -no-custom) || true
+
+    if [[ -n "$selection" ]]; then
+        handle_selection "$selection"
+    fi
+}
+
+main "$@"
