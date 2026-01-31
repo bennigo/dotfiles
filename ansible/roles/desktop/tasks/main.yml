@@ -47,6 +47,8 @@
       - xdg-utils
       - lynx
       - flatpak
+      - jmtpfs            # FUSE-based MTP filesystem for device file transfer
+      - mtp-tools          # MTP device detection and diagnostics
     state: present
   tags: ["desktop", "utilities"]
 
@@ -66,12 +68,20 @@
         state: present
         method: system
 
+    - name: Install Zotero via Flatpak
+      flatpak:
+        name: org.zotero.Zotero
+        remote: flathub
+        state: present
+        method: system
+
     - name: Display Flatpak installation results
       debug:
         msg: |
           Flatpak setup complete:
           - Flathub repository added
           - LibreOffice installed via Flatpak
+          - Zotero installed via Flatpak
           Note: Flatpak applications may require logout/login to appear in menus
   tags: ["desktop", "flatpak", "office"]
 
