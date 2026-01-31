@@ -252,7 +252,7 @@ bindsym $mod+o [con_mark="quick"] scratchpad show
 ## Scratchpad // Toggle LibreOffice scratchpad // 📄 ##
 bindsym $mod+Shift+d exec /home/bgo/.local/bin/toggle-libreoffice.sh
 ## Scratchpad // Show Zotero from scratchpad // 📖 ##
-bindsym $mod+Shift+z [con_mark="zotero"] scratchpad show
+bindsym $mod+g [con_mark="zotero"] scratchpad show
 ## Scratchpad // Show floating terminal // 🪟🖥️ ##
 bindsym $mod+Shift+Return [con_mark="terminal_fl"] scratchpad show
 
