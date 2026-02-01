@@ -246,7 +246,7 @@ bindsym $mod+z [con_mark="zathura"] scratchpad show
 ## Scratchpad // Show Cisco client from scratchpad // 🛡️ ##
 bindsym $mod+c [con_mark="cisco"] scratchpad show
 ## Scratchpad // Show Obsidian from scratchpad // 🗒️ ##
-bindsym $mod+Shift+o [con_mark="obsidian"] scratchpad show
+bindsym $mod+Shift+o [con_mark="obsidian"] scratchpad show; [con_mark="obsidian"] move position center
 ## Scratchpad // Show Quick (Neovim) from scratchpad // ⚡ ##
 bindsym $mod+o [con_mark="quick"] scratchpad show
 ## Scratchpad // Toggle LibreOffice scratchpad // 📄 ##
