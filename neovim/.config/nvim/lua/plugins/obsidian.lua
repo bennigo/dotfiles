@@ -335,16 +335,15 @@ local function setup()
       folder = "Assets/attachments", -- replaces deprecated img_folder
 
       img_text_func = function(path)
-        -- Get the workspace root to calculate relative path
-        local workspace_root = Obsidian.dir
+        -- Use the new global Obsidian API (no client access to avoid deprecation warnings)
+        local workspace_root = Obsidian.workspace.path
         local relative_path = vim.fn.fnamemodify(tostring(path), ":s?" .. tostring(workspace_root) .. "/??")
 
         local format_string = {
           markdown = "![](%s)",
           wiki = "![[%s]]",
         }
-        -- local style = Obsidian.opts.preferred_link_style
-        local style = "markdown"
+        local style = Obsidian.opts.preferred_link_style or "markdown"
 
         if style == "markdown" then
           relative_path = require("obsidian.util").urlencode(relative_path, { keep_path_sep = true })
