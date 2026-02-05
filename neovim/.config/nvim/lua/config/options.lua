@@ -15,7 +15,7 @@ local options = {
   -- shiftwidth = 4, -- the number of spaces inserted for each indentation
   -- tabstop = 4, -- insert 2 spaces for a tab
   --
-  -- clipboard = "", -- Sync clipboard between OS and Neovim. See `:help 'clipboard'`
+  clipboard = "unnamedplus", -- Sync clipboard between OS and Neovim
   -- breakindent = true, -- Enable break indent
   -- ignorecase = true, -- ignore case in search patterns
   -- smartcase = true, -- smart case

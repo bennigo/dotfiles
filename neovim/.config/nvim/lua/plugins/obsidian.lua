@@ -101,13 +101,11 @@ local function setup()
     -- Either 'wiki' or 'markdown'.
     preferred_link_style = "wiki",
 
-    -- Optional, boolean or a function that takes a filename and returns a boolean.
-    -- `true` indicates that you don't want obsidian.nvim to manage frontmatter.
-    disable_frontmatter = false,
-
-    -- Optional, alternatively you can customize the frontmatter data.
-    ---@return table
-    note_frontmatter_func = function(note)
+    -- Frontmatter configuration (replaces deprecated disable_frontmatter and note_frontmatter_func)
+    frontmatter = {
+      enabled = true,
+      ---@return table
+      func = function(note)
       -- Add the title of the note as an alias.
       if note.title then
         note:add_alias(note.title)
@@ -143,7 +141,8 @@ local function setup()
       out.resource = out.resource or ""
 
       return out
-    end,
+      end,
+    },
 
     templates = {
       folder = "Templates",
@@ -214,37 +213,11 @@ local function setup()
       },
     },
 
-    -- Optional, by default when you use `:ObsidianFollowLink` on a link to an external
-    -- URL it will be ignored but you can customize this behavior here.
-    ---@param url string
-    follow_url_func = function(url)
-      -- Open the URL in the default web browser.
-      -- vim.fn.jobstart({ "open", url }) -- Mac OS
-      -- vim.fn.jobstart({"xdg-open", url})  -- linux
-      -- vim.cmd(':silent exec "!start ' .. url .. '"') -- Windows
-      vim.ui.open(url) -- need Neovim 0.10.0+
-      -- vim.ui.open(url, { cmd = { "firefox" } })
-    end,
+    -- NOTE: follow_url_func and follow_img_func are deprecated
+    -- They now default to vim.ui.open, which is what we want
 
-    -- Optional, by default when you use `:ObsidianFollowLink` on a link to an image
-    -- file it will be ignored but you can customize this behavior here.
-    ---@param img string
-    follow_img_func = function(img)
-      -- vim.fn.jobstart({ "qlmanage", "-p", img }) -- Mac OS quick look preview
-      -- vim.fn.jobstart({ "xdg-open", url }) -- linux
-      vim.ui.open(img)
-      -- vim.ui.open(img, { cmd = { "loupe" } })
-      -- vim.cmd(':silent exec "!startvim.ui.open(img)
-      -- vim.ui.open(img, { cmd = { "loupe" } }) ' .. url .. '"') -- Windows
-    end,
-
-    ---@class obsidian.config.OpenOpts
-    --Opens the file with current line number
-    ---@field use_advanced_uri? boolean
-    ---
-    ---Function to do the opening, default to vim.ui.open
-    ---@field func? fun(uri: string)
-    -- open = {
+    -- Use new command format (e.g., "Obsidian backlinks" instead of "ObsidianBacklinks")
+    legacy_commands = false,
 
     picker = {
       -- Set your preferred picker. Can be one of 'telescope.nvim', 'fzf-lua', or 'mini.pick'.
@@ -265,14 +238,14 @@ local function setup()
       },
     },
 
-    -- Optional, sort search results by "path", "modified", "accessed", or "created".
-    -- The recommend value is "modified" and `true` for `sort_reversed`, which means, for example,
-    -- that `:ObsidianQuickSwitch` will show the notes sorted by latest modified time
-    sort_by = "modified",
-    sort_reversed = true,
-
-    -- Set the maximum number of lines to read from notes on disk when performing certain searches.
-    search_max_lines = 1000,
+    -- Search configuration (replaces deprecated top-level sort_by, sort_reversed, search_max_lines)
+    search = {
+      -- Sort search results by "path", "modified", "accessed", or "created".
+      sort_by = "modified",
+      sort_reversed = true,
+      -- Maximum number of lines to read from notes on disk when performing searches.
+      max_lines = 1000,
+    },
 
     -- Optional, determines how certain commands open notes. The valid options are:
     -- 1. "current" (the default) - to always open in the current window
@@ -359,7 +332,7 @@ local function setup()
       -- The default folder to place images in via `:ObsidianPasteImg`.
       -- If this is a relative path it will be interpreted as relative to the vault root.
       -- You can always override this per image by passing a full path to the command instead of just a filename.
-      img_folder = "Assets/attachments", -- This is the default
+      folder = "Assets/attachments", -- replaces deprecated img_folder
 
       img_text_func = function(path)
         -- Get the workspace root to calculate relative path
@@ -465,25 +438,26 @@ return {
       return require("obsidian").util.smart_action()
     end, { buffer = true, expr = true, desc = "[O]bsidian Smart_action" })
 
-    vim.keymap.set("n", "<leader>ob", "<cmd>ObsidianBacklinks<cr>", { desc = "[O]bsidian [B]backlinks" })
-    vim.keymap.set("n", "<leader>or", "<cmd>ObsidianRename<cr>", { desc = "[O]bsidian [R]ename" })
-    vim.keymap.set("n", "<leader>oo", "<cmd>ObsidianOpen<cr>", { desc = "[O]bsidian [O]pen" })
-    vim.keymap.set("n", "<leader>oT", "<cmd>ObsidianTemplate<cr>", { desc = "[O]bsidian insert from [T]emplate" })
+    -- New command format (legacy_commands = false)
+    vim.keymap.set("n", "<leader>ob", "<cmd>Obsidian backlinks<cr>", { desc = "[O]bsidian [B]backlinks" })
+    vim.keymap.set("n", "<leader>or", "<cmd>Obsidian rename<cr>", { desc = "[O]bsidian [R]ename" })
+    vim.keymap.set("n", "<leader>oo", "<cmd>Obsidian open<cr>", { desc = "[O]bsidian [O]pen" })
+    vim.keymap.set("n", "<leader>oT", "<cmd>Obsidian template<cr>", { desc = "[O]bsidian insert from [T]emplate" })
 
-    vim.keymap.set("n", "<leader>ot", "<cmd>ObsidianTag<cr>", { desc = "[O]bsidian search [T]ags" })
-    vim.keymap.set("n", "<leader>oq", "<cmd>ObsidianQuickSwitch<cr>", { desc = "[O]bsidian  [Q]uickSwich" })
-    vim.keymap.set("n", "<leader>os", "<cmd>ObsidianSearch<cr>", { desc = "[O]bsidian [S]earch" })
-    vim.keymap.set("n", "<leader>op", "<cmd>ObsidianPasteImg<cr>", { desc = "[O]bsidian [P]aste image" })
+    vim.keymap.set("n", "<leader>ot", "<cmd>Obsidian tags<cr>", { desc = "[O]bsidian search [T]ags" })
+    vim.keymap.set("n", "<leader>oq", "<cmd>Obsidian quick_switch<cr>", { desc = "[O]bsidian [Q]uickSwitch" })
+    vim.keymap.set("n", "<leader>os", "<cmd>Obsidian search<cr>", { desc = "[O]bsidian [S]earch" })
+    vim.keymap.set("n", "<leader>op", "<cmd>Obsidian paste_img<cr>", { desc = "[O]bsidian [P]aste image" })
 
     -- journaling
-    vim.keymap.set("n", "<leader>ojy", "<cmd>ObsidianYesterday<cr>", { desc = "[O]bsidian [J]journal [Y]esterday" })
-    vim.keymap.set("n", "<leader>ojt", "<cmd>ObsidianToday<cr>", { desc = "[O]bsidian [J]journal [T]oday" })
-    vim.keymap.set("n", "<leader>ojm", "<cmd>ObsidianTomorrow<cr>", { desc = "[O]bsidian [J]ournal [T]omorrow" })
-    vim.keymap.set("n", "<leader>ojd", "<cmd>ObsidianDailies<cr>", { desc = "[O]bsidian [J]journal [D]dailies" })
+    vim.keymap.set("n", "<leader>ojy", "<cmd>Obsidian yesterday<cr>", { desc = "[O]bsidian [J]journal [Y]esterday" })
+    vim.keymap.set("n", "<leader>ojt", "<cmd>Obsidian today<cr>", { desc = "[O]bsidian [J]journal [T]oday" })
+    vim.keymap.set("n", "<leader>ojm", "<cmd>Obsidian tomorrow<cr>", { desc = "[O]bsidian [J]ournal [T]omorrow" })
+    vim.keymap.set("n", "<leader>ojd", "<cmd>Obsidian dailies<cr>", { desc = "[O]bsidian [J]journal [D]ailies" })
 
     -- new notes
-    vim.keymap.set("n", "<leader>onn", "<cmd>ObsidianNew<cr>", { desc = "[O]bsidian [N]ew" })
-    vim.keymap.set("n", "<leader>ont", "<cmd>ObsidianNewFromTemplate<cr>", { desc = "[O]bsidian new from [T]emplate" })
+    vim.keymap.set("n", "<leader>onn", "<cmd>Obsidian new<cr>", { desc = "[O]bsidian [N]ew" })
+    vim.keymap.set("n", "<leader>ont", "<cmd>Obsidian new_from_template<cr>", { desc = "[O]bsidian new from [T]emplate" })
     -- vim.keymap.set(
     --   "n",
     --   "<leader>ona",
