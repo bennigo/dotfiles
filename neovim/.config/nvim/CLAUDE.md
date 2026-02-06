@@ -13,19 +13,60 @@ This is a production IDE for scientific computing (GPS/GNSS data processing), kn
 
 ## Critical Integrations
 
-### Claude Code (AI Pair Programming)
+### Claude Code (AI Pair Programming - Primary)
 
-**File**: `lua/plugins/extend-ai.lua`
+**File**: `lua/plugins/claude-code.lua`
 **Primary Keymap**: `<M-c>` (toggle/focus)
-**Leader Mappings**: `<leader>ai` (toggle), `<leader>ac` (focus), `<leader>as` (send), `<leader>ad` (accept diff)
+**Leader Mappings**: `<leader>aci` (toggle), `<leader>acc` (focus), `<leader>acs` (send), `<leader>acd/D` (accept/reject diff)
 
 **Configuration**:
-- Floating window: 85% width, 90% height
+- Floating window: 95% width, 95% height
 - Diff: vertical split, keeps terminal focus
 - Auto-close diffs on accept
 - WebSocket connection to Claude Code CLI
+- Transparency enabled (winblend: 30)
 
-**Also Includes**: Codeium and Copilot in AI ecosystem
+### Avante (Secondary AI - Local + ACP)
+
+**File**: `lua/plugins/avante.lua`
+**Primary Keymap**: `<M-C>` (Zen mode - full screen)
+**Leader Mappings**: `<leader>aa` (ask), `<leader>ae` (edit), `<leader>as` (sidebar), `<leader>ap*` (providers)
+
+**Features**:
+- **Mode**: Agentic (tool execution enabled)
+- **Default Provider**: Ollama (llama3.1:8b) - free, local
+- **ACP Provider**: Claude Code (`<leader>apc`) - uses your Claude Max subscription via CLI
+- **Project Instructions**: Create `avante.md` in project root for context
+- **Token Counting**: Enabled in UI
+
+**Provider Switching**:
+- `<leader>apo`: Use Ollama (local, free)
+- `<leader>apc`: Use Claude Code (via ACP - leverages Claude Max subscription)
+
+**Also Available**: Codeium and Copilot (disabled by default)
+
+### CodeCompanion (Evaluation Alternative)
+
+**File**: `lua/plugins/codecompanion.lua`
+**Status**: Evaluation alongside Avante (1-2 week trial)
+**Leader Mappings**: `<leader>C*` (non-conflicting with Avante)
+
+**Philosophy**: "Like Zed AI" - chat + quick inline edits with deep Neovim integration
+- Better maintained (1 open issue vs Avante's 203)
+- Deep LSP/buffer integration via variables (`#buffer`, `#lsp`)
+- Slash commands for context injection (`/buffer`, `/file`, `/help`)
+
+**Key Commands**:
+- `<leader>Cc`: Toggle chat window
+- `<leader>Ci`: Inline edit (quick changes in buffer)
+- `<leader>Cp`: Action palette (all available actions)
+- `<leader>Ce/f/t`: Explain/Fix/Test code (visual mode)
+
+**Evaluation Criteria**:
+- Compare stability with Avante
+- Test LSP diagnostics sharing
+- Assess diff application reliability
+- Evaluate overall workflow fit
 
 ### Database UI (PostgreSQL Integration)
 
@@ -122,13 +163,15 @@ This configuration extends LazyVim rather than replacing it:
 
 ## Plugin Ecosystem
 
-### AI & Completion (6 plugins)
+### AI & Completion (8 plugins)
 
-- **claudecode.nvim**: Claude Code integration (extend-ai.lua)
+- **claudecode.nvim**: Claude Code integration - primary AI (claude-code.lua)
+- **avante.nvim**: Secondary AI with Ollama + ACP support (avante.lua)
+- **codecompanion.nvim**: Evaluation alternative - "Zed AI" style (codecompanion.lua)
 - **blink.cmp**: Modern completion engine (fast, async)
 - **blink.compat**: Compatibility layer for cmp sources
-- **copilot.lua**: GitHub Copilot
-- **codeium.nvim**: Codeium AI assistant
+- **copilot.lua**: GitHub Copilot (disabled)
+- **codeium.nvim**: Codeium AI assistant (disabled)
 - **lazydev.nvim**: Lua LSP enhancement for Neovim development
 
 ### Database & Data (3 plugins)
@@ -391,7 +434,9 @@ This configuration extends LazyVim rather than replacing it:
 │   │   ├── keymaps.lua               # Global keymaps
 │   │   └── autocmds.lua              # Auto commands
 │   └── plugins/
-│       ├── extend-ai.lua             # Claude Code integration
+│       ├── avante.lua                # Avante AI (Ollama + ACP)
+│       ├── claude-code.lua           # Claude Code integration
+│       ├── codecompanion.lua         # CodeCompanion (evaluation)
 │       ├── extend-dadbod.lua         # Database UI
 │       ├── extend-fzf.lua            # Fuzzy finder config
 │       ├── extend-harpoon.lua        # File bookmarks

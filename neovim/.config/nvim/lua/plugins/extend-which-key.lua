@@ -39,7 +39,8 @@ return {
           icon = "🔄",
           group = "+provider",
         },
-        { "<leader>apo", desc = "Use Ollama (DeepSeek)" },
+        { "<leader>apo", desc = "Use Ollama (Llama)" },
+        { "<leader>apc", desc = "Use Claude Code (ACP)" },
         -- Claude Code (Max Plan)
         {
           "<leader>ac",
@@ -52,6 +53,20 @@ return {
         { "<leader>acm", desc = "Select Claude Model" },
         { "<leader>acd", desc = "Accept Diff" },
         { "<leader>acD", desc = "Reject Diff" },
+        -- CodeCompanion (evaluation alternative to Avante)
+        {
+          "<leader>C",
+          icon = "🧪",
+          group = "+codecompanion",
+        },
+        { "<leader>Cc", desc = "Toggle Chat" },
+        { "<leader>Ca", desc = "Add to Chat", mode = "v" },
+        { "<leader>Ci", desc = "Inline Edit" },
+        { "<leader>Cp", desc = "Action Palette" },
+        { "<leader>Ce", desc = "Explain Code", mode = "v" },
+        { "<leader>Cf", desc = "Fix Code", mode = "v" },
+        { "<leader>Ct", desc = "Generate Tests", mode = "v" },
+        { "<leader>Cb", desc = "Chat with Buffer" },
       },
     },
   },

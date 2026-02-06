@@ -8,6 +8,9 @@ return {
     provider = "ollama", -- default provider (local, no cost)
     auto_suggestions_provider = "ollama",
 
+    -- Mode: "agentic" enables tool execution, "legacy" is chat-only
+    mode = "agentic",
+
     -- Behaviour settings
     behaviour = {
       auto_suggestions = false, -- don't auto-suggest
@@ -15,10 +18,27 @@ return {
       auto_set_keymaps = true,
       auto_apply_diff_after_generation = false,
       support_paste_from_clipboard = true,
+      auto_approve_tool_permissions = false, -- require approval for tool execution
+      enable_token_counting = true, -- show token usage in UI
     },
 
-    -- Disable tool support for providers that don't support it
-    support_tools = false,
+    -- Project-specific instructions (create avante.md in project root)
+    instructions_file = "avante.md",
+
+    -- ACP (Agent Client Protocol) providers - connect to external AI CLIs
+    -- These allow Avante to use Claude Code, Gemini CLI, etc. as backends
+    acp = {
+      enabled = true,
+      providers = {
+        ["claude-code"] = {
+          command = "claude",
+          args = {},
+        },
+      },
+    },
+
+    -- Enable tool support (for agentic mode with capable providers)
+    support_tools = true,
 
     -- Mappings - Alt+c for Zen mode toggle
     mappings = {
@@ -130,8 +150,9 @@ return {
     -- Sidebar mode toggle (occasional use)
     { "<leader>as", function() require("avante").toggle() end, desc = "Avante: Toggle Sidebar" },
 
-    -- Provider switching (only Ollama configured)
-    { "<leader>apo", "<cmd>AvanteProviderSwitch ollama<cr>", desc = "Use Ollama (DeepSeek)" },
+    -- Provider switching
+    { "<leader>apo", "<cmd>AvanteProviderSwitch ollama<cr>", desc = "Use Ollama (Llama)" },
+    { "<leader>apc", "<cmd>AvanteProviderSwitch claude-code<cr>", desc = "Use Claude Code (ACP)" },
   },
 
   config = function(_, opts)
@@ -148,8 +169,8 @@ return {
         user = "user",
         assistant = "assistant",
       },
-      parse_response = function(data_stream, event_state, opts)
-        require("avante.providers").openai.parse_response(data_stream, event_state, opts)
+      parse_response = function(data_stream, event_state, parse_opts)
+        require("avante.providers").openai.parse_response(data_stream, event_state, parse_opts)
       end,
     }
 
