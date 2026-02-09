@@ -15,6 +15,11 @@ plug "$HOME/.config/zsh/exports.zsh"
 # Fallback if plug doesn't work
 [ -f "$HOME/.config/zsh/exports.zsh" ] && source "$HOME/.config/zsh/exports.zsh"
 
+# FZF path (must be set before plugins that depend on fzf)
+if [[ ! "$PATH" == */.local/share/fzf/bin* ]]; then
+  [ -d "$HOME/.local/share/fzf/bin" ] && export PATH="${PATH:+${PATH}:}$HOME/.local/share/fzf/bin"
+fi
+
 # Zap plugins
 plug "zsh-users/zsh-autosuggestions"
 plug "zap-zsh/supercharge"
@@ -44,10 +49,7 @@ fi
 NPM_PATH="$HOME/.local/share/npm-global/bin"
 [ -d "$NPM_PATH" ] && export PATH="$NPM_PATH:$PATH"
 
-# FZF configuration
-if [[ ! "$PATH" == */.local/share/fzf/bin* ]]; then
-  [ -d "$HOME/.local/share/fzf/bin" ] && export PATH="${PATH:+${PATH}:}$HOME/.local/share/fzf/bin"
-fi
+# FZF shell integration
 [ -f "$HOME/.fzf.zsh" ] && source "$HOME/.fzf.zsh"
 command -v fzf >/dev/null 2>&1 && source <(fzf --zsh 2>/dev/null)
 
