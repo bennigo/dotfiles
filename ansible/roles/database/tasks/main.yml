@@ -177,3 +177,52 @@
 
       Your database configuration is now version-control safe! 🎉
   tags: ["database", "credentials", "information"]
+
+# DbVisualizer GUI database client
+- name: Check if DbVisualizer is already installed
+  command: dbvis -version
+  register: dbvis_installed
+  failed_when: false
+  changed_when: false
+  tags: ["database", "dbvisualizer"]
+
+- name: Install DbVisualizer
+  block:
+    - name: Download DbVisualizer {{ dbvisualizer_version }} .deb package
+      get_url:
+        url: "{{ dbvisualizer_deb_url }}"
+        dest: "/tmp/{{ dbvisualizer_deb_filename }}"
+        mode: '0644'
+        timeout: 300
+
+    - name: Install DbVisualizer .deb package
+      apt:
+        deb: "/tmp/{{ dbvisualizer_deb_filename }}"
+        state: present
+
+    - name: Clean up DbVisualizer .deb package
+      file:
+        path: "/tmp/{{ dbvisualizer_deb_filename }}"
+        state: absent
+  when: dbvis_installed.rc != 0
+  tags: ["database", "dbvisualizer"]
+
+- name: Verify DbVisualizer installation
+  command: dbvis -version
+  register: dbvis_version_result
+  failed_when: false
+  changed_when: false
+  tags: ["database", "dbvisualizer"]
+
+- name: Display DbVisualizer installation results
+  debug:
+    msg: |
+      DbVisualizer installation: {{ 'SUCCESS' if dbvis_version_result.rc == 0 else 'FAILED' }}
+      {% if dbvis_version_result.rc == 0 %}
+      Version: {{ dbvis_version_result.stdout_lines[0] | default('installed') }}
+      Launch: Run 'dbvis' from terminal or find it in your application menu
+      {% else %}
+      Installation may have failed. Try manually:
+        sudo dpkg -i /tmp/{{ dbvisualizer_deb_filename }}
+      {% endif %}
+  tags: ["database", "dbvisualizer"]

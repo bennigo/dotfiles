@@ -13,6 +13,12 @@ database_packages:
   - libpq-dev
   - python3-psycopg2  # Required for Ansible PostgreSQL modules
 
+# DbVisualizer GUI client
+dbvisualizer_version: "25.3.2"
+dbvisualizer_version_underscore: "{{ dbvisualizer_version | replace('.', '_') }}"
+dbvisualizer_deb_url: "https://www.dbvis.com/product_download/dbvis-{{ dbvisualizer_version }}/media/dbvis_linux_{{ dbvisualizer_version_underscore }}.deb"
+dbvisualizer_deb_filename: "dbvis_linux_{{ dbvisualizer_version_underscore }}.deb"
+
 # Development settings
 postgresql_development_settings:
   max_connections: 100
