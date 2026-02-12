@@ -272,6 +272,43 @@ sync_password_store() {
     fi
 }
 
+# Reverse sync: copy live Claude files back to the repository
+# Solves the "stow direction problem" - Stow deploys repo→live (symlinks),
+# but Claude Code creates NEW files directly in ~/.claude/ (live).
+# This function copies those new files into the repo before git add.
+sync_claude_live_to_repo() {
+    local live_dir="$HOME/.claude"
+    local repo_dir="$CLAUDE_PRIVATE_DIR/.claude"
+
+    if [ ! -d "$live_dir" ]; then
+        log_info "No live Claude directory found, skipping reverse sync"
+        return 0
+    fi
+
+    log_info "Reverse-syncing live Claude files to repository..."
+
+    # Directories containing important backup data (encrypted via git-crypt)
+    # --max-size=95M: GitHub rejects files >100MB; 95MB gives headroom for git-crypt overhead
+    local sync_dirs=("projects" "todos" "shell-snapshots" "plans" "tasks")
+
+    for dir in "${sync_dirs[@]}"; do
+        if [ -d "$live_dir/$dir" ] && [ "$(ls -A "$live_dir/$dir" 2>/dev/null)" ]; then
+            mkdir -p "$repo_dir/$dir"
+            rsync -a --max-size=95M "$live_dir/$dir/" "$repo_dir/$dir/"
+        fi
+    done
+
+    # Individual files (only if they exist and aren't symlinks back to repo)
+    # Use command to bypass any cp alias (-i), and -f to overwrite git-crypt's 600 perms
+    for file in "history.jsonl" ".credentials.json"; do
+        if [ -f "$live_dir/$file" ] && [ ! -L "$live_dir/$file" ]; then
+            command cp -fp "$live_dir/$file" "$repo_dir/$file"
+        fi
+    done
+
+    log_success "Live Claude files synced to repository"
+}
+
 # Sync claude-private repository
 sync_claude_private() {
     if ! is_git_repo "$CLAUDE_PRIVATE_DIR"; then
@@ -282,8 +319,12 @@ sync_claude_private() {
     log_info "Checking claude-private for changes..."
     cd "$CLAUDE_PRIVATE_DIR"
 
-    # Check if there are any changes
-    if git diff --quiet && git diff --cached --quiet; then
+    # Reverse sync: pull new files from live ~/.claude/ into repo
+    sync_claude_live_to_repo
+
+    # Check if there are any changes (tracked modifications OR new untracked files)
+    local has_untracked=$(git ls-files --others --exclude-standard | head -1)
+    if git diff --quiet && git diff --cached --quiet && [ -z "$has_untracked" ]; then
         # No new changes, but check if we're ahead
         local ahead=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo "0")
         if [ "$ahead" -gt 0 ]; then
