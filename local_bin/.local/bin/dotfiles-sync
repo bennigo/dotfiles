@@ -284,7 +284,19 @@ sync_claude_private() {
 
     # Check if there are any changes
     if git diff --quiet && git diff --cached --quiet; then
-        log_info "No changes in claude-private"
+        # No new changes, but check if we're ahead
+        local ahead=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo "0")
+        if [ "$ahead" -gt 0 ]; then
+            log_info "Claude-private has $ahead commit(s) to push (no new changes)"
+            if git push; then
+                log_success "Claude-private pushed $ahead existing commit(s)"
+            else
+                log_error "Failed to push claude-private"
+                return 1
+            fi
+        else
+            log_info "No changes in claude-private"
+        fi
         return 0
     fi
 
@@ -329,7 +341,19 @@ sync_dotfiles() {
         if git submodule status | grep -q '^+'; then
             log_info "Submodule updates detected"
         else
-            log_info "No changes in main dotfiles"
+            # No new changes, but check if we're ahead
+            local ahead=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo "0")
+            if [ "$ahead" -gt 0 ]; then
+                log_info "Dotfiles has $ahead commit(s) to push (no new changes)"
+                if git push; then
+                    log_success "Dotfiles pushed $ahead existing commit(s)"
+                else
+                    log_error "Failed to push dotfiles"
+                    return 1
+                fi
+            else
+                log_info "No changes in main dotfiles"
+            fi
             return 0
         fi
     fi
