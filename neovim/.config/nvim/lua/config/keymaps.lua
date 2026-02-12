@@ -147,6 +147,22 @@ keymap("v", "K", ":m '<-2<CR>gv=gv")
 keymap("x", "p", [["_dP]])
 keymap("n", "<leader>X", "<cmd>!chmod +x %<CR>", { silent = true })
 
+-- Print markdown to Epson via pandoc (no temp file)
+vim.api.nvim_create_user_command("PrintMd", function(args)
+  local file = vim.fn.expand("%:p")
+  if file == "" then
+    vim.notify("No file to print", vim.log.levels.WARN)
+    return
+  end
+  local cmd = "print-md"
+  if args.args ~= "" then
+    cmd = cmd .. " " .. args.args
+  end
+  cmd = cmd .. " " .. vim.fn.shellescape(file)
+  vim.fn.system(cmd)
+  vim.notify("Sent to printer: " .. vim.fn.fnamemodify(file, ":t"), vim.log.levels.INFO)
+end, { nargs = "?", desc = "Print markdown via pandoc (options: --duplex --draft --gray)" })
+
 -- Mermaid diagram preview with Zathura
 keymap("n", "<leader>mp", function()
   local file = vim.api.nvim_buf_get_name(0)

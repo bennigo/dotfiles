@@ -447,6 +447,20 @@ return {
     vim.keymap.set("n", "<leader>oq", "<cmd>Obsidian quick_switch<cr>", { desc = "[O]bsidian [Q]uickSwitch" })
     vim.keymap.set("n", "<leader>os", "<cmd>Obsidian search<cr>", { desc = "[O]bsidian [S]earch" })
     vim.keymap.set("n", "<leader>op", "<cmd>Obsidian paste_img<cr>", { desc = "[O]bsidian [P]aste image" })
+    vim.keymap.set("n", "<leader>oP", function()
+      local file = vim.fn.expand("%:p")
+      if file == "" then
+        vim.notify("No file to print", vim.log.levels.WARN)
+        return
+      end
+      local ft = vim.bo.filetype
+      if ft ~= "markdown" then
+        vim.notify("print-md only supports markdown files", vim.log.levels.WARN)
+        return
+      end
+      vim.cmd("silent !print-md " .. vim.fn.shellescape(file))
+      vim.notify("Sent to printer: " .. vim.fn.fnamemodify(file, ":t"), vim.log.levels.INFO)
+    end, { desc = "[O]bsidian [P]rint note" })
 
     -- journaling
     vim.keymap.set("n", "<leader>ojy", "<cmd>Obsidian yesterday<cr>", { desc = "[O]bsidian [J]journal [Y]esterday" })

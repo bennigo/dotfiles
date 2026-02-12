@@ -1,0 +1,49 @@
+#!/bin/bash
+# Print markdown files formatted as PDF via pandoc
+# Usage: print-md file.md [file2.md ...]
+#        print-md --duplex file.md
+#        print-md --draft file.md
+#        print-md --gray file.md
+
+set -euo pipefail
+
+LP_OPTS=()
+
+# Parse flags
+while [[ "${1:-}" == --* ]]; do
+    case "$1" in
+        --duplex)  LP_OPTS+=(-o Duplex=DuplexNoTumble) ;;
+        --draft)   LP_OPTS+=(-o cupsPrintQuality=Draft) ;;
+        --gray)    LP_OPTS+=(-o ColorModel=Gray) ;;
+        --help|-h)
+            echo "Usage: print-md [options] file.md [file2.md ...]"
+            echo ""
+            echo "Options:"
+            echo "  --duplex  Double-sided printing (long edge)"
+            echo "  --draft   Draft quality (saves ink)"
+            echo "  --gray    Grayscale output"
+            echo "  --help    Show this help"
+            exit 0
+            ;;
+        *) echo "Unknown option: $1"; exit 1 ;;
+    esac
+    shift
+done
+
+if [[ $# -eq 0 ]]; then
+    echo "Usage: print-md [options] file.md [file2.md ...]"
+    exit 1
+fi
+
+for file in "$@"; do
+    if [[ ! -f "$file" ]]; then
+        echo "File not found: $file"
+        exit 1
+    fi
+    echo "Printing: $file"
+    pandoc "$file" -t pdf --pdf-engine=xelatex \
+        -V geometry:margin=2cm \
+        -V mainfont="DejaVu Sans" \
+        -V monofont="DejaVu Sans Mono" \
+        | lp "${LP_OPTS[@]}" -
+done
