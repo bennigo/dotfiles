@@ -61,15 +61,14 @@ def main():
     file_mapping = {
         'afreksnefnd_email.txt': 'afreksnefnd_email',
         'azores.login': 'azores_login',
-        'benedikt_klifursamband_login': 'benedikt_klifursamband_login',
         'flug_myidtravel.txt': 'flug_myidtravel',
         'google_oauth_client.txt': 'google_oauth_client',
         'launaskjal': 'launaskjal',
+        'mozilla_recovery': 'mozilla_recovery',
         'openai_nvim_key.txt': 'openai_nvim_key',
         'pgdev.vedur.is.txt': 'pgdev_vedur_is',
         'verslo_fjarnam.txt': 'verslo_fjarnam',
         'client_secret_311376334639-11vl3n2ioavagoauc31a19abi06tqsn8.apps.googleusercontent.com.json': 'client_secret_google',
-        'connections.json': 'connections_json'
     }
 
     print("Copying credentials to YAML structure...")

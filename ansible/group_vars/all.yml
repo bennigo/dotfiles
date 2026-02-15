@@ -6,13 +6,14 @@
 # Can be overridden: ansible-playbook bootstrap.yml --extra-vars "target_user=otheruser"
 target_user: "{{ lookup('env', 'USER') | default('bgo') }}"
 target_home: "/home/{{ target_user }}"
-target_email: "bgo@vedur.is"
-target_name: "Benedikt Gunnar Ófeigsson"
+target_email: "{{ override_email | default('bgo@vedur.is') }}"
+target_name: "{{ override_name | default('Benedikt Gunnar Ófeigsson') }}"
 
 # Installation profiles (predefined combinations)
 profiles:
-  # User-only setup (for additional users on already-configured systems)
+  # User setup (base packages + dotfiles for additional users)
   user:
+    - base
     - dotfiles
   minimal:
     - base
@@ -54,7 +55,15 @@ profiles:
     - email
     - credentials
     - dotfiles
-    - work_tools
+  # Work-only setup (development environment without desktop/email)
+  work_only:
+    - base
+    - system_files
+    - development
+    - database
+    - docker
+    - credentials
+    - dotfiles
 
 # Hardware-specific role activation
 hardware_roles:
