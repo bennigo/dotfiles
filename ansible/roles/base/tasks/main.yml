@@ -30,7 +30,7 @@
     validate: 'visudo -cf %s'
   tags: ["base", "sudo"]
 
-- name: Set up git configuration (bgo only - other users configure manually)
+- name: Set up git configuration
   git_config:
     name: "{{ item.name }}"
     value: "{{ item.value }}"
@@ -39,17 +39,19 @@
     - { name: "user.email", value: "{{ target_email }}" }
     - { name: "user.name", value: "{{ target_name }}" }
   become: no
-  when: features.setup_personal_repos | default(false)
-  tags: ["base", "git", "personal"]
+  when: (features.setup_personal_repos | default(false)) or (override_email is defined) or (override_name is defined)
+  tags: ["base", "git"]
 
 - name: Remind non-bgo users to configure git
   debug:
     msg: |
-      Git user configuration skipped (not bgo user).
+      Git user configuration skipped.
       Configure manually with:
         git config --global user.name "Your Name"
         git config --global user.email "your@email.com"
-  when: not (features.setup_personal_repos | default(false))
+      Or re-run with identity overrides:
+        --extra-vars '{"override_email": "you@example.com", "override_name": "Your Name"}'
+  when: not ((features.setup_personal_repos | default(false)) or (override_email is defined) or (override_name is defined))
   tags: ["base", "git"]
 
 - name: Change default shell to zsh
