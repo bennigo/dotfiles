@@ -1,0 +1,116 @@
+#!/bin/bash
+# Fix Cisco AnyConnect VPN hijacking local subnet routes and firewall
+#
+# Cisco's vpnagentd does TWO things to block local network access:
+# 1. Injects routes for the local subnet through cscotun0 (routing hijack)
+# 2. Adds iptables DROP rules in a "ciscovpn" chain (firewall block)
+#
+# We counter both:
+# 1. Policy routing table 200 bypasses the route hijack (vpnagentd can't see it)
+# 2. iptables RETURN rules for local devices inserted before the final DROP
+#    (RETURN matches Cisco's own exception pattern, making them less likely to be purged)
+#
+# Additionally, vpnagentd periodically rebuilds its iptables chains, so we
+# apply the fix in a retry loop to survive chain rebuilds.
+#
+# Deployed to: /etc/NetworkManager/dispatcher.d/99-fix-vpn-local-routes
+
+INTERFACE="$1"
+ACTION="$2"
+LOCAL_TABLE=200
+
+# Local devices that should remain reachable while VPN is active
+# Format: "IP DESCRIPTION"
+LOCAL_DEVICES=(
+    "192.168.50.1   router"
+    "192.168.50.54  printer"
+    "192.168.50.99  holuhraun"
+)
+
+# Number of retry attempts (vpnagentd may rebuild chains after initial connection)
+RETRY_COUNT=5
+RETRY_DELAY=3
+
+apply_fixes() {
+    # Get the local WiFi/ethernet interface and subnet
+    LOCAL_IF=$(ip -4 route show proto kernel | grep -v "docker\|br-\|cscotun\|lo\|veth" | head -1 | awk '{print $3}')
+    LOCAL_SUBNET=$(ip -4 route show dev "$LOCAL_IF" proto kernel | awk '{print $1}')
+    LOCAL_SRC=$(ip -4 addr show dev "$LOCAL_IF" | grep -oP 'inet \K[0-9.]+')
+
+    if [[ -z "$LOCAL_SUBNET" || -z "$LOCAL_IF" || -z "$LOCAL_SRC" ]]; then
+        logger -t vpn-route-fix "Could not determine local network (IF=$LOCAL_IF SUBNET=$LOCAL_SUBNET SRC=$LOCAL_SRC)"
+        return 1
+    fi
+
+    # --- Fix 1: Policy routing to bypass route hijack ---
+    ip route replace "$LOCAL_SUBNET" dev "$LOCAL_IF" src "$LOCAL_SRC" table "$LOCAL_TABLE" 2>/dev/null
+
+    if ! ip rule show | grep -q "lookup $LOCAL_TABLE"; then
+        ip rule add to "$LOCAL_SUBNET" lookup "$LOCAL_TABLE" priority 50
+    fi
+
+    ip route flush cache
+
+    # --- Fix 2: iptables RETURN rules for local devices ---
+    if ! iptables -L ciscovpn -n &>/dev/null; then
+        return 0
+    fi
+
+    # Find the final catch-all DROP rule position
+    DROP_NUM=$(iptables -L ciscovpn --line-numbers -n | grep "DROP.*0\.0\.0\.0/0.*0\.0\.0\.0/0" | tail -1 | awk '{print $1}')
+
+    if [[ -z "$DROP_NUM" ]]; then
+        logger -t vpn-route-fix "No catch-all DROP rule found in ciscovpn chain"
+        return 0
+    fi
+
+    local added=0
+    for entry in "${LOCAL_DEVICES[@]}"; do
+        local device_ip=${entry%% *}
+        local device_name=${entry##* }
+
+        # Outgoing: local machine -> device (via physical interface)
+        if ! iptables -C ciscovpn -o "$LOCAL_IF" -s "$LOCAL_SRC" -d "$device_ip" -j RETURN 2>/dev/null; then
+            iptables -I ciscovpn "$DROP_NUM" -o "$LOCAL_IF" -s "$LOCAL_SRC" -d "$device_ip" -j RETURN
+            ((added++))
+        fi
+
+        # Incoming: device -> local machine (via physical interface)
+        if ! iptables -C ciscovpn -i "$LOCAL_IF" -s "$device_ip" -d "$LOCAL_SRC" -j RETURN 2>/dev/null; then
+            # Recalculate DROP position (shifted by insertions)
+            DROP_NUM=$(iptables -L ciscovpn --line-numbers -n | grep "DROP.*0\.0\.0\.0/0.*0\.0\.0\.0/0" | tail -1 | awk '{print $1}')
+            iptables -I ciscovpn "$DROP_NUM" -i "$LOCAL_IF" -s "$device_ip" -d "$LOCAL_SRC" -j RETURN
+            ((added++))
+        fi
+    done
+
+    if [[ $added -gt 0 ]]; then
+        logger -t vpn-route-fix "Added $added iptables RETURN rules for local devices before DROP rule"
+    fi
+
+    logger -t vpn-route-fix "Local network fix applied: $LOCAL_SUBNET via $LOCAL_IF (table $LOCAL_TABLE), ${#LOCAL_DEVICES[@]} devices whitelisted"
+}
+
+case "$ACTION" in
+    vpn-up|up)
+        # Check if Cisco VPN tunnel is active
+        if [[ "$INTERFACE" == cscotun* ]] || ip link show cscotun0 &>/dev/null; then
+            # Apply fixes with retries to survive vpnagentd chain rebuilds
+            for ((i=1; i<=RETRY_COUNT; i++)); do
+                apply_fixes
+                if [[ $i -lt $RETRY_COUNT ]]; then
+                    sleep "$RETRY_DELAY"
+                fi
+            done
+        fi
+        ;;
+    vpn-down|down)
+        # Clean up when VPN disconnects
+        if [[ "$INTERFACE" == cscotun* ]]; then
+            ip rule del lookup "$LOCAL_TABLE" 2>/dev/null
+            ip route flush table "$LOCAL_TABLE" 2>/dev/null
+            ip route flush cache
+            logger -t vpn-route-fix "Cleaned up policy routing table $LOCAL_TABLE"
+        fi
+        ;;
+esac
