@@ -50,3 +50,5 @@ source $ZSHRC
 mamba install pytest
 exit
 exit
+ls
+exit
