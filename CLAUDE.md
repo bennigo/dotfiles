@@ -339,4 +339,17 @@ Ansible automatically deploys all stowable directories except:
   - [ ] **Reference**: See `/home/bgo/notes/bgovault/2.Areas/Linux/NeoMutt_Email_System_Guide.md`
 - **Ranger**: Minimal configuration (only rc.conf), needs proper setup
 - **Systemd user services**: Basic setup (mako-watcher only), could be expanded
+- **Google Drive MCP (KÍ)**: OAuth credentials for `@modelcontextprotocol/server-gdrive`
+  - [x] **DONE**: OAuth credentials backed up to `pass` (2026-02-18)
+    - `pass show mcp/gdrive-oauth-keys` — Google Cloud client keys (project: KI-drive, ID: 313326843952)
+    - `pass show mcp/gdrive-credentials` — OAuth refresh token (regenerable via OAuth flow)
+    - MCP server config in `~/.claude.json` (project: `/home/bgo/personal/klifur/KI/fjarmal`)
+    - Google account: KÍ Drive (benedikt@klifursamband.is)
+    - Scope: `drive.readonly` only
+    - **Restore after reinstall**:
+      ```bash
+      mkdir -p ~/.config/mcp-gdrive
+      pass show mcp/gdrive-oauth-keys > ~/.config/mcp-gdrive/gcp-oauth.keys.json
+      # Run the MCP server once to trigger OAuth flow for fresh refresh token
+      ```
 

@@ -23,7 +23,7 @@ LOCAL_TABLE=200
 # Format: "IP DESCRIPTION"
 LOCAL_DEVICES=(
     "192.168.50.1   router"
-    "192.168.50.54  printer"
+    "192.168.50.152 printer"
     "192.168.50.99  holuhraun"
 )
 
