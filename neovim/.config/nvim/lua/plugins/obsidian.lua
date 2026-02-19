@@ -256,28 +256,23 @@ local function setup()
     -- Optional, define your own callbacks to further customize behavior.
     callbacks = {
       -- Runs at the end of `require("obsidian").setup()`.
-      ---@param client obsidian.Client
-      post_setup = function(client) end,
+      post_setup = function() end,
 
       -- Runs anytime you enter the buffer for a note.
-      ---@param client obsidian.Client
       ---@param note obsidian.Note
-      enter_note = function(client, note) end,
+      enter_note = function(note) end,
 
       -- Runs anytime you leave the buffer for a note.
-      ---@param client obsidian.Client
       ---@param note obsidian.Note
-      leave_note = function(client, note) end,
+      leave_note = function(note) end,
 
       -- Runs right before writing the buffer for a note.
-      ---@param client obsidian.Client
       ---@param note obsidian.Note
-      pre_write_note = function(client, note) end,
+      pre_write_note = function(note) end,
 
       -- Runs anytime the workspace is set/changed.
-      ---@param client obsidian.Client
       ---@param workspace obsidian.Workspace
-      post_set_workspace = function(client, workspace) end,
+      post_set_workspace = function(workspace) end,
     },
 
     -- Optional, configure additional syntax highlighting / extmarks.
@@ -329,7 +324,7 @@ local function setup()
     ---@field confirm_img_paste? boolean
 
     attachments = {
-      -- The default folder to place images in via `:ObsidianPasteImg`.
+      -- The default folder to place images in via `:Obsidian paste_img`.
       -- If this is a relative path it will be interpreted as relative to the vault root.
       -- You can always override this per image by passing a full path to the command instead of just a filename.
       folder = "Assets/attachments", -- replaces deprecated img_folder
@@ -428,13 +423,13 @@ return {
       end
     end
     -- For other mappings:
-    -- vim.keymap.set("n", "gf", "<cmd>ObsidianFollowLink<cr>", { desc = "[O]bsidian [J]journal [Y]esterday" })
+    -- vim.keymap.set("n", "gf", "<cmd>Obsidian follow_link<cr>", { desc = "[O]bsidian Follow Link" })
     vim.keymap.set("n", "<leader>oc", function()
-      return require("obsidian").util.toggle_checkbox()
+      return require("obsidian").actions.toggle_checkbox()
     end, { buffer = true, desc = "[O]bsidian Toggle [C]heckbox" })
 
     vim.keymap.set("n", "<CR>", function()
-      return require("obsidian").util.smart_action()
+      return require("obsidian").actions.smart_action()
     end, { buffer = true, expr = true, desc = "[O]bsidian Smart_action" })
 
     -- New command format (legacy_commands = false)

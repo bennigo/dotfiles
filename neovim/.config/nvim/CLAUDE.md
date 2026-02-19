@@ -603,12 +603,29 @@ return {
 
 ### Obsidian Operations
 
+**Command format**: `legacy_commands = false` — use space-separated format, NOT PascalCase.
+
 ```vim
-:ObsidianToday         " Open today's daily note
-:ObsidianNew           " Create new note
-:ObsidianSearch        " Search vault
-:ObsidianQuickSwitch   " Quick note switcher
+" New format (correct):
+:Obsidian today          " Open today's daily note
+:Obsidian new            " Create new note
+:Obsidian search         " Search vault
+:Obsidian quick_switch   " Quick note switcher
+:Obsidian backlinks      " Show backlinks
+:Obsidian tags           " Search tags
+:Obsidian template       " Insert from template
+:Obsidian rename         " Rename note
+:Obsidian paste_img      " Paste image
+
+" OLD format (will NOT work):
+" :ObsidianToday, :ObsidianNew, :ObsidianQuickSwitch, etc.
 ```
+
+**API notes** (obsidian.nvim v3.15+):
+- Actions moved: `require("obsidian").actions.toggle_checkbox()` (was `util.toggle_checkbox`)
+- Actions moved: `require("obsidian").actions.smart_action()` (was `util.smart_action`)
+- Global state: Use `Obsidian.opts`, `Obsidian.workspace` (not `client.opts`, `client.dir`)
+- Callbacks: No longer receive `client` as first argument — `client` is deprecated, will be removed in 4.0.0
 
 ### Testing
 
