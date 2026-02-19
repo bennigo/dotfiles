@@ -14,13 +14,13 @@ fi
 if [[ $# -eq 0 || $1 == "normal" ]]; then
   nvim
 elif [ "$1" = "quick" ]; then
-  nvim -c ":cd ${cwd}" -c ":ObsidianQuickSwitch"
+  nvim -c ":cd ${cwd}" -c ":Obsidian quick_switch"
 elif [ "$1" = "today" ]; then
-  nvim -c ":cd ${cwd}" -c ":ObsidianToday"
+  nvim -c ":cd ${cwd}" -c ":Obsidian today"
 elif [ "$1" = "new" ]; then
-  nvim -c ":cd ${cwd}" -c ":ObsidianNew"
+  nvim -c ":cd ${cwd}" -c ":Obsidian new"
 elif [ "$1" = "template" ]; then
-  nvim -c ":cd ${cwd}" -c ":ObsidianNewFromTemplate"
+  nvim -c ":cd ${cwd}" -c ":Obsidian new_from_template"
 else
   echo "Invalid argument: $1"
   echo "Usage: $0 [new|today|quick|normal|template]"
