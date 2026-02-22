@@ -53,7 +53,7 @@ Personal dotfiles repository for Sway-based Linux desktop environment. Uses modu
 ├── claude-code/   # Claude Code CLI and MCP server configurations (see claude-code/README.md)
 ├── containers/    # Container/Podman configuration (minimal - only registries.conf)
 ├── ranger/        # File manager (minimal - needs proper configuration)
-├── systemd/       # User systemd services (basic - mako-watcher only)
+├── systemd/       # User systemd services (claude-imports, tmux, password-store-sync, mako-watcher, mtp-automount)
 ├── neomutt/       # Email client (structure present, needs post-reinstall setup)
 ├── i3/            # Legacy i3 configuration (excluded from stow)
 └── [app]/         # Per-application config directories
@@ -162,13 +162,41 @@ chmod +x ~/.config/sway/scripts/new_script.sh
 sudo systemctl status udevmon
 sudo systemctl restart udevmon
 
-# User services  
+# User services
 systemctl --user status pipewire
 systemctl --user restart waybar
 
 # Check Wayland session
 echo $WAYLAND_DISPLAY
 loginctl show-session $(loginctl | grep $(whoami) | awk '{print $1}')
+```
+
+### User Systemd Services
+
+The `systemd/` package contains 7 user service units deployed with `stow --no-folding` to prevent
+stow from tree-folding `~/.config/systemd/` (which would cause `systemctl --user enable` to write
+`.wants/` symlinks inside the git repo).
+
+| Unit | Type | Activation | Purpose |
+|------|------|-----------|---------|
+| `claude-imports.service` | Long-running | `enable --now` | Watches Downloads for vault notes and Claude exports |
+| `mako-watcher.path` | Path trigger | `enable --now` | Triggers mako-watcher.service on config file changes |
+| `mako-watcher.service` | Triggered | via `.path` | Reloads Mako notification daemon on config change |
+| `password-store-sync.timer` | Timer | `enable --now` | Schedules periodic password store and dotfiles sync |
+| `password-store-sync.service` | Triggered | via `.timer` | Runs the actual sync (git pull/push) |
+| `tmux.service` | Forking | `enable` only | Starts detached tmux session at login |
+| `mtp-automount@.service` | Template | on-demand | MTP device automount (activated by udev rules) |
+
+```bash
+# Deploy systemd services (uses --no-folding to keep .wants/ out of repo)
+cd ~/.dotfiles
+stow -R --no-folding systemd
+
+# Check service status
+systemctl --user status claude-imports password-store-sync.timer mako-watcher.path tmux
+
+# View all managed unit files
+systemctl --user list-unit-files | grep -E '(claude|tmux|mako|password|mtp)'
 ```
 
 ### Database Management (PostgreSQL 18)
@@ -301,8 +329,13 @@ Ansible automatically deploys all stowable directories except:
 - `system/` (system configs)
 - `i3/` (legacy configuration, unused)
 - `sway-remix/` (experimental)
+- `systemd/` (deployed separately with `--no-folding`, see below)
 - `.git/` (version control)
 - Hidden directories (starting with `.`)
+
+The `systemd` package is stowed separately with `stow --no-folding` so that `~/.config/systemd/user/`
+is a real directory. This prevents `systemctl --user enable` from creating `.wants/` symlinks inside the
+git repo. Ansible also enables and starts the appropriate services after deployment.
 
 ### Recent System Improvements
 
@@ -338,7 +371,6 @@ Ansible automatically deploys all stowable directories except:
   - [ ] **TODO**: Set up notmuch for email indexing and search
   - [ ] **Reference**: See `/home/bgo/notes/bgovault/2.Areas/Linux/NeoMutt_Email_System_Guide.md`
 - **Ranger**: Minimal configuration (only rc.conf), needs proper setup
-- **Systemd user services**: Basic setup (mako-watcher only), could be expanded
 - **Google Drive MCP (KÍ)**: OAuth credentials for `@modelcontextprotocol/server-gdrive`
   - [x] **DONE**: OAuth credentials backed up to `pass` (2026-02-18)
     - `pass show mcp/gdrive-oauth-keys` — Google Cloud client keys (project: KI-drive, ID: 313326843952)

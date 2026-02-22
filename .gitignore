@@ -20,7 +20,10 @@ ansible/*.retry
 **/.ansible/
 **/ansible.log
 
-# Temporary files and backups  
+# Systemd .wants directories (created by systemctl enable, not version-controlled)
+systemd/.config/systemd/user/*.wants/
+
+# Temporary files and backups
 **/*.backup.*
 **/.tmp/
 **/tmp/

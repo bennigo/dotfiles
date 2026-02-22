@@ -1,23 +1,10 @@
 [Unit]
-Description=Watch for Claude conversation exports and move to Obsidian inbox
-Documentation=file:///home/bgo/notes/bgovault/.scripts/watch-claude-imports.sh
-After=default.target
+Description=Watch Downloads for vault notes and Claude exports
 
 [Service]
-Type=simple
-ExecStart=/home/bgo/notes/bgovault/.scripts/watch-claude-imports.sh
+ExecStart=%h/notes/bgovault/.scripts/watch-claude-imports.sh
 Restart=on-failure
-RestartSec=10
-
-# Environment
-Environment=HOME=/home/bgo
-Environment=DISPLAY=:0
-Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
-
-# Logging
-StandardOutput=journal
-StandardError=journal
-SyslogIdentifier=claude-imports
+RestartSec=5
 
 [Install]
 WantedBy=default.target
