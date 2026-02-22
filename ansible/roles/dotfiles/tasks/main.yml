@@ -26,6 +26,7 @@
                       reject('equalto', 'system') |
                       reject('equalto', 'sway-remix') |
                       reject('equalto', 'i3') |
+                      reject('equalto', 'systemd') |
                       reject('equalto', '.git') |
                       list }}"
 
@@ -35,7 +36,7 @@
       Dotfiles directories to be deployed:
       {{ stowable_dirs | join(', ') }}
 
-      Skipped directories: ansible, system, sway-remix, i3, .git, hidden dirs
+      Skipped directories: ansible, system, sway-remix, i3, systemd (separate --no-folding), .git, hidden dirs
 
 - name: Deploy dotfiles with stow
   command: stow {{ item }}
@@ -46,6 +47,43 @@
   register: stow_results
   failed_when: stow_results.rc != 0 and 'WARNING' not in stow_results.stderr
   tags: ["dotfiles", "stow"]
+
+- name: Deploy systemd user services with stow (no-folding)
+  command: stow -R --no-folding systemd
+  args:
+    chdir: "{{ directories.dotfiles }}"
+  become: no
+  register: stow_systemd_result
+  failed_when: stow_systemd_result.rc != 0 and 'WARNING' not in stow_systemd_result.stderr
+  tags: ["dotfiles", "stow", "systemd"]
+
+- name: Activate user systemd services
+  block:
+    - name: Reload systemd user daemon
+      systemd:
+        daemon_reload: yes
+        scope: user
+
+    - name: Enable and start persistent user services
+      systemd:
+        name: "{{ item }}"
+        enabled: yes
+        state: started
+        scope: user
+      loop:
+        - claude-imports.service
+        - mako-watcher.path
+        - password-store-sync.timer
+
+    - name: Enable login-activated user services (no forced start)
+      systemd:
+        name: "{{ item }}"
+        enabled: yes
+        scope: user
+      loop:
+        - tmux.service
+  become: no
+  tags: ["dotfiles", "systemd", "services"]
 
 - name: Deploy custom local bin scripts
   block:
@@ -133,6 +171,7 @@
       Dotfiles deployment completed:
       
       ✅ Stowed directories: {{ stowable_dirs | join(', ') }}
+      ✅ Systemd user services deployed (--no-folding) and activated
       ✅ Local bin scripts deployed
       ✅ Shell environment configured
       ✅ Critical configs verified (sway, waybar, foot)
