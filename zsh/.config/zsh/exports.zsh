@@ -73,3 +73,26 @@ if [[ -f ~/.pgpass ]]; then
   export DEV_GNSS_URL=$(pg_url "pgdev.vedur.is" "gnss-europe-v0-2-9")
   export DEV_METRICS_URL=$(pg_url "pgdev.vedur.is" "gps_metrics")
 fi
+
+# --- Wayland env refresh for tmux-continuum restored sessions ---
+# After reboot, tmux-continuum restores shells before Sway starts,
+# leaving WAYLAND_DISPLAY/SWAYSOCK/DISPLAY empty. This pulls current
+# values from the tmux session env (populated by update-environment on attach).
+refresh-wayland-env() {
+    [[ -z "$TMUX" ]] && return 0
+
+    local var val
+    for var in WAYLAND_DISPLAY SWAYSOCK DISPLAY; do
+        val=$(tmux show-environment "$var" 2>/dev/null)
+        case "$val" in
+            "$var="*)  export "$val" ;;
+            "-$var")   unset "$var" ;;
+            *)         ;;
+        esac
+    done
+}
+
+# Auto-refresh on shell startup inside tmux when Wayland env is stale
+if [[ -n "$TMUX" && -z "$WAYLAND_DISPLAY" ]]; then
+    refresh-wayland-env
+fi
