@@ -281,6 +281,41 @@ udevadm monitor --environment --udev
 
 ## System Integration
 
+### Wayland Environment in Tmux
+
+After reboot, `tmux-continuum` restores sessions before Sway starts, leaving `WAYLAND_DISPLAY`,
+`SWAYSOCK`, and `DISPLAY` empty in restored panes. Two mechanisms fix this:
+
+- **Auto-refresh**: `zsh/exports.zsh` defines `refresh-wayland-env` which pulls current values from
+  the tmux session env (populated by `update-environment` on attach). Runs automatically on shell
+  startup when `WAYLAND_DISPLAY` is empty inside tmux.
+- **Manual bulk refresh**: `prefix + E` (tmux keybinding) sends `refresh-wayland-env` + Enter to
+  every pane across all sessions — useful for long-running shells that never re-sourced.
+
+```bash
+# Manual refresh in a single pane
+refresh-wayland-env
+
+# Bulk refresh all panes (tmux prefix + E)
+# Verify
+echo $WAYLAND_DISPLAY  # Should show wayland-1
+```
+
+### Claude Code Notifications
+
+Claude Code notifications are forwarded to Mako via a hook in `~/.claude/settings.json`.
+The `claude-notify` script (`local_bin/`) reads hook JSON on stdin and calls `notify-send`
+with urgency based on event type (critical for permission prompts, normal for idle prompts).
+
+This is needed because inside Neovim's terminal buffer, standard terminal notification
+mechanisms (OSC sequences, bells) are swallowed — the hook runs as a separate process and
+reaches Mako directly via D-Bus.
+
+```bash
+# Test the notification hook manually
+echo '{"notification_type":"idle_prompt","message":"Test","title":"Claude Code"}' | claude-notify
+```
+
 ### Wayland Compatibility
 - **XWayland**: Legacy X11 application support enabled
 - **Screen sharing**: Portal-based sharing for Wayland applications
@@ -315,8 +350,9 @@ udevadm monitor --environment --udev
 Common dependencies across custom scripts:
 
 - rofi (menus and launchers)
-- jq (JSON processing for sway IPC)
+- jq (JSON processing for sway IPC, tmux statusline, claude-notify)
 - waybar (status bar integration)
+- libnotify-bin (notify-send for claude-notify and desktop notifications)
 
 ### File Editing Preference
 
@@ -353,6 +389,10 @@ git repo. Ansible also enables and starts the appropriate services after deploym
   - CLI tool for adding signature images to PDF documents
   - Deployed via Ansible with automatic dependency management
   - Python-based with pypdf, Pillow, and ReportLab
+- **Wayland env refresh for tmux**: Auto-fixes stale `WAYLAND_DISPLAY`/`SWAYSOCK`/`DISPLAY` in
+  tmux-continuum restored sessions, with manual `prefix + E` bulk refresh keybinding
+- **Claude Code notification hook**: `claude-notify` script forwards Claude Code `Notification`
+  hook events to Mako via `notify-send` — works inside Neovim terminal where OSC sequences are swallowed
 - **Fresh install automation**: Complete Ansible bootstrap for clean deployments
 - **Environment consistency**: PAM-based XDG variables for reliable path resolution
 - **Claude Code integration**: AI assistant with secure API key management

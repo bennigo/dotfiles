@@ -1,0 +1,31 @@
+#!/bin/bash
+# Claude Code notification hook — forwards to notify-send (Mako)
+# Used by the Notification hook in ~/.claude/settings.json
+#
+# Hook input (JSON on stdin):
+#   session_id, cwd, hook_event_name, message, title, notification_type
+#
+# Notification types: permission_prompt, idle_prompt, auth_success, elicitation_dialog
+
+INPUT=$(cat)
+TYPE=$(echo "$INPUT" | jq -r '.notification_type // "unknown"')
+MESSAGE=$(echo "$INPUT" | jq -r '.message // "Claude Code needs attention"')
+TITLE=$(echo "$INPUT" | jq -r '.title // "Claude Code"')
+
+case "$TYPE" in
+    permission_prompt)
+        notify-send -u critical -a "Claude Code" "$TITLE" "$MESSAGE"
+        ;;
+    idle_prompt)
+        notify-send -u normal -a "Claude Code" "$TITLE" "$MESSAGE"
+        ;;
+    auth_success)
+        notify-send -u low -a "Claude Code" "$TITLE" "Authentication successful"
+        ;;
+    elicitation_dialog)
+        notify-send -u normal -a "Claude Code" "$TITLE" "$MESSAGE"
+        ;;
+    *)
+        notify-send -a "Claude Code" "$TITLE" "$MESSAGE"
+        ;;
+esac

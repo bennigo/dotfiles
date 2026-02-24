@@ -121,6 +121,7 @@ base_packages:
   - wget
   - unzip
   - build-essential
+  - jq  # JSON processing (used by sway IPC, tmux statusline, claude-notify hook)
   - nfs-common  # Required for NFS network mounts in fstab
   
 development_packages:
