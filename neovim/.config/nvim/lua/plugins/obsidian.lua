@@ -422,6 +422,26 @@ return {
         vim.notify("obsidian_pdf module not found: " .. tostring(pdf), vim.log.levels.WARN)
       end
     end
+
+    -- Vault operations (bridge obsidian ↔ Claude Code)
+    do
+      local ok, vault_ops = pcall(require, "user.vault_ops")
+      if ok then
+        vim.keymap.set("n", "<leader>oe", function()
+          local link = vault_ops.get_wikilink_under_cursor()
+          if link then
+            vault_ops.send_to_claude_terminal("/expand-topic [[" .. link .. "]]")
+          else
+            vim.notify("No [[wikilink]] under cursor", vim.log.levels.WARN)
+          end
+        end, { desc = "[O]bsidian [E]xpand topic → Claude" })
+
+        vim.keymap.set("v", "<leader>o[", function()
+          vault_ops.wrap_selection_as_placeholder()
+        end, { desc = "[O]bsidian wrap as [[placeholder]]" })
+      end
+    end
+
     -- For other mappings:
     -- vim.keymap.set("n", "gf", "<cmd>Obsidian follow_link<cr>", { desc = "[O]bsidian Follow Link" })
     vim.keymap.set("n", "<leader>oc", function()
