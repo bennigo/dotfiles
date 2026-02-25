@@ -26,44 +26,19 @@ function M.get_wikilink_under_cursor()
   return nil
 end
 
---- Send text to a terminal channel, then submit with Enter after a short delay.
---- Splitting text and Enter avoids TUI frameworks (Ink) swallowing the
---- carriage return when it arrives in the same data chunk as the text.
----@param chan number terminal channel id
----@param text string text to type (without trailing newline/CR)
-local function send_and_submit(chan, text)
-  vim.fn.chansend(chan, text)
-  vim.defer_fn(function()
-    vim.fn.chansend(chan, "\r")
-  end, 50)
-end
-
---- Send arbitrary text to the Claude Code terminal and submit it.
---- Opens the terminal if not already running, with a deferred send.
----@param text string The prompt text to send (should NOT include trailing \n or \r)
+--- Copy text to system clipboard and open/focus the Claude Code terminal.
+--- The user pastes manually (Ctrl+Shift+V) because PTY injection is unreliable
+--- with TUI frameworks like Ink/React that power Claude Code.
+---@param text string The prompt text to copy and paste into Claude
 function M.send_to_claude_terminal(text)
   local ok, terminal = pcall(require, "claudecode.terminal")
   if not ok then
     vim.notify("claudecode.nvim not available", vim.log.levels.ERROR)
     return
   end
-  local bufnr = terminal.get_active_terminal_bufnr()
-  if bufnr then
-    local chan = vim.bo[bufnr].channel
-    send_and_submit(chan, text)
-    terminal.ensure_visible()
-  else
-    terminal.open()
-    vim.defer_fn(function()
-      local new_bufnr = terminal.get_active_terminal_bufnr()
-      if new_bufnr then
-        local chan = vim.bo[new_bufnr].channel
-        send_and_submit(chan, text)
-      else
-        vim.notify("Could not find Claude terminal after opening", vim.log.levels.WARN)
-      end
-    end, 800)
-  end
+  vim.fn.setreg("+", text)
+  terminal.open()
+  vim.notify("Copied to clipboard — paste with Ctrl+Shift+V", vim.log.levels.INFO)
 end
 
 --- Wrap visual selection in [[ ]] (single-line only).
