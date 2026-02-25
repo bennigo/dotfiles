@@ -19,9 +19,6 @@ return {
           "<leader>o",
           icon = "📓",
           group = "+obsidian",
-          expand = function()
-            return require("which-key.extras").expand.win()
-          end,
         },
         -- AI Tools keybindings
         {
