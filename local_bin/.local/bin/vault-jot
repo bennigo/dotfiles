@@ -1,0 +1,107 @@
+#!/usr/bin/env bash
+# vault-jot — Quick capture to today's Obsidian daily note via rofi popup
+# Bound to $mod+Ctrl+j in Sway
+#
+# Usage:
+#   vault-jot              # rofi popup for input
+#   vault-jot "some text"  # direct input (no popup)
+#
+# Prefix with "todo " to create a task checkbox
+
+set -euo pipefail
+
+VAULT_DIR="${HOME}/notes/bgovault"
+DAILY_DIR="${VAULT_DIR}/Journal/daily"
+TODAY=$(date +%Y-%m-%d)
+NOW_TIME=$(date +%H:%M)
+DAILY_FILE="${DAILY_DIR}/${TODAY}.md"
+
+# Get input: from argument or rofi popup
+if [[ $# -gt 0 ]]; then
+    INPUT="$*"
+else
+    INPUT=$(rofi -dmenu -p "Jot" -theme-str 'window { width: 600px; }' -lines 0 2>/dev/null) || exit 0
+fi
+
+# Exit if empty
+[[ -z "${INPUT}" ]] && exit 0
+
+# Create daily note if it doesn't exist
+if [[ ! -f "${DAILY_FILE}" ]]; then
+    YESTERDAY=$(date -d "yesterday" +%Y-%m-%d)
+    TOMORROW=$(date -d "tomorrow" +%Y-%m-%d)
+    ALIAS=$(date +"📅 %B %-d, %Y day: %j")
+    cat > "${DAILY_FILE}" <<TEMPLATE
+---
+area: "Journal"
+id: ${TODAY}
+created: ${TODAY} ${NOW_TIME}
+aliases:
+  - "${ALIAS}"
+tags:
+  - type/daily-note
+project: ""
+resource: ""
+---
+
+# ${TODAY}
+
+<< [[${YESTERDAY}]] | [[${TOMORROW}]] >>
+
+## Skyndiminnispunktar
+
+> Fljótlegar hugmyndir og athugasemdir — hreinsað í lok dags
+
+
+## Verkefni dagsins
+
+## Dagbók
+
+- ${NOW_TIME} —
+TEMPLATE
+fi
+
+# Format the entry
+if [[ "${INPUT,,}" == todo\ * ]]; then
+    # Task mode: strip "todo " prefix, create checkbox
+    TASK_TEXT="${INPUT:5}"
+    # Extract due date if present (📅 already in text)
+    ENTRY="- [ ] ${TASK_TEXT} ➕ ${TODAY}"
+    NOTIFY_MSG="Task: ${TASK_TEXT}"
+else
+    # Plain jot mode
+    ENTRY="- ${INPUT} (${NOW_TIME})"
+    NOTIFY_MSG="Jot: ${INPUT}"
+fi
+
+# Append under ## Skyndiminnispunktar
+# Find the line number of the section, then find the next ## heading or EOF
+SECTION_LINE=$(grep -n "^## Skyndiminnispunktar" "${DAILY_FILE}" | head -1 | cut -d: -f1)
+
+if [[ -z "${SECTION_LINE}" ]]; then
+    # No section found — append before ## Verkefni dagsins
+    VERKEFNI_LINE=$(grep -n "^## Verkefni dagsins" "${DAILY_FILE}" | head -1 | cut -d: -f1)
+    if [[ -n "${VERKEFNI_LINE}" ]]; then
+        # Insert section + entry before Verkefni
+        sed -i "${VERKEFNI_LINE}i\\## Skyndiminnispunktar\n\n> Fljótlegar hugmyndir og athugasemdir — hreinsað í lok dags\n\n${ENTRY}\n" "${DAILY_FILE}"
+    else
+        # Fallback: append to end of file
+        printf '\n## Skyndiminnispunktar\n\n%s\n' "${ENTRY}" >> "${DAILY_FILE}"
+    fi
+else
+    # Find the next ## heading after Skyndiminnispunktar
+    NEXT_HEADING=$(tail -n +"$((SECTION_LINE + 1))" "${DAILY_FILE}" | grep -n "^## " | head -1 | cut -d: -f1)
+
+    if [[ -n "${NEXT_HEADING}" ]]; then
+        # Insert before the next heading (relative line + section offset)
+        INSERT_LINE=$((SECTION_LINE + NEXT_HEADING - 1))
+        # Use sed to insert entry + blank line before the next heading
+        sed -i "${INSERT_LINE}i\\${ENTRY}\n" "${DAILY_FILE}"
+    else
+        # No next heading — append to end of file
+        printf '%s\n' "${ENTRY}" >> "${DAILY_FILE}"
+    fi
+fi
+
+# Desktop notification
+notify-send -t 3000 "Vault Jot" "${NOTIFY_MSG}" -i dialog-information 2>/dev/null || true
