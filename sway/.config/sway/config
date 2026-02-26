@@ -225,6 +225,8 @@ bindsym $mod+Shift+n exec $term --class "nvim_obsidiannew" zsh -i ~/.local/bin/r
 bindsym $mod+i exec $term --class "nvim_quick" zsh -i ~/.local/bin/run_nvim_obsidian.sh quick
 ## Notes // Insert from template (Neovim) // 📄 ##
 bindsym $mod+Shift+i exec $term --class "nvim_quick" zsh -i ~/.local/bin/run_nvim_obsidian.sh template
+## Notes // Quick jot to daily note (rofi popup) // ✏️ ##
+bindsym $mod+Ctrl+j exec ~/.local/bin/vault-jot
 # floating terminal
 ## Apps // Open floating terminal // 🪟🖥️ ##
 bindsym $mod+t exec $term --class "terminal_floating"

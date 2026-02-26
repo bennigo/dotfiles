@@ -155,16 +155,40 @@ local function setup()
           return tostring(os.date("%Y-%m-%d", os.time() - 86400))
         end,
 
+        tomorrow = function()
+          return tostring(os.date("%Y-%m-%d", os.time() + 86400))
+        end,
+
+        last_week = function()
+          local t = os.time() - 7 * 86400
+          return os.date("%G-W%V", t)
+        end,
+
+        next_week = function()
+          local t = os.time() + 7 * 86400
+          return os.date("%G-W%V", t)
+        end,
+
+        monday = function()
+          local t = os.time()
+          local wday = os.date("*t", t).wday -- 1=Sun, 2=Mon, ...
+          local offset = (wday == 1) and -6 or (2 - wday)
+          return os.date("%Y-%m-%d", t + offset * 86400)
+        end,
+
+        sunday = function()
+          local t = os.time()
+          local wday = os.date("*t", t).wday
+          local offset = (wday == 1) and 0 or (8 - wday)
+          return os.date("%Y-%m-%d", t + offset * 86400)
+        end,
+
         alias_journal_heading = function(note_date)
           return note_date.partial_note.title or tostring(os.date("📅 %B %-d, %Y, Day: %j", os.time()))
         end,
 
         alias_heading = function()
           return tostring(os.date("📅 %B %-d, %Y, Day: %j", os.time()))
-        end,
-
-        timed_task = function()
-          return string.format("- [ ] Task 1 ➕ %s", os.date("%Y-%m-%d", os.time()))
         end,
 
         property = function()
