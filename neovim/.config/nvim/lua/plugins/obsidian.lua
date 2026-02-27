@@ -569,48 +569,87 @@ return {
       vim.notify("Sent to printer: " .. vim.fn.fnamemodify(file, ":t"), vim.log.levels.INFO)
     end, { desc = "[O]bsidian [P]rint note" })
 
-    --- Open a daily note and position cursor for quick capture in Skyndiminnispunktar.
-    --- @param cmd string  Obsidian subcommand: "today", "yesterday", "tomorrow"
-    --- @param todo boolean  If true, pre-fill "- [ ] " checkbox
-    local function quick_jot(cmd, todo)
+    --- Bullet timestamp: (HH:MM) same-day, (YYYY-MM-DD HH:MM) cross-day.
+    local function bullet_suffix()
+      local fname = vim.fn.expand("%:t:r")
+      if fname == os.date("%Y-%m-%d") then
+        return " (" .. os.date("%H:%M") .. ")"
+      else
+        return " (" .. os.date("%Y-%m-%d %H:%M") .. ")"
+      end
+    end
+
+    --- Task created-date: always ➕ YYYY-MM-DD HH:MM.
+    local function todo_suffix()
+      return " ➕ " .. os.date("%Y-%m-%d %H:%M")
+    end
+
+    --- Position cursor in a daily-note section with prefix and suffix.
+    --- @param section string   Section heading (e.g. "Skyndiminnispunktar")
+    --- @param prefix string    Text before cursor (e.g. "- ")
+    --- @param suffix_fn fun(): string  Returns text after cursor
+    local function jot_to_section(section, prefix, suffix_fn)
+      local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+      for idx, line in ipairs(lines) do
+        if line:match("^## " .. section) then
+          local insert_at = idx
+          for j = idx + 1, #lines do
+            if lines[j]:match("^## ") then
+              insert_at = j - 1
+              break
+            end
+            insert_at = j
+          end
+          local suffix = suffix_fn()
+          vim.api.nvim_buf_set_lines(0, insert_at, insert_at, false, { prefix .. suffix })
+          vim.api.nvim_win_set_cursor(0, { insert_at + 1, #prefix })
+          vim.cmd("startinsert")
+          return
+        end
+      end
+    end
+
+    --- Open a daily note and position cursor for quick capture.
+    --- @param cmd string      Obsidian subcommand: "today", "yesterday", "tomorrow"
+    --- @param section string  Section heading to target
+    --- @param prefix string   Text before cursor (e.g. "- " or "- [ ] ")
+    --- @param suffix_fn fun(): string  Returns text after cursor
+    local function quick_jot(cmd, section, prefix, suffix_fn)
       vim.cmd("Obsidian " .. cmd)
       vim.defer_fn(function()
-        local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-        for idx, line in ipairs(lines) do
-          if line:match("^## Skyndiminnispunktar") then
-            local insert_at = idx
-            for j = idx + 1, #lines do
-              if lines[j]:match("^## ") then
-                insert_at = j - 1
-                break
-              end
-              insert_at = j
-            end
-            if todo then
-              local task_prefix = "- [ ] "
-              vim.api.nvim_buf_set_lines(0, insert_at, insert_at, false, { task_prefix })
-              vim.api.nvim_win_set_cursor(0, { insert_at + 1, #task_prefix })
-              vim.cmd("startinsert!")
-            else
-              vim.api.nvim_win_set_cursor(0, { insert_at, 0 })
-              vim.cmd("startinsert")
-            end
-            return
-          end
-        end
+        jot_to_section(section, prefix, suffix_fn)
       end, 200)
     end
 
-    -- journaling: quick-jot variants (open daily + position cursor in Skyndiminnispunktar)
-    vim.keymap.set("n", "<leader>ojt", function() quick_jot("today", false) end, { desc = "[O]bsidian [j]ot [t]oday" })
-    vim.keymap.set("n", "<leader>ojm", function() quick_jot("tomorrow", false) end, { desc = "[O]bsidian [j]ot to[m]orrow" })
-    vim.keymap.set("n", "<leader>ojy", function() quick_jot("yesterday", false) end, { desc = "[O]bsidian [j]ot [y]esterday" })
-    vim.keymap.set("n", "<leader>ojd", "<cmd>Obsidian dailies<cr>", { desc = "[O]bsidian [j]ournal [d]ailies" })
+    --- Register a one-shot autocmd to jot into the next daily note that opens.
+    --- @param section string  Section heading to target
+    --- @param prefix string   Text before cursor (e.g. "- " or "- [ ] ")
+    --- @param suffix_fn fun(): string  Returns text after cursor
+    local function jot_after_picker(section, prefix, suffix_fn)
+      vim.api.nvim_create_augroup("ObsidianQuickJot", { clear = true })
+      vim.api.nvim_create_autocmd("BufEnter", {
+        group = "ObsidianQuickJot",
+        pattern = "*/Journal/daily/*.md",
+        once = true,
+        callback = function()
+          vim.defer_fn(function()
+            jot_to_section(section, prefix, suffix_fn)
+          end, 200)
+        end,
+      })
+    end
 
-    -- journaling: quick-todo variants (same but pre-fills "- [ ] " checkbox)
-    vim.keymap.set("n", "<leader>oJt", function() quick_jot("today", true) end, { desc = "[O]bsidian todo [J]ot [t]oday" })
-    vim.keymap.set("n", "<leader>oJm", function() quick_jot("tomorrow", true) end, { desc = "[O]bsidian todo [J]ot to[m]orrow" })
-    vim.keymap.set("n", "<leader>oJy", function() quick_jot("yesterday", true) end, { desc = "[O]bsidian todo [J]ot [y]esterday" })
+    -- journaling: quick-jot variants (bullet + timestamp in Skyndiminnispunktar)
+    vim.keymap.set("n", "<leader>ojt", function() quick_jot("today", "Skyndiminnispunktar", "- ", bullet_suffix) end, { desc = "[O]bsidian [j]ot [t]oday" })
+    vim.keymap.set("n", "<leader>ojm", function() quick_jot("tomorrow", "Skyndiminnispunktar", "- ", bullet_suffix) end, { desc = "[O]bsidian [j]ot to[m]orrow" })
+    vim.keymap.set("n", "<leader>ojy", function() quick_jot("yesterday", "Skyndiminnispunktar", "- ", bullet_suffix) end, { desc = "[O]bsidian [j]ot [y]esterday" })
+    vim.keymap.set("n", "<leader>ojd", function() jot_after_picker("Skyndiminnispunktar", "- ", bullet_suffix); vim.cmd("Obsidian dailies") end, { desc = "[O]bsidian [j]ot [d]ailies" })
+
+    -- journaling: quick-todo variants (checkbox + created-date in Verkefni dagsins)
+    vim.keymap.set("n", "<leader>oJt", function() quick_jot("today", "Verkefni dagsins", "- [ ] ", todo_suffix) end, { desc = "[O]bsidian todo [J]ot [t]oday" })
+    vim.keymap.set("n", "<leader>oJm", function() quick_jot("tomorrow", "Verkefni dagsins", "- [ ] ", todo_suffix) end, { desc = "[O]bsidian todo [J]ot to[m]orrow" })
+    vim.keymap.set("n", "<leader>oJy", function() quick_jot("yesterday", "Verkefni dagsins", "- [ ] ", todo_suffix) end, { desc = "[O]bsidian todo [J]ot [y]esterday" })
+    vim.keymap.set("n", "<leader>oJd", function() jot_after_picker("Verkefni dagsins", "- [ ] ", todo_suffix); vim.cmd("Obsidian dailies") end, { desc = "[O]bsidian todo [J]ot [d]ailies" })
 
     -- new notes
     vim.keymap.set("n", "<leader>onn", "<cmd>Obsidian new<cr>", { desc = "[O]bsidian [N]ew" })
