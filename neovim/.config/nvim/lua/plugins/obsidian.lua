@@ -135,9 +135,26 @@ local function setup()
         end
       end
 
-      -- If this is a daily note (by path), set area to "Journal" if not already set.
+      -- If this is a daily note (by path), set area to "Journal" if not already set,
+      -- add type/daily-note tag and date alias (matching daily_notes config).
       local note_path = tostring(note.path or "")
-      if note_path:match("Journal/daily") and (out.area == nil or out.area == "") then
+      local date_match = note_path:match("Journal/daily/(%d%d%d%d%-%d%d%-%d%d)%.md")
+      if date_match then
+        if out.area == nil or out.area == "" then
+          out.area = "Journal"
+        end
+        -- Add type/daily-note tag
+        if out.tags and not vim.tbl_contains(out.tags, "type/daily-note") then
+          table.insert(out.tags, "type/daily-note")
+        end
+        -- Add date alias (matches daily_notes.alias_format)
+        local y, m, d = date_match:match("(%d+)-(%d+)-(%d+)")
+        local ts = os.time({ year = tonumber(y), month = tonumber(m), day = tonumber(d), hour = 12 })
+        local date_alias = os.date("📅 %B %-d, %Y day: %j", ts)
+        if out.aliases and not vim.tbl_contains(out.aliases, date_alias) then
+          table.insert(out.aliases, date_alias)
+        end
+      elseif note_path:match("Journal/daily") and (out.area == nil or out.area == "") then
         out.area = "Journal"
       end
 
@@ -291,11 +308,14 @@ local function setup()
       -- Runs anytime you enter the buffer for a note.
       ---@param note obsidian.Note
       enter_note = function(note)
-        -- Auto-apply daily template when a bare daily note is opened (e.g. from wikilink follow)
+        -- Auto-apply daily template when a bare daily note is opened (e.g. from wikilink follow).
+        -- Uses the note's date (from filename) instead of wall-clock date for all substitutions.
         local path = tostring(note.path)
-        if not path:match("Journal/daily/%d%d%d%d%-%d%d%-%d%d%.md$") then
+        local date_str = path:match("Journal/daily/(%d%d%d%d%-%d%d%-%d%d)%.md$")
+        if not date_str then
           return
         end
+        -- Check if note is bare (only frontmatter, no body content)
         local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
         local past_frontmatter = false
         local frontmatter_count = 0
@@ -309,10 +329,29 @@ local function setup()
             return -- has real content already
           end
         end
-        if past_frontmatter then
-          vim.api.nvim_win_set_cursor(0, { #lines, 0 })
-          vim.cmd("Obsidian template template_daily")
-        end
+        if not past_frontmatter then return end
+
+        -- Parse note date from filename and compute yesterday/tomorrow
+        local y, m, d = date_str:match("(%d+)-(%d+)-(%d+)")
+        local note_ts = os.time({ year = tonumber(y), month = tonumber(m), day = tonumber(d), hour = 12 })
+        local yesterday = os.date("%Y-%m-%d", note_ts - 86400)
+        local tomorrow = os.date("%Y-%m-%d", note_ts + 86400)
+        local time_now = os.date("%H:%M")
+
+        -- Read template, strip its frontmatter, substitute with note-correct dates
+        local vault = vim.fn.expand("~/notes/bgovault")
+        local f = io.open(vault .. "/Templates/template_daily.md", "r")
+        if not f then return end
+        local tmpl = f:read("*a")
+        f:close()
+        tmpl = tmpl:gsub("^%-%-%-.-%-%-%-\n?", "")
+        tmpl = tmpl:gsub("{{date}}", date_str)
+        tmpl = tmpl:gsub("{{yesterday}}", yesterday)
+        tmpl = tmpl:gsub("{{tomorrow}}", tomorrow)
+        tmpl = tmpl:gsub("{{time}}", time_now)
+
+        local new_lines = vim.split(tmpl, "\n")
+        vim.api.nvim_buf_set_lines(0, #lines, #lines, false, new_lines)
       end,
 
       -- Runs anytime you leave the buffer for a note.
