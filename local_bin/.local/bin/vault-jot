@@ -198,6 +198,22 @@ fi
 # Exit if empty
 [[ -z "${INPUT}" ]] && exit 0
 
+# ── Parse date alias from input (handles rofi and CLI the same way) ──
+# If the first word is a date alias, consume it and re-target the date.
+FIRST_WORD="${INPUT%% *}"
+if resolve_date "${FIRST_WORD}"; then
+    # Strip the date alias from input (handle single-word case)
+    if [[ "${INPUT}" == *" "* ]]; then
+        INPUT="${INPUT#* }"
+    else
+        INPUT=""
+    fi
+    DAILY_FILE="${DAILY_DIR}/${TARGET_DATE}.md"
+fi
+
+# Exit if input was only a date alias with no text
+[[ -z "${INPUT}" ]] && exit 0
+
 # ── Create daily note if needed ───────────────────────────────────────
 ensure_daily_note "${TARGET_DATE}"
 
