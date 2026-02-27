@@ -569,15 +569,11 @@ return {
       vim.notify("Sent to printer: " .. vim.fn.fnamemodify(file, ":t"), vim.log.levels.INFO)
     end, { desc = "[O]bsidian [P]rint note" })
 
-    -- journaling
-    vim.keymap.set("n", "<leader>ojy", "<cmd>Obsidian yesterday<cr>", { desc = "[O]bsidian [J]journal [Y]esterday" })
-    vim.keymap.set("n", "<leader>ojt", "<cmd>Obsidian today<cr>", { desc = "[O]bsidian [J]journal [T]oday" })
-    vim.keymap.set("n", "<leader>ojm", "<cmd>Obsidian tomorrow<cr>", { desc = "[O]bsidian [J]ournal [T]omorrow" })
-    vim.keymap.set("n", "<leader>ojd", "<cmd>Obsidian dailies<cr>", { desc = "[O]bsidian [J]journal [D]ailies" })
-
-    -- quick-jot: open today's daily and position cursor in Skyndiminnispunktar
-    vim.keymap.set("n", "<leader>oj", function()
-      vim.cmd("Obsidian today")
+    --- Open a daily note and position cursor for quick capture in Skyndiminnispunktar.
+    --- @param cmd string  Obsidian subcommand: "today", "yesterday", "tomorrow"
+    --- @param todo boolean  If true, pre-fill "- [ ] " checkbox
+    local function quick_jot(cmd, todo)
+      vim.cmd("Obsidian " .. cmd)
       vim.defer_fn(function()
         local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
         for idx, line in ipairs(lines) do
@@ -590,38 +586,31 @@ return {
               end
               insert_at = j
             end
-            vim.api.nvim_win_set_cursor(0, { insert_at, 0 })
-            vim.cmd("startinsert")
-            return
-          end
-        end
-      end, 200)
-    end, { desc = "[O]bsidian quick [j]ot to daily" })
-
-    -- quick-jot-todo: same but pre-fills a task checkbox
-    vim.keymap.set("n", "<leader>oJ", function()
-      vim.cmd("Obsidian today")
-      vim.defer_fn(function()
-        local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-        for idx, line in ipairs(lines) do
-          if line:match("^## Skyndiminnispunktar") then
-            local insert_at = idx
-            for j = idx + 1, #lines do
-              if lines[j]:match("^## ") then
-                insert_at = j - 1
-                break
-              end
-              insert_at = j
+            if todo then
+              local task_prefix = "- [ ] "
+              vim.api.nvim_buf_set_lines(0, insert_at, insert_at, false, { task_prefix })
+              vim.api.nvim_win_set_cursor(0, { insert_at + 1, #task_prefix })
+              vim.cmd("startinsert!")
+            else
+              vim.api.nvim_win_set_cursor(0, { insert_at, 0 })
+              vim.cmd("startinsert")
             end
-            local task_prefix = "- [ ] "
-            vim.api.nvim_buf_set_lines(0, insert_at, insert_at, false, { task_prefix })
-            vim.api.nvim_win_set_cursor(0, { insert_at + 1, #task_prefix })
-            vim.cmd("startinsert!")
             return
           end
         end
       end, 200)
-    end, { desc = "[O]bsidian quick [J]ot todo to daily" })
+    end
+
+    -- journaling: quick-jot variants (open daily + position cursor in Skyndiminnispunktar)
+    vim.keymap.set("n", "<leader>ojt", function() quick_jot("today", false) end, { desc = "[O]bsidian [j]ot [t]oday" })
+    vim.keymap.set("n", "<leader>ojm", function() quick_jot("tomorrow", false) end, { desc = "[O]bsidian [j]ot to[m]orrow" })
+    vim.keymap.set("n", "<leader>ojy", function() quick_jot("yesterday", false) end, { desc = "[O]bsidian [j]ot [y]esterday" })
+    vim.keymap.set("n", "<leader>ojd", "<cmd>Obsidian dailies<cr>", { desc = "[O]bsidian [j]ournal [d]ailies" })
+
+    -- journaling: quick-todo variants (same but pre-fills "- [ ] " checkbox)
+    vim.keymap.set("n", "<leader>oJt", function() quick_jot("today", true) end, { desc = "[O]bsidian todo [J]ot [t]oday" })
+    vim.keymap.set("n", "<leader>oJm", function() quick_jot("tomorrow", true) end, { desc = "[O]bsidian todo [J]ot to[m]orrow" })
+    vim.keymap.set("n", "<leader>oJy", function() quick_jot("yesterday", true) end, { desc = "[O]bsidian todo [J]ot [y]esterday" })
 
     -- new notes
     vim.keymap.set("n", "<leader>onn", "<cmd>Obsidian new<cr>", { desc = "[O]bsidian [N]ew" })
