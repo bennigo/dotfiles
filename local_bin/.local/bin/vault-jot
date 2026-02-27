@@ -63,17 +63,18 @@ ensure_daily_note() {
 
     [[ -f "${note_file}" ]] && return 0
 
-    local prev_date next_date alias now_time
+    local prev_date next_date alias now_time created_stamp
     prev_date=$(date -d "${note_date} - 1 day" +%Y-%m-%d)
     next_date=$(date -d "${note_date} + 1 day" +%Y-%m-%d)
     alias=$(date -d "${note_date}" +"📅 %B %-d, %Y day: %j")
     now_time=$(date +%H:%M)
+    created_stamp=$(date +"%Y-%m-%d %H:%M")
 
     cat > "${note_file}" <<TEMPLATE
 ---
 area: "Journal"
 id: ${note_date}
-created: ${note_date} ${now_time}
+created: ${created_stamp}
 aliases:
   - "${alias}"
 tags:
@@ -93,9 +94,38 @@ resource: ""
 
 ## Verkefni dagsins
 
+### Áætlað í dag
+
+\`\`\`tasks
+not done
+happens on ${note_date}
+group by filename
+short mode
+\`\`\`
+
+### Tímasett / Yfirstandandi
+
+\`\`\`tasks
+not done
+due before ${note_date}
+limit 10
+short mode
+\`\`\`
+
 ## Dagbók
 
 - ${now_time} —
+
+## Nótur dagsins
+
+\`\`\`dataview
+TABLE WITHOUT ID
+  file.link as "Nóta",
+  file.folder as "Staðsetning"
+FROM "" AND -"Templates" AND -"4.Archive" AND -"Journal"
+WHERE file.cday = date("${note_date}")
+SORT file.ctime ASC
+\`\`\`
 TEMPLATE
 }
 
@@ -220,12 +250,6 @@ else
         printf '%s\n' "${ENTRY}" >> "${DAILY_FILE}"
     fi
 fi
-
-# ── Pre-create adjacent daily notes so nav links always work ──────────
-NEXT_DATE=$(date -d "${TARGET_DATE} + 1 day" +%Y-%m-%d)
-PREV_DATE=$(date -d "${TARGET_DATE} - 1 day" +%Y-%m-%d)
-ensure_daily_note "${NEXT_DATE}"
-ensure_daily_note "${PREV_DATE}"
 
 # ── Output confirmation ──────────────────────────────────────────────
 echo "${NOTIFY_MSG}"
