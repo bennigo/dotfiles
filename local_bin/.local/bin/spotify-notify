@@ -1,0 +1,13 @@
+#!/bin/bash
+# Spotify track change notifications via playerctl + notify-send
+# Sends a desktop notification with track info on each song change.
+# Designed to run as a background process (see systemd/spotify-notify.service).
+
+playerctl --player=spotify --follow metadata --format $'{{title}}\n{{artist}}\n{{album}}' 2>/dev/null |
+while true; do
+    read -r title || break
+    read -r artist || break
+    read -r album || break
+    [[ -z "$title" ]] && continue
+    notify-send -t 5000 -a "Spotify" "$title" "$artist — $album"
+done

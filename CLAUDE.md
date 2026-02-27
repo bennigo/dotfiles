@@ -173,7 +173,7 @@ loginctl show-session $(loginctl | grep $(whoami) | awk '{print $1}')
 
 ### User Systemd Services
 
-The `systemd/` package contains 7 user service units deployed with `stow --no-folding` to prevent
+The `systemd/` package contains 8 user service units deployed with `stow --no-folding` to prevent
 stow from tree-folding `~/.config/systemd/` (which would cause `systemctl --user enable` to write
 `.wants/` symlinks inside the git repo).
 
@@ -185,6 +185,7 @@ stow from tree-folding `~/.config/systemd/` (which would cause `systemctl --user
 | `password-store-sync.timer` | Timer | `enable --now` | Schedules periodic password store and dotfiles sync |
 | `password-store-sync.service` | Triggered | via `.timer` | Runs the actual sync (git pull/push) |
 | `tmux.service` | Forking | `enable` only | Starts detached tmux session at login |
+| `spotify-notify.service` | Long-running | `enable --now` | Track change notifications via playerctl + notify-send |
 | `mtp-automount@.service` | Template | on-demand | MTP device automount (activated by udev rules) |
 
 ```bash
@@ -193,10 +194,10 @@ cd ~/.dotfiles
 stow -R --no-folding systemd
 
 # Check service status
-systemctl --user status claude-imports password-store-sync.timer mako-watcher.path tmux
+systemctl --user status claude-imports password-store-sync.timer mako-watcher.path tmux spotify-notify
 
 # View all managed unit files
-systemctl --user list-unit-files | grep -E '(claude|tmux|mako|password|mtp)'
+systemctl --user list-unit-files | grep -E '(claude|tmux|mako|password|mtp|spotify)'
 ```
 
 ### Database Management (PostgreSQL 18)

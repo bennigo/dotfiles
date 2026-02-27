@@ -58,9 +58,11 @@ local function setup()
     ---@param title string|?
     ---@return string
     note_id_func = function(title)
+      -- Preserve date-formatted IDs so note_path_func can route them to Journal/daily/
+      if title and title:match("^%d%d%d%d%-%d%d%-%d%d$") then
+        return title
+      end
       -- Create note IDs in a Zettelkasten format with a timestamp and a suffix.
-      -- In this case a note with the title 'My new note' will be given an ID that looks
-      -- like '1657296016-my-new-note', and therefore the file name '1657296016-my-new-note.md'
       local suffix = ""
       if title ~= nil then
         -- If title is given, transform it into valid file name.
@@ -78,7 +80,11 @@ local function setup()
     ---@param spec { id: string, dir: obsidian.Path, title: string|? }
     ---@return string|obsidian.Path The full path to the new note.
     note_path_func = function(spec)
-      -- This is equivalent to the default behavior.
+      local id_str = tostring(spec.id)
+      -- Route YYYY-MM-DD IDs to Journal/daily/ (daily note navigation links)
+      if id_str:match("^%d%d%d%d%-%d%d%-%d%d$") then
+        return vim.fn.expand("~/notes/bgovault") .. "/Journal/daily/" .. id_str .. ".md"
+      end
       local path = spec.dir / tostring(spec.id)
       return path:with_suffix(".md")
     end,
@@ -129,10 +135,10 @@ local function setup()
         end
       end
 
-      -- If this is a daily note (by path), set Area to "Journal" if not already set.
+      -- If this is a daily note (by path), set area to "Journal" if not already set.
       local note_path = tostring(note.path or "")
-      if note_path:match("Journal/daily") and (out.area == nil or out.Area == "") then
-        out.Area = "Journal"
+      if note_path:match("Journal/daily") and (out.area == nil or out.area == "") then
+        out.area = "Journal"
       end
 
       -- Ensure keys exist, even if still empty after merges.
@@ -284,7 +290,30 @@ local function setup()
 
       -- Runs anytime you enter the buffer for a note.
       ---@param note obsidian.Note
-      enter_note = function(note) end,
+      enter_note = function(note)
+        -- Auto-apply daily template when a bare daily note is opened (e.g. from wikilink follow)
+        local path = tostring(note.path)
+        if not path:match("Journal/daily/%d%d%d%d%-%d%d%-%d%d%.md$") then
+          return
+        end
+        local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+        local past_frontmatter = false
+        local frontmatter_count = 0
+        for _, line in ipairs(lines) do
+          if line:match("^%-%-%-") then
+            frontmatter_count = frontmatter_count + 1
+            if frontmatter_count == 2 then
+              past_frontmatter = true
+            end
+          elseif past_frontmatter and line:match("%S") then
+            return -- has real content already
+          end
+        end
+        if past_frontmatter then
+          vim.api.nvim_win_set_cursor(0, { #lines, 0 })
+          vim.cmd("Obsidian template template_daily")
+        end
+      end,
 
       -- Runs anytime you leave the buffer for a note.
       ---@param note obsidian.Note
@@ -506,6 +535,54 @@ return {
     vim.keymap.set("n", "<leader>ojt", "<cmd>Obsidian today<cr>", { desc = "[O]bsidian [J]journal [T]oday" })
     vim.keymap.set("n", "<leader>ojm", "<cmd>Obsidian tomorrow<cr>", { desc = "[O]bsidian [J]ournal [T]omorrow" })
     vim.keymap.set("n", "<leader>ojd", "<cmd>Obsidian dailies<cr>", { desc = "[O]bsidian [J]journal [D]ailies" })
+
+    -- quick-jot: open today's daily and position cursor in Skyndiminnispunktar
+    vim.keymap.set("n", "<leader>oj", function()
+      vim.cmd("Obsidian today")
+      vim.defer_fn(function()
+        local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+        for idx, line in ipairs(lines) do
+          if line:match("^## Skyndiminnispunktar") then
+            local insert_at = idx
+            for j = idx + 1, #lines do
+              if lines[j]:match("^## ") then
+                insert_at = j - 1
+                break
+              end
+              insert_at = j
+            end
+            vim.api.nvim_win_set_cursor(0, { insert_at, 0 })
+            vim.cmd("startinsert")
+            return
+          end
+        end
+      end, 200)
+    end, { desc = "[O]bsidian quick [j]ot to daily" })
+
+    -- quick-jot-todo: same but pre-fills a task checkbox
+    vim.keymap.set("n", "<leader>oJ", function()
+      vim.cmd("Obsidian today")
+      vim.defer_fn(function()
+        local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+        for idx, line in ipairs(lines) do
+          if line:match("^## Skyndiminnispunktar") then
+            local insert_at = idx
+            for j = idx + 1, #lines do
+              if lines[j]:match("^## ") then
+                insert_at = j - 1
+                break
+              end
+              insert_at = j
+            end
+            local task_prefix = "- [ ] "
+            vim.api.nvim_buf_set_lines(0, insert_at, insert_at, false, { task_prefix })
+            vim.api.nvim_win_set_cursor(0, { insert_at + 1, #task_prefix })
+            vim.cmd("startinsert!")
+            return
+          end
+        end
+      end, 200)
+    end, { desc = "[O]bsidian quick [J]ot todo to daily" })
 
     -- new notes
     vim.keymap.set("n", "<leader>onn", "<cmd>Obsidian new<cr>", { desc = "[O]bsidian [N]ew" })
