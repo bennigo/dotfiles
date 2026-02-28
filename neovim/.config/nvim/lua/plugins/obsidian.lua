@@ -600,6 +600,10 @@ return {
             end
             insert_at = j
           end
+          -- Skip trailing blank lines so entry stays adjacent to content
+          while insert_at > idx and lines[insert_at]:match("^%s*$") do
+            insert_at = insert_at - 1
+          end
           local suffix = suffix_fn()
           vim.api.nvim_buf_set_lines(0, insert_at, insert_at, false, { prefix .. suffix })
           vim.api.nvim_win_set_cursor(0, { insert_at + 1, #prefix })
