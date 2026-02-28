@@ -258,9 +258,16 @@ else
     NEXT_HEADING=$(tail -n +"$((SECTION_LINE + 1))" "${DAILY_FILE}" | grep -n "^## " | head -1 | cut -d: -f1)
 
     if [[ -n "${NEXT_HEADING}" ]]; then
-        # Insert before the next heading (relative line + section offset)
-        INSERT_LINE=$((SECTION_LINE + NEXT_HEADING - 1))
-        sed -i "${INSERT_LINE}i\\${ENTRY}\n" "${DAILY_FILE}"
+        # Absolute line of the next heading
+        NEXT_HEADING_ABS=$((SECTION_LINE + NEXT_HEADING))
+        # Start one line before the heading, skip trailing blank lines
+        INSERT_LINE=$((NEXT_HEADING_ABS - 1))
+        while [[ $INSERT_LINE -gt $SECTION_LINE ]] && \
+              [[ -z "$(sed -n "${INSERT_LINE}p" "${DAILY_FILE}" | tr -d '[:space:]')" ]]; do
+            INSERT_LINE=$((INSERT_LINE - 1))
+        done
+        # Insert after last content line (no trailing \n)
+        sed -i "$((INSERT_LINE + 1))i\\${ENTRY}" "${DAILY_FILE}"
     else
         # No next heading — append to end of file
         printf '%s\n' "${ENTRY}" >> "${DAILY_FILE}"
