@@ -10,7 +10,7 @@ Personal dotfiles repository for Sway-based Linux desktop environment. Uses modu
 
 ### Linux Distribution
 - **OS**: Linux (Ubuntu-based or similar)
-- **Kernel**: Linux 6.14.0-29-generic
+- **Kernel**: Linux 6.14.0-37-generic
 - **Architecture**: x86_64
 - **Package Manager**: apt, snap, flatpak support
 
@@ -34,29 +34,36 @@ Personal dotfiles repository for Sway-based Linux desktop environment. Uses modu
 
 ```
 .dotfiles/
-├── sway/          # Sway compositor configuration
-├── waybar/        # Status bar with custom modules
-├── neovim/        # Editor configuration (LazyVim-based, built from source) - see neovim/.config/nvim/CLAUDE.md
-├── neovim_old/    # Previous neovim configuration backup
-├── tmux/          # Terminal multiplexer config
-├── local_bin/     # Custom executable scripts
-├── system/        # System-level configs and installation (see system/CLAUDE.md)
-├── ansible/       # System provisioning and automation (includes PostgreSQL 18 setup)
-├── kitty/         # Terminal emulator configuration
-├── foot/          # Lightweight terminal emulator
-├── alacritty/     # Cross-platform terminal emulator
-├── qutebrowser/   # Keyboard-driven web browser
-├── swappy/        # Screenshot annotation tool
-├── zsh/           # Shell configuration
-├── profile/       # Shell profile settings
-├── docker/        # Docker Engine configuration, scripts, and compose templates (see docker/CLAUDE.md)
-├── claude-code/   # Claude Code CLI and MCP server configurations (see claude-code/README.md)
-├── containers/    # Container/Podman configuration (minimal - only registries.conf)
-├── ranger/        # File manager (minimal - needs proper configuration)
-├── systemd/       # User systemd services (claude-imports, tmux, password-store-sync, mako-watcher, mtp-automount)
-├── neomutt/       # Email client (structure present, needs post-reinstall setup)
-├── i3/            # Legacy i3 configuration (excluded from stow)
-└── [app]/         # Per-application config directories
+├── sway/           # Sway compositor configuration
+├── waybar/         # Status bar with custom modules
+├── neovim/         # Editor configuration (LazyVim-based, built from source) - see neovim/.config/nvim/CLAUDE.md
+├── neovim_old/     # Previous neovim configuration backup
+├── tmux/           # Terminal multiplexer config
+├── local_bin/      # Custom executable scripts (~23 scripts)
+├── system/         # System-level configs and installation (see system/CLAUDE.md)
+├── ansible/        # System provisioning and automation (includes PostgreSQL 18 setup)
+├── kitty/          # Terminal emulator configuration
+├── foot/           # Lightweight terminal emulator
+├── alacritty/      # Cross-platform terminal emulator
+├── qutebrowser/    # Keyboard-driven web browser
+├── swappy/         # Screenshot annotation tool
+├── grim/           # Screenshot tool configuration (integrates with swappy/slurp)
+├── mako/           # Notification daemon configuration
+├── zsh/            # Shell configuration
+├── profile/        # Shell profile settings
+├── docker/         # Docker Engine configuration, scripts, and compose templates (see docker/CLAUDE.md)
+├── claude-code/    # Claude Code CLI and MCP server configurations (see claude-code/README.md)
+├── ollama/         # Local LLM configuration (DeepSeek Coder V2 16B, Llama 3.1 8B) - see ollama/README.md
+├── containers/     # Container/Podman configuration (minimal - only registries.conf)
+├── gnupg/          # GPG agent configuration (stow deploys to ~/.gnupg/)
+├── luacheck/       # Lua linter configuration for Neovim development
+├── udev/           # Device rules (MTP automount, input devices)
+├── ranger/         # File manager (minimal - needs proper configuration)
+├── systemd/        # User systemd services (claude-imports, tmux, password-store-sync, mako-watcher, mtp-automount)
+├── claude-private/ # Encrypted submodule (git-crypt, GPG key 0FA08B1A9096B394) - stow-deployed
+├── neomutt/        # Email client (structure present, needs post-reinstall setup)
+├── i3/             # Legacy i3 configuration (excluded from stow)
+└── [app]/          # Per-application config directories
 ```
 
 ### Configuration Pattern
@@ -84,8 +91,11 @@ bindsym $mod+key command
 
 ### Custom Scripts
 
-- **`local_bin/`**: System utilities and application launchers
+- **`local_bin/`**: System utilities and application launchers (~23 scripts)
 - **`sway/.config/sway/scripts/`**: Sway-specific automation
+  - `sway-shortcuts.sh` — Dynamic shortcut overlay via rofi
+  - `lid-handler.sh` — Laptop lid event handler with power awareness
+  - `swayidle-power-aware.sh` — Power-aware idle management (AC vs battery behavior)
 - **`waybar/.config/waybar/scripts/`**: Status bar modules
 
 ### System Automation
@@ -98,6 +108,8 @@ bindsym $mod+key command
 ### Development Integration
 
 - **Neovim**: LazyVim-based setup (75+ plugins) with Claude Code, Database UI, Obsidian integration - see `neovim/.config/nvim/CLAUDE.md`
+- **Ollama/Local AI**: DeepSeek Coder V2 16B + Llama 3.1 8B on NVIDIA RTX 2000 Ada (8GB VRAM) - see `ollama/README.md`
+- **Avante.nvim**: Local AI coding assistance via Ollama backend + Claude via ACP (CodeCompanion in evaluation)
 - **PostgreSQL 18**: Production database with secure credential management via `pass` - see `ansible/DATABASE_SETUP.md`
 - **Docker Engine 28.4.0**: Container orchestration with Compose v2, utility scripts, templates - see `docker/CLAUDE.md`
 - **Claude Code**: Integrated AI coding assistant with MCP server integrations - see `claude-code/README.md`
@@ -317,6 +329,18 @@ reaches Mako directly via D-Bus.
 echo '{"notification_type":"idle_prompt","message":"Test","title":"Claude Code"}' | claude-notify
 ```
 
+### Multi-Machine Sync
+
+Unified sync system for dotfiles, claude-private submodule, and password-store across machines.
+
+- **`dotfiles-sync`**: Primary sync script — commits, pulls, pushes all three repositories
+- **`sync`**: Shell alias for `dotfiles-sync`
+- **`sync-status`**: Check sync state without modifying anything
+- **Automatic sync**: `password-store-sync.timer` runs periodic sync via systemd
+- **Waybar indicators**: Visual sync status (synced, push needed, pull needed, uncommitted)
+
+See `SYNC_WORKFLOW.md`, `SYNC_DEPLOYMENT.md`, and `SYNC_QUICK_REFERENCE.md` for full documentation.
+
 ### Wayland Compatibility
 - **XWayland**: Legacy X11 application support enabled
 - **Screen sharing**: Portal-based sharing for Wayland applications
@@ -333,6 +357,8 @@ echo '{"notification_type":"idle_prompt","message":"Test","title":"Claude Code"}
 - **Neovim plugin ecosystem and configuration**: `neovim/.config/nvim/CLAUDE.md` (75+ plugins, LazyVim-based)
 - **Docker Engine configuration and workflows**: `docker/CLAUDE.md` (daemon config, scripts, compose templates)
 - **Database setup and credential management**: `ansible/DATABASE_SETUP.md` (PostgreSQL 18)
+- **Local LLM configuration**: `ollama/README.md` (DeepSeek Coder V2 16B, Llama 3.1 8B, GPU setup)
+- **Multi-machine sync workflow**: `SYNC_WORKFLOW.md`, `SYNC_DEPLOYMENT.md`, `SYNC_QUICK_REFERENCE.md`
 - **System installation, hardware setup, and credentials**: `system/CLAUDE.md`
 - **Global workspace context**: `/home/bgo/CLAUDE.md`
 - **Project-specific contexts**: Individual project CLAUDE.md files
@@ -370,12 +396,23 @@ Ansible automatically deploys all stowable directories except:
 - `.git/` (version control)
 - Hidden directories (starting with `.`)
 
+Note: `claude-private/` (encrypted submodule) IS intentionally stowed — it deploys `~/.claude.json`
+and encrypted content to `~/.claude/`. The submodule is managed by git-crypt with GPG key `0FA08B1A9096B394`.
+
 The `systemd` package is stowed separately with `stow --no-folding` so that `~/.config/systemd/user/`
 is a real directory. This prevents `systemctl --user enable` from creating `.wants/` symlinks inside the
 git repo. Ansible also enables and starts the appropriate services after deployment.
 
 ### Recent System Improvements
 
+- **Ollama/Local AI Integration**: GPU-accelerated local LLM inference with NVIDIA RTX 2000 Ada
+  - DeepSeek Coder V2 16B + Llama 3.1 8B models
+  - Integrated with avante.nvim for local AI coding assistance
+  - See: `ollama/README.md` for configuration details
+- **Multi-Machine Sync System**: Unified sync for dotfiles, claude-private, and password-store
+  - `dotfiles-sync` script with Waybar visual indicators
+  - Automatic periodic sync via systemd timer
+  - See: `SYNC_WORKFLOW.md` for complete documentation
 - **PostgreSQL 18 Integration**: Production database with secure credential management via GPG-encrypted `pass` store
   - Full Ansible automation for installation and user setup
   - Neovim Database UI (vim-dadbod-ui) for direct database access
