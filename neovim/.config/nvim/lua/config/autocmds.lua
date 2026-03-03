@@ -22,6 +22,59 @@
 --   desc = "Auto-activate conda environment in terminals"
 -- })
 
+-- Refresh Wayland env vars from tmux (fixes xdg-open after session restore)
+if vim.env.TMUX and vim.env.TMUX ~= "" then
+  for _, var in ipairs({ "WAYLAND_DISPLAY", "SWAYSOCK", "DISPLAY" }) do
+    local ok, result = pcall(vim.fn.system, { "tmux", "show-environment", var })
+    if ok and result and result:match("^" .. var .. "=") then
+      vim.env[var] = result:match("^" .. var .. "=(.+)"):gsub("%s+$", "")
+    end
+  end
+end
+
+-- Override gx in markdown buffers to resolve vault paths for wikilinks/images
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "markdown",
+  callback = function(ev)
+    vim.keymap.set("n", "gx", function()
+      local line = vim.api.nvim_get_current_line()
+      local col = vim.api.nvim_win_get_cursor(0)[2] + 1
+
+      -- Extract wikilink or image embed under cursor: [[file]] or ![[file]]
+      local target
+      for s, link in line:gmatch("()!?%[%[([^%]|#]+)[^%]]*%]%]") do
+        local e = s + #link + 4
+        if col >= s and col <= e then
+          target = link
+          break
+        end
+      end
+
+      -- Fall back to default gx for URLs and non-wikilink text
+      if not target then
+        vim.ui.open(vim.fn.expand("<cfile>"))
+        return
+      end
+
+      -- Resolve the target to a vault path
+      local vault = vim.fn.expand("~/notes/bgovault")
+      local direct = vault .. "/" .. target
+      if vim.fn.filereadable(direct) == 1 then
+        vim.ui.open(direct)
+        return
+      end
+
+      -- Search vault for the file
+      local found = vim.fn.globpath(vault, "**/" .. target, false, true)
+      if #found > 0 then
+        vim.ui.open(found[1])
+      else
+        vim.notify("Not found in vault: " .. target, vim.log.levels.WARN)
+      end
+    end, { buffer = ev.buf, desc = "Open link/image (vault-aware)" })
+  end,
+})
+
 -- Mermaid diagram auto-generation
 -- Auto-generate PDF when saving .mmd files
 vim.api.nvim_create_autocmd("BufWritePost", {
