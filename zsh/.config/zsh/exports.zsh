@@ -92,7 +92,18 @@ refresh-wayland-env() {
     done
 }
 
-# Auto-refresh on shell startup inside tmux when Wayland env is stale
+# Auto-refresh Wayland env in tmux (handles continuum-restored shells too).
+# A precmd hook retries each prompt until WAYLAND_DISPLAY is set, then
+# removes itself so there is zero overhead after the first successful refresh.
+_auto_refresh_wayland_precmd() {
+    if [[ -z "$WAYLAND_DISPLAY" ]]; then
+        refresh-wayland-env
+    fi
+    if [[ -n "$WAYLAND_DISPLAY" ]]; then
+        precmd_functions=(${precmd_functions:#_auto_refresh_wayland_precmd})
+        unfunction _auto_refresh_wayland_precmd 2>/dev/null
+    fi
+}
 if [[ -n "$TMUX" && -z "$WAYLAND_DISPLAY" ]]; then
-    refresh-wayland-env
+    precmd_functions+=(_auto_refresh_wayland_precmd)
 fi
