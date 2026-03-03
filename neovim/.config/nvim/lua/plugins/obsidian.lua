@@ -260,8 +260,22 @@ local function setup()
       },
     },
 
-    -- NOTE: follow_url_func and follow_img_func are deprecated
-    -- They now default to vim.ui.open, which is what we want
+    -- Resolve image path in vault before opening (vim.ui.open passes bare filename)
+    follow_img_func = function(img)
+      local vault_root = vim.fn.expand("~/notes/bgovault")
+      local full = vault_root .. "/" .. img
+      if vim.fn.filereadable(full) == 1 then
+        vim.ui.open(full)
+      else
+        -- Search for the file anywhere in the vault
+        local found = vim.fn.globpath(vault_root, "**/" .. img, false, true)
+        if #found > 0 then
+          vim.ui.open(found[1])
+        else
+          vim.notify("Image not found: " .. img, vim.log.levels.WARN)
+        end
+      end
+    end,
 
     -- Use new command format (e.g., "Obsidian backlinks" instead of "ObsidianBacklinks")
     legacy_commands = false,
