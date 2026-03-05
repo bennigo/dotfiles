@@ -555,8 +555,8 @@ return {
     end, { buffer = true, desc = "[O]bsidian Toggle [C]heckbox" })
 
     vim.keymap.set("n", "<CR>", function()
-      return require("obsidian").actions.smart_action()
-    end, { buffer = true, expr = true, desc = "[O]bsidian Smart_action" })
+      return require("user.footnote_nav").smart_action_with_footnotes()
+    end, { buffer = true, expr = true, desc = "[O]bsidian Smart_action + Footnotes" })
 
     -- New command format (legacy_commands = false)
     vim.keymap.set("n", "<leader>ob", "<cmd>Obsidian backlinks<cr>", { desc = "[O]bsidian [B]backlinks" })
