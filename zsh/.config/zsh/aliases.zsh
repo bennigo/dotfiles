@@ -13,6 +13,8 @@ alias v='nvim'
 # alias restream='restream -p'
 
 alias rek='TERM=xterm-256color ssh gpsops@rek.vedur.is'
+alias reknew='TERM=xterm-256color ssh bgo@rek-d01.vedur.is'
+alias gpsops_rek='TERM=xterm-256color ssh gpsops@rek-d01.vedur.is'
 alias okada='TERM=xterm-256color ssh gpsops@okada.vedur.is'
 alias sarpur='TERM=xterm-256color ssh gpsops@sarpur.vedur.is'
 alias gpsplot='TERM=xterm-256color ssh -X gpsops@gpsplot.vedur.is'
