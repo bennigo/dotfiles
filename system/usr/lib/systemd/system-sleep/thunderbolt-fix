@@ -1,0 +1,23 @@
+#!/bin/bash
+# Fix Intel Maple Ridge Thunderbolt 4 controller stuck in D3cold after suspend/resume.
+# The controller (and downstream USB-C ports) fails to wake from D3cold on ThinkPad P1 Gen 6.
+# Removing the parent PCI bridge and rescanning forces full re-initialization.
+#
+# Called by systemd-suspend.service with: $1 = pre|post, $2 = suspend|hibernate|...
+# Deployed from: ~/.dotfiles/system/usr/lib/systemd/system-sleep/thunderbolt-fix
+
+BRIDGE="0000:20:00.0"
+
+case "$1" in
+    post)
+        logger -t thunderbolt-fix "Resume detected, removing Thunderbolt PCI bridge $BRIDGE and rescanning"
+        if [ -e "/sys/bus/pci/devices/$BRIDGE" ]; then
+            echo 1 > "/sys/bus/pci/devices/$BRIDGE/remove"
+            sleep 2
+            echo 1 > /sys/bus/pci/rescan
+            logger -t thunderbolt-fix "PCI rescan complete"
+        else
+            logger -t thunderbolt-fix "Bridge $BRIDGE not found, skipping"
+        fi
+        ;;
+esac
