@@ -1,0 +1,216 @@
+#!/bin/bash
+# voice-input — Record microphone audio and transcribe to text via Whisper
+#
+# Designed as a standalone speech-to-text tool that can also serve as
+# a building block in a speech translation pipeline.
+#
+# Output modes:
+#   --clipboard   Copy transcription to Wayland clipboard (default)
+#   --stdout      Print transcription to stdout (for piping)
+#   --both        Both clipboard and stdout
+#
+# Usage:
+#   voice-input                    # Record, transcribe, copy to clipboard
+#   voice-input -l is              # Force Icelandic
+#   voice-input -m tiny            # Use tiny model (faster, less accurate)
+#   voice-input --stdout | translate  # Pipe to future translation tool
+#   voice-input --timeout 10       # Auto-stop after 10 seconds
+#
+# Dependencies: arecord, wl-copy (for clipboard), python3 with faster-whisper
+#               (installed via yt-transcribe's venv)
+
+set -euo pipefail
+
+# --- Defaults ---
+LANGUAGE="auto"
+MODEL="medium"
+OUTPUT_MODE="clipboard"
+TIMEOUT=0          # 0 = no timeout, stop with Ctrl+C (auto-set to 15s if no TTY)
+AUDIO_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/voice-input"
+KEEP_AUDIO=false
+QUIET=false
+DEVICE="auto"
+
+# --- Parse arguments ---
+usage() {
+    cat <<'EOF'
+Usage: voice-input [OPTIONS]
+
+Record microphone audio and transcribe to text via Whisper.
+
+Options:
+  -l, --language LANG   Language code (en, is, auto) [default: auto]
+  -m, --model MODEL     Whisper model (tiny|base|small|medium|large-v3) [default: medium]
+  -o, --output MODE     Output mode: clipboard, stdout, both [default: clipboard]
+  -t, --timeout SECS    Auto-stop recording after SECS seconds (0=manual) [default: 0]
+  -d, --device DEVICE   Audio device for arecord (default or hw:X,Y)
+  --keep-audio          Keep the recorded WAV file after transcription
+  -q, --quiet           Suppress status messages (only output transcript)
+  -h, --help            Show this help
+EOF
+    exit 0
+}
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -l|--language) LANGUAGE="$2"; shift 2 ;;
+        -m|--model)    MODEL="$2"; shift 2 ;;
+        -o|--output)   OUTPUT_MODE="$2"; shift 2 ;;
+        -t|--timeout)  TIMEOUT="$2"; shift 2 ;;
+        -d|--device)   DEVICE="$2"; shift 2 ;;
+        --keep-audio)  KEEP_AUDIO=true; shift ;;
+        -q|--quiet)    QUIET=true; shift ;;
+        -h|--help)     usage ;;
+        *) echo "Unknown option: $1" >&2; exit 1 ;;
+    esac
+done
+
+# Auto-set timeout when stdin is not a terminal (e.g., inside Claude Code)
+if [[ "$TIMEOUT" -eq 0 ]] && ! tty -s; then
+    TIMEOUT=15
+fi
+
+# --- Helpers ---
+info() {
+    if [[ "$QUIET" != true ]]; then
+        echo "$@" >&2
+    fi
+}
+
+cleanup() {
+    # Stop recording if still running
+    if [[ -n "${RECORD_PID:-}" ]] && kill -0 "$RECORD_PID" 2>/dev/null; then
+        kill "$RECORD_PID" 2>/dev/null || true
+        wait "$RECORD_PID" 2>/dev/null || true
+    fi
+    # Remove audio file unless --keep-audio
+    if [[ "$KEEP_AUDIO" != true ]] && [[ -f "${AUDIO_FILE:-}" ]]; then
+        rm -f "$AUDIO_FILE"
+    fi
+}
+trap cleanup EXIT
+
+# --- Dependency checks ---
+if ! command -v arecord &>/dev/null; then
+    echo "Error: arecord not found. Install alsa-utils." >&2
+    exit 1
+fi
+
+if [[ "$OUTPUT_MODE" == "clipboard" || "$OUTPUT_MODE" == "both" ]]; then
+    if ! command -v wl-copy &>/dev/null; then
+        echo "Error: wl-copy not found. Install wl-clipboard." >&2
+        exit 1
+    fi
+fi
+
+# --- Resolve yt-transcribe's Python environment ---
+# yt-transcribe is installed as a uv tool; find its venv with faster-whisper
+YT_VENV="$HOME/.local/share/uv/tools/yt-transcribe"
+if [[ ! -d "$YT_VENV" ]]; then
+    echo "Error: yt-transcribe venv not found at $YT_VENV" >&2
+    echo "Install with: uv tool install yt-transcribe" >&2
+    exit 1
+fi
+
+PYTHON="$YT_VENV/bin/python"
+if [[ ! -x "$PYTHON" ]]; then
+    echo "Error: Python not found in yt-transcribe venv" >&2
+    exit 1
+fi
+
+# --- Record audio ---
+mkdir -p "$AUDIO_DIR"
+AUDIO_FILE="$AUDIO_DIR/recording-$(date +%Y%m%d-%H%M%S).wav"
+
+ARECORD_ARGS=(-f cd -t wav -c 1 -r 16000)
+if [[ "$DEVICE" != "auto" ]]; then
+    ARECORD_ARGS+=(-D "$DEVICE")
+fi
+
+if [[ "$TIMEOUT" -gt 0 ]]; then
+    ARECORD_ARGS+=(-d "$TIMEOUT")
+    info "Recording for ${TIMEOUT}s... (Ctrl+C to stop early)"
+else
+    info "Recording... Press Ctrl+C to stop."
+fi
+
+arecord "${ARECORD_ARGS[@]}" "$AUDIO_FILE" 2>/dev/null &
+RECORD_PID=$!
+
+# Wait for recording to finish (timeout or Ctrl+C)
+wait "$RECORD_PID" 2>/dev/null || true
+RECORD_PID=""
+
+# Check we got audio
+if [[ ! -s "$AUDIO_FILE" ]]; then
+    echo "Error: No audio recorded." >&2
+    exit 1
+fi
+
+info "Transcribing with Whisper ($MODEL)..."
+
+# --- Transcribe using faster-whisper from yt-transcribe's venv ---
+LANG_ARG="$LANGUAGE"
+TRANSCRIPT=$("$PYTHON" -c "
+import sys, os, io
+
+# Redirect stdout to stderr so transcriber's print() calls don't pollute our output
+_real_stdout = sys.stdout
+sys.stdout = sys.stderr
+
+from yt_transcribe.transcriber import transcribe
+
+lang = '$LANG_ARG' if '$LANG_ARG' != 'auto' else None
+result = transcribe(
+    audio_path='$AUDIO_FILE',
+    model='$MODEL',
+    language=lang,
+)
+
+# Restore stdout for our structured output only
+sys.stdout = _real_stdout
+print(f'__lang__:{result.language}:{result.language_probability:.2f}')
+print(result.text)
+")
+
+if [[ -z "$TRANSCRIPT" ]]; then
+    echo "Error: Transcription failed or produced no output." >&2
+    exit 1
+fi
+
+# Parse metadata and transcript text
+META_LINE=$(echo "$TRANSCRIPT" | head -1)
+TEXT=$(echo "$TRANSCRIPT" | tail -n +2)
+DETECTED_LANG=$(echo "$META_LINE" | cut -d: -f2)
+LANG_PROB=$(echo "$META_LINE" | cut -d: -f3)
+
+if [[ -z "$TEXT" ]]; then
+    info "No speech detected in recording."
+    exit 0
+fi
+
+info "Detected: $DETECTED_LANG (${LANG_PROB})"
+
+# --- Output ---
+case "$OUTPUT_MODE" in
+    clipboard)
+        echo "$TEXT" | wl-copy
+        info "Copied to clipboard."
+        ;;
+    stdout)
+        echo "$TEXT"
+        ;;
+    both)
+        echo "$TEXT" | wl-copy
+        echo "$TEXT"
+        info "Copied to clipboard."
+        ;;
+    *)
+        echo "Unknown output mode: $OUTPUT_MODE" >&2
+        exit 1
+        ;;
+esac
+
+if [[ "$KEEP_AUDIO" == true ]]; then
+    info "Audio saved: $AUDIO_FILE"
+fi
