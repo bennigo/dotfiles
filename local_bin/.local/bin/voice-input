@@ -89,9 +89,8 @@ fi
 
 # --- Toggle mode (for Sway keybindings) ---
 if [[ "$TOGGLE" == true ]]; then
-    TOGGLE_LOG="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/voice-input.log"
-    exec 2>>"$TOGGLE_LOG"
-    echo "--- $(date) --- toggle invoked, state_file=$STATE_FILE exists=$(test -f "$STATE_FILE" && echo yes || echo no)" >&2
+    # Suppress stderr in toggle mode (runs from Sway keybinding, no terminal)
+    exec 2>/dev/null
 
     if [[ -f "$STATE_FILE" ]]; then
         # --- Second press: stop recording, transcribe, clipboard ---
@@ -99,15 +98,19 @@ if [[ "$TOGGLE" == true ]]; then
         rm -f "$STATE_FILE"
 
         if [[ -n "${RECORD_PID:-}" ]] && kill -0 "$RECORD_PID" 2>/dev/null; then
-            kill -INT "$RECORD_PID" 2>/dev/null
-            sleep 0.2  # let arecord finalize WAV header
+            # Send SIGINT to the process group so arecord finalizes the WAV header
+            kill -INT -- -"$RECORD_PID" 2>/dev/null || kill -INT "$RECORD_PID" 2>/dev/null || true
+            sleep 0.3  # let arecord finalize WAV header
             # Force kill if still running
-            kill -0 "$RECORD_PID" 2>/dev/null && kill "$RECORD_PID" 2>/dev/null || true
+            kill -0 "$RECORD_PID" 2>/dev/null && kill -9 "$RECORD_PID" 2>/dev/null || true
         fi
 
-        notify-send -t 3000 "Voice Input" "Transcribing..."
+        # Dismiss all Voice Input notifications, show "Transcribing"
+        makoctl dismiss --all 2>/dev/null || true
+        notify-send -t 30000 "Voice Input" "Transcribing..."
 
         if [[ ! -s "${AUDIO_FILE:-}" ]]; then
+            makoctl dismiss --all 2>/dev/null || true
             notify-send -u critical -t 5000 "Voice Input" "No audio recorded."
             exit 1
         fi
@@ -132,15 +135,17 @@ print(result.text)
         TEXT=$(echo "$TRANSCRIPT" | tail -n +2)
 
         if [[ -z "$TEXT" ]]; then
+            makoctl dismiss --all 2>/dev/null || true
             notify-send -u critical -t 5000 "Voice Input" "No speech detected."
             rm -f "$AUDIO_FILE"
             exit 0
         fi
 
         echo "$TEXT" | wl-copy
-        # Show first 80 chars in notification
+        # Replace "Transcribing" with result preview
         PREVIEW="${TEXT:0:80}"
         [[ ${#TEXT} -gt 80 ]] && PREVIEW="${PREVIEW}..."
+        makoctl dismiss --all 2>/dev/null || true
         notify-send -t 5000 "Voice Input" "Copied to clipboard:\n${PREVIEW}"
 
         rm -f "$AUDIO_FILE"
@@ -150,12 +155,14 @@ print(result.text)
         mkdir -p "$AUDIO_DIR"
         AUDIO_FILE="$AUDIO_DIR/recording-$(date +%Y%m%d-%H%M%S).wav"
 
-        ARECORD_ARGS=(-f cd -t wav -c 1 -r 16000)
+        ARECORD_ARGS=(-f S16_LE -t wav -c 1 -r 16000)
         [[ "$DEVICE" != "auto" ]] && ARECORD_ARGS+=(-D "$DEVICE")
 
-        arecord "${ARECORD_ARGS[@]}" "$AUDIO_FILE" 2>/dev/null &
+        setsid arecord "${ARECORD_ARGS[@]}" "$AUDIO_FILE" >/dev/null 2>&1 &
         RECORD_PID=$!
-        disown "$RECORD_PID"
+
+        # Show persistent "Recording" notification and save its ID for replacement
+        notify-send -t 30000 "Voice Input" "Recording... Press Super+Shift+v to stop."
 
         # Save state for the second invocation
         cat > "$STATE_FILE" <<STATEEOF
@@ -165,7 +172,6 @@ LANGUAGE="$LANGUAGE"
 MODEL="$MODEL"
 STATEEOF
 
-        notify-send -t 0 "Voice Input" "Recording... Press again to stop."
         exit 0
     fi
 fi
