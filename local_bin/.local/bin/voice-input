@@ -11,10 +11,11 @@
 #
 # Usage:
 #   voice-input                    # Record, transcribe, copy to clipboard
-#   voice-input -l is              # Force Icelandic
+#   voice-input -l is              # Icelandic (auto-selects large-v3)
 #   voice-input -m tiny            # Use tiny model (faster, less accurate)
 #   voice-input --stdout | translate  # Pipe to future translation tool
 #   voice-input --timeout 10       # Auto-stop after 10 seconds
+#   voice-input --toggle           # Toggle: 1st call starts, 2nd stops+transcribes (for keybindings)
 #
 # Dependencies: arecord, wl-copy (for clipboard), python3 with faster-whisper
 #               (installed via yt-transcribe's venv)
@@ -30,6 +31,9 @@ AUDIO_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/voice-input"
 KEEP_AUDIO=false
 QUIET=false
 DEVICE="auto"
+MODEL_EXPLICIT=false
+TOGGLE=false
+STATE_FILE="${XDG_RUNTIME_DIR:-/tmp}/voice-input.state"
 
 # --- Parse arguments ---
 usage() {
@@ -41,9 +45,12 @@ Record microphone audio and transcribe to text via Whisper.
 Options:
   -l, --language LANG   Language code (en, is, auto) [default: auto]
   -m, --model MODEL     Whisper model (tiny|base|small|medium|large-v3) [default: medium]
+                        Low-resource languages (e.g. Icelandic) auto-upgrade to large-v3
   -o, --output MODE     Output mode: clipboard, stdout, both [default: clipboard]
   -t, --timeout SECS    Auto-stop recording after SECS seconds (0=manual) [default: 0]
   -d, --device DEVICE   Audio device for arecord (default or hw:X,Y)
+  --toggle              Toggle mode for keybindings: 1st call starts recording,
+                        2nd call stops and transcribes to clipboard
   --keep-audio          Keep the recorded WAV file after transcription
   -q, --quiet           Suppress status messages (only output transcript)
   -h, --help            Show this help
@@ -54,16 +61,114 @@ EOF
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -l|--language) LANGUAGE="$2"; shift 2 ;;
-        -m|--model)    MODEL="$2"; shift 2 ;;
+        -m|--model)    MODEL="$2"; MODEL_EXPLICIT=true; shift 2 ;;
         -o|--output)   OUTPUT_MODE="$2"; shift 2 ;;
         -t|--timeout)  TIMEOUT="$2"; shift 2 ;;
         -d|--device)   DEVICE="$2"; shift 2 ;;
+        --toggle)      TOGGLE=true; shift ;;
         --keep-audio)  KEEP_AUDIO=true; shift ;;
         -q|--quiet)    QUIET=true; shift ;;
         -h|--help)     usage ;;
         *) echo "Unknown option: $1" >&2; exit 1 ;;
     esac
 done
+
+# --- Auto-upgrade model for low-resource languages ---
+# Languages where models smaller than large-v3 produce unusable results
+LARGE_MODEL_LANGUAGES="is"  # Icelandic — extend with space-separated codes as needed
+
+if [[ "$MODEL_EXPLICIT" != true ]]; then
+    for lang_code in $LARGE_MODEL_LANGUAGES; do
+        if [[ "$LANGUAGE" == "$lang_code" ]]; then
+            MODEL="large-v3"
+            echo "Auto-upgrading model to large-v3 for language '$LANGUAGE' (override with -m)" >&2
+            break
+        fi
+    done
+fi
+
+# --- Toggle mode (for Sway keybindings) ---
+if [[ "$TOGGLE" == true ]]; then
+    TOGGLE_LOG="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/voice-input.log"
+    exec 2>>"$TOGGLE_LOG"
+    echo "--- $(date) --- toggle invoked, state_file=$STATE_FILE exists=$(test -f "$STATE_FILE" && echo yes || echo no)" >&2
+
+    if [[ -f "$STATE_FILE" ]]; then
+        # --- Second press: stop recording, transcribe, clipboard ---
+        source "$STATE_FILE"
+        rm -f "$STATE_FILE"
+
+        if [[ -n "${RECORD_PID:-}" ]] && kill -0 "$RECORD_PID" 2>/dev/null; then
+            kill -INT "$RECORD_PID" 2>/dev/null
+            sleep 0.2  # let arecord finalize WAV header
+            # Force kill if still running
+            kill -0 "$RECORD_PID" 2>/dev/null && kill "$RECORD_PID" 2>/dev/null || true
+        fi
+
+        notify-send -t 3000 "Voice Input" "Transcribing..."
+
+        if [[ ! -s "${AUDIO_FILE:-}" ]]; then
+            notify-send -u critical -t 5000 "Voice Input" "No audio recorded."
+            exit 1
+        fi
+
+        # Resolve Python
+        YT_VENV="$HOME/.local/share/uv/tools/yt-transcribe"
+        PYTHON="$YT_VENV/bin/python"
+
+        LANG_ARG="$LANGUAGE"
+        TRANSCRIPT=$("$PYTHON" -c "
+import sys
+_real_stdout = sys.stdout
+sys.stdout = sys.stderr
+from yt_transcribe.transcriber import transcribe
+lang = '$LANG_ARG' if '$LANG_ARG' != 'auto' else None
+result = transcribe(audio_path='$AUDIO_FILE', model='$MODEL', language=lang)
+sys.stdout = _real_stdout
+print(f'__lang__:{result.language}:{result.language_probability:.2f}')
+print(result.text)
+" 2>/dev/null) || true
+
+        TEXT=$(echo "$TRANSCRIPT" | tail -n +2)
+
+        if [[ -z "$TEXT" ]]; then
+            notify-send -u critical -t 5000 "Voice Input" "No speech detected."
+            rm -f "$AUDIO_FILE"
+            exit 0
+        fi
+
+        echo "$TEXT" | wl-copy
+        # Show first 80 chars in notification
+        PREVIEW="${TEXT:0:80}"
+        [[ ${#TEXT} -gt 80 ]] && PREVIEW="${PREVIEW}..."
+        notify-send -t 5000 "Voice Input" "Copied to clipboard:\n${PREVIEW}"
+
+        rm -f "$AUDIO_FILE"
+        exit 0
+    else
+        # --- First press: start recording in background ---
+        mkdir -p "$AUDIO_DIR"
+        AUDIO_FILE="$AUDIO_DIR/recording-$(date +%Y%m%d-%H%M%S).wav"
+
+        ARECORD_ARGS=(-f cd -t wav -c 1 -r 16000)
+        [[ "$DEVICE" != "auto" ]] && ARECORD_ARGS+=(-D "$DEVICE")
+
+        arecord "${ARECORD_ARGS[@]}" "$AUDIO_FILE" 2>/dev/null &
+        RECORD_PID=$!
+        disown "$RECORD_PID"
+
+        # Save state for the second invocation
+        cat > "$STATE_FILE" <<STATEEOF
+RECORD_PID=$RECORD_PID
+AUDIO_FILE="$AUDIO_FILE"
+LANGUAGE="$LANGUAGE"
+MODEL="$MODEL"
+STATEEOF
+
+        notify-send -t 0 "Voice Input" "Recording... Press again to stop."
+        exit 0
+    fi
+fi
 
 # Auto-set timeout when stdin is not a terminal (e.g., inside Claude Code)
 if [[ "$TIMEOUT" -eq 0 ]] && ! tty -s; then
@@ -134,12 +239,18 @@ else
     info "Recording... Press Ctrl+C to stop."
 fi
 
+# Trap SIGINT during recording so Ctrl+C stops arecord but continues to transcription
+trap 'kill "$RECORD_PID" 2>/dev/null; wait "$RECORD_PID" 2>/dev/null || true; RECORD_PID=""' INT
+
 arecord "${ARECORD_ARGS[@]}" "$AUDIO_FILE" 2>/dev/null &
 RECORD_PID=$!
 
 # Wait for recording to finish (timeout or Ctrl+C)
 wait "$RECORD_PID" 2>/dev/null || true
 RECORD_PID=""
+
+# Restore default SIGINT handler for the rest of the script
+trap - INT
 
 # Check we got audio
 if [[ ! -s "$AUDIO_FILE" ]]; then
