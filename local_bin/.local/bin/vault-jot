@@ -241,37 +241,53 @@ else
     NOTIFY_MSG="Jot → ${TARGET_DATE}: ${INPUT}"
 fi
 
-# ── Append under ## Skyndiminnispunktar ───────────────────────────────
-SECTION_LINE=$(grep -n "^## Skyndiminnispunktar" "${DAILY_FILE}" | head -1 | cut -d: -f1)
+# ── Append entry to the appropriate section ──────────────────────────
+# Tasks (- [ ] ...) go under ## Verkefni dagsins; plain jots under ## Skyndiminnispunktar
+insert_under_section() {
+    local section_heading="$1"
+    local entry="$2"
+    local file="$3"
 
-if [[ -z "${SECTION_LINE}" ]]; then
-    # No section found — append before ## Verkefni dagsins
-    VERKEFNI_LINE=$(grep -n "^## Verkefni dagsins" "${DAILY_FILE}" | head -1 | cut -d: -f1)
-    if [[ -n "${VERKEFNI_LINE}" ]]; then
-        sed -i "${VERKEFNI_LINE}i\\## Skyndiminnispunktar\n\n> Fljótlegar hugmyndir og athugasemdir — hreinsað í lok dags\n\n${ENTRY}\n" "${DAILY_FILE}"
-    else
-        # Fallback: append to end of file
-        printf '\n## Skyndiminnispunktar\n\n%s\n' "${ENTRY}" >> "${DAILY_FILE}"
+    local section_line
+    section_line=$(grep -n "^## ${section_heading}$" "${file}" | head -1 | cut -d: -f1)
+
+    if [[ -z "${section_line}" ]]; then
+        # Section not found — append to end of file
+        printf '\n## %s\n\n%s\n' "${section_heading}" "${entry}" >> "${file}"
+        return
     fi
-else
-    # Find the next ## heading after Skyndiminnispunktar
-    NEXT_HEADING=$(tail -n +"$((SECTION_LINE + 1))" "${DAILY_FILE}" | grep -n "^## " | head -1 | cut -d: -f1)
 
-    if [[ -n "${NEXT_HEADING}" ]]; then
-        # Absolute line of the next heading
-        NEXT_HEADING_ABS=$((SECTION_LINE + NEXT_HEADING))
-        # Start one line before the heading, skip trailing blank lines
-        INSERT_LINE=$((NEXT_HEADING_ABS - 1))
-        while [[ $INSERT_LINE -gt $SECTION_LINE ]] && \
-              [[ -z "$(sed -n "${INSERT_LINE}p" "${DAILY_FILE}" | tr -d '[:space:]')" ]]; do
-            INSERT_LINE=$((INSERT_LINE - 1))
+    # For Verkefni dagsins: insert before the first ### subsection
+    # For Skyndiminnispunktar: insert before the next ## heading
+    local pattern
+    if [[ "${section_heading}" == "Verkefni dagsins" ]]; then
+        pattern="^### "
+    else
+        pattern="^## "
+    fi
+
+    local next_heading
+    next_heading=$(tail -n +"$((section_line + 1))" "${file}" | grep -n "${pattern}" | head -1 | cut -d: -f1)
+
+    if [[ -n "${next_heading}" ]]; then
+        local next_heading_abs=$((section_line + next_heading))
+        # Walk back over blank lines to find last content line
+        local insert_line=$((next_heading_abs - 1))
+        while [[ $insert_line -gt $section_line ]] && \
+              [[ -z "$(sed -n "${insert_line}p" "${file}" | tr -d '[:space:]')" ]]; do
+            insert_line=$((insert_line - 1))
         done
-        # Insert after last content line (no trailing \n)
-        sed -i "$((INSERT_LINE + 1))i\\${ENTRY}" "${DAILY_FILE}"
+        sed -i "$((insert_line + 1))i\\${entry}" "${file}"
     else
         # No next heading — append to end of file
-        printf '%s\n' "${ENTRY}" >> "${DAILY_FILE}"
+        printf '%s\n' "${entry}" >> "${file}"
     fi
+}
+
+if [[ "${ENTRY}" == "- [ ] "* ]]; then
+    insert_under_section "Verkefni dagsins" "${ENTRY}" "${DAILY_FILE}"
+else
+    insert_under_section "Skyndiminnispunktar" "${ENTRY}" "${DAILY_FILE}"
 fi
 
 # ── Output confirmation ──────────────────────────────────────────────
