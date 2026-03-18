@@ -39,14 +39,14 @@ require("lazy").setup({
     rtp = {
       -- disable some rtp plugins
       disabled_plugins = {
-        "gzip",
+        -- "gzip",         -- re-enabled: needed for .Z and .gz compressed files (RINEX data)
         -- "matchit",
         -- "matchparen",
         -- "netrwPlugin",
         "tarPlugin",
         "tohtml",
         "tutor",
-        "zipPlugin",
+        -- "zipPlugin",    -- re-enabled: needed for .zip archive browsing
       },
     },
   },
