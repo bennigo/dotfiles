@@ -672,11 +672,87 @@ return {
     -- new notes
     vim.keymap.set("n", "<leader>onn", "<cmd>Obsidian new<cr>", { desc = "[O]bsidian [N]ew" })
     vim.keymap.set("n", "<leader>ont", "<cmd>Obsidian new_from_template<cr>", { desc = "[O]bsidian new from [T]emplate" })
-    -- vim.keymap.set(
-    --   "n",
-    --   "<leader>ona",
-    --   "<cmd>ObsidianNewFromTemplateAuto<cr>",
-    --   { desc = "[O]bsidian new from [T]emplate (auto title)" }
-    -- )
+
+    -- REST API integration (requires Local REST API plugin running in Obsidian)
+    local rest_api = vim.fn.expand("~/notes/bgovault/.scripts/obsidian-rest-api.sh")
+    if vim.fn.filereadable(rest_api) == 1 then
+      -- Open current note in Obsidian GUI (graph, canvas, preview)
+      vim.keymap.set("n", "<leader>oag", function()
+        local rel = vim.fn.fnamemodify(vim.fn.expand("%:p"), ":.")
+        if rel == "" or not rel:match("%.md$") then
+          vim.notify("Not a vault markdown file", vim.log.levels.WARN)
+          return
+        end
+        vim.fn.system(rest_api .. " open " .. vim.fn.shellescape(rel))
+        vim.notify("Opened in Obsidian: " .. rel, vim.log.levels.INFO)
+      end, { desc = "[O]bsidian [A]PI open in [G]UI" })
+
+      -- Dataview DQL query (prompted)
+      vim.keymap.set("n", "<leader>oad", function()
+        vim.ui.input({ prompt = "DQL> " }, function(query)
+          if not query or query == "" then return end
+          local output = vim.fn.system(rest_api .. " dql " .. vim.fn.shellescape(query))
+          -- Show in a scratch buffer
+          vim.cmd("botright new")
+          vim.bo.buftype = "nofile"
+          vim.bo.bufhidden = "wipe"
+          vim.bo.filetype = "markdown"
+          vim.api.nvim_buf_set_name(0, "DQL: " .. query:sub(1, 40))
+          vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.split(output, "\n"))
+        end)
+      end, { desc = "[O]bsidian [A]PI [D]ataview query" })
+
+      -- Search via REST API (uses Obsidian's indexed search)
+      vim.keymap.set("n", "<leader>oas", function()
+        vim.ui.input({ prompt = "Search> " }, function(query)
+          if not query or query == "" then return end
+          local output = vim.fn.system(rest_api .. " search " .. vim.fn.shellescape(query))
+          vim.cmd("botright new")
+          vim.bo.buftype = "nofile"
+          vim.bo.bufhidden = "wipe"
+          vim.bo.filetype = "markdown"
+          vim.api.nvim_buf_set_name(0, "Search: " .. query)
+          vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.split(output, "\n"))
+        end)
+      end, { desc = "[O]bsidian [A]PI [S]earch" })
+
+      -- Show backlinks for current note via Dataview
+      vim.keymap.set("n", "<leader>oab", function()
+        local stem = vim.fn.expand("%:t:r")
+        if stem == "" then
+          vim.notify("No file open", vim.log.levels.WARN)
+          return
+        end
+        local dql = 'TABLE file.mtime as Modified WHERE contains(file.outlinks, [[' .. stem .. ']]) SORT file.mtime DESC'
+        local output = vim.fn.system(rest_api .. " dql " .. vim.fn.shellescape(dql))
+        vim.cmd("botright new")
+        vim.bo.buftype = "nofile"
+        vim.bo.bufhidden = "wipe"
+        vim.bo.filetype = "markdown"
+        vim.api.nvim_buf_set_name(0, "Backlinks: " .. stem)
+        vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.split(output, "\n"))
+      end, { desc = "[O]bsidian [A]PI [B]acklinks (Dataview)" })
+
+      -- Execute Obsidian command (prompted with filter)
+      vim.keymap.set("n", "<leader>oax", function()
+        vim.ui.input({ prompt = "Command filter> " }, function(filter)
+          if not filter then return end
+          local output = vim.fn.system(rest_api .. " commands " .. vim.fn.shellescape(filter))
+          local lines = vim.split(output, "\n")
+          if #lines == 0 then
+            vim.notify("No commands match: " .. filter, vim.log.levels.WARN)
+            return
+          end
+          vim.ui.select(lines, { prompt = "Execute command:" }, function(choice)
+            if not choice then return end
+            local cmd_id = choice:match("^%s*(%S+)")
+            if cmd_id then
+              vim.fn.system(rest_api .. " exec " .. vim.fn.shellescape(cmd_id))
+              vim.notify("Executed: " .. cmd_id, vim.log.levels.INFO)
+            end
+          end)
+        end)
+      end, { desc = "[O]bsidian [A]PI e[X]ecute command" })
+    end
   end,
 }
