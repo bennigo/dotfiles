@@ -554,9 +554,30 @@ return {
       return require("obsidian").actions.toggle_checkbox()
     end, { buffer = true, desc = "[O]bsidian Toggle [C]heckbox" })
 
-    vim.keymap.set("n", "<CR>", function()
-      return require("user.footnote_nav").smart_action_with_footnotes()
-    end, { buffer = true, expr = true, desc = "[O]bsidian Smart_action + Footnotes" })
+    -- obsidian.nvim hardcodes <CR> → api.smart_action on every BufEnter (autocmds.lua:49).
+    -- Instead of fighting the autocmd, we monkey-patch the function itself so the
+    -- plugin's own <CR> mapping calls our footnote-aware wrapper.
+    -- Done once at startup — no autocmds, no vim.schedule, no race with which-key.
+    do
+      local obsidian_api = require("obsidian.api")
+      local original_smart_action = obsidian_api.smart_action
+      obsidian_api.smart_action = function()
+        -- Check footnotes first
+        local fn = require("user.footnote_nav")
+        local ref_label = fn.cursor_footnote_ref()
+        if ref_label then
+          vim.schedule(function() fn.goto_definition(ref_label) end)
+          return ""
+        end
+        local def_label = fn.cursor_footnote_def()
+        if def_label then
+          vim.schedule(function() fn.goto_reference(def_label) end)
+          return ""
+        end
+        -- Fall through to original (saved reference, not our patched version)
+        return original_smart_action()
+      end
+    end
 
     -- New command format (legacy_commands = false)
     vim.keymap.set("n", "<leader>ob", "<cmd>Obsidian backlinks<cr>", { desc = "[O]bsidian [B]backlinks" })
