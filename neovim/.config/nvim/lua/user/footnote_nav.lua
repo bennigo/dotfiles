@@ -91,12 +91,45 @@ function M.goto_reference(label)
     vim.api.nvim_win_set_cursor(0, { refs[1].lnum, (refs[1].col or 1) - 1 })
     vim.cmd("normal! zz")
   else
-    vim.fn.setqflist(refs, "r")
-    vim.cmd("normal! m'")
-    vim.api.nvim_win_set_cursor(0, { refs[1].lnum, (refs[1].col or 1) - 1 })
-    vim.cmd("normal! zz")
-    vim.cmd("copen")
-    vim.notify(#refs .. " references to [^" .. label .. "], use ]q/[q to navigate", vim.log.levels.INFO)
+    -- Use fzf-lua floating picker if available, otherwise vim.ui.select
+    local ok, fzf = pcall(require, "fzf-lua")
+    if ok then
+      local items = {}
+      for _, ref in ipairs(refs) do
+        -- Format as file:line:col:text so fzf-lua previewer can show the right location
+        table.insert(items, string.format("%s:%d:%d: %s",
+          fname, ref.lnum, ref.col or 1, ref.text:sub(1, 120)))
+      end
+      fzf.fzf_exec(items, {
+        prompt = "Footnote [^" .. label .. "] references> ",
+        previewer = "builtin",
+        actions = {
+          ["default"] = function(selected)
+            if selected and selected[1] then
+              local lnum = tonumber(selected[1]:match(":(%d+):%d+:"))
+              if lnum then
+                vim.cmd("normal! m'")
+                vim.api.nvim_win_set_cursor(0, { lnum, 0 })
+                vim.cmd("normal! zz")
+              end
+            end
+          end,
+        },
+      })
+    else
+      -- Fallback: vim.ui.select
+      local display = {}
+      for i, ref in ipairs(refs) do
+        display[i] = string.format("L%d: %s", ref.lnum, ref.text:sub(1, 80))
+      end
+      vim.ui.select(display, { prompt = "References to [^" .. label .. "]:" }, function(_, idx)
+        if idx then
+          vim.cmd("normal! m'")
+          vim.api.nvim_win_set_cursor(0, { refs[idx].lnum, (refs[idx].col or 1) - 1 })
+          vim.cmd("normal! zz")
+        end
+      end)
+    end
   end
 end
 
