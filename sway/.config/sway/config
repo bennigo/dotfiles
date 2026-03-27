@@ -216,15 +216,15 @@ bindsym $mod+r exec /usr/bin/gnome-calculator -m advanced
 ## Apps // System monitor (htop) in terminal // 📈 ##
 bindsym $mod+Shift+t exec $term --class "htop" htop
 
-# nvim with obskidian
-## Notes // Open Obsidian daily note (Neovim) // 📝 ##
-bindsym $mod+n exec $term --class "nvim_obsidiantoday" zsh -i ~/.local/bin/run_nvim_obsidian.sh today 
-## Notes // Create new Obsidian note (Neovim) // 🆕 ##
-bindsym $mod+Shift+n exec $term --class "nvim_obsidiannew" zsh -i ~/.local/bin/run_nvim_obsidian.sh new
-## Notes // Quick note (Neovim) // ⚡ ##
-bindsym $mod+i exec $term --class "nvim_quick" zsh -i ~/.local/bin/run_nvim_obsidian.sh quick
+# nvim with obsidian — each gets its own mark for independent scratchpad toggle
+## Notes // Toggle Obsidian daily note (Neovim) // 📝 ##
+bindsym $mod+n exec ~/.local/bin/sway-nvim-toggle today
+## Notes // Toggle new Obsidian note (Neovim) // 🆕 ##
+bindsym $mod+Shift+n exec ~/.local/bin/sway-nvim-toggle new
+## Notes // Toggle quick note (Neovim) // ⚡ ##
+bindsym $mod+i exec ~/.local/bin/sway-nvim-toggle quick
 ## Notes // Insert from template (Neovim) // 📄 ##
-bindsym $mod+Shift+i exec $term --class "nvim_quick" zsh -i ~/.local/bin/run_nvim_obsidian.sh template
+bindsym $mod+Shift+i exec ~/.local/bin/sway-nvim-toggle template
 ## Notes // Quick jot to daily note (rofi popup) // ✏️ ##
 bindsym $mod+Ctrl+j exec ~/.local/bin/vault-jot
 ## Voice // Toggle voice-to-clipboard (Whisper) // 🎙️ ##
@@ -251,8 +251,8 @@ bindsym $mod+z [con_mark="zathura"] scratchpad show
 bindsym $mod+c [con_mark="cisco"] scratchpad show
 ## Scratchpad // Show Obsidian from scratchpad // 🗒️ ##
 bindsym $mod+Shift+o [con_mark="obsidian"] scratchpad show; [con_mark="obsidian"] move position center
-## Scratchpad // Show Quick (Neovim) from scratchpad // ⚡ ##
-bindsym $mod+o [con_mark="quick"] scratchpad show
+## Scratchpad // Show Neovim from scratchpad (any nvim window) // ⚡ ##
+bindsym $mod+o [con_mark="nvim_today"] scratchpad show; [con_mark="nvim_new"] scratchpad show; [con_mark="nvim_quick"] scratchpad show
 ## Scratchpad // Toggle LibreOffice scratchpad // 📄 ##
 bindsym $mod+Shift+d exec /home/bgo/.local/bin/toggle-libreoffice.sh
 ## Scratchpad // Show Zotero from scratchpad // 📖 ##
@@ -521,7 +521,9 @@ for_window [app_id="^libreoffice"] mark "libreoffice", floating enable, resize s
 for_window [app_id="terminal_floating"] mark "terminal_fl", move scratchpad, move container to workspace current, resize set width 1500 px height 900 px
 for_window [app_id="git_sync_float"] floating enable, resize set width 1200 px height 800 px, move position center
 for_window [app_id="org.pwmt.zathura"] mark "zathura", move scratchpad, move container to workspace current, resize set width 1200 px height 1180 px
-for_window [app_id="(?i)(?:nvim_obsidiantoday|nvim_obsidiannew|nvim_quick)"] mark "quick", move scratchpad, move container to workspace current, resize set width 1900 px height 1100 px
+for_window [app_id="nvim_obsidiantoday"] mark "nvim_today", move scratchpad, resize set width 1900 px height 1100 px
+for_window [app_id="nvim_obsidiannew"] mark "nvim_new", move scratchpad, resize set width 1900 px height 1100 px
+for_window [app_id="nvim_quick"] mark "nvim_quick", move scratchpad, resize set width 1900 px height 1100 px
 # for_window [app_id="terminal_floating"] mark "terminal", move scratchpad floating enable resize set width 1400 px height 1000 px
 
 include /etc/sway/config.d/*

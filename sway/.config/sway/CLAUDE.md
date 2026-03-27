@@ -254,6 +254,29 @@ journalctl -b -k | grep -i nvidia
 | `$mod+Ctrl+b` | Emergency display on | Force panel on + 50% brightness |
 | `$mod+Shift+z` | Restore display | Power on + restore brightness |
 
+### Scratchpad & Neovim Obsidian Windows
+
+Neovim Obsidian windows use a **toggle pattern** via `~/.local/bin/sway-nvim-toggle`:
+- First press: launches kitty terminal → `for_window` rule marks it and moves to scratchpad → script polls for the mark and runs `scratchpad show`
+- Subsequent presses: detects existing mark via `jq` on `swaymsg -t get_tree` → toggles `scratchpad show`
+
+**Each mode gets its own mark** for independent toggle:
+
+| Shortcut | Mode | Mark | App ID | Description |
+|----------|------|------|--------|-------------|
+| `$mod+n` | today | `nvim_today` | `nvim_obsidiantoday` | Daily note |
+| `$mod+Shift+n` | new | `nvim_new` | `nvim_obsidiannew` | New note |
+| `$mod+i` | quick | `nvim_quick` | `nvim_quick` | Quick switch |
+| `$mod+Shift+i` | template | `nvim_quick` | `nvim_quick` | New from template |
+| `$mod+o` | — | all nvim_* | — | Show any nvim window |
+| `$mod+Shift+o` | — | `obsidian` | `obsidian` | Show Obsidian app |
+
+**`for_window` rules** (line ~524 in config): mark + move scratchpad + resize. No `scratchpad show` in the rule — the toggle script handles showing after launch.
+
+**Dependencies**: `jq` (for reliable mark detection in sway tree JSON).
+
+**History**: Previously all three nvim app IDs shared mark `"quick"`, requiring `$mod+o` to bring any forward. Separated into distinct marks (2026-03-27) for direct toggle via launch keys.
+
 ### Other Key Bindings
 
 See `config` file for complete list, or press `$mod+/` for interactive shortcut overlay.
