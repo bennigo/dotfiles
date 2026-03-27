@@ -290,7 +290,9 @@ Shared helpers: `now_tt()`, `now_dt()`, `now_td()`, `unit_to_seconds()`, `future
 
 **Task emoji order**: `➕` (created) → `⏳` (scheduled) → `📅` (due). Matches obsidian-tasks-plugin conventions.
 
-**Smart Dagbok Enter** (`after/ftplugin/markdown.lua`): On a line matching `- HH:MM — text`, both Enter (insert) and `o` (normal) create a new `- {current time} — ` line. Empty timestamp lines (`- HH:MM — ` with no text) are cleared on Enter as an offramp. All other lines delegate to bullets.vim. Lives in `after/ftplugin/` to run after bullets.vim sets its mappings.
+**Smart Dagbok Enter** (two files):
+- `lua/plugins/extend-blink-cmp.lua` — Injects dagbok logic into blink.cmp's `<CR>` keymap chain (blink.cmp owns `<CR>` in insert mode via `preset = "enter"`). Custom function runs before `accept`/`fallback`: on `- HH:MM` lines creates new timestamped line, on empty `- HH:MM` clears line (offramp), otherwise falls through to completion accept or MiniPairs.
+- `after/ftplugin/markdown.lua` — Normal mode `o` override (blink.cmp doesn't intercept `o`). Same dagbok logic, delegates to bullets.vim for non-dagbok lines.
 
 ### Special Purpose (3 plugins)
 
