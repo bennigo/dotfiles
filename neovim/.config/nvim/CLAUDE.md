@@ -262,6 +262,36 @@ This configuration extends LazyVim rather than replacing it:
 - **LuaSnip**: Snippet engine (extend-luasnip.lua)
 - **friendly-snippets**: Snippet collection
 
+**Custom Markdown Snippets** (`lua/snippets/markdown.lua`):
+
+Obsidian daily note workflow snippets. Expand with `<C-K>` or `<C-L>`, tab through placeholders.
+
+| Trigger | Output | Use |
+|---------|--------|-----|
+| `ct` | `14:30` | Bare time (current) |
+| `tt` | `(🕛 14:30: text)` | Inline time stamp |
+| `dt` | `(➕ 2026-03-27 14:30: text)` | Inline datetime stamp |
+| `cdt` | `➕ 2026-03-27 14:30` | Bare creation datetime |
+| `ctd` | `➕ 2026-03-27` | Bare creation date |
+| `db` | `- 14:30 — text` | Dagbok journal entry |
+| `dtbull` | `- text ➕ 2026-03-27 14:30` | Timed bullet |
+| `dbull` | `- text ➕ 2026-03-27` | Date bullet |
+| `dtask` | `- [ ] text ➕ 2026-03-27` | Task with creation date |
+| `dtask<N>` | `- [ ] text ➕ today 📅 +N days` | Task + deadline (e.g. `dtask5`) |
+| `dtask<N>h` | same, +N hours | Task + deadline hours |
+| `dtask<N>m` | same, +N minutes | Task + deadline minutes |
+| `stask<N>` | `- [ ] text ➕ today ⏳ +N days` | Task + scheduled start |
+| `fstask<N>` | `- [ ] text ➕ today ⏳ +N 📅 deadline` | Full task (scheduled + deadline tab stop) |
+| `deadl<N>` | `📅 2026-04-01` | Deadline date only |
+| `sched<N>` | `⏳ 2026-04-01` | Scheduled date only |
+
+All `<N>` triggers accept optional unit suffix: `d` (days, default), `h` (hours), `m` (minutes).
+Shared helpers: `now_tt()`, `now_dt()`, `now_td()`, `unit_to_seconds()`, `future_date()`, `creation_date()`.
+
+**Task emoji order**: `➕` (created) → `⏳` (scheduled) → `📅` (due). Matches obsidian-tasks-plugin conventions.
+
+**Smart Dagbok Enter** (`after/ftplugin/markdown.lua`): On a line matching `- HH:MM — text`, both Enter (insert) and `o` (normal) create a new `- {current time} — ` line. Empty timestamp lines (`- HH:MM — ` with no text) are cleared on Enter as an offramp. All other lines delegate to bullets.vim. Lives in `after/ftplugin/` to run after bullets.vim sets its mappings.
+
 ### Special Purpose (3 plugins)
 
 - **vim-kitty**: Kitty terminal integration
@@ -376,6 +406,7 @@ This configuration extends LazyVim rather than replacing it:
 **Preview**: markdown-preview.nvim (browser)
 **Integration**: Obsidian.nvim for vault files
 **Diagrams**: Mermaid support via custom workflow
+**Snippets**: LuaSnip markdown snippets for timestamps, tasks, journal entries (see Snippets section above)
 
 ### Lua
 
@@ -464,12 +495,17 @@ This configuration extends LazyVim rather than replacing it:
 │       ├── mason-workaround.lua      # Mason fixes
 │       ├── toggle_term.lua           # Terminal toggle
 │       └── example.lua               # LazyVim examples
+│   └── snippets/
+│       └── markdown.lua              # Obsidian daily note snippets (timestamps, tasks, journal)
+├── after/
+│   └── ftplugin/
+│       └── markdown.lua              # Smart Dagbok continuation (overrides bullets.vim)
 ├── lazy-lock.json                     # Plugin version lock file
 ├── lazyvim.json                       # LazyVim config
 ├── db_ui/                             # Database UI saved queries
 ├── ftplugin/                          # Filetype-specific configs
 ├── spell/                             # Spell dictionaries
-├── test_stuff/                        # Testing area
+├── test_stuff/                        # Testing area (mini_snippets.lua experimental)
 └── .neoconf.json                      # Project-local LSP config
 ```
 

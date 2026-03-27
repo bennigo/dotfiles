@@ -246,19 +246,19 @@ bindsym $mod+Shift+p exec $term --class "clipse" zsh -i ${HOME}/.local/bin/run_s
 # bindsym $mod+o exec gtk-launch obsidian.desktop
 
 ## Scratchpad // Show Zathura from scratchpad // 📚 ##
-bindsym $mod+z [con_mark="zathura"] scratchpad show
+bindsym $mod+z [app_id="org.pwmt.zathura"] scratchpad show
 ## Scratchpad // Show Cisco client from scratchpad // 🛡️ ##
-bindsym $mod+c [con_mark="cisco"] scratchpad show
+bindsym $mod+c [app_id="com.cisco.secureclient.gui"] scratchpad show
 ## Scratchpad // Show Obsidian from scratchpad // 🗒️ ##
-bindsym $mod+Shift+o [con_mark="obsidian"] scratchpad show; [con_mark="obsidian"] move position center
+bindsym $mod+Shift+o [app_id="obsidian"] scratchpad show; [app_id="obsidian"] move position center
 ## Scratchpad // Show Neovim from scratchpad (any nvim window) // ⚡ ##
 bindsym $mod+o [con_mark="nvim_today"] scratchpad show; [con_mark="nvim_new"] scratchpad show; [con_mark="nvim_quick"] scratchpad show
 ## Scratchpad // Toggle LibreOffice scratchpad // 📄 ##
 bindsym $mod+Shift+d exec /home/bgo/.local/bin/toggle-libreoffice.sh
 ## Scratchpad // Show Zotero from scratchpad // 📖 ##
-bindsym $mod+g [con_mark="zotero"] scratchpad show
+bindsym $mod+g [app_id="org.zotero.Zotero"] scratchpad show
 ## Scratchpad // Show floating terminal // 🪟🖥️ ##
-bindsym $mod+Shift+Return [con_mark="terminal_fl"] scratchpad show
+bindsym $mod+Shift+Return [app_id="terminal_floating"] scratchpad show
 
 # Screenshot the monitor
 # take screenshot and copy to clipboard
@@ -514,13 +514,13 @@ for_window [app_id="Cisco Secure Client"] floating enable, sticky enable
 for_window [app_id="org.gnome.Calculator"] floating enable,  sticky enable
 
 
-for_window [app_id="com.cisco.secureclient.gui"] mark "cisco", move scratchpad, floating enable
-for_window [app_id="obsidian"] mark "obsidian", move scratchpad, floating enable, resize set width 2000 px height 1190 px, move position center
-for_window [app_id="org.zotero.Zotero"] mark "zotero", move scratchpad, floating enable, resize set width 1900 px height 1100 px
-for_window [app_id="^libreoffice"] mark "libreoffice", floating enable, resize set width 3200 px height 2000 px, move scratchpad
-for_window [app_id="terminal_floating"] mark "terminal_fl", move scratchpad, move container to workspace current, resize set width 1500 px height 900 px
+for_window [app_id="com.cisco.secureclient.gui"] move scratchpad, floating enable
+for_window [app_id="obsidian"] move scratchpad, floating enable, resize set width 2000 px height 1190 px, move position center
+for_window [app_id="org.zotero.Zotero"] move scratchpad, floating enable, resize set width 1900 px height 1100 px
+for_window [app_id="^libreoffice"] floating enable, resize set width 3200 px height 2000 px, move scratchpad
+for_window [app_id="terminal_floating"] move scratchpad, move container to workspace current, resize set width 1500 px height 900 px
 for_window [app_id="git_sync_float"] floating enable, resize set width 1200 px height 800 px, move position center
-for_window [app_id="org.pwmt.zathura"] mark "zathura", move scratchpad, move container to workspace current, resize set width 1200 px height 1180 px
+for_window [app_id="org.pwmt.zathura"] move scratchpad, move container to workspace current, resize set width 1200 px height 1180 px
 for_window [app_id="nvim_obsidiantoday"] mark "nvim_today", move scratchpad, resize set width 1900 px height 1100 px
 for_window [app_id="nvim_obsidiannew"] mark "nvim_new", move scratchpad, resize set width 1900 px height 1100 px
 for_window [app_id="nvim_quick"] mark "nvim_quick", move scratchpad, resize set width 1900 px height 1100 px

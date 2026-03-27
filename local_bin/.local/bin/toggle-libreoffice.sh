@@ -10,9 +10,9 @@ if pgrep -x "soffice.bin" > /dev/null; then
     echo "$(date): LibreOffice is running, toggling" >> "$LOGFILE"
     # LibreOffice is running, toggle visibility via scratchpad
     # Also ensure proper size and centering each time we show it
-    swaymsg '[con_mark="libreoffice"] scratchpad show' >> "$LOGFILE" 2>&1
+    swaymsg '[app_id="^libreoffice"] scratchpad show' >> "$LOGFILE" 2>&1
     sleep 0.1
-    swaymsg '[con_mark="libreoffice"] resize set width 3200 px height 2000 px, move position center' >> "$LOGFILE" 2>&1
+    swaymsg '[app_id="^libreoffice"] resize set width 3200 px height 2000 px, move position center' >> "$LOGFILE" 2>&1
     echo "$(date): Toggle complete" >> "$LOGFILE"
 else
     echo "$(date): LibreOffice not running, launching" >> "$LOGFILE"
