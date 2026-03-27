@@ -96,3 +96,6 @@ vim.api.nvim_create_autocmd("BufWritePost", {
   end,
   desc = "Auto-generate PDF from Mermaid diagrams"
 })
+
+-- Smart Dagbok timestamp continuation moved to after/ftplugin/markdown.lua
+-- (must run AFTER bullets.vim sets its <CR> and o mappings)

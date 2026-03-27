@@ -254,11 +254,28 @@ journalctl -b -k | grep -i nvidia
 | `$mod+Ctrl+b` | Emergency display on | Force panel on + 50% brightness |
 | `$mod+Shift+z` | Restore display | Power on + restore brightness |
 
-### Scratchpad & Neovim Obsidian Windows
+### Scratchpad Windows
 
-Neovim Obsidian windows use a **toggle pattern** via `~/.local/bin/sway-nvim-toggle`:
+Non-Neovim scratchpad windows (Obsidian, Zotero, Zathura, Cisco, terminal, LibreOffice) use **`app_id`-based** keybindings — the toggle shortcut matches the window by its `app_id` property directly, with no marks involved. The `for_window` rules handle initial placement (move to scratchpad + resize) when the window first appears.
+
+This avoids the mark-stealing problem: Sway marks are unique, so when Electron apps (Obsidian, Zotero) spawn secondary windows with the same `app_id`, a mark-based `for_window` rule would move the mark to the new window, breaking the toggle. Using `app_id` in keybindings eliminates this failure mode.
+
+| Shortcut | App ID | Description |
+|----------|--------|-------------|
+| `$mod+Shift+o` | `obsidian` | Show Obsidian app |
+| `$mod+z` | `org.pwmt.zathura` | Show Zathura PDF reader |
+| `$mod+g` | `org.zotero.Zotero` | Show Zotero |
+| `$mod+c` | `com.cisco.secureclient.gui` | Show Cisco client |
+| `$mod+Shift+Return` | `terminal_floating` | Show floating terminal |
+| `$mod+Shift+d` | `^libreoffice` | Toggle LibreOffice (script-based) |
+
+### Neovim Obsidian Windows
+
+Neovim Obsidian windows use a **mark-based toggle pattern** via `~/.local/bin/sway-nvim-toggle`:
 - First press: launches kitty terminal → `for_window` rule marks it and moves to scratchpad → script polls for the mark and runs `scratchpad show`
 - Subsequent presses: detects existing mark via `jq` on `swaymsg -t get_tree` → toggles `scratchpad show`
+
+Marks are safe here because each mode launches kitty with a unique `app_id` — no secondary-window ambiguity.
 
 **Each mode gets its own mark** for independent toggle:
 
@@ -269,13 +286,10 @@ Neovim Obsidian windows use a **toggle pattern** via `~/.local/bin/sway-nvim-tog
 | `$mod+i` | quick | `nvim_quick` | `nvim_quick` | Quick switch |
 | `$mod+Shift+i` | template | `nvim_quick` | `nvim_quick` | New from template |
 | `$mod+o` | — | all nvim_* | — | Show any nvim window |
-| `$mod+Shift+o` | — | `obsidian` | `obsidian` | Show Obsidian app |
-
-**`for_window` rules** (line ~524 in config): mark + move scratchpad + resize. No `scratchpad show` in the rule — the toggle script handles showing after launch.
 
 **Dependencies**: `jq` (for reliable mark detection in sway tree JSON).
 
-**History**: Previously all three nvim app IDs shared mark `"quick"`, requiring `$mod+o` to bring any forward. Separated into distinct marks (2026-03-27) for direct toggle via launch keys.
+**History**: Previously all three nvim app IDs shared mark `"quick"`, requiring `$mod+o` to bring any forward. Separated into distinct marks (2026-03-27) for direct toggle via launch keys. Non-nvim scratchpad windows switched from marks to `app_id` keybindings (2026-03-27) to fix mark-stealing by secondary Electron windows.
 
 ### Other Key Bindings
 
