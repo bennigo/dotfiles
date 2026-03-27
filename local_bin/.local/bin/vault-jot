@@ -8,6 +8,8 @@
 #   vault-jot todo Fix thing               # task to today
 #   vault-jot todo Fix thing due:2026-03-01  # task with due date
 #   vault-jot todo Fix thing @2026-03-01   # task with due date (shorthand)
+#   vault-jot todo Fix thing start:2026-03-28 due:2026-04-01  # scheduled + due
+#   vault-jot todo Fix thing ~2026-03-28   # scheduled date (shorthand)
 #   vault-jot tm Call dentist              # jot to tomorrow
 #   vault-jot yd Forgot to log             # jot to yesterday
 #   vault-jot nw Plan sprint               # jot to next monday
@@ -42,13 +44,16 @@ DATE ALIASES (optional first argument):
 
 TASK MODE:
   Start text with "todo" to create a checkbox task.
-  Append due:YYYY-MM-DD or @YYYY-MM-DD for a due date.
+  Append due:YYYY-MM-DD or @YYYY-MM-DD for a due date (📅 deadline).
+  Append start:YYYY-MM-DD or ~YYYY-MM-DD for a scheduled date (⏳ start working).
 
 EXAMPLES:
   vault-jot Buy milk
   vault-jot tm Call dentist
   vault-jot todo Fix timeout due:2026-03-01
   vault-jot tm todo Review PR @2026-03-02
+  vault-jot todo Plan proposal start:2026-03-28 due:2026-04-01
+  vault-jot todo Prep slides ~2026-03-28
   vault-jot nw Plan sprint goals
   vault-jot yd Forgot to log meeting
 EOF
@@ -56,77 +61,9 @@ EOF
 }
 
 # ── Create a daily note if it doesn't exist ───────────────────────────
-# Usage: ensure_daily_note YYYY-MM-DD
+# Delegates to vault-create-daily (single source of truth for template)
 ensure_daily_note() {
-    local note_date="$1"
-    local note_file="${DAILY_DIR}/${note_date}.md"
-
-    [[ -f "${note_file}" ]] && return 0
-
-    local prev_date next_date alias now_time created_stamp
-    prev_date=$(date -d "${note_date} - 1 day" +%Y-%m-%d)
-    next_date=$(date -d "${note_date} + 1 day" +%Y-%m-%d)
-    alias=$(date -d "${note_date}" +"📅 %B %-d, %Y day: %j")
-    now_time=$(date +%H:%M)
-    created_stamp=$(date +"%Y-%m-%d %H:%M")
-
-    cat > "${note_file}" <<TEMPLATE
----
-area: "Journal"
-id: ${note_date}
-created: ${created_stamp}
-aliases:
-  - "${alias}"
-tags:
-  - type/daily-note
-project: ""
-resource: ""
----
-
-# ${note_date}
-
-<< [[${prev_date}]] | [[${next_date}]] >>
-
-## Skyndiminnispunktar
-
-> Fljótlegar hugmyndir og athugasemdir — hreinsað í lok dags
-
-
-## Verkefni dagsins
-
-### Áætlað í dag
-
-\`\`\`tasks
-not done
-happens on ${note_date}
-group by filename
-short mode
-\`\`\`
-
-### Tímasett / Yfirstandandi
-
-\`\`\`tasks
-not done
-due before ${note_date}
-limit 10
-short mode
-\`\`\`
-
-## Dagbók
-
-- ${now_time} —
-
-## Nótur dagsins
-
-\`\`\`dataview
-TABLE WITHOUT ID
-  file.link as "Nóta",
-  file.folder as "Staðsetning"
-FROM "" AND -"Templates" AND -"4.Archive" AND -"Journal"
-WHERE file.cday = date("${note_date}")
-SORT file.ctime ASC
-\`\`\`
-TEMPLATE
+    vault-create-daily "$1"
 }
 
 # ── Parse date target ─────────────────────────────────────────────────
@@ -222,15 +159,24 @@ if [[ "${INPUT,,}" == todo\ * ]]; then
     # Task mode: strip "todo " prefix
     TASK_TEXT="${INPUT:5}"
 
+    # Extract scheduled date: start:YYYY-MM-DD, start: YYYY-MM-DD, or ~YYYY-MM-DD
+    SCHEDULED_DATE=""
+    if [[ "${TASK_TEXT}" =~ (start:[[:space:]]?|~)([0-9]{4}-[0-9]{2}-[0-9]{2}) ]]; then
+        SCHEDULED_DATE="${BASH_REMATCH[2]}"
+        TASK_TEXT=$(echo "${TASK_TEXT}" | sed -E 's/(start:[[:space:]]?|~)[0-9]{4}-[0-9]{2}-[0-9]{2}//g' | sed 's/[[:space:]]*$//' | sed 's/[[:space:]]\+/ /g')
+    fi
+
     # Extract due date: due:YYYY-MM-DD, due: YYYY-MM-DD, or @YYYY-MM-DD
     DUE_DATE=""
     if [[ "${TASK_TEXT}" =~ (due:[[:space:]]?|@)([0-9]{4}-[0-9]{2}-[0-9]{2}) ]]; then
         DUE_DATE="${BASH_REMATCH[2]}"
-        # Remove the due date pattern from task text
         TASK_TEXT=$(echo "${TASK_TEXT}" | sed -E 's/(due:[[:space:]]?|@)[0-9]{4}-[0-9]{2}-[0-9]{2}//g' | sed 's/[[:space:]]*$//' | sed 's/[[:space:]]\+/ /g')
     fi
 
     ENTRY="- [ ] ${TASK_TEXT} ➕ ${TODAY}"
+    if [[ -n "${SCHEDULED_DATE}" ]]; then
+        ENTRY="${ENTRY} ⏳ ${SCHEDULED_DATE}"
+    fi
     if [[ -n "${DUE_DATE}" ]]; then
         ENTRY="${ENTRY} 📅 ${DUE_DATE}"
     fi

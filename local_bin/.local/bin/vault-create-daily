@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+# vault-create-daily — Create daily note from canonical template (standalone)
+# Single source of truth for daily note creation outside Obsidian.
+# Used by: vault-jot, /daily slash command
+# Inside Obsidian: Templater folder template handles creation instead.
+#
+# Usage: vault-create-daily YYYY-MM-DD
+#        vault-create-daily          # defaults to today
+
+set -euo pipefail
+
+NOTE_DATE="${1:-$(date +%Y-%m-%d)}"
+VAULT_DIR="${HOME}/notes/bgovault"
+DAILY_DIR="${VAULT_DIR}/Journal/daily"
+NOTE_FILE="${DAILY_DIR}/${NOTE_DATE}.md"
+
+# Already exists — nothing to do
+[[ -f "${NOTE_FILE}" ]] && exit 0
+
+# Compute template values
+PREV=$(date -d "${NOTE_DATE} - 1 day" +%Y-%m-%d)
+NEXT=$(date -d "${NOTE_DATE} + 1 day" +%Y-%m-%d)
+ALIAS=$(date -d "${NOTE_DATE}" +"📅 %B %-d, %Y day: %j")
+NOW=$(date +%H:%M)
+CREATED=$(date +"%Y-%m-%d %H:%M")
+
+cat > "${NOTE_FILE}" <<TEMPLATE
+---
+area: "Journal"
+id: ${NOTE_DATE}
+created: ${CREATED}
+aliases:
+  - "${ALIAS}"
+tags:
+  - type/daily-note
+project: ""
+resource: ""
+---
+
+# ${NOTE_DATE}
+
+<< [[${PREV}]] | [[${NEXT}]] >>
+
+## Skyndiminnispunktar
+
+> Fljótlegar hugmyndir og athugasemdir — hreinsað í lok dags
+
+
+## Verkefni dagsins
+
+### Áætlað í dag
+
+\`\`\`tasks
+not done
+happens on ${NOTE_DATE}
+group by filename
+short mode
+\`\`\`
+
+### Tímasett / Yfirstandandi
+
+\`\`\`tasks
+not done
+due before ${NOTE_DATE}
+limit 10
+short mode
+\`\`\`
+
+## Dagbók
+
+- ${NOW} —
+
+**Hvað er í forgrunni í dag?**
+
+
+**Hvað lærði ég / tók eftir?**
+
+
+**Þakklæti / jákvætt**
+
+
+## Nótur dagsins
+
+\`\`\`dataview
+TABLE WITHOUT ID
+  file.link as "Nóta",
+  file.folder as "Staðsetning"
+FROM "" AND -"Templates" AND -"4.Archive" AND -"Journal"
+WHERE file.cday = date("${NOTE_DATE}")
+SORT file.ctime ASC
+\`\`\`
+TEMPLATE

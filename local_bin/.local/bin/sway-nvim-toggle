@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# sway-nvim-toggle — Toggle a Neovim Obsidian scratchpad window
+# If window with the mark exists, toggle scratchpad visibility.
+# If no such window exists, launch a new one and show it.
+#
+# Usage: sway-nvim-toggle <mode>
+#   mode: today | new | quick | template
+
+set -euo pipefail
+
+MODE="${1:?Usage: sway-nvim-toggle <today|new|quick|template>}"
+
+case "${MODE}" in
+    today)    MARK="nvim_today"; APP_ID="nvim_obsidiantoday" ;;
+    new)      MARK="nvim_new";   APP_ID="nvim_obsidiannew"   ;;
+    quick)    MARK="nvim_quick"; APP_ID="nvim_quick"         ;;
+    template) MARK="nvim_quick"; APP_ID="nvim_quick"         ;;
+    *) echo "Unknown mode: ${MODE}" >&2; exit 1 ;;
+esac
+
+TERM="${HOME}/.local/bin/kitty"
+
+# Check if a window with this mark exists using jq on sway tree
+HAS_WINDOW=$(swaymsg -t get_tree | jq -r ".. | .marks? // empty | .[]" 2>/dev/null | grep -qxF "${MARK}" && echo yes || echo no)
+
+if [[ "${HAS_WINDOW}" == "yes" ]]; then
+    # Window exists — toggle scratchpad visibility
+    swaymsg "[con_mark=\"${MARK}\"] scratchpad show"
+else
+    # No window — launch and then show after it lands in scratchpad
+    ${TERM} --class "${APP_ID}" zsh -i ~/.local/bin/run_nvim_obsidian.sh "${MODE}" &
+    # Wait for the window to appear and get its mark
+    for _ in $(seq 1 20); do
+        sleep 0.15
+        if swaymsg -t get_tree | jq -r ".. | .marks? // empty | .[]" 2>/dev/null | grep -qxF "${MARK}"; then
+            swaymsg "[con_mark=\"${MARK}\"] scratchpad show"
+            exit 0
+        fi
+    done
+fi

@@ -91,7 +91,10 @@ bindsym $mod+key command
 
 ### Custom Scripts
 
-- **`local_bin/`**: System utilities and application launchers (~23 scripts)
+- **`local_bin/`**: System utilities and application launchers (~24 scripts)
+  - `sway-nvim-toggle` — Toggle Neovim Obsidian scratchpad windows (mark-based, uses jq for detection)
+  - `vault-create-daily` — Single source of truth for daily note creation outside Obsidian
+  - `vault-jot` — Quick capture to Obsidian daily note (rofi popup or CLI)
 - **`sway/.config/sway/scripts/`**: Sway-specific automation
   - `sway-shortcuts.sh` — Dynamic shortcut overlay via rofi
   - `lid-handler.sh` — Laptop lid event handler with power awareness
