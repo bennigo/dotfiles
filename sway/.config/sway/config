@@ -252,7 +252,7 @@ bindsym $mod+c [app_id="com.cisco.secureclient.gui"] scratchpad show
 ## Scratchpad // Show Obsidian from scratchpad // 🗒️ ##
 bindsym $mod+Shift+o [app_id="obsidian"] scratchpad show; [app_id="obsidian"] move position center
 ## Scratchpad // Show Neovim from scratchpad (any nvim window) // ⚡ ##
-bindsym $mod+o [con_mark="nvim_today"] scratchpad show; [con_mark="nvim_new"] scratchpad show; [con_mark="nvim_quick"] scratchpad show
+bindsym $mod+o [con_mark="nvim_today"] scratchpad show, move position center; [con_mark="nvim_new"] scratchpad show, move position center; [con_mark="nvim_quick"] scratchpad show, move position center
 ## Scratchpad // Toggle LibreOffice scratchpad // 📄 ##
 bindsym $mod+Shift+d exec /home/bgo/.local/bin/toggle-libreoffice.sh
 ## Scratchpad // Show Zotero from scratchpad // 📖 ##
