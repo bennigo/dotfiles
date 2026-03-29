@@ -257,6 +257,8 @@ bindsym $mod+o [con_mark="nvim_today"] scratchpad show, move position center; [c
 bindsym $mod+Shift+d exec /home/bgo/.local/bin/toggle-libreoffice.sh
 ## Scratchpad // Show Zotero from scratchpad // 📖 ##
 bindsym $mod+g [app_id="org.zotero.Zotero"] scratchpad show
+## Scratchpad // Toggle satellite imagery viewer // 🛰️ ##
+bindsym $mod+y exec ~/.local/bin/sat-viewer
 ## Scratchpad // Show floating terminal // 🪟🖥️ ##
 bindsym $mod+Shift+Return [app_id="terminal_floating"] scratchpad show
 
@@ -521,9 +523,10 @@ for_window [app_id="^libreoffice"] floating enable, resize set width 3200 px hei
 for_window [app_id="terminal_floating"] move scratchpad, move container to workspace current, resize set width 1500 px height 900 px
 for_window [app_id="git_sync_float"] floating enable, resize set width 1200 px height 800 px, move position center
 for_window [app_id="org.pwmt.zathura"] move scratchpad, move container to workspace current, resize set width 1200 px height 1180 px
-for_window [app_id="nvim_obsidiantoday"] mark "nvim_today", move scratchpad, resize set width 1900 px height 1100 px
-for_window [app_id="nvim_obsidiannew"] mark "nvim_new", move scratchpad, resize set width 1900 px height 1100 px
-for_window [app_id="nvim_quick"] mark "nvim_quick", move scratchpad, resize set width 1900 px height 1100 px
+for_window [title="sat-viewer"] floating enable, resize set width 2200 px height 1300 px
+for_window [app_id="nvim_obsidiantoday"] mark "nvim_today", move scratchpad, resize set width 1900 px height 1190 px
+for_window [app_id="nvim_obsidiannew"] mark "nvim_new", move scratchpad, resize set width 1900 px height 1190 px
+for_window [app_id="nvim_quick"] mark "nvim_quick", move scratchpad, resize set width 1900 px height 1190 px
 # for_window [app_id="terminal_floating"] mark "terminal", move scratchpad floating enable resize set width 1400 px height 1000 px
 
 include /etc/sway/config.d/*
