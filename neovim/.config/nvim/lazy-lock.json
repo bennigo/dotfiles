@@ -14,7 +14,7 @@
   "claudecode.nvim": { "branch": "main", "commit": "432121f0f5b9bda041030d1e9e83b7ba3a93dd8f" },
   "cmake-tools.nvim": { "branch": "master", "commit": "906fd4816bf4d588162d5ec78830456f0d969c5f" },
   "cmp-r": { "branch": "main", "commit": "70bfe8f4c062acc10266e24825439c009a0b1b89" },
-  "codecompanion.nvim": { "branch": "main", "commit": "78203ccaa36469b4a212123c7d532e2367ad9dd4" },
+  "codecompanion.nvim": { "branch": "main", "commit": "0cc43b8fd329395c0bd2c35b78c69a3f742ec400" },
   "codeium.nvim": { "branch": "main", "commit": "ebed4f7cc8a18184d8332d421ca10bed5f7d59a1" },
   "conform.nvim": { "branch": "master", "commit": "086a40dc7ed8242c03be9f47fbcee68699cc2395" },
   "copilot.lua": { "branch": "master", "commit": "0a3e09122cfd21e62a1e9d183c61aa1cacdd7da6" },

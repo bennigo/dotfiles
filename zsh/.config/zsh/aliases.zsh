@@ -108,6 +108,11 @@ alias code-review='snap && echo "Now in Claude Code: Ctrl+V \"Review this code f
 alias explain-ui='snap && echo "Now in Claude Code: Ctrl+V \"Explain what this interface does and how to use it\""'
 alias extract-text='snap && echo "Now in Claude Code: Ctrl+V \"Extract all text from this image as markdown\""'
 
+# Satellite imagery viewer - inline in terminal (kitty icat)
+alias sat='sat-viewer --inline'        # Show latest comparison image
+alias sat3='sat-viewer --inline 3'     # Show latest 3 images
+alias satall='sat-viewer --inline 8'   # Show latest 8 images
+
 # RxTools aliases - use wrappers to avoid Qt version conflicts
 alias rxcontrol='/usr/local/rxtools/bin/runRxcontrol'
 alias rxdownload='/usr/local/rxtools/bin/runRxdownload'
