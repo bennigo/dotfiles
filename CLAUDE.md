@@ -26,6 +26,7 @@ Personal dotfiles repository for Sway-based Linux desktop environment. Uses modu
 ### Hardware Support
 - **Display Server**: Wayland (Sway compositor)
 - **GPU**: Nvidia support configured
+- **Thunderbolt**: Intel Maple Ridge TB4 with resume fix (ThinkPad P1 Gen 6)
 - **Input**: Keyboard/mouse with custom udev rules
 
 ## Architecture
@@ -39,7 +40,7 @@ Personal dotfiles repository for Sway-based Linux desktop environment. Uses modu
 ├── neovim/         # Editor configuration (LazyVim-based, built from source) - see neovim/.config/nvim/CLAUDE.md
 ├── neovim_old/     # Previous neovim configuration backup
 ├── tmux/           # Terminal multiplexer config
-├── local_bin/      # Custom executable scripts (~23 scripts)
+├── local_bin/      # Custom executable scripts (~26 scripts)
 ├── system/         # System-level configs and installation (see system/CLAUDE.md)
 ├── ansible/        # System provisioning and automation (includes PostgreSQL 18 setup)
 ├── kitty/          # Terminal emulator configuration
@@ -91,10 +92,15 @@ bindsym $mod+key command
 
 ### Custom Scripts
 
-- **`local_bin/`**: System utilities and application launchers (~24 scripts)
+- **`local_bin/`**: System utilities and application launchers (~26 scripts)
   - `sway-nvim-toggle` — Toggle Neovim Obsidian scratchpad windows (mark-based, uses jq for detection)
   - `vault-create-daily` — Single source of truth for daily note creation outside Obsidian
   - `vault-jot` — Quick capture to Obsidian daily note (rofi popup or CLI)
+  - `voice-input` — Speech-to-text via Whisper with Wayland clipboard support (auto/en/is)
+  - `print-md` — Print markdown to PDF via pandoc with CUPS options (duplex, draft, grayscale)
+  - `rofi-mount-menu` — Interactive MTP device mounting/unmounting menu with rofi
+  - `spotify-notify` — Desktop notifications for Spotify track changes via playerctl
+  - `mtp-automount` — MTP device automounter with friendly names (YoloBox etc.)
 - **`sway/.config/sway/scripts/`**: Sway-specific automation
   - `sway-shortcuts.sh` — Dynamic shortcut overlay via rofi
   - `lid-handler.sh` — Laptop lid event handler with power awareness
@@ -112,10 +118,11 @@ bindsym $mod+key command
 
 - **Neovim**: LazyVim-based setup (75+ plugins) with Claude Code, Database UI, Obsidian integration - see `neovim/.config/nvim/CLAUDE.md`
 - **Ollama/Local AI**: DeepSeek Coder V2 16B + Llama 3.1 8B on NVIDIA RTX 2000 Ada (8GB VRAM) - see `ollama/README.md`
-- **Avante.nvim**: Local AI coding assistance via Ollama backend + Claude via ACP (CodeCompanion in evaluation)
+- **AI Coding Assistance**: Avante.nvim (Ollama backend + Claude via ACP) and CodeCompanion.nvim (Zed AI-style workflow with deep LSP integration)
 - **PostgreSQL 18**: Production database with secure credential management via `pass` - see `ansible/DATABASE_SETUP.md`
 - **Docker Engine 28.4.0**: Container orchestration with Compose v2, utility scripts, templates - see `docker/CLAUDE.md`
-- **Claude Code**: Integrated AI coding assistant with MCP server integrations - see `claude-code/README.md`
+- **Claude Code**: Integrated AI coding assistant with MCP server integrations and remote control - see `claude-code/README.md`
+- **Voice Input**: Speech-to-text via faster-whisper with Wayland clipboard integration (Icelandic/English)
 - **Database UI**: vim-dadbod-ui integration in Neovim for direct database access
 - **Tmux**: Session management with plugin ecosystem
 - **Terminal**: Multiple emulator configs (kitty, foot, alacritty)
@@ -332,6 +339,22 @@ reaches Mako directly via D-Bus.
 echo '{"notification_type":"idle_prompt","message":"Test","title":"Claude Code"}' | claude-notify
 ```
 
+### Claude Code Remote Control
+
+Claude Code can be accessed from a phone or browser via the remote control feature.
+
+- **Tmux**: Persistent `claude-rc` window spawned at tmux startup in scratchpad mode, running
+  `claude remote-control --name 'tmux-remote'`. Uses full path to npm-global claude binary
+  to avoid PATH issues when tmux starts via systemd.
+- **Neovim**: `<leader>acR` keymap launches a remote control session from within Neovim.
+
+```bash
+# Manual launch
+claude remote-control --name 'my-session'
+
+# The tmux claude-rc window is created automatically at startup
+```
+
 ### Multi-Machine Sync
 
 Unified sync system for dotfiles, claude-private submodule, and password-store across machines.
@@ -349,6 +372,16 @@ See `SYNC_WORKFLOW.md`, `SYNC_DEPLOYMENT.md`, and `SYNC_QUICK_REFERENCE.md` for 
 - **Screen sharing**: Portal-based sharing for Wayland applications
 - **Clipboard**: wl-clipboard for Wayland-native copy/paste
 
+### System-Level Fixes
+
+- **Thunderbolt 4 Resume Fix** (`system/usr/lib/systemd/system-sleep/thunderbolt-fix`):
+  Fixes Intel Maple Ridge Thunderbolt 4 D3cold hang post-resume on ThinkPad P1 Gen 6.
+  Removes and rescans PCI bridge `0000:20:00.0` as a systemd sleep hook.
+- **Cisco VPN Local Route Fix** (`system/etc/NetworkManager/dispatcher.d/99-fix-vpn-local-routes`):
+  Bypasses Cisco AnyConnect VPN hijacking of local subnet routes. Uses policy routing (table 200)
+  + iptables RETURN rules with device whitelist (router, printer, etc.). Auto-retries to survive
+  vpnagentd chain rebuilds.
+
 ### Performance Optimization
 - **Nvidia**: Early KMS for optimal Wayland performance
 - **Input latency**: Custom udev rules for gaming/professional input devices
@@ -362,6 +395,7 @@ See `SYNC_WORKFLOW.md`, `SYNC_DEPLOYMENT.md`, and `SYNC_QUICK_REFERENCE.md` for 
 - **Database setup and credential management**: `ansible/DATABASE_SETUP.md` (PostgreSQL 18)
 - **Local LLM configuration**: `ollama/README.md` (DeepSeek Coder V2 16B, Llama 3.1 8B, GPU setup)
 - **Multi-machine sync workflow**: `SYNC_WORKFLOW.md`, `SYNC_DEPLOYMENT.md`, `SYNC_QUICK_REFERENCE.md`
+- **Sway Obsidian scratchpad architecture**: `sway/.config/sway/CLAUDE.md` (mark-based toggles, app_id keybindings)
 - **System installation, hardware setup, and credentials**: `system/CLAUDE.md`
 - **Global workspace context**: `/home/bgo/CLAUDE.md`
 - **Project-specific contexts**: Individual project CLAUDE.md files
@@ -383,6 +417,9 @@ Common dependencies across custom scripts:
 - jq (JSON processing for sway IPC, tmux statusline, claude-notify)
 - waybar (status bar integration)
 - libnotify-bin (notify-send for claude-notify and desktop notifications)
+- playerctl (spotify-notify, media control)
+- pandoc + xelatex (print-md, markdown to PDF)
+- arecord + faster-whisper (voice-input, speech-to-text)
 
 ### File Editing Preference
 
@@ -434,6 +471,24 @@ git repo. Ansible also enables and starts the appropriate services after deploym
   tmux-continuum restored sessions, with manual `prefix + E` bulk refresh keybinding
 - **Claude Code notification hook**: `claude-notify` script forwards Claude Code `Notification`
   hook events to Mako via `notify-send` — works inside Neovim terminal where OSC sequences are swallowed
+- **Claude Code Remote Control**: Tmux persistent `claude-rc` window + Neovim `<leader>acR` keymap
+  for phone/browser access to Claude Code sessions
+- **Voice Input / Speech-to-Text**: `voice-input` script using faster-whisper with Wayland clipboard
+  - Supports Icelandic, English, and auto-detect language modes
+  - Toggle recording mode with timeout support
+- **Markdown Printing**: `print-md` script for printing markdown to PDF via pandoc + CUPS
+  - Supports duplex, draft quality, grayscale options
+- **MTP Automount System**: Automated MTP device mounting with udev rules
+  - `mtp-automount` script with device-to-friendly-name mapping (YoloBox etc.)
+  - `rofi-mount-menu` for interactive mount/unmount via rofi
+  - Systemd template service `mtp-automount@.service` triggered by udev
+- **System-Level Hardware Fixes**:
+  - Thunderbolt 4 resume fix for Intel Maple Ridge D3cold hang (ThinkPad P1 Gen 6)
+  - Cisco AnyConnect VPN local route fix via policy routing + iptables
+- **Neovim Smart Dagbok Timestamps**: Auto-continuing timestamped journal entries
+  - `<CR>` in markdown insert mode continues `- HH:MM — ` entries with current time
+  - Normal mode `o` on dagbok lines creates new timestamped line
+  - Rich snippets for timestamps, tasks with deadlines, and journal entries
 - **Fresh install automation**: Complete Ansible bootstrap for clean deployments
 - **Environment consistency**: PAM-based XDG variables for reliable path resolution
 - **Claude Code integration**: AI assistant with secure API key management

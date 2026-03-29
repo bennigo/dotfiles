@@ -51,6 +51,11 @@ return {
 
       -- Fallback: Quick return to Claude window (useful if diff steals focus)
       vim.keymap.set({ "n", "i" }, "<C-M-c>", "<cmd>ClaudeCodeFocus<cr>", { desc = "Return to Claude Code" })
+
+      -- Remote Control: open Claude Code accessible from phone/browser
+      vim.keymap.set("n", "<leader>acR", function()
+        vim.cmd("ClaudeCode --remote-control")
+      end, { desc = "Claude Code Remote Control" })
     end,
     keys = {
       -- Universal Claude Code toggle - Alt+c
@@ -79,6 +84,7 @@ return {
         { "<leader>acm", "<cmd>ClaudeCodeSelectModel<cr>", desc = "Select Claude Model", icon = "⚙️" },
         { "<leader>acd", "<cmd>ClaudeCodeDiffAccept<cr>", desc = "Accept Claude Diff", icon = "✅" },
         { "<leader>acD", "<cmd>ClaudeCodeDiffDeny<cr>", desc = "Reject Claude Diff", icon = "❌" },
+        { "<leader>acR", desc = "Claude Code Remote Control", icon = "📱" },
       })
 
       opts.spec = spec
