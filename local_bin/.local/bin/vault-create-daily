@@ -39,7 +39,7 @@ resource: ""
 
 # ${NOTE_DATE}
 
-<< [[\`= dateformat(date(this.file.name) - dur(1 day), "yyyy-MM-dd")\`]] | [[\`= dateformat(date(this.file.name) + dur(1 day), "yyyy-MM-dd")\`]] >>
+<< [[${PREV}]] | [[${NEXT}]] >>
 
 ## Skyndiminnispunktar
 

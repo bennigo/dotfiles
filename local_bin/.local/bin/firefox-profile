@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# firefox-profile — Launch or focus a Firefox profile on its assigned workspace
+#
+# Usage: firefox-profile <work|personal>
+#
+# Each profile gets a unique Wayland app_id via --name, allowing Sway assign
+# rules to place them on dedicated workspaces. If the profile is already
+# running, focus its workspace instead of launching a new instance.
+
+set -euo pipefail
+
+PROFILE="${1:?Usage: firefox-profile <work|personal>}"
+
+case "${PROFILE}" in
+    work)     APP_ID="firefox-work"     ;;
+    personal) APP_ID="firefox-personal" ;;
+    *)        echo "Unknown profile: ${PROFILE}" >&2; exit 1 ;;
+esac
+
+# Check if a window with this app_id already exists in the sway tree
+HAS_WINDOW=$(swaymsg -t get_tree | jq -r \
+  ".. | select(.app_id? == \"${APP_ID}\") | .app_id" 2>/dev/null | head -1)
+
+if [[ -n "${HAS_WINDOW}" ]]; then
+    swaymsg "[app_id=\"${APP_ID}\"] focus"
+else
+    exec firefox -P "${PROFILE}" --name "${APP_ID}" --no-remote
+fi
