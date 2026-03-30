@@ -17,7 +17,7 @@ This is a production IDE for scientific computing (GPS/GNSS data processing), kn
 
 **File**: `lua/plugins/claude-code.lua`
 **Primary Keymap**: `<M-c>` (toggle/focus)
-**Leader Mappings**: `<leader>aci` (toggle), `<leader>acc` (focus), `<leader>acs` (send), `<leader>acd/D` (accept/reject diff)
+**Leader Mappings**: `<leader>aci` (toggle), `<leader>acc` (focus), `<leader>acs` (send), `<leader>acd/D` (accept/reject diff), `<leader>acR` (remote control)
 
 **Configuration**:
 - Floating window: 95% width, 95% height
@@ -25,6 +25,7 @@ This is a production IDE for scientific computing (GPS/GNSS data processing), kn
 - Auto-close diffs on accept
 - WebSocket connection to Claude Code CLI
 - Transparency enabled (winblend: 30)
+- Remote control: `<leader>acR` opens Claude Code with `--remote-control` flag, accessible from phone/browser via claude.ai/code or QR code scan
 
 ### Avante (Secondary AI - Local + ACP)
 
@@ -94,6 +95,13 @@ This is a production IDE for scientific computing (GPS/GNSS data processing), kn
 - Completion: via blink.cmp
 - Zettelkasten-style note IDs (timestamp + title)
 - Daily note format: workdays only
+
+**Wikilink Wrapping** (`<leader>o[` in visual mode):
+- Select text → `<leader>o[` → searches vault for matching notes via `obsidian.search.resolve_note()`
+- **Match found**: picker with existing notes, "Create new note", and "bare placeholder" options
+- **No match**: inserts `[[text]]` as bare placeholder
+- **Link format**: `[[note-id|selected text]]` when linking to existing note
+- **Implementation**: `lua/user/vault_ops.lua` → `wrap_selection_as_placeholder()`
 
 **Cross-Reference**: See `~/notes/bgovault/CLAUDE.md` for vault-specific context
 
@@ -497,6 +505,12 @@ Shared helpers: `now_tt()`, `now_dt()`, `now_td()`, `unit_to_seconds()`, `future
 │       ├── mason-workaround.lua      # Mason fixes
 │       ├── toggle_term.lua           # Terminal toggle
 │       └── example.lua               # LazyVim examples
+│   └── user/
+│       ├── vault_ops.lua              # Vault wikilink wrapping, placeholder linking, Claude terminal send
+│       ├── footnote_nav.lua           # Footnote navigation (jump ref↔def, used by smart_action patch)
+│       ├── obsidian_helpers.lua       # Obsidian utility functions
+│       ├── obsidian_pdf.lua           # PDF integration for Obsidian
+│       └── devlog.lua                 # Development logging utilities
 │   └── snippets/
 │       └── markdown.lua              # Obsidian daily note snippets (timestamps, tasks, journal)
 ├── after/

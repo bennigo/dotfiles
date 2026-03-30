@@ -243,6 +243,10 @@ bindsym $mod+Shift+p exec $term --class "clipse" zsh -i ${HOME}/.local/bin/run_s
     exec_always --no-startup-id gtk-launch com.cisco.secureclient.gui.desktop
     exec --no-startup-id gtk-launch obsidian.desktop
     exec --no-startup-id $term --class "terminal_floating"
+
+# Browser profiles on dedicated workspaces
+    exec firefox-profile work
+    exec firefox-profile personal
 # bindsym $mod+o exec gtk-launch obsidian.desktop
 
 ## Scratchpad // Show Zathura from scratchpad // 📚 ##
@@ -256,7 +260,7 @@ bindsym $mod+o [con_mark="nvim_today"] scratchpad show, move position center; [c
 ## Scratchpad // Toggle LibreOffice scratchpad // 📄 ##
 bindsym $mod+Shift+d exec /home/bgo/.local/bin/toggle-libreoffice.sh
 ## Scratchpad // Show Zotero from scratchpad // 📖 ##
-bindsym $mod+g [app_id="org.zotero.Zotero"] scratchpad show
+bindsym $mod+g [app_id="org.zotero.Zotero"] scratchpad show, move position center
 ## Scratchpad // Toggle satellite imagery viewer // 🛰️ ##
 bindsym $mod+y exec ~/.local/bin/sat-viewer
 ## Scratchpad // Show floating terminal // 🪟🖥️ ##
@@ -289,9 +293,18 @@ bindsym $mod+Shift+Print exec ${HOME}/.local/bin/run_screenshot.sh -e -c -m regi
 # bindsym $mod+greater exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Next
 # bindsym $mod+less exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Previous
 
-    assign [class="Spotify"] 10 
+    # Browser profiles → dedicated workspaces
+    assign [app_id="firefox-work"] workspace 2
+    assign [app_id="firefox-personal"] workspace 3
+
+    assign [class="Spotify"] 10
     for_window [class="Spotify"] floating enable
     for_window [class="Spotify"] resize set width 1800 height 1100
+
+## Apps // Focus/launch Firefox work profile // 🦊 ##
+bindsym $mod+F1 exec ~/.local/bin/firefox-profile work
+## Apps // Focus/launch Firefox personal profile // 🦊 ##
+bindsym $mod+F2 exec ~/.local/bin/firefox-profile personal
 
 ## Media // Launch Spotify // 🎵 ##
 bindsym $mod+colon exec spotify
@@ -518,15 +531,15 @@ for_window [app_id="org.gnome.Calculator"] floating enable,  sticky enable
 
 for_window [app_id="com.cisco.secureclient.gui"] move scratchpad, floating enable
 for_window [app_id="obsidian"] move scratchpad, floating enable, resize set width 2000 px height 1190 px, move position center
-for_window [app_id="org.zotero.Zotero"] move scratchpad, floating enable, resize set width 1900 px height 1100 px
+for_window [app_id="org.zotero.Zotero"] move scratchpad, floating enable, resize set width 1900 px height 1100 px, move position center
 for_window [app_id="^libreoffice"] floating enable, resize set width 3200 px height 2000 px, move scratchpad
 for_window [app_id="terminal_floating"] move scratchpad, move container to workspace current, resize set width 1500 px height 900 px
 for_window [app_id="git_sync_float"] floating enable, resize set width 1200 px height 800 px, move position center
 for_window [app_id="org.pwmt.zathura"] move scratchpad, move container to workspace current, resize set width 1200 px height 1180 px
 for_window [title="sat-viewer"] floating enable, resize set width 2200 px height 1300 px
-for_window [app_id="nvim_obsidiantoday"] mark "nvim_today", move scratchpad, resize set width 1900 px height 1190 px
-for_window [app_id="nvim_obsidiannew"] mark "nvim_new", move scratchpad, resize set width 1900 px height 1190 px
-for_window [app_id="nvim_quick"] mark "nvim_quick", move scratchpad, resize set width 1900 px height 1190 px
+for_window [app_id="nvim_obsidiantoday"] mark "nvim_today", move scratchpad, resize set width 1840 px height 1150 px
+for_window [app_id="nvim_obsidiannew"] mark "nvim_new", move scratchpad, resize set width 1840 px height 1150 px
+for_window [app_id="nvim_quick"] mark "nvim_quick", move scratchpad, resize set width 1840 px height 1150 px
 # for_window [app_id="terminal_floating"] mark "terminal", move scratchpad floating enable resize set width 1400 px height 1000 px
 
 include /etc/sway/config.d/*
