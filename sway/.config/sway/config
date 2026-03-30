@@ -301,11 +301,6 @@ bindsym $mod+Shift+Print exec ${HOME}/.local/bin/run_screenshot.sh -e -c -m regi
     for_window [class="Spotify"] floating enable
     for_window [class="Spotify"] resize set width 1800 height 1100
 
-## Apps // Focus/launch Firefox work profile // 🦊 ##
-bindsym $mod+F1 exec ~/.local/bin/firefox-profile work
-## Apps // Focus/launch Firefox personal profile // 🦊 ##
-bindsym $mod+F2 exec ~/.local/bin/firefox-profile personal
-
 ## Media // Launch Spotify // 🎵 ##
 bindsym $mod+colon exec spotify
 ## Media // Play/Pause Spotify // ⏯️ ##
