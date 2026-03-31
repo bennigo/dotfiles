@@ -25,13 +25,13 @@ architecture guidelines. Subdirectories with their own CLAUDE.md are marked with
 ├── neovim/         # LazyVim-based IDE (75+ plugins) — see neovim/.config/nvim/CLAUDE.md 📄
 ├── neovim_old/     # Previous neovim configuration backup
 ├── tmux/           # Terminal multiplexer + plugins — see tmux/.config/tmux/CLAUDE.md 📄
-├── local_bin/      # Custom executable scripts (~28 scripts)
+├── local_bin/      # Custom executable scripts (~28 scripts) — see local_bin/CLAUDE.md 📄
 ├── system/         # System configs, hardware, installation — see system/CLAUDE.md 📄
-├── ansible/        # System provisioning and automation
+├── ansible/        # System provisioning and automation — see ansible/CLAUDE.md 📄
 ├── systemd/        # User systemd services (8 units) — see systemd/CLAUDE.md 📄
 ├── docker/         # Docker Engine + compose templates — see docker/CLAUDE.md 📄
 ├── claude-code/    # Claude Code CLI + MCP servers — see claude-code/CLAUDE.md 📄
-├── firefox/        # Multi-profile Firefox setup with Sway workspace integration
+├── firefox/        # Multi-profile Firefox + Sway workspace integration — see firefox/CLAUDE.md 📄
 ├── kitty/          # Terminal emulator (primary)
 ├── foot/           # Lightweight terminal emulator
 ├── alacritty/      # Cross-platform terminal emulator
@@ -154,6 +154,9 @@ Edit source files in this repository, not deployed locations in `~/.config/`.
 | `claude-code/CLAUDE.md` | MCP servers, notification hooks, remote control |
 | `systemd/CLAUDE.md` | 8 user service units, deployment, activation |
 | `system/CLAUDE.md` | Hardware fixes, GPU, credentials, installation, post-reinstall TODOs |
+| `firefox/CLAUDE.md` | Multi-profile setup, deploy script, Sway workspace integration |
+| `local_bin/CLAUDE.md` | ~28 scripts by category, dependencies, adding new scripts |
+| `ansible/CLAUDE.md` | Profile-based provisioning, 10 roles, hardware detection |
 | `ollama/README.md` | Local LLM setup (DeepSeek, Llama), GPU configuration |
 | `ansible/DATABASE_SETUP.md` | PostgreSQL 18 setup, credential management |
 | `SYNC_WORKFLOW.md` | Multi-machine sync architecture |
