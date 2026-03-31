@@ -1,523 +1,161 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code when working with this dotfiles repository.
+Personal dotfiles repository for Sway-based Linux desktop environment.
+Uses modular GNU Stow deployment and hub-and-spoke documentation.
 
-## Repository Overview
+## Documentation Architecture
 
-Personal dotfiles repository for Sway-based Linux desktop environment. Uses modular configuration management with GNU Stow for deployment.
+This repo uses hierarchical CLAUDE.md organization — detailed context lives in subdirectory
+files; this file is the routing table. See `~/.claude/CLAUDE.md` for the full context
+architecture guidelines. Subdirectories with their own CLAUDE.md are marked with `📄` below.
 
 ## System Environment
 
-### Linux Distribution
-- **OS**: Linux (Ubuntu-based or similar)
-- **Kernel**: Linux 6.14.0-37-generic
-- **Architecture**: x86_64
-- **Package Manager**: apt, snap, flatpak support
+- **Hardware**: ThinkPad P1 Gen 6, NVIDIA RTX 2000 Ada (8GB VRAM)
+- **OS**: Linux (Ubuntu-based), kernel 6.14.0-37-generic, x86_64
+- **Desktop**: Sway (Wayland) + Waybar + Rofi + Mako + Kitty/Foot
+- **Package managers**: apt, snap, flatpak
 
-### Desktop Environment
-- **Compositor**: Sway (Wayland-based i3-compatible)
-- **Status Bar**: Waybar with custom modules
-- **Application Launcher**: Rofi
-- **Terminal Emulators**: Kitty (primary), Foot (lightweight), Alacritty (cross-platform)
-- **Notification System**: Mako
-- **Screenshot Tools**: Grim + Swappy + Slurp
-- **File Manager**: Ranger (terminal), Nautilus (GUI)
-
-### Hardware Support
-- **Display Server**: Wayland (Sway compositor)
-- **GPU**: Nvidia support configured
-- **Thunderbolt**: Intel Maple Ridge TB4 with resume fix (ThinkPad P1 Gen 6)
-- **Input**: Keyboard/mouse with custom udev rules
-
-## Architecture
-
-### Directory Structure
+## Directory Structure
 
 ```
 .dotfiles/
-├── sway/           # Sway compositor configuration
-├── waybar/         # Status bar with custom modules
-├── neovim/         # Editor configuration (LazyVim-based, built from source) - see neovim/.config/nvim/CLAUDE.md
+├── sway/           # Sway compositor — see sway/.config/sway/CLAUDE.md 📄
+├── waybar/         # Status bar with custom modules and scripts
+├── neovim/         # LazyVim-based IDE (75+ plugins) — see neovim/.config/nvim/CLAUDE.md 📄
 ├── neovim_old/     # Previous neovim configuration backup
-├── tmux/           # Terminal multiplexer config
-├── local_bin/      # Custom executable scripts (~26 scripts)
-├── system/         # System-level configs and installation (see system/CLAUDE.md)
-├── ansible/        # System provisioning and automation (includes PostgreSQL 18 setup)
-├── kitty/          # Terminal emulator configuration
+├── tmux/           # Terminal multiplexer + plugins — see tmux/.config/tmux/CLAUDE.md 📄
+├── local_bin/      # Custom executable scripts (~28 scripts)
+├── system/         # System configs, hardware, installation — see system/CLAUDE.md 📄
+├── ansible/        # System provisioning and automation
+├── systemd/        # User systemd services (8 units) — see systemd/CLAUDE.md 📄
+├── docker/         # Docker Engine + compose templates — see docker/CLAUDE.md 📄
+├── claude-code/    # Claude Code CLI + MCP servers — see claude-code/CLAUDE.md 📄
+├── firefox/        # Multi-profile Firefox setup with Sway workspace integration
+├── kitty/          # Terminal emulator (primary)
 ├── foot/           # Lightweight terminal emulator
 ├── alacritty/      # Cross-platform terminal emulator
 ├── qutebrowser/    # Keyboard-driven web browser
-├── swappy/         # Screenshot annotation tool
-├── grim/           # Screenshot tool configuration (integrates with swappy/slurp)
-├── mako/           # Notification daemon configuration
-├── zsh/            # Shell configuration
+├── zsh/            # Shell configuration (aliases, exports, hooks)
 ├── profile/        # Shell profile settings
-├── docker/         # Docker Engine configuration, scripts, and compose templates (see docker/CLAUDE.md)
-├── claude-code/    # Claude Code CLI and MCP server configurations (see claude-code/README.md)
-├── ollama/         # Local LLM configuration (DeepSeek Coder V2 16B, Llama 3.1 8B) - see ollama/README.md
-├── containers/     # Container/Podman configuration (minimal - only registries.conf)
+├── ollama/         # Local LLM config (DeepSeek Coder V2, Llama 3.1) — see ollama/README.md
+├── swappy/         # Screenshot annotation tool
+├── grim/           # Screenshot tool (integrates with swappy/slurp)
+├── mako/           # Notification daemon configuration
+├── containers/     # Container/Podman configuration (minimal)
 ├── gnupg/          # GPG agent configuration (stow deploys to ~/.gnupg/)
 ├── luacheck/       # Lua linter configuration for Neovim development
 ├── udev/           # Device rules (MTP automount, input devices)
-├── ranger/         # File manager (minimal - needs proper configuration)
-├── systemd/        # User systemd services (claude-imports, tmux, password-store-sync, mako-watcher, mtp-automount)
-├── claude-private/ # Encrypted submodule (git-crypt, GPG key 0FA08B1A9096B394) - stow-deployed
-├── neomutt/        # Email client (structure present, needs post-reinstall setup)
+├── ranger/         # File manager (minimal, needs setup)
+├── neomutt/        # Email client (needs post-reinstall setup — see system/CLAUDE.md)
+├── claude-private/ # Encrypted submodule (git-crypt, GPG key 0FA08B1A9096B394) — stow-deployed
 ├── i3/             # Legacy i3 configuration (excluded from stow)
 └── [app]/          # Per-application config directories
 ```
 
-### Configuration Pattern
+## Configuration Pattern
 
-Each directory contains complete `.config/[app]` structure for GNU Stow deployment:
+Each directory contains `.config/[app]` structure for GNU Stow deployment:
 
 ```bash
-stow sway waybar neovim tmux  # Deploy multiple configs
-stow -t ~ sway                # Deploy single config
+stow sway waybar neovim tmux   # Deploy multiple configs
+stow -t ~ sway                 # Deploy single config
 ```
+
+**Special cases:**
+- `systemd/` — Must use `stow -R --no-folding systemd` (see `systemd/CLAUDE.md`)
+- `claude-private/` — Encrypted submodule, intentionally stowed (deploys to `~/.claude/`)
+- Subdirectory CLAUDE.md files use `.stow-local-ignore` to prevent deployment to `~/`
+
+**Stow exclusions** (not stowed by Ansible):
+`ansible/`, `system/`, `i3/`, `sway-remix/`, `systemd/` (separate), `.git/`, hidden dirs
 
 ## Key Features
 
-### Smart Shortcut System (`sway/.config/sway/config`)
-
-Structured comment format for dynamic shortcut overlays:
-
-```
-## Category // Description // Icon ##
-bindsym $mod+key command
-```
-
-- Parsed by `sway-shortcuts.sh` script
-- Generates searchable, categorized rofi menus
-
-### Custom Scripts
-
-- **`local_bin/`**: System utilities and application launchers (~26 scripts)
-  - `sway-nvim-toggle` — Toggle Neovim Obsidian scratchpad windows (mark-based, uses jq for detection)
-  - `vault-create-daily` — Single source of truth for daily note creation outside Obsidian
-  - `vault-jot` — Quick capture to Obsidian daily note (rofi popup or CLI)
-  - `voice-input` — Speech-to-text via Whisper with Wayland clipboard support (auto/en/is)
-  - `print-md` — Print markdown to PDF via pandoc with CUPS options (duplex, draft, grayscale)
-  - `rofi-mount-menu` — Interactive MTP device mounting/unmounting menu with rofi
-  - `spotify-notify` — Desktop notifications for Spotify track changes via playerctl
-  - `mtp-automount` — MTP device automounter with friendly names (YoloBox etc.)
-- **`sway/.config/sway/scripts/`**: Sway-specific automation
-  - `sway-shortcuts.sh` — Dynamic shortcut overlay via rofi
-  - `lid-handler.sh` — Laptop lid event handler with power awareness
-  - `swayidle-power-aware.sh` — Power-aware idle management (AC vs battery behavior)
-- **`waybar/.config/waybar/scripts/`**: Status bar modules
-
-### System Automation
-
-- **Ansible**: Comprehensive system provisioning and configuration management
-- **Bootstrap system**: Automated setup for fresh installations
-- **Credentials management**: Encrypted vault with GPG/pass integration
-- **SSH key automation**: Automated extraction and deployment from vault
+### Smart Shortcut System
+Sway config uses structured comments (`## Category // Description // Icon ##`) parsed by
+`sway-shortcuts.sh` into searchable rofi menus. See `sway/.config/sway/CLAUDE.md`.
 
 ### Development Integration
+- **Neovim**: LazyVim + Claude Code + Database UI + Obsidian — see `neovim/.config/nvim/CLAUDE.md`
+- **Ollama**: GPU-accelerated local LLM inference — see `ollama/README.md`
+- **PostgreSQL 18**: Secure credential management via `pass` — see `ansible/DATABASE_SETUP.md`
+- **Docker 28.4.0**: Container orchestration with VPN-friendly networking — see `docker/CLAUDE.md`
+- **Languages**: Python/uv, Go, Rust, Node.js/FNM, R
 
-- **Neovim**: LazyVim-based setup (75+ plugins) with Claude Code, Database UI, Obsidian integration - see `neovim/.config/nvim/CLAUDE.md`
-- **Ollama/Local AI**: DeepSeek Coder V2 16B + Llama 3.1 8B on NVIDIA RTX 2000 Ada (8GB VRAM) - see `ollama/README.md`
-- **AI Coding Assistance**: Avante.nvim (Ollama backend + Claude via ACP) and CodeCompanion.nvim (Zed AI-style workflow with deep LSP integration)
-- **PostgreSQL 18**: Production database with secure credential management via `pass` - see `ansible/DATABASE_SETUP.md`
-- **Docker Engine 28.4.0**: Container orchestration with Compose v2, utility scripts, templates - see `docker/CLAUDE.md`
-- **Claude Code**: Integrated AI coding assistant with MCP server integrations and remote control - see `claude-code/README.md`
-- **Voice Input**: Speech-to-text via faster-whisper with Wayland clipboard integration (Icelandic/English)
-- **Database UI**: vim-dadbod-ui integration in Neovim for direct database access
-- **Tmux**: Session management with plugin ecosystem
-- **Terminal**: Multiple emulator configs (kitty, foot, alacritty)
-- **Shell**: Zsh with custom profile configurations
-- **Browser**: Qutebrowser for keyboard-driven web browsing
-- **Languages**: Go, Rust, Node.js/FNM, Python/uv, R statistical computing
-- **Containerization**: Docker with VPN-friendly networking, GPS receivers scheduler
-- **Notes**: Obsidian vault integration with PARA method organization
+### System Automation
+- **Ansible**: Profile-based bootstrap for fresh installations
+- **Multi-machine sync**: `dotfiles-sync` script with Waybar indicators — see `SYNC_WORKFLOW.md`
+- **Credentials**: Encrypted vault with GPG/pass integration
+- **Systemd**: 8 user services for session automation — see `systemd/CLAUDE.md`
+
+### Claude Code Integration
+- **MCP servers**: Database access, web search — see `claude-code/CLAUDE.md`
+- **Notifications**: Hook-based forwarding to Mako — see `claude-code/CLAUDE.md`
+- **Remote control**: Tmux persistent window + Neovim keymap — see `tmux/.config/tmux/CLAUDE.md`
+
+### Wayland Environment
+- Tmux session env refresh after reboot — see `tmux/.config/tmux/CLAUDE.md`
+- System-level fixes (Thunderbolt, VPN) — see `system/CLAUDE.md`
 
 ## Common Operations
 
-### Configuration Management
-
 ```bash
 # Deploy configurations
-cd ~/.dotfiles
-stow sway waybar neovim
+cd ~/.dotfiles && stow sway waybar neovim
 
-# Test sway configuration
-sway -C ~/.config/sway/config
+# Sway
+sway -C ~/.config/sway/config    # Test config
+swaymsg reload                   # Reload
 
-# Reload sway
-swaymsg reload
-```
-
-### System Provisioning
-
-```bash
-# Run complete Ansible bootstrap (fresh installation)
+# Ansible bootstrap
 cd ~/.dotfiles/ansible
 ansible-playbook bootstrap.yml --extra-vars "profile=work_laptop"
 
-# Target specific profiles
-ansible-playbook bootstrap.yml --extra-vars "profile=development"  # Dev tools + database
-ansible-playbook bootstrap.yml --extra-vars "profile=desktop"      # Full desktop + database
+# Database — see ansible/DATABASE_SETUP.md
+psql bgo                         # Connect to default database
 
-# Target specific roles
-ansible-playbook bootstrap.yml --tags "development"        # Dev tools only
-ansible-playbook bootstrap.yml --tags "database"           # PostgreSQL + credential scripts
-ansible-playbook bootstrap.yml --tags "dotfiles"           # Stow deployment only
-ansible-playbook bootstrap.yml --tags "credentials"        # Vault management only
-```
+# Docker — see docker/CLAUDE.md
+docker compose up -d             # Start services
 
-### Script Development
+# Sync — see SYNC_WORKFLOW.md
+dotfiles-sync                    # Commit, pull, push all repos
 
-```bash
-# Make scripts executable
+# Script development
 chmod +x ~/.local/bin/new_script.sh
-chmod +x ~/.config/sway/scripts/new_script.sh
-
-# Test sway shortcuts overlay
-~/.config/sway/scripts/sway-shortcuts.sh
 ```
 
-### System Services
+## Script Dependencies
 
-```bash
-# System services
-sudo systemctl status udevmon
-sudo systemctl restart udevmon
-
-# User services
-systemctl --user status pipewire
-systemctl --user restart waybar
-
-# Check Wayland session
-echo $WAYLAND_DISPLAY
-loginctl show-session $(loginctl | grep $(whoami) | awk '{print $1}')
-```
-
-### User Systemd Services
-
-The `systemd/` package contains 8 user service units deployed with `stow --no-folding` to prevent
-stow from tree-folding `~/.config/systemd/` (which would cause `systemctl --user enable` to write
-`.wants/` symlinks inside the git repo).
-
-| Unit | Type | Activation | Purpose |
-|------|------|-----------|---------|
-| `claude-imports.service` | Long-running | `enable --now` | Watches Downloads for vault notes and Claude exports |
-| `mako-watcher.path` | Path trigger | `enable --now` | Triggers mako-watcher.service on config file changes |
-| `mako-watcher.service` | Triggered | via `.path` | Reloads Mako notification daemon on config change |
-| `password-store-sync.timer` | Timer | `enable --now` | Schedules periodic password store and dotfiles sync |
-| `password-store-sync.service` | Triggered | via `.timer` | Runs the actual sync (git pull/push) |
-| `tmux.service` | Forking | `enable` only | Starts detached tmux session at login |
-| `spotify-notify.service` | Long-running | `enable --now` | Track change notifications via playerctl + notify-send |
-| `mtp-automount@.service` | Template | on-demand | MTP device automount (activated by udev rules) |
-
-```bash
-# Deploy systemd services (uses --no-folding to keep .wants/ out of repo)
-cd ~/.dotfiles
-stow -R --no-folding systemd
-
-# Check service status
-systemctl --user status claude-imports password-store-sync.timer mako-watcher.path tmux spotify-notify
-
-# View all managed unit files
-systemctl --user list-unit-files | grep -E '(claude|tmux|mako|password|mtp|spotify)'
-```
-
-### Database Management (PostgreSQL 18)
-
-```bash
-# Setup database credentials from password store
-git clone git@github.com:bennigo/bgo-pstore.git ~/.password-store
-update-pgpass              # Generates ~/.pgpass from pass credentials
-
-# Database operations
-psql bgo                    # Connect to default database
-createdb myproject          # Create new database
-psql myproject             # Connect to specific database
-
-# Neovim database UI (vim-dadbod-ui)
-nvim                       # Database connections via db_ui (:DBUI or <leader>D)
-                           # Saved queries in ~/.config/nvim/db_ui/
-
-# Update credentials
-pass edit database/vedur_password
-update-pgpass              # Regenerate .pgpass file
-
-# Database status
-sudo systemctl status postgresql
-psql --version             # PostgreSQL 18.0
-```
-
-**See detailed documentation**: `ansible/DATABASE_SETUP.md`
-
-### Docker Container Management
-
-```bash
-# Container operations
-docker ps                           # List running containers
-docker compose up -d                # Start services in background
-docker compose down                 # Stop and remove containers
-docker-logs-follow web db           # Follow logs from multiple containers
-
-# Cleanup and maintenance
-docker-cleanup                      # Interactive cleanup (custom script)
-docker-cleanup --all --force        # Remove all unused images, no confirmation
-docker-stats-pretty                 # Colorized container statistics
-
-# Using compose templates
-cp ~/.dotfiles/docker/templates/compose-python-dev.yml docker-compose.yml
-cp ~/.dotfiles/docker/templates/.env.example .env
-# Edit .env and docker-compose.yml, then:
-docker compose up -d
-
-# Current running containers
-docker ps -f name=gps-receivers    # GPS receivers scheduler
-```
-
-**See detailed documentation**: `docker/CLAUDE.md`
-
-### PDF Document Management
-
-```bash
-# Sign PDF documents with signature image
-sign-pdf input.pdf signature.png output.pdf                    # Sign at bottom-right corner
-sign-pdf input.pdf sig.png output.pdf --position 100 100       # Sign at specific position
-sign-pdf input.pdf sig.png output.pdf --page -1                # Sign last page
-sign-pdf input.pdf sig.png output.pdf --width 200 --height 80  # Custom signature size
-
-# View help and examples
-sign-pdf --help
-```
-
-### Hardware Management
-
-```bash
-# Test Nvidia configuration
-./system/nvidia.test
-
-# Check GPU status
-nvidia-smi
-swaymsg -t get_outputs
-
-# Input device debugging
-udevadm monitor --environment --udev
-```
-
-## System Integration
-
-### Wayland Environment in Tmux
-
-After reboot, `tmux-continuum` restores sessions before Sway starts, leaving `WAYLAND_DISPLAY`,
-`SWAYSOCK`, and `DISPLAY` empty in restored panes. Two mechanisms fix this:
-
-- **Auto-refresh**: `zsh/exports.zsh` defines `refresh-wayland-env` which pulls current values from
-  the tmux session env (populated by `update-environment` on attach). Runs automatically on shell
-  startup when `WAYLAND_DISPLAY` is empty inside tmux.
-- **Manual bulk refresh**: `prefix + E` (tmux keybinding) sends `refresh-wayland-env` + Enter to
-  every pane across all sessions — useful for long-running shells that never re-sourced.
-
-```bash
-# Manual refresh in a single pane
-refresh-wayland-env
-
-# Bulk refresh all panes (tmux prefix + E)
-# Verify
-echo $WAYLAND_DISPLAY  # Should show wayland-1
-```
-
-### Claude Code Notifications
-
-Claude Code notifications are forwarded to Mako via a hook in `~/.claude/settings.json`.
-The `claude-notify` script (`local_bin/`) reads hook JSON on stdin and calls `notify-send`
-with urgency based on event type (critical for permission prompts, normal for idle prompts).
-
-This is needed because inside Neovim's terminal buffer, standard terminal notification
-mechanisms (OSC sequences, bells) are swallowed — the hook runs as a separate process and
-reaches Mako directly via D-Bus.
-
-```bash
-# Test the notification hook manually
-echo '{"notification_type":"idle_prompt","message":"Test","title":"Claude Code"}' | claude-notify
-```
-
-### Claude Code Remote Control
-
-Claude Code can be accessed from a phone or browser via the remote control feature.
-
-- **Tmux**: Persistent `claude-rc` window spawned at tmux startup in scratchpad mode, running
-  `claude remote-control --name 'tmux-remote'`. Uses full path to npm-global claude binary
-  to avoid PATH issues when tmux starts via systemd.
-- **Neovim**: `<leader>acR` keymap launches a remote control session from within Neovim.
-
-```bash
-# Manual launch
-claude remote-control --name 'my-session'
-
-# The tmux claude-rc window is created automatically at startup
-```
-
-### Multi-Machine Sync
-
-Unified sync system for dotfiles, claude-private submodule, and password-store across machines.
-
-- **`dotfiles-sync`**: Primary sync script — commits, pulls, pushes all three repositories
-- **`sync`**: Shell alias for `dotfiles-sync`
-- **`sync-status`**: Check sync state without modifying anything
-- **Automatic sync**: `password-store-sync.timer` runs periodic sync via systemd
-- **Waybar indicators**: Visual sync status (synced, push needed, pull needed, uncommitted)
-
-See `SYNC_WORKFLOW.md`, `SYNC_DEPLOYMENT.md`, and `SYNC_QUICK_REFERENCE.md` for full documentation.
-
-### Wayland Compatibility
-- **XWayland**: Legacy X11 application support enabled
-- **Screen sharing**: Portal-based sharing for Wayland applications
-- **Clipboard**: wl-clipboard for Wayland-native copy/paste
-
-### System-Level Fixes
-
-- **Thunderbolt 4 Resume Fix** (`system/usr/lib/systemd/system-sleep/thunderbolt-fix`):
-  Fixes Intel Maple Ridge Thunderbolt 4 D3cold hang post-resume on ThinkPad P1 Gen 6.
-  Removes and rescans PCI bridge `0000:20:00.0` as a systemd sleep hook.
-- **Cisco VPN Local Route Fix** (`system/etc/NetworkManager/dispatcher.d/99-fix-vpn-local-routes`):
-  Bypasses Cisco AnyConnect VPN hijacking of local subnet routes. Uses policy routing (table 200)
-  + iptables RETURN rules with device whitelist (router, printer, etc.). Auto-retries to survive
-  vpnagentd chain rebuilds.
-
-### Performance Optimization
-- **Nvidia**: Early KMS for optimal Wayland performance
-- **Input latency**: Custom udev rules for gaming/professional input devices
-- **Resource management**: Systemd user services for session components
-- **Environment variables**: PAM-based XDG configuration for consistent paths
-
-## Cross-References
-
-- **Neovim plugin ecosystem and configuration**: `neovim/.config/nvim/CLAUDE.md` (75+ plugins, LazyVim-based)
-- **Docker Engine configuration and workflows**: `docker/CLAUDE.md` (daemon config, scripts, compose templates)
-- **Database setup and credential management**: `ansible/DATABASE_SETUP.md` (PostgreSQL 18)
-- **Local LLM configuration**: `ollama/README.md` (DeepSeek Coder V2 16B, Llama 3.1 8B, GPU setup)
-- **Multi-machine sync workflow**: `SYNC_WORKFLOW.md`, `SYNC_DEPLOYMENT.md`, `SYNC_QUICK_REFERENCE.md`
-- **Sway Obsidian scratchpad architecture**: `sway/.config/sway/CLAUDE.md` (mark-based toggles, app_id keybindings)
-- **System installation, hardware setup, and credentials**: `system/CLAUDE.md`
-- **Global workspace context**: `/home/bgo/CLAUDE.md`
-- **Project-specific contexts**: Individual project CLAUDE.md files
+Common dependencies across custom scripts:
+- rofi, jq, waybar, libnotify-bin (notify-send)
+- playerctl (media control), pandoc + xelatex (PDF)
+- arecord + faster-whisper (voice-input), wl-clipboard
 
 ## Development Notes
 
 ### Adding Configurations
-
-1. Create new directory with `.config/[app]` structure
+1. Create directory with `.config/[app]` structure
 2. Add application configs inside
-3. Update this CLAUDE.md if significant patterns emerge
+3. If substantial, create a CLAUDE.md (see context architecture guidelines)
 4. Deploy with `stow [app]`
 
-### Script Dependencies
+### File Editing
+Edit source files in this repository, not deployed locations in `~/.config/`.
 
-Common dependencies across custom scripts:
+## Cross-Reference Index
 
-- rofi (menus and launchers)
-- jq (JSON processing for sway IPC, tmux statusline, claude-notify)
-- waybar (status bar integration)
-- libnotify-bin (notify-send for claude-notify and desktop notifications)
-- playerctl (spotify-notify, media control)
-- pandoc + xelatex (print-md, markdown to PDF)
-- arecord + faster-whisper (voice-input, speech-to-text)
-
-### File Editing Preference
-
-Edit source files in dotfiles repository, not deployed locations in `~/.config/`.
-
-### Stow Configuration
-
-Ansible automatically deploys all stowable directories except:
-- `ansible/` (build system)
-- `system/` (system configs)
-- `i3/` (legacy configuration, unused)
-- `sway-remix/` (experimental)
-- `systemd/` (deployed separately with `--no-folding`, see below)
-- `.git/` (version control)
-- Hidden directories (starting with `.`)
-
-Note: `claude-private/` (encrypted submodule) IS intentionally stowed — it deploys `~/.claude.json`
-and encrypted content to `~/.claude/`. The submodule is managed by git-crypt with GPG key `0FA08B1A9096B394`.
-
-The `systemd` package is stowed separately with `stow --no-folding` so that `~/.config/systemd/user/`
-is a real directory. This prevents `systemctl --user enable` from creating `.wants/` symlinks inside the
-git repo. Ansible also enables and starts the appropriate services after deployment.
-
-### Recent System Improvements
-
-- **Ollama/Local AI Integration**: GPU-accelerated local LLM inference with NVIDIA RTX 2000 Ada
-  - DeepSeek Coder V2 16B + Llama 3.1 8B models
-  - Integrated with avante.nvim for local AI coding assistance
-  - See: `ollama/README.md` for configuration details
-- **Multi-Machine Sync System**: Unified sync for dotfiles, claude-private, and password-store
-  - `dotfiles-sync` script with Waybar visual indicators
-  - Automatic periodic sync via systemd timer
-  - See: `SYNC_WORKFLOW.md` for complete documentation
-- **PostgreSQL 18 Integration**: Production database with secure credential management via GPG-encrypted `pass` store
-  - Full Ansible automation for installation and user setup
-  - Neovim Database UI (vim-dadbod-ui) for direct database access
-  - Password-less connections via `~/.pgpass` (auto-generated from `pass`)
-  - See: `ansible/DATABASE_SETUP.md` for complete documentation
-- **Neovim Ecosystem**: 75+ plugins documented in dedicated `neovim/.config/nvim/CLAUDE.md`
-  - Built from source (v0.11.4) with full dependency management
-  - LazyVim foundation with extensive customization
-  - Claude Code, Database UI, Obsidian, R statistical computing integrations
-  - Multi-language support: Python, R, LaTeX, Lua, Markdown
-- **Obsidian Workflow Tools**: Integrated PDF signing utility (`sign-pdf`)
-  - CLI tool for adding signature images to PDF documents
-  - Deployed via Ansible with automatic dependency management
-  - Python-based with pypdf, Pillow, and ReportLab
-- **Wayland env refresh for tmux**: Auto-fixes stale `WAYLAND_DISPLAY`/`SWAYSOCK`/`DISPLAY` in
-  tmux-continuum restored sessions, with manual `prefix + E` bulk refresh keybinding
-- **Claude Code notification hook**: `claude-notify` script forwards Claude Code `Notification`
-  hook events to Mako via `notify-send` — works inside Neovim terminal where OSC sequences are swallowed
-- **Claude Code Remote Control**: Tmux persistent `claude-rc` window + Neovim `<leader>acR` keymap
-  for phone/browser access to Claude Code sessions
-- **Voice Input / Speech-to-Text**: `voice-input` script using faster-whisper with Wayland clipboard
-  - Supports Icelandic, English, and auto-detect language modes
-  - Toggle recording mode with timeout support
-- **Markdown Printing**: `print-md` script for printing markdown to PDF via pandoc + CUPS
-  - Supports duplex, draft quality, grayscale options
-- **MTP Automount System**: Automated MTP device mounting with udev rules
-  - `mtp-automount` script with device-to-friendly-name mapping (YoloBox etc.)
-  - `rofi-mount-menu` for interactive mount/unmount via rofi
-  - Systemd template service `mtp-automount@.service` triggered by udev
-- **System-Level Hardware Fixes**:
-  - Thunderbolt 4 resume fix for Intel Maple Ridge D3cold hang (ThinkPad P1 Gen 6)
-  - Cisco AnyConnect VPN local route fix via policy routing + iptables
-- **Neovim Smart Dagbok Timestamps**: Auto-continuing timestamped journal entries
-  - `<CR>` in markdown insert mode continues `- HH:MM — ` entries with current time
-  - Normal mode `o` on dagbok lines creates new timestamped line
-  - Rich snippets for timestamps, tasks with deadlines, and journal entries
-- **Fresh install automation**: Complete Ansible bootstrap for clean deployments
-- **Environment consistency**: PAM-based XDG variables for reliable path resolution
-- **Claude Code integration**: AI assistant with secure API key management
-- **Vault automation**: Encrypted credential storage with SSH key deployment
-- **Password management**: GPG-encrypted password store with version control (private repo)
-
-### Configuration Gaps (Post-Reinstall TODO)
-
-- **Neomutt**: Structure present, needs configuration after laptop reinstallation
-  - [ ] **mbsync setup complete**: `.mbsyncrc` created for Gmail
-  - [ ] **TODO**: Add Gmail app password to pass: `pass insert email/bgovedur@gmail.com`
-    - Get app password from: https://myaccount.google.com/apppasswords
-    - Create "Mail" app password (16 characters)
-  - [ ] **TODO**: Run initial sync: `mbsync -a` (will take 5-10 min first time)
-  - [ ] **TODO**: Add other accounts (benedikt@klifursamband.is, afreksnefnd@klifursamband.is) to `.mbsyncrc`
-  - [ ] **TODO**: Set up notmuch for email indexing and search
-  - [ ] **Reference**: See `/home/bgo/notes/bgovault/2.Areas/Linux/NeoMutt_Email_System_Guide.md`
-- **Ranger**: Minimal configuration (only rc.conf), needs proper setup
-- **Google Drive MCP (KÍ)**: OAuth credentials for `@modelcontextprotocol/server-gdrive`
-  - [x] **DONE**: OAuth credentials backed up to `pass` (2026-02-18)
-    - `pass show mcp/gdrive-oauth-keys` — Google Cloud client keys (project: KI-drive, ID: 313326843952)
-    - `pass show mcp/gdrive-credentials` — OAuth refresh token (regenerable via OAuth flow)
-    - MCP server config in `~/.claude.json` (project: `/home/bgo/personal/klifur/KI/fjarmal`)
-    - Google account: KÍ Drive (benedikt@klifursamband.is)
-    - Scope: `drive.readonly` only
-    - **Restore after reinstall**:
-      ```bash
-      mkdir -p ~/.config/mcp-gdrive
-      pass show mcp/gdrive-oauth-keys > ~/.config/mcp-gdrive/gcp-oauth.keys.json
-      # Run the MCP server once to trigger OAuth flow for fresh refresh token
-      ```
-
+| File | Content |
+|------|---------|
+| `sway/.config/sway/CLAUDE.md` | Compositor config, workspaces, shortcuts, scratchpads |
+| `neovim/.config/nvim/CLAUDE.md` | 75+ plugins, AI integration, database UI, keymaps |
+| `tmux/.config/tmux/CLAUDE.md` | Session management, plugins, Wayland env fix, remote control |
+| `docker/CLAUDE.md` | Daemon config, VPN networking, scripts, compose templates |
+| `claude-code/CLAUDE.md` | MCP servers, notification hooks, remote control |
+| `systemd/CLAUDE.md` | 8 user service units, deployment, activation |
+| `system/CLAUDE.md` | Hardware fixes, GPU, credentials, installation, post-reinstall TODOs |
+| `ollama/README.md` | Local LLM setup (DeepSeek, Llama), GPU configuration |
+| `ansible/DATABASE_SETUP.md` | PostgreSQL 18 setup, credential management |
+| `SYNC_WORKFLOW.md` | Multi-machine sync architecture |
+| `SYNC_DEPLOYMENT.md` | Sync system deployment guide |
+| `/home/bgo/CLAUDE.md` | Global workspace context |
