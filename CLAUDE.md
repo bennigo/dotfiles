@@ -21,7 +21,7 @@ architecture guidelines. Subdirectories with their own CLAUDE.md are marked with
 ```
 .dotfiles/
 ├── sway/           # Sway compositor — see sway/.config/sway/CLAUDE.md 📄
-├── waybar/         # Status bar with custom modules and scripts
+├── waybar/         # Status bar with custom modules — see waybar/CLAUDE.md 📄
 ├── neovim/         # LazyVim-based IDE (75+ plugins) — see neovim/.config/nvim/CLAUDE.md 📄
 ├── neovim_old/     # Previous neovim configuration backup
 ├── tmux/           # Terminal multiplexer + plugins — see tmux/.config/tmux/CLAUDE.md 📄
@@ -36,7 +36,7 @@ architecture guidelines. Subdirectories with their own CLAUDE.md are marked with
 ├── foot/           # Lightweight terminal emulator
 ├── alacritty/      # Cross-platform terminal emulator
 ├── qutebrowser/    # Keyboard-driven web browser
-├── zsh/            # Shell configuration (aliases, exports, hooks)
+├── zsh/            # Shell configuration (Zap plugins, aliases) — see zsh/CLAUDE.md 📄
 ├── profile/        # Shell profile settings
 ├── ollama/         # Local LLM config (DeepSeek Coder V2, Llama 3.1) — see ollama/README.md
 ├── swappy/         # Screenshot annotation tool
@@ -153,6 +153,8 @@ Edit source files in this repository, not deployed locations in `~/.config/`.
 | `docker/CLAUDE.md` | Daemon config, VPN networking, scripts, compose templates |
 | `claude-code/CLAUDE.md` | MCP servers, notification hooks, remote control |
 | `systemd/CLAUDE.md` | 8 user service units, deployment, activation |
+| `zsh/CLAUDE.md` | Zap plugins, aliases, exports, Wayland env fix, stow conflict |
+| `waybar/CLAUDE.md` | Modules, git-sync status, custom scripts, clipboard |
 | `system/CLAUDE.md` | Hardware fixes, GPU, credentials, installation, post-reinstall TODOs |
 | `firefox/CLAUDE.md` | Multi-profile setup, deploy script, Sway workspace integration |
 | `local_bin/CLAUDE.md` | ~28 scripts by category, dependencies, adding new scripts |

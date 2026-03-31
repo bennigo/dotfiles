@@ -387,6 +387,42 @@ tail -f $XDG_RUNTIME_DIR/swayidle-power-aware.log
    - Impact: Brief gap in idle monitoring during config reload
    - Acceptable: Only happens on `exec_always` triggers
 
+## Smart Shortcut System
+
+Self-documenting keybindings that generate searchable rofi menus via `sway-shortcuts.sh`.
+
+### Comment Format
+
+Keybindings are annotated with structured comments immediately before the `bindsym` line:
+
+```
+## Category // Description // Icon ##
+bindsym $mod+key command
+```
+
+**Examples from config:**
+```
+## Power // Force panel on and set 50% brightness // 💡 ##
+## Media // Decrease screen brightness // 🔅 ##
+## Media // Increase volume // 🔊 ##
+```
+
+### How It Works (`scripts/sway-shortcuts.sh`)
+
+1. Collects bindings from `swaymsg -t get_bindings` (live) or config file (fallback)
+2. Parses smart comments to extract Category, Description, and Icon
+3. Joins bindings with their descriptions
+4. Sorts by category and description
+5. Displays via rofi with fuzzy search (or `less` if rofi unavailable)
+
+**Features:**
+- Supports line-before and inline comment formats
+- Normalizes modifier display (Mod4→Super, Mod1→Alt, Control→Ctrl)
+- Groups by category with bold headers
+- Icons displayed before descriptions
+- Optional detail view showing underlying command (`--detail` flag)
+- Flags: `--include-xf86`, `--include-bindcode`, `--desc-required`, `--debug`
+
 ## Future Improvements
 
 - [ ] Add configurable timeouts via environment variables or config file
