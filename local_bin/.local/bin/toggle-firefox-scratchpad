@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# toggle-firefox-scratchpad — Toggle default Firefox between tiled and scratchpad
+#
+# If no default Firefox window exists: do nothing (use plain 'firefox' to open one)
+# If window is tiled/floating on a workspace: move to scratchpad
+# If window is in scratchpad (hidden or visible): toggle visibility
+
+set -euo pipefail
+
+APP_ID="firefox_firefox"
+TREE=$(swaymsg -t get_tree)
+
+# Check if window exists at all
+HAS_WINDOW=$(echo "${TREE}" | jq -r \
+  ".. | select(.app_id? == \"${APP_ID}\") | .id" 2>/dev/null | head -1)
+
+if [[ -z "${HAS_WINDOW}" ]]; then
+    exit 0
+fi
+
+# Check if window is in scratchpad (__i3_scratch workspace)
+IN_SCRATCHPAD=$(echo "${TREE}" | jq -r "
+  recurse(.nodes[]?, .floating_nodes[]?) |
+  select(.name? == \"__i3_scratch\") |
+  recurse(.nodes[]?, .floating_nodes[]?) |
+  select(.app_id? == \"${APP_ID}\") | .id
+" 2>/dev/null | head -1)
+
+if [[ -n "${IN_SCRATCHPAD}" ]]; then
+    # Window is in scratchpad — toggle visibility
+    swaymsg "[app_id=\"${APP_ID}\"] scratchpad show"
+    swaymsg "[app_id=\"${APP_ID}\"] resize set width 2400 px height 1600 px, move position center" 2>/dev/null || true
+else
+    # Window is on a workspace — move to scratchpad (hides it)
+    swaymsg "[app_id=\"${APP_ID}\"] move scratchpad"
+fi

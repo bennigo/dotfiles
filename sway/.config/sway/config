@@ -265,6 +265,8 @@ bindsym $mod+g [app_id="org.zotero.Zotero"] scratchpad show, move position cente
 bindsym $mod+y exec ~/.local/bin/sat-viewer
 ## Scratchpad // Show floating terminal // 🪟🖥️ ##
 bindsym $mod+Shift+Return [app_id="terminal_floating"] scratchpad show
+## Scratchpad // Toggle default Firefox scratchpad // 🦊 ##
+bindsym $mod+Shift+b exec ~/.local/bin/toggle-firefox-scratchpad
 
 # Screenshot the monitor
 # take screenshot and copy to clipboard
