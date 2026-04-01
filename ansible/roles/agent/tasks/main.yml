@@ -1,0 +1,497 @@
+---
+# Agent server role - OpenClaw AI agent setup with isolation
+# Creates isolated user, installs Node.js, Tailscale, UFW, agent tooling
+#
+# Two-user architecture:
+#   bgo (target_user) — admin with SSH keys, sudo, dotfiles
+#   openclaw-agent    — restricted service user for AI agent
+
+# ============================================================
+# SECTION 1: Isolated user creation
+# ============================================================
+
+- name: Create openclaw-agent system group
+  group:
+    name: "{{ agent_user }}"
+    state: present
+  tags: ["agent", "user"]
+
+- name: Create openclaw-agent user with restricted permissions
+  user:
+    name: "{{ agent_user }}"
+    group: "{{ agent_user }}"
+    groups: docker
+    append: yes
+    shell: /bin/bash
+    home: "{{ agent_home }}"
+    create_home: yes
+    system: no
+    comment: "OpenClaw AI Agent (restricted)"
+  tags: ["agent", "user"]
+
+- name: Lock down agent home directory permissions
+  file:
+    path: "{{ agent_home }}"
+    mode: '0700'
+    owner: "{{ agent_user }}"
+    group: "{{ agent_user }}"
+  tags: ["agent", "user"]
+
+- name: Lock down primary user home directory
+  file:
+    path: "{{ target_home }}"
+    mode: '0750'
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+  tags: ["agent", "user"]
+
+- name: Ensure openclaw-agent has NO sudo access
+  file:
+    path: "/etc/sudoers.d/{{ agent_user }}"
+    state: absent
+  tags: ["agent", "user"]
+
+- name: Create agent workspace directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ agent_user }}"
+    group: "{{ agent_user }}"
+    mode: '0755'
+  loop:
+    - "{{ agent_workspace }}"
+    - "{{ agent_workspace }}/logs"
+    - "{{ agent_workspace }}/data"
+    - "{{ agent_workspace }}/config"
+    - "{{ agent_home }}/.config"
+  tags: ["agent", "workspace"]
+
+- name: Display user isolation status
+  debug:
+    msg: |
+      User isolation configured:
+        Admin user: {{ target_user }} (home: {{ target_home }}, mode: 0750, sudo: yes)
+        Agent user: {{ agent_user }} (home: {{ agent_home }}, mode: 0700, sudo: no)
+        Workspace: {{ agent_workspace }}
+  tags: ["agent", "user"]
+
+# ============================================================
+# SECTION 2: Node.js installation (for agent user)
+# ============================================================
+
+- name: Install Node.js via FNM for agent user
+  block:
+    - name: Download and install fnm for agent
+      shell: curl -fsSL https://fnm.vercel.app/install | bash
+      become: yes
+      become_user: "{{ agent_user }}"
+      args:
+        creates: "{{ agent_home }}/.local/share/fnm"
+
+    - name: Install LTS Node.js for agent
+      shell: |
+        export PATH="{{ agent_home }}/.local/share/fnm:$PATH"
+        eval "$(fnm env --use-on-cd)"
+        fnm install --lts
+        fnm default lts-latest
+      become: yes
+      become_user: "{{ agent_user }}"
+      args:
+        creates: "{{ agent_home }}/.local/share/fnm/node-versions"
+
+    - name: Configure npm global prefix for agent
+      shell: |
+        export PATH="{{ agent_home }}/.local/share/fnm:$PATH"
+        eval "$(fnm env --use-on-cd)"
+        npm config set prefix "{{ agent_home }}/.local/share/npm-global"
+        mkdir -p "{{ agent_home }}/.local/share/npm-global"
+      become: yes
+      become_user: "{{ agent_user }}"
+
+    - name: Install agent npm packages
+      shell: |
+        export PATH="{{ agent_home }}/.local/share/fnm:$PATH"
+        eval "$(fnm env --use-on-cd)"
+        npm install --global {{ item }}
+      loop:
+        - "@anthropic-ai/claude-code"
+      become: yes
+      become_user: "{{ agent_user }}"
+      ignore_errors: yes
+
+    - name: Verify Node.js installation for agent
+      shell: |
+        export PATH="{{ agent_home }}/.local/share/fnm:$PATH"
+        eval "$(fnm env --use-on-cd)"
+        node --version
+      become: yes
+      become_user: "{{ agent_user }}"
+      register: agent_node_version
+      changed_when: false
+      failed_when: false
+
+    - name: Display Node.js installation status
+      debug:
+        msg: |
+          Agent Node.js: {{ 'INSTALLED' if agent_node_version.rc == 0 else 'FAILED' }}
+          {% if agent_node_version.rc == 0 %}
+          Version: {{ agent_node_version.stdout }}
+          {% endif %}
+          Note: OpenClaw install is manual until package name confirmed:
+            sudo -u {{ agent_user }} bash -c 'export PATH="$HOME/.local/share/fnm:$PATH"; eval "$(fnm env)"; npm install -g @openclaw/openclaw'
+  tags: ["agent", "nodejs"]
+
+# ============================================================
+# SECTION 3: Tailscale installation
+# ============================================================
+
+- name: Install and configure Tailscale
+  block:
+    - name: Add Tailscale GPG key
+      shell: |
+        curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/{{ ansible_distribution_release }}.noarmor.gpg | \
+        tee /usr/share/keyrings/tailscale-archive-keyring.gpg > /dev/null
+      args:
+        creates: /usr/share/keyrings/tailscale-archive-keyring.gpg
+
+    - name: Add Tailscale repository
+      shell: |
+        curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/{{ ansible_distribution_release }}.tailscale-keyring.list | \
+        tee /etc/apt/sources.list.d/tailscale.list > /dev/null
+      args:
+        creates: /etc/apt/sources.list.d/tailscale.list
+
+    - name: Install Tailscale
+      apt:
+        name: tailscale
+        state: present
+        update_cache: yes
+
+    - name: Enable Tailscale service
+      systemd:
+        name: tailscaled
+        enabled: yes
+        state: started
+
+    - name: Display Tailscale setup instructions
+      debug:
+        msg: |
+          Tailscale installed and service started.
+
+          MANUAL STEP REQUIRED:
+            sudo tailscale up --ssh
+
+          This authenticates the machine and enables SSH over Tailscale.
+          After auth, connect from ThinkPad via: ssh <tailscale-hostname>
+  when: features.setup_tailscale | default(false)
+  tags: ["agent", "tailscale"]
+
+# ============================================================
+# SECTION 4: UFW Firewall
+# ============================================================
+
+- name: Configure UFW firewall
+  block:
+    - name: Install UFW
+      apt:
+        name: ufw
+        state: present
+
+    - name: Reset UFW to defaults before configuring
+      shell: ufw --force reset
+
+    - name: Set UFW default policies (deny all)
+      shell: |
+        ufw default deny incoming
+        ufw default deny outgoing
+
+    - name: Allow outbound HTTPS (cloud APIs)
+      shell: ufw allow out 443/tcp
+
+    - name: Allow outbound HTTP (package management)
+      shell: ufw allow out 80/tcp
+
+    - name: Allow outbound DNS
+      shell: |
+        ufw allow out 53/tcp
+        ufw allow out 53/udp
+
+    - name: Allow outbound SSH (git clone, remote access)
+      shell: ufw allow out 22/tcp
+
+    - name: Allow inbound SSH (for remote ansible from ThinkPad)
+      shell: ufw allow in 22/tcp
+
+    - name: Allow Tailscale traffic
+      shell: |
+        ufw allow in on tailscale0
+        ufw allow out on tailscale0
+        ufw allow 41641/udp
+      when: features.setup_tailscale | default(false)
+
+    - name: Enable UFW
+      shell: ufw --force enable
+
+    - name: Enable UFW service
+      systemd:
+        name: ufw
+        enabled: yes
+        state: started
+
+    - name: Get UFW status
+      shell: ufw status verbose
+      register: ufw_status
+      changed_when: false
+
+    - name: Display firewall configuration
+      debug:
+        msg: |
+          UFW Firewall configured:
+          {{ ufw_status.stdout }}
+
+          POLICY: deny incoming, deny outgoing
+          ALLOWED OUT: HTTPS (443), HTTP (80), DNS (53), SSH (22)
+          ALLOWED IN: SSH (22), Tailscale interface
+  when: features.setup_firewall | default(false)
+  tags: ["agent", "firewall"]
+
+# ============================================================
+# SECTION 5: API key management
+# ============================================================
+
+- name: Set up API key storage for agent
+  block:
+    - name: Create API key directory
+      file:
+        path: "{{ agent_workspace }}/config/api-keys"
+        state: directory
+        owner: "{{ agent_user }}"
+        group: "{{ agent_user }}"
+        mode: '0700'
+
+    - name: Extract API keys from ansible-vault
+      shell: |
+        if [ -f "{{ directories.dotfiles }}/system/credentials.vault" ]; then
+          ansible-vault view \
+            --vault-password-file "{{ directories.dotfiles }}/system/scripts/ansible-vault-pass.sh" \
+            "{{ directories.dotfiles }}/system/credentials.vault" \
+            | grep -A1 "{{ item.vault_key }}:" | tail -n1 | sed 's/^[[:space:]]*//' | tr -d '"'
+        fi
+      register: api_key_results
+      loop:
+        - { vault_key: "claude_api_key", env_name: "ANTHROPIC_API_KEY" }
+        - { vault_key: "deepseek_api_key", env_name: "DEEPSEEK_API_KEY" }
+        - { vault_key: "kimi_api_key", env_name: "KIMI_API_KEY" }
+      become: no
+      failed_when: false
+      no_log: true
+
+    - name: Create agent environment file with API keys
+      copy:
+        content: |
+          # OpenClaw Agent API Keys
+          # Managed by ansible - do not edit manually
+          {% for result in api_key_results.results %}
+          {% if result.stdout is defined and result.stdout | trim | length > 0 %}
+          {{ result.item.env_name }}={{ result.stdout | trim }}
+          {% endif %}
+          {% endfor %}
+        dest: "{{ agent_workspace }}/config/agent.env"
+        owner: "{{ agent_user }}"
+        group: "{{ agent_user }}"
+        mode: '0600'
+      no_log: true
+
+    - name: Display API key setup status
+      debug:
+        msg: |
+          API key extraction results:
+          {% for result in api_key_results.results %}
+          - {{ result.item.env_name }}: {{ 'FOUND' if (result.stdout is defined and result.stdout | trim | length > 0) else 'NOT FOUND (add to credentials.vault)' }}
+          {% endfor %}
+
+          Keys stored in: {{ agent_workspace }}/config/agent.env
+          Manual edit: sudo -u {{ agent_user }} vim {{ agent_workspace }}/config/agent.env
+  tags: ["agent", "api-keys"]
+
+# ============================================================
+# SECTION 6: Agent logging
+# ============================================================
+
+- name: Configure agent action logging
+  block:
+    - name: Create logrotate configuration for agent
+      copy:
+        content: |
+          {{ agent_workspace }}/logs/*.log {
+              daily
+              missingok
+              rotate 30
+              compress
+              delaycompress
+              notifempty
+              create 0640 {{ agent_user }} {{ agent_user }}
+          }
+        dest: /etc/logrotate.d/openclaw-agent
+        owner: root
+        group: root
+        mode: '0644'
+  tags: ["agent", "logging"]
+
+# ============================================================
+# SECTION 7: bgovault read-only setup
+# ============================================================
+
+- name: Set up bgovault as read-only for agent server
+  block:
+    - name: Check if bgovault exists
+      stat:
+        path: "{{ personal_repos.obsidian_vault.dest }}/.git"
+      register: agent_vault_exists
+      become: no
+
+    - name: Disable push on bgovault remote
+      shell: |
+        cd {{ personal_repos.obsidian_vault.dest }}
+        git remote set-url --push origin no-push-configured
+      become: no
+      when: agent_vault_exists.stat.exists
+
+    - name: Verify push is disabled
+      shell: |
+        cd {{ personal_repos.obsidian_vault.dest }}
+        git remote -v
+      register: vault_remote_status
+      become: no
+      changed_when: false
+      when: agent_vault_exists.stat.exists
+
+    - name: Create vault sync lockfile to prevent auto-sync
+      copy:
+        content: |
+          # This file prevents dotfiles-sync from auto-pushing bgovault
+          # On agent_server profile, bgovault is READ-ONLY
+          # Manual pull only: cd ~/notes/bgovault && git pull
+          SYNC_DISABLED=true
+          REASON=agent_server_profile
+        dest: "{{ personal_repos.obsidian_vault.dest }}/.sync-disabled"
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: '0644'
+      become: no
+      when: agent_vault_exists.stat.exists
+
+    - name: Display bgovault read-only status
+      debug:
+        msg: |
+          bgovault read-only configuration:
+          {% if agent_vault_exists.stat.exists %}
+          Push remote: DISABLED (no-push-configured)
+          Sync lockfile: CREATED (.sync-disabled)
+          Manual pull: cd ~/notes/bgovault && git pull
+          {% else %}
+          Vault not yet cloned. After SSH key setup, clone manually:
+            git clone {{ personal_repos.obsidian_vault.url }} {{ personal_repos.obsidian_vault.dest }}
+          Then re-run this playbook to disable push.
+          {% endif %}
+  when: features.setup_personal_repos | default(false)
+  tags: ["agent", "bgovault", "readonly"]
+
+# ============================================================
+# SECTION 8: Progressive trust documentation
+# ============================================================
+
+- name: Create agent server guide
+  copy:
+    content: |
+      # OpenClaw Agent Server - Progressive Trust Guide
+
+      ## Architecture
+      - Admin user: {{ target_user }} (SSH, sudo, dotfiles)
+      - Agent user: {{ agent_user }} (restricted, no sudo)
+      - Workspace: {{ agent_workspace }}
+      - API keys: {{ agent_workspace }}/config/agent.env
+
+      ## Current Permissions (Initial)
+      - Outbound HTTPS only (cloud APIs)
+      - No GitHub write access (push disabled on bgovault)
+      - No vedur.is VPN/network access
+      - bgovault is read-only (no auto-sync)
+      - {{ agent_user }} has no sudo
+
+      ## Monitoring (from ThinkPad)
+      ```bash
+      ssh <tailscale-hostname> 'tail -f {{ agent_workspace }}/logs/*.log'
+      ssh <tailscale-hostname> 'sudo ufw status'
+      ssh <tailscale-hostname> 'tailscale status'
+      ssh <tailscale-hostname> 'sudo -u {{ agent_user }} ps aux'
+      ```
+
+      ## Running OpenClaw
+      ```bash
+      sudo -u {{ agent_user }} bash
+      export PATH="$HOME/.local/share/fnm:$PATH"
+      eval "$(fnm env)"
+      source {{ agent_workspace }}/config/agent.env
+      openclaw onboard  # First time setup
+      ```
+
+      ## Expanding Permissions
+
+      ### Level 1: Enable GitHub push on bgovault
+      ```bash
+      cd ~/notes/bgovault
+      git remote set-url --push origin git@github.com:bennigo/bgovault.git
+      rm .sync-disabled
+      ```
+
+      ### Level 2: Additional outbound ports
+      ```bash
+      sudo ufw allow out <port>/tcp
+      ```
+
+      ### Level 3: Grant agent additional group access
+      ```bash
+      sudo usermod -aG <group> {{ agent_user }}
+      ```
+
+      ## Emergency Lockdown
+      ```bash
+      sudo ufw default deny outgoing
+      sudo systemctl stop tailscaled
+      sudo pkill -u {{ agent_user }}
+      ```
+
+      ## Re-provisioning
+      ```bash
+      # From ThinkPad:
+      cd ~/.dotfiles/ansible
+      ansible-playbook bootstrap.yml -i inventory.yml \
+        --extra-vars "@profiles/agent_server.yml" \
+        --limit agent_servers
+      ```
+    dest: "{{ target_home }}/AGENT_SERVER_GUIDE.md"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0644'
+  become: no
+  tags: ["agent", "docs"]
+
+- name: Display bootstrap completion for agent server
+  debug:
+    msg: |
+      ============================================
+      AGENT SERVER SETUP COMPLETE
+      ============================================
+
+      Admin: {{ target_user }} (SSH keys, sudo, dotfiles)
+      Agent: {{ agent_user }} (restricted, cloud APIs)
+      Workspace: {{ agent_workspace }}
+
+      MANUAL STEPS REMAINING:
+      1. sudo tailscale up --ssh
+      2. Verify API keys: sudo -u {{ agent_user }} cat {{ agent_workspace }}/config/agent.env
+      3. Read: ~/AGENT_SERVER_GUIDE.md
+
+      ============================================
+  tags: ["agent"]

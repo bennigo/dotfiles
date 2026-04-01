@@ -2,6 +2,14 @@ all:
   hosts:
     localhost:
       ansible_connection: local
+  children:
+    agent_servers:
+      hosts: {}
+      # Add agent servers here when Tailscale is configured, e.g.:
+      # agent-laptop:
+      #   ansible_host: <tailscale-ip-or-hostname>
+      #   ansible_user: bgo
+      #   ansible_ssh_extra_args: "-o StrictHostKeyChecking=accept-new"
   vars:
     # Hardware detection - with safe defaults
     # These can be overridden via command line: --extra-vars "force_nvidia=true"

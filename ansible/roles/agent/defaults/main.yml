@@ -1,0 +1,5 @@
+---
+# Agent role defaults
+agent_user: "openclaw-agent"
+agent_home: "/home/openclaw-agent"
+agent_workspace: "/opt/openclaw"

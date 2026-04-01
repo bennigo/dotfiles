@@ -20,6 +20,7 @@ ansible-playbook bootstrap.yml --extra-vars "profile=work_laptop"
 | `full` | All including credentials | Complete setup |
 | `work_laptop` | Full + work tools + NVIDIA + laptop | Primary work machine |
 | `work_only` | Development without desktop/email | Work headless |
+| `agent_server` | base, credentials, docker, dotfiles, agent | OpenClaw AI agent server |
 
 **Tag-based selective runs:**
 ```bash
@@ -42,6 +43,7 @@ ansible-playbook bootstrap.yml --tags "credentials"    # Vault management only
 | `credentials` | GPG, pass, ansible-vault preparation (no sensitive data in repo) |
 | `dotfiles` | GNU Stow deployment of all config directories |
 | `email` | NeoMutt setup, HTML email support, mail directory structure |
+| `agent` | OpenClaw AI agent: isolated user, Node.js, Tailscale, UFW, API keys, bgovault read-only |
 | `hardware/` | Sub-roles: `nvidia/` (GPU drivers), `laptop/` (TLP, brightness), `desktop/` (PulseAudio) |
 
 ## Hardware Auto-Detection

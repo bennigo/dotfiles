@@ -8,27 +8,34 @@
   register: dotfiles_dir
   failed_when: not dotfiles_dir.stat.exists
 
-- name: Get list of stowable directories
-  find:
-    paths: "{{ directories.dotfiles }}"
-    file_type: directory
-    depth: 1
-  register: stow_directories
-  become: no
-
-- name: Filter directories for stow deployment
+- name: Use configured stow directories if specified
   set_fact:
-    stowable_dirs: "{{ stow_directories.files |
-                      map(attribute='path') |
-                      map('basename') |
-                      reject('match', '^[.]') |
-                      reject('equalto', 'ansible') |
-                      reject('equalto', 'system') |
-                      reject('equalto', 'sway-remix') |
-                      reject('equalto', 'i3') |
-                      reject('equalto', 'systemd') |
-                      reject('equalto', '.git') |
-                      list }}"
+    stowable_dirs: "{{ stow_directories }}"
+  when: stow_directories | default([]) | length > 0
+
+- name: Auto-discover stow directories if not configured
+  block:
+    - name: Get list of stowable directories
+      find:
+        paths: "{{ directories.dotfiles }}"
+        file_type: directory
+        depth: 1
+      register: discovered_stow_directories
+
+    - name: Filter directories for stow deployment
+      set_fact:
+        stowable_dirs: "{{ discovered_stow_directories.files |
+                          map(attribute='path') |
+                          map('basename') |
+                          reject('match', '^[.]') |
+                          reject('equalto', 'ansible') |
+                          reject('equalto', 'system') |
+                          reject('equalto', 'sway-remix') |
+                          reject('equalto', 'i3') |
+                          reject('equalto', 'systemd') |
+                          reject('equalto', '.git') |
+                          list }}"
+  when: stow_directories | default([]) | length == 0
 
 - name: Display directories to be stowed
   debug:
@@ -70,18 +77,16 @@
         enabled: yes
         state: started
         scope: user
-      loop:
-        - claude-imports.service
-        - mako-watcher.path
-        - password-store-sync.timer
+      loop: "{{ dotfiles_systemd_services | default(['claude-imports.service', 'mako-watcher.path', 'password-store-sync.timer']) }}"
+      when: (dotfiles_systemd_services | default(['claude-imports.service', 'mako-watcher.path', 'password-store-sync.timer'])) | length > 0
 
     - name: Enable login-activated user services (no forced start)
       systemd:
         name: "{{ item }}"
         enabled: yes
         scope: user
-      loop:
-        - tmux.service
+      loop: "{{ dotfiles_systemd_services_no_start | default(['tmux.service']) }}"
+      when: (dotfiles_systemd_services_no_start | default(['tmux.service'])) | length > 0
   become: no
   tags: ["dotfiles", "systemd", "services"]
 
@@ -157,12 +162,10 @@
   stat:
     path: "{{ target_home }}/.config/{{ item }}"
   register: config_check
-  loop:
-    - sway
-    - waybar
-    - foot
+  loop: "{{ dotfiles_verify_configs | default(['sway', 'waybar', 'foot']) }}"
   failed_when: not config_check.stat.exists
   become: no
+  when: (dotfiles_verify_configs | default(['sway', 'waybar', 'foot'])) | length > 0
   tags: ["dotfiles", "verify"]
 
 - name: Display dotfiles deployment summary
