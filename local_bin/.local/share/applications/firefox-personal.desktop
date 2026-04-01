@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Firefox (Personal)
+Comment=Launch Firefox with personal profile on workspace 3
+Exec=/home/bgo/.local/bin/firefox-profile personal
+Icon=firefox
+Type=Application
+Categories=Network;WebBrowser;
