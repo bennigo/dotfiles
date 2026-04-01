@@ -17,6 +17,92 @@ NOTE_FILE="${DAILY_DIR}/${NOTE_DATE}.md"
 # Already exists — nothing to do
 [[ -f "${NOTE_FILE}" ]] && exit 0
 
+# ── Rollover uncompleted tasks from most recent previous daily note ───
+# Mirrors obsidian-rollover-daily-todos plugin behavior for notes created
+# outside Obsidian (Neovim, CLI). Finds tasks under "## Verkefni dagsins"
+# (before "### Áætlað í dag"), rolls over uncompleted ones, removes from source.
+rollover_tasks() {
+    local target_file="$1"
+    local target_date="$2"
+
+    # Find most recent previous daily note (walk back up to 7 days)
+    local prev_file=""
+    for i in $(seq 1 7); do
+        local check_date
+        check_date=$(date -d "${target_date} - ${i} day" +%Y-%m-%d)
+        local check_file="${DAILY_DIR}/${check_date}.md"
+        if [[ -f "${check_file}" ]]; then
+            prev_file="${check_file}"
+            break
+        fi
+    done
+    [[ -z "${prev_file}" ]] && return 0
+
+    # Extract line range: from "## Verkefni dagsins" to "### Áætlað í dag"
+    local section_start section_end
+    section_start=$(grep -n '^## Verkefni dagsins$' "${prev_file}" | head -1 | cut -d: -f1)
+    [[ -z "${section_start}" ]] && return 0
+    section_end=$(tail -n +"$((section_start + 1))" "${prev_file}" | grep -n '^### ' | head -1 | cut -d: -f1)
+    if [[ -n "${section_end}" ]]; then
+        section_end=$((section_start + section_end - 1))
+    else
+        # No ### subheading — use next ## heading as boundary
+        section_end=$(tail -n +"$((section_start + 1))" "${prev_file}" | grep -n '^## ' | head -1 | cut -d: -f1)
+        if [[ -n "${section_end}" ]]; then
+            section_end=$((section_start + section_end - 1))
+        else
+            section_end=$(wc -l < "${prev_file}")
+        fi
+    fi
+
+    # Collect uncompleted tasks and their children from the section
+    local tasks=()
+    local in_task=false
+    local line_num=$((section_start + 1))
+
+    while [[ ${line_num} -le ${section_end} ]]; do
+        local line
+        line=$(sed -n "${line_num}p" "${prev_file}")
+
+        if [[ "${line}" =~ ^-\ \[\ \]\ (.+) ]]; then
+            # Uncompleted task — check it's not empty
+            local task_text="${BASH_REMATCH[1]}"
+            task_text=$(echo "${task_text}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+            if [[ -n "${task_text}" ]]; then
+                in_task=true
+                tasks+=("${line}")
+            else
+                in_task=false
+            fi
+        elif [[ "${line}" =~ ^-\ \[[xX/\-]\] ]]; then
+            # Completed/cancelled task — skip
+            in_task=false
+        elif ${in_task} && [[ "${line}" =~ ^[[:space:]]+ ]]; then
+            # Indented child line of current task
+            tasks+=("${line}")
+        else
+            in_task=false
+        fi
+
+        line_num=$((line_num + 1))
+    done
+
+    [[ ${#tasks[@]} -eq 0 ]] && return 0
+
+    # Insert rolled-over tasks into new note under "## Verkefni dagsins"
+    local insert_point
+    insert_point=$(grep -n '^## Verkefni dagsins$' "${target_file}" | head -1 | cut -d: -f1)
+    [[ -z "${insert_point}" ]] && return 0
+
+    # Insert rolled-over tasks into new note (non-destructive — source note untouched
+    # to avoid racing with Obsidian Sync between phone and laptop)
+    local tmpfile
+    tmpfile=$(mktemp)
+    printf '%s\n' "${tasks[@]}" > "${tmpfile}"
+    sed -i "$((insert_point))r ${tmpfile}" "${target_file}"
+    rm -f "${tmpfile}"
+}
+
 # Compute template values
 PREV=$(date -d "${NOTE_DATE} - 1 day" +%Y-%m-%d)
 NEXT=$(date -d "${NOTE_DATE} + 1 day" +%Y-%m-%d)
@@ -90,3 +176,6 @@ WHERE file.cday = date("${NOTE_DATE}")
 SORT file.ctime ASC
 \`\`\`
 TEMPLATE
+
+# Roll over uncompleted tasks from previous daily note
+rollover_tasks "${NOTE_FILE}" "${NOTE_DATE}"

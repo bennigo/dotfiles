@@ -338,8 +338,8 @@ local function setup()
             on_stdout = function() end,
             on_stderr = function() end,
           })
-          -- Focus the Obsidian window on Sway
-          vim.fn.jobstart({ "swaymsg", "[app_id=obsidian] focus" }, {
+          -- Focus the Obsidian window on Sway (matches both Wayland app_id and XWayland class)
+          vim.fn.jobstart({ "swaymsg", '[app_id="obsidian"] focus; [class="obsidian"] focus' }, {
             detach = true,
             on_stdout = function() end,
             on_stderr = function() end,
@@ -352,17 +352,22 @@ local function setup()
             on_stdout = function() end,
             on_stderr = function() end,
           })
-          -- Poll for window to appear, then open the file via REST API
+          -- Poll for window to land in scratchpad (for_window rule must fire first),
+          -- then show it. Using jq to check the scratchpad node specifically avoids
+          -- a race where the window exists in the tree but hasn't been moved yet.
           local attempts = 0
           local timer = vim.uv.new_timer()
           timer:start(1000, 1000, vim.schedule_wrap(function()
             attempts = attempts + 1
-            local result = vim.fn.system("swaymsg -t get_tree | grep -c 'obsidian'")
-            if tonumber(result) and tonumber(result) > 0 then
+            -- Check for Obsidian in scratchpad (matches both Wayland app_id and XWayland class)
+            local in_scratchpad = vim.fn.system(
+              'swaymsg -t get_tree | jq -e \'.. | select(.name? == "__i3_scratch") | .. | select(.app_id? == "obsidian" or .window_properties?.class? == "obsidian")\' >/dev/null 2>&1 && echo yes || echo no'
+            ):gsub("%s+", "")
+            if in_scratchpad == "yes" then
               timer:stop()
               timer:close()
-              -- Show from scratchpad and resize to match Sway's for_window rule
-              vim.fn.system("swaymsg '[app_id=obsidian] scratchpad show, resize set width 2000 px height 1190 px, move position center'")
+              -- Show from scratchpad and ensure correct size (try both selectors)
+              vim.fn.system('swaymsg \'[app_id="obsidian"] scratchpad show, resize set width 2000 px height 1190 px, move position center; [class="obsidian"] scratchpad show, resize set width 2000 px height 1190 px, move position center\'')
               -- If we have a file path, open it via REST API once the server is ready
               if file then
                 vim.defer_fn(function()

@@ -254,7 +254,7 @@ bindsym $mod+z [app_id="org.pwmt.zathura"] scratchpad show
 ## Scratchpad // Show Cisco client from scratchpad // 🛡️ ##
 bindsym $mod+c [app_id="com.cisco.secureclient.gui"] scratchpad show
 ## Scratchpad // Show Obsidian from scratchpad // 🗒️ ##
-bindsym $mod+Shift+o [app_id="obsidian"] scratchpad show; [app_id="obsidian"] move position center
+bindsym $mod+Shift+o [app_id="obsidian"] scratchpad show; [class="obsidian"] scratchpad show; [app_id="obsidian"] resize set width 2000 px height 1190 px, move position center; [class="obsidian"] resize set width 2000 px height 1190 px, move position center
 ## Scratchpad // Show Neovim from scratchpad (any nvim window) // ⚡ ##
 bindsym $mod+o [con_mark="nvim_today"] scratchpad show, move position center; [con_mark="nvim_new"] scratchpad show, move position center; [con_mark="nvim_quick"] scratchpad show, move position center
 ## Scratchpad // Toggle LibreOffice scratchpad // 📄 ##
@@ -527,7 +527,9 @@ for_window [app_id="org.gnome.Calculator"] floating enable,  sticky enable
 
 
 for_window [app_id="com.cisco.secureclient.gui"] move scratchpad, floating enable
+# Obsidian can launch as native Wayland (app_id) or XWayland (class) — match both
 for_window [app_id="obsidian"] move scratchpad, floating enable, resize set width 2000 px height 1190 px, move position center
+for_window [class="obsidian"] move scratchpad, floating enable, resize set width 2000 px height 1190 px, move position center
 for_window [app_id="org.zotero.Zotero"] move scratchpad, floating enable, resize set width 1900 px height 1100 px, move position center
 for_window [app_id="^libreoffice"] floating enable, resize set width 3200 px height 2000 px, move scratchpad
 for_window [app_id="terminal_floating"] move scratchpad, move container to workspace current, resize set width 1500 px height 900 px
