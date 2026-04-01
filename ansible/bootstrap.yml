@@ -97,7 +97,11 @@
     - role: email
       tags: ["email", "communication"]
       when: "'email' in profiles[selected_profile]"
-      
+
+    - role: agent
+      tags: ["agent", "openclaw"]
+      when: "'agent' in profiles[selected_profile]"
+
     # Hardware-specific roles (conditional)
     - role: hardware/nvidia
       tags: ["hardware", "nvidia"]

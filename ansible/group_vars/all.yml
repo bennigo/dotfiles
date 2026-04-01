@@ -64,6 +64,13 @@ profiles:
     - docker
     - credentials
     - dotfiles
+  # Agent server (OpenClaw AI agent with isolation)
+  agent_server:
+    - base
+    - credentials
+    - docker
+    - dotfiles
+    - agent
 
 # Hardware-specific role activation
 hardware_roles:
@@ -103,6 +110,10 @@ features:
   setup_personal_repos: "{{ target_user == 'bgo' }}"
   # Work infrastructure (vedur.is) - NFS mounts, internal hosts
   setup_work_infrastructure: "{{ target_user == 'bgo' }}"
+  # Agent server features (disabled by default)
+  setup_agent_server: false
+  setup_tailscale: false
+  setup_firewall: false
 
 # Personal repository configuration (only used when setup_personal_repos is true)
 personal_repos:
@@ -141,6 +152,20 @@ desktop_packages:
   - foot
   - wdisplays
   - kanshi
+
+# Agent server configuration (used by agent role)
+agent_user: "openclaw-agent"
+agent_home: "/home/openclaw-agent"
+agent_workspace: "/opt/openclaw"
+
+# Dotfiles deployment control (empty = auto-discover, backward-compatible)
+# Override in profile to limit which dirs are stowed
+stow_directories: []
+# Systemd user services to enable (empty = use defaults: claude-imports, mako-watcher, password-store-sync)
+dotfiles_systemd_services: []
+dotfiles_systemd_services_no_start: []
+# Config dirs to verify after stow (empty = use defaults: sway, waybar, foot)
+dotfiles_verify_configs: []
 
 # Directory structure
 directories:

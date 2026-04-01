@@ -1,0 +1,49 @@
+---
+# Agent server profile - OpenClaw AI agent with isolation
+# Usage (local):  ansible-playbook bootstrap.yml --extra-vars "@profiles/agent_server.yml"
+# Usage (remote): ansible-playbook bootstrap.yml -i inventory.yml --extra-vars "@profiles/agent_server.yml" --limit agent_servers
+
+profile: agent_server
+
+# Feature flags: minimal, no work/desktop/development
+features:
+  install_development_tools: false
+  install_desktop_environment: false
+  install_gaming_tools: false
+  install_media_tools: false
+  setup_credentials: true           # SSH keys + GPG for bgo user
+  deploy_work_configs: false
+  setup_personal_repos: true        # bgovault yes, but read-only (agent role handles no-push)
+  setup_work_infrastructure: false  # No vedur.is NFS/hosts
+  setup_agent_server: true
+  setup_tailscale: true
+  setup_firewall: true
+
+# Minimal base packages (no nfs-common, no build-essential needed)
+base_packages:
+  - git
+  - stow
+  - zsh
+  - vim
+  - curl
+  - wget
+  - unzip
+  - jq
+
+# Dotfiles: only deploy shell config, not desktop
+stow_directories:
+  - zsh
+  - tmux
+  - profile
+
+# Systemd: only tmux (no mako-watcher, no password-store-sync, no claude-imports)
+dotfiles_systemd_services: []
+dotfiles_systemd_services_no_start:
+  - tmux.service
+
+# No desktop configs to verify
+dotfiles_verify_configs: []
+
+# Skip confirmations for automated setup
+skip_confirmation: true
+skip_reboot_prompt: false

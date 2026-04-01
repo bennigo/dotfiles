@@ -1,0 +1,8 @@
+---
+- name: Restart Tailscale
+  systemd:
+    name: tailscaled
+    state: restarted
+
+- name: Reload UFW
+  shell: ufw reload

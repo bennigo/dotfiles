@@ -314,6 +314,78 @@ local function setup()
     -- 3. "hsplit" - to open in a horizontal split if there's not already a horizontal split
     open_notes_in = "current",
 
+    -- Custom open: use Obsidian Local REST API when running, xdg-open when not.
+    -- Both xdg-open and gio open the note in a new pop-out window instead of reusing
+    -- the existing one. The REST API's /open/ endpoint navigates within the existing window.
+    open = {
+      func = function(uri)
+        -- Extract vault-relative file path from obsidian:// URI
+        local file = uri:match("file=([^&]+)")
+        if file then
+          file = vim.uri_decode(file)
+        end
+
+        local is_running = vim.fn.system("pgrep -x obsidian"):match("%d+") ~= nil
+        if is_running and file then
+          -- Use REST API to open file in existing window (no new window)
+          vim.fn.jobstart({
+            "curl", "-sk",
+            "-H", "Authorization: Bearer 633d0602c1469b69bd560a2d52b5ee7dc0dc830a8f9b50a45fb4064aca4e567c",
+            "-X", "POST",
+            "https://localhost:27124/open/" .. file,
+          }, {
+            detach = true,
+            on_stdout = function() end,
+            on_stderr = function() end,
+          })
+          -- Focus the Obsidian window on Sway
+          vim.fn.jobstart({ "swaymsg", "[app_id=obsidian] focus" }, {
+            detach = true,
+            on_stdout = function() end,
+            on_stderr = function() end,
+          })
+        else
+          -- Obsidian not running — launch with gtk-launch (same as Sway startup),
+          -- then show from scratchpad after it appears.
+          vim.fn.jobstart({ "gtk-launch", "obsidian.desktop" }, {
+            detach = true,
+            on_stdout = function() end,
+            on_stderr = function() end,
+          })
+          -- Poll for window to appear, then open the file via REST API
+          local attempts = 0
+          local timer = vim.uv.new_timer()
+          timer:start(1000, 1000, vim.schedule_wrap(function()
+            attempts = attempts + 1
+            local result = vim.fn.system("swaymsg -t get_tree | grep -c 'obsidian'")
+            if tonumber(result) and tonumber(result) > 0 then
+              timer:stop()
+              timer:close()
+              -- Show from scratchpad and resize to match Sway's for_window rule
+              vim.fn.system("swaymsg '[app_id=obsidian] scratchpad show, resize set width 2000 px height 1190 px, move position center'")
+              -- If we have a file path, open it via REST API once the server is ready
+              if file then
+                vim.defer_fn(function()
+                  vim.fn.jobstart({
+                    "curl", "-sk",
+                    "-H", "Authorization: Bearer 633d0602c1469b69bd560a2d52b5ee7dc0dc830a8f9b50a45fb4064aca4e567c",
+                    "-X", "POST",
+                    "https://localhost:27124/open/" .. file,
+                  }, {
+                    on_stdout = function() end,
+                    on_stderr = function() end,
+                  })
+                end, 2000)
+              end
+            elseif attempts >= 15 then
+              timer:stop()
+              timer:close()
+            end
+          end))
+        end
+      end,
+    },
+
     -- Optional, define your own callbacks to further customize behavior.
     callbacks = {
       -- Runs at the end of `require("obsidian").setup()`.
