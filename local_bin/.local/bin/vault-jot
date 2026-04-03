@@ -63,7 +63,7 @@ EOF
 # ── Create a daily note if it doesn't exist ───────────────────────────
 # Delegates to vault-create-daily (single source of truth for template)
 ensure_daily_note() {
-    vault-create-daily "$1"
+    "${HOME}/.local/bin/vault-create-daily" "$1"
 }
 
 # ── Parse date target ─────────────────────────────────────────────────
