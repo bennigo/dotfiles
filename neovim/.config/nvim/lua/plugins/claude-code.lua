@@ -98,6 +98,37 @@ return {
         end, 100)
       end
 
+      -- ── Expand Stub Keybinding ─────────────────────────────────
+      -- Normal: send /expand-stub with current buffer's note stem
+      -- Visual: send /expand-stub with visual selection text
+
+      vim.keymap.set("n", "<leader>ace", function()
+        local bufname = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ":t:r")
+        if bufname == "" then
+          vim.notify("No buffer name", vim.log.levels.WARN)
+          return
+        end
+        send_prompt_to_claude('/expand-stub "' .. bufname .. '"')
+      end, { desc = "Expand stub (buffer)" })
+
+      vim.keymap.set("v", "<leader>ace", function()
+        local start_pos = vim.fn.getpos("v")
+        local end_pos = vim.fn.getpos(".")
+        local lines = vim.fn.getregion(start_pos, end_pos, { type = vim.fn.mode() })
+        local text = table.concat(lines, " "):gsub("^%s+", ""):gsub("%s+$", "")
+        -- Strip wikilink brackets if present
+        text = text:gsub("^%[%[", ""):gsub("%]%]$", "")
+        -- Strip display text from piped links: stem|display -> stem
+        text = text:gsub("|.*$", "")
+        if text == "" then
+          vim.notify("Empty selection", vim.log.levels.WARN)
+          return
+        end
+        -- Exit visual mode before sending
+        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "x", false)
+        send_prompt_to_claude('/expand-stub "' .. text .. '"')
+      end, { desc = "Expand stub (selection)" })
+
       vim.keymap.set("n", "<leader>acp", function()
         Snacks.scratch.open({
           name = "Claude Prompt",
@@ -154,6 +185,7 @@ return {
         { "<leader>acD", "<cmd>ClaudeCodeDiffDeny<cr>", desc = "Reject Claude Diff", icon = "❌" },
         { "<leader>acR", desc = "Claude Code Remote Control", icon = "📱" },
         { "<leader>acp", desc = "Compose Claude prompt", icon = "📝" },
+        { "<leader>ace", desc = "Expand stub", mode = { "n", "v" }, icon = "🌱" },
       })
 
       opts.spec = spec
