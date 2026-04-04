@@ -1,5 +1,6 @@
 return {
   -- Add Claude Code integration to AI ecosystem
+  -- testa íslensku
   {
     "coder/claudecode.nvim",
     dependencies = { "folke/snacks.nvim" }, -- Required for terminal support

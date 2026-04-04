@@ -99,3 +99,79 @@ vim.api.nvim_create_autocmd("BufWritePost", {
 
 -- Smart Dagbok timestamp continuation moved to after/ftplugin/markdown.lua
 -- (must run AFTER bullets.vim sets its <CR> and o mappings)
+
+-- Keyboard layout switching: US English in Normal/Visual, system layout in Insert
+-- Uses swaymsg to switch layout index (0=US, 1=Icelandic per sway config)
+if vim.fn.executable("swaymsg") == 1 and vim.env.SWAYSOCK then
+  local insert_layout = 0 -- tracks user's preferred Insert mode layout
+
+  local function set_layout(index)
+    vim.fn.jobstart({ "swaymsg", "input", "type:keyboard", "xkb_switch_layout", tostring(index) })
+  end
+
+  local function get_current_layout()
+    local ok, result = pcall(vim.fn.system, { "swaymsg", "-t", "get_inputs" })
+    if not ok or not result then
+      return 0
+    end
+    local data = vim.json.decode(result)
+    if not data then
+      return 0
+    end
+    for _, input in ipairs(data) do
+      if input.type == "keyboard" and input.identifier and input.identifier:find("AT_Translated") then
+        return input.xkb_active_layout_index or 0
+      end
+    end
+    return 0
+  end
+
+  local grp = vim.api.nvim_create_augroup("sway_keyboard_layout", { clear = true })
+
+  -- Force US layout on startup (Normal mode)
+  set_layout(0)
+
+  vim.api.nvim_create_autocmd("InsertEnter", {
+    group = grp,
+    callback = function()
+      set_layout(insert_layout)
+    end,
+    desc = "Restore user's keyboard layout for Insert mode",
+  })
+
+  vim.api.nvim_create_autocmd("InsertLeave", {
+    group = grp,
+    callback = function()
+      insert_layout = get_current_layout()
+      set_layout(0)
+    end,
+    desc = "Switch to US keyboard layout for Normal mode",
+  })
+
+  -- Terminal buffers behave like Insert mode
+  vim.api.nvim_create_autocmd("TermEnter", {
+    group = grp,
+    callback = function()
+      set_layout(insert_layout)
+    end,
+    desc = "Restore user's keyboard layout for Terminal mode",
+  })
+
+  vim.api.nvim_create_autocmd("TermLeave", {
+    group = grp,
+    callback = function()
+      insert_layout = get_current_layout()
+      set_layout(0)
+    end,
+    desc = "Switch to US keyboard layout when leaving Terminal mode",
+  })
+
+  -- Restore layout when quitting Neovim
+  vim.api.nvim_create_autocmd("VimLeavePre", {
+    group = grp,
+    callback = function()
+      set_layout(insert_layout)
+    end,
+    desc = "Restore keyboard layout on Neovim exit",
+  })
+end
