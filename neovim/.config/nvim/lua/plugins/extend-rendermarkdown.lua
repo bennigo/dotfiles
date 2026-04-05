@@ -137,6 +137,22 @@ return {
   ---@module 'render-markdown',
   ---@type render.md.UserConfig
 
+  keys = {
+    {
+      "<leader>uc",
+      function()
+        vim.cmd("RenderMarkdown toggle")
+        if vim.wo.conceallevel == 0 then
+          vim.wo.conceallevel = 3
+        else
+          vim.wo.conceallevel = 0
+        end
+      end,
+      ft = "markdown",
+      desc = "Toggle Render Markdown",
+    },
+  },
+
   config = function()
     -- require('obsidian').setup({
     --     ui = { enable = false },
@@ -150,6 +166,35 @@ return {
     end
 
     setup()
-    -- require("render-markdown").setup({})
+
+    -- Strikethrough rendering: render-markdown.nvim has no strikethrough handler,
+    -- so we apply extmarks via treesitter to show strikethrough styling
+    local ns = vim.api.nvim_create_namespace("markdown_strikethrough")
+    vim.api.nvim_create_autocmd({ "BufEnter", "TextChanged", "InsertLeave" }, {
+      pattern = "*.md",
+      callback = function(ev)
+        vim.api.nvim_buf_clear_namespace(ev.buf, ns, 0, -1)
+        local ok, parser = pcall(vim.treesitter.get_parser, ev.buf, "markdown")
+        if not ok then
+          return
+        end
+        parser:for_each_tree(function(tree, lang_tree)
+          if lang_tree:lang() ~= "markdown_inline" then
+            return
+          end
+          local query = vim.treesitter.query.parse("markdown_inline", "(strikethrough) @strike")
+          for _, node in query:iter_captures(tree:root(), ev.buf) do
+            local sr, sc, er, ec = node:range()
+            vim.api.nvim_buf_set_extmark(ev.buf, ns, sr, sc + 2, {
+              end_row = er,
+              end_col = ec - 2,
+              hl_group = "@markup.strikethrough",
+              hl_mode = "combine",
+              priority = 200,
+            })
+          end
+        end)
+      end,
+    })
   end,
 }
