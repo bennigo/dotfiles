@@ -29,6 +29,8 @@ Terminal multiplexer setup with session persistence, plugin ecosystem, and Wayla
 
 ## Key Bindings
 
+- `prefix + R` — Reload tmux config (`~/.config/tmux/tmux.conf`)
+- `prefix + r` — Rename window
 - `prefix + p` — Toggle floating pane (floax)
 - `prefix + P` — Floating pane menu
 - `prefix + o` — Session picker (sessionx with zoxide integration)
@@ -91,8 +93,13 @@ if-shell '! tmux list-windows -F "#W" | grep -q "^claude-rc$"' {
 
 ## Terminal & Color Support
 
-Configured for true color support across kitty, foot, and screen-256color terminals.
-Includes undercurl/underline style overrides for Neovim diagnostics.
+- **default-terminal**: `tmux-256color` (switched from `screen-256color` — required for strikethrough and other modern terminal features)
+- **True color**: Enabled via `terminal-overrides` for kitty, tmux-256color, and foot terminals
+- **Undercurl/underline styles**: `Smulx` and `Setulc` overrides for Neovim diagnostics
+- **Strikethrough**: `smxx=\E[9m:rmxx=\E[29m` override + `terminal-features` with `strikethrough` flag — required for Neovim's `@markup.strikethrough` to render inside tmux
+- **Clipboard/RGB**: `terminal-features '*:clipboard:strikethrough:usstyle:RGB'`
+
+**Note**: Terminal type changes (`default-terminal`) require `tmux kill-server` and restart — config reload alone is insufficient.
 
 ## Cross-References
 

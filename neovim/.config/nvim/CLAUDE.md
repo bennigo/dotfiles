@@ -195,10 +195,11 @@ This configuration extends LazyVim rather than replacing it:
 - **mini.files**: Modern file browser (extend-mini-files.lua)
 - **neo-tree.nvim**: Traditional file tree explorer
 
-### Markdown & Documentation (5 plugins)
+### Markdown & Documentation (6 plugins)
 
 - **obsidian.nvim**: Obsidian vault integration (obsidian.lua)
 - **render-markdown.nvim**: Rich inline markdown rendering (extend-rendermarkdown.lua)
+- **markdown.nvim**: Inline formatting keybindings — bold, italic, strikethrough, code (markdown-formatting.lua)
 - **bullets.vim**: Smart bullet list handling (markdown-bullets.lua)
 - **markdown-preview.nvim**: Live browser preview
 - **ltex_extra.nvim**: Grammar/spell checking for markdown
@@ -412,11 +413,27 @@ Shared helpers: `now_tt()`, `now_dt()`, `now_td()`, `unit_to_seconds()`, `future
 ### Markdown
 
 **Rendering**: render-markdown.nvim (inline)
+**Inline Formatting**: markdown.nvim (markdown-formatting.lua)
 **Bullets**: bullets.vim (smart lists)
 **Preview**: markdown-preview.nvim (browser)
 **Integration**: Obsidian.nvim for vault files
 **Diagrams**: Mermaid support via custom workflow
 **Snippets**: LuaSnip markdown snippets for timestamps, tasks, journal entries (see Snippets section above)
+
+**Inline Formatting Keybindings** (visual mode — select text first):
+
+| Key | Action | Result |
+|-----|--------|--------|
+| `gsi` | Toggle italic | `*text*` |
+| `gsb` | Toggle bold | `**text**` |
+| `gss` | Toggle strikethrough | `~~text~~` |
+| `gsc` | Toggle code | `` `text` `` |
+
+Also works in normal mode (`gsi` wraps word). `ds`/`cs` to delete/change emphasis.
+
+**Render-markdown Conceal Toggle**: `<leader>uc` toggles render-markdown on/off and resets conceallevel, revealing raw markdown delimiters (`~~`, `*`, `**`, etc.)
+
+**Strikethrough Rendering**: render-markdown.nvim has no built-in strikethrough handler. A custom autocmd in `extend-rendermarkdown.lua` applies `@markup.strikethrough` extmarks via treesitter to render strikethrough styling while `~~` markers remain concealed. Requires tmux `smxx` terminal capability (see tmux CLAUDE.md).
 
 ### Lua
 
@@ -502,6 +519,7 @@ Shared helpers: `now_tt()`, `now_dt()`, `now_td()`, `unit_to_seconds()`, `future
 │       ├── image.lua                 # Image support
 │       ├── languages.lua             # Language configs
 │       ├── markdown-bullets.lua      # Bullet lists
+│       ├── markdown-formatting.lua   # Inline formatting (bold/italic/strikethrough/code)
 │       ├── mason-workaround.lua      # Mason fixes
 │       ├── toggle_term.lua           # Terminal toggle
 │       └── example.lua               # LazyVim examples
