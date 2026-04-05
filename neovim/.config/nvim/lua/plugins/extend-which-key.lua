@@ -64,6 +64,17 @@ return {
         { "<leader>Cf", desc = "Fix Code", mode = "v" },
         { "<leader>Ct", desc = "Generate Tests", mode = "v" },
         { "<leader>Cb", desc = "Chat with Buffer" },
+        -- Markdown inline formatting (markdown.nvim)
+        {
+          "gs",
+          group = "+surround/format",
+          icon = "✏️",
+          mode = { "n", "v" },
+        },
+        { "gsi", desc = "Toggle italic", mode = { "n", "v" } },
+        { "gsb", desc = "Toggle bold", mode = { "n", "v" } },
+        { "gss", desc = "Toggle strikethrough", mode = { "n", "v" } },
+        { "gsc", desc = "Toggle code", mode = { "n", "v" } },
       },
     },
   },
