@@ -4,7 +4,10 @@ return {
     "catppuccin/nvim",
     opts = function(_, opts)
       -- Extend LazyVim's opts with our customizations
-      opts.transparent_background = true
+      if vim.g.transparent_background == nil then
+        vim.g.transparent_background = true
+      end
+      opts.transparent_background = vim.g.transparent_background
       opts.treesitter = true
 
       -- Custom highlight overrides for transparency
