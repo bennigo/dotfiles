@@ -52,13 +52,35 @@ keymap("n", "<leader>sO", function()
   -- LazyVim.pick("files", { dirs = { "~.dotfiles/" }, hidden = true })
 end, { desc = "grep workfiles" })
 
--- Toggle transparency
+-- Toggle transparency (direct highlight manipulation — works in tmux)
 keymap("n", "<leader>uo", function()
-  vim.g.transparent_background = not vim.g.transparent_background
-  local cat = require("catppuccin")
-  cat.options.transparent_background = vim.g.transparent_background
-  cat.compile()
-  vim.cmd.colorscheme(vim.g.colors_name)
+  local normal = vim.api.nvim_get_hl(0, { name = "Normal" })
+  local is_opaque = normal.bg ~= nil
+
+  if is_opaque then
+    -- Opaque → transparent: remove backgrounds
+    vim.api.nvim_set_hl(0, "Normal", { fg = normal.fg })
+    vim.api.nvim_set_hl(0, "NormalNC", { fg = normal.fg })
+    vim.api.nvim_set_hl(0, "NormalFloat", {})
+    vim.api.nvim_set_hl(0, "FloatBorder", {})
+    vim.api.nvim_set_hl(0, "SignColumn", {})
+  else
+    -- Transparent → opaque: set catppuccin mocha backgrounds
+    local base = 0x1e1e2e
+    local mantle = 0x181825
+    local crust = 0x11111b
+    local surface1 = 0x45475a
+    vim.api.nvim_set_hl(0, "Normal", { fg = normal.fg, bg = base })
+    vim.api.nvim_set_hl(0, "NormalNC", { fg = normal.fg, bg = base })
+    vim.api.nvim_set_hl(0, "NormalFloat", { bg = mantle })
+    vim.api.nvim_set_hl(0, "FloatBorder", { bg = mantle })
+    vim.api.nvim_set_hl(0, "StatusLine", { fg = normal.fg, bg = mantle })
+    vim.api.nvim_set_hl(0, "StatusLineNC", { fg = surface1, bg = mantle })
+    vim.api.nvim_set_hl(0, "TabLineFill", { bg = mantle })
+    vim.api.nvim_set_hl(0, "WinSeparator", { fg = crust })
+    vim.api.nvim_set_hl(0, "VertSplit", { fg = crust })
+    vim.api.nvim_set_hl(0, "SignColumn", { bg = base })
+  end
 end, { desc = "Toggle transparency" })
 
 keymap("n", "<leader>uN", function()
