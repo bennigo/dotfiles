@@ -52,35 +52,17 @@ keymap("n", "<leader>sO", function()
   -- LazyVim.pick("files", { dirs = { "~.dotfiles/" }, hidden = true })
 end, { desc = "grep workfiles" })
 
--- Toggle transparency (direct highlight manipulation — works in tmux)
+-- Toggle transparency (controls kitty opacity — works in tmux)
 keymap("n", "<leader>uo", function()
-  local normal = vim.api.nvim_get_hl(0, { name = "Normal" })
-  local is_opaque = normal.bg ~= nil
-
-  if is_opaque then
-    -- Opaque → transparent: remove backgrounds
-    vim.api.nvim_set_hl(0, "Normal", { fg = normal.fg })
-    vim.api.nvim_set_hl(0, "NormalNC", { fg = normal.fg })
-    vim.api.nvim_set_hl(0, "NormalFloat", {})
-    vim.api.nvim_set_hl(0, "FloatBorder", {})
-    vim.api.nvim_set_hl(0, "SignColumn", {})
-  else
-    -- Transparent → opaque: set catppuccin mocha backgrounds
-    local base = 0x1e1e2e
-    local mantle = 0x181825
-    local crust = 0x11111b
-    local surface1 = 0x45475a
-    vim.api.nvim_set_hl(0, "Normal", { fg = normal.fg, bg = base })
-    vim.api.nvim_set_hl(0, "NormalNC", { fg = normal.fg, bg = base })
-    vim.api.nvim_set_hl(0, "NormalFloat", { bg = mantle })
-    vim.api.nvim_set_hl(0, "FloatBorder", { bg = mantle })
-    vim.api.nvim_set_hl(0, "StatusLine", { fg = normal.fg, bg = mantle })
-    vim.api.nvim_set_hl(0, "StatusLineNC", { fg = surface1, bg = mantle })
-    vim.api.nvim_set_hl(0, "TabLineFill", { bg = mantle })
-    vim.api.nvim_set_hl(0, "WinSeparator", { fg = crust })
-    vim.api.nvim_set_hl(0, "VertSplit", { fg = crust })
-    vim.api.nvim_set_hl(0, "SignColumn", { bg = base })
+  local sock = vim.env.KITTY_LISTEN_ON
+  if not sock then
+    vim.notify("KITTY_LISTEN_ON not set", vim.log.levels.WARN)
+    return
   end
+  if vim.g.kitty_opaque == nil then vim.g.kitty_opaque = false end
+  vim.g.kitty_opaque = not vim.g.kitty_opaque
+  local opacity = vim.g.kitty_opaque and "1.0" or "0.7"
+  vim.fn.jobstart({ "kitty", "@", "--to", sock, "set-background-opacity", opacity }, { detach = true })
 end, { desc = "Toggle transparency" })
 
 keymap("n", "<leader>uN", function()
