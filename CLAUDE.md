@@ -90,9 +90,42 @@ Sway config uses structured comments (`## Category // Description // Icon ##`) p
 - **Systemd**: 8 user services for session automation — see `systemd/CLAUDE.md`
 
 ### Claude Code Integration
-- **MCP servers**: Database access, web search — see `claude-code/CLAUDE.md`
+- **MCP servers**: Database access, web search, Google Workspace — see `claude-code/CLAUDE.md`
 - **Notifications**: Hook-based forwarding to Mako — see `claude-code/CLAUDE.md`
 - **Remote control**: Tmux persistent window + Neovim keymap — see `tmux/.config/tmux/CLAUDE.md`
+
+### Google Account Routing Policy
+When using Google Workspace tools (email, calendar, drive), always use the correct account:
+
+| Account | Context | Use for |
+|---------|---------|---------|
+| `benedikt@klifursamband.is` | KI (Klifursamband Íslands) | KI emails, KI calendar events, KI Drive files |
+| `bgovedur@gmail.com` | Personal | Personal emails, personal calendar, personal Drive |
+
+**Routing rules:**
+- KI/climbing association context → always `benedikt@klifursamband.is`
+- Everything else → `bgovedur@gmail.com`
+- When context is ambiguous, **ask which account** before proceeding
+
+**Safety restrictions (STRICT):**
+
+| Operation | bgovedur@gmail.com | benedikt@klifursamband.is |
+|-----------|-------------------|--------------------------|
+| Read/search/list | Allowed with approval | Allowed with approval |
+| Send/reply/forward email | Ask user to confirm recipient + content first | **NEVER without explicit user instruction** |
+| Create calendar event | Ask user to confirm details first | **NEVER without explicit user instruction** |
+| Update/delete calendar event | Ask user to confirm | **NEVER without explicit user instruction** |
+| Upload/share/delete Drive files | Ask user to confirm | **NEVER — ask user to do it manually** |
+| Create/write Sheets/Docs | Ask user to confirm | **NEVER without explicit user instruction** |
+| Trash/modify email | Ask user to confirm | **NEVER without explicit user instruction** |
+
+**Hard rules:**
+- **NEVER delete** anything on either account without the user explicitly requesting it
+- **NEVER send email** on either account without the user explicitly requesting it and confirming the content
+- **KI account is read-only by default** — all write operations require the user to explicitly instruct them, state what to write, and confirm before execution
+- **Always show the full operation details** (recipient, subject, body, event details) before executing any write operation
+- When in doubt, default to **read-only** — suggest the action and let the user decide
+- **Draft over send** — when composing emails, always create a draft first unless the user explicitly says to send
 
 ### Wayland Environment
 - Tmux session env refresh after reboot — see `tmux/.config/tmux/CLAUDE.md`

@@ -24,23 +24,54 @@ Multiple connections configured for various projects:
 | `postgres-gnss-readonly` | Development GNSS | Read-only |
 | `postgres-metrics-readonly` | Development metrics | Read-only |
 
+### Google Workspace (`google-workspace`)
+
+Multi-account Google Workspace access via [`@aaronsb/google-workspace-mcp`](https://github.com/aaronsb/google-workspace-mcp).
+
+**Authenticated accounts:**
+
+| Account | Category | Description |
+|---------|----------|-------------|
+| `bgovedur@gmail.com` | personal | Personal Gmail |
+| `benedikt@klifursamband.is` | work | KI Climbing Association |
+
+**Services:** Gmail, Calendar, Drive, Sheets, Docs, Tasks, Meet
+
+**Tools:** `manage_email`, `manage_calendar`, `manage_drive`, `manage_sheets`, `manage_docs`,
+`manage_tasks`, `manage_meet`, `manage_accounts`, `manage_workspace`, `manage_scratchpad`, `queue_operations`
+
+Each tool takes an `email` parameter to specify which account to use.
+
+**Credentials:** OAuth via GCP project "Claude code" (bgovedur org). Tokens stored
+XDG-compliant at `~/.config/google-workspace-mcp/accounts.json` and
+`~/.local/share/google-workspace-mcp/credentials/`.
+
+**Account routing policy:** See `../CLAUDE.md` → "Google Account Routing Policy"
+
+**Re-authenticating accounts:**
+```bash
+bash /tmp/auth-google.sh  # Edit script to change email, then run
+```
+
 ### Environment Variables
 
 MCP servers require connection strings set in shell profile (`zsh/.config/zsh/exports.zsh`):
 
 ```bash
-BRAVE_API_KEY          # Brave Search API
-LOCAL_POSTGRES_URL     # postgresql://user:pass@localhost:5432/dbname
-PROD_GAS_URL           # Production GAS database
-PROD_SKJALFTALISA_URL  # Production earthquake database
-PROD_TOS_URL           # Production TOS database
-DEV_EPOS_URL           # Development EPOS database
-DEV_GNSS_URL           # Development GNSS database
-DEV_METRICS_URL        # Development metrics database
+BRAVE_API_KEY              # Brave Search API
+GOOGLE_MCP_CLIENT_ID       # Google OAuth client ID (from pass)
+GOOGLE_MCP_CLIENT_SECRET   # Google OAuth client secret (from pass)
+LOCAL_POSTGRES_URL         # postgresql://user:pass@localhost:5432/dbname
+PROD_GAS_URL               # Production GAS database
+PROD_SKJALFTALISA_URL      # Production earthquake database
+PROD_TOS_URL               # Production TOS database
+DEV_EPOS_URL               # Development EPOS database
+DEV_GNSS_URL               # Development GNSS database
+DEV_METRICS_URL            # Development metrics database
 ```
 
 **Security**: Config uses `${VAR}` references — no credentials stored in this repository.
-Production databases are read-only for safety.
+Production databases are read-only for safety. Google OAuth tokens managed by the MCP server locally.
 
 ## Notification Hook
 

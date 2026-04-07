@@ -45,6 +45,8 @@ command -v pip >/dev/null 2>&1 && eval "$(pip completion --zsh 2>/dev/null)"
 
 #API_KEYS and credentials from pass
 export BRAVE_API_KEY=$(pass show tokens/brave_api 2>/dev/null || echo "")
+export GOOGLE_MCP_CLIENT_ID=$(pass show tokens/google_mcp_claude_client_id 2>/dev/null || echo "")
+export GOOGLE_MCP_CLIENT_SECRET=$(pass show tokens/google_mcp_claude_client_secret 2>/dev/null || echo "")
 
 # PostgreSQL connection URL builder from ~/.pgpass
 function pg_url() {
