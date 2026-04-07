@@ -8,10 +8,10 @@ clean() {
     head -15
 }
 
-END=$(date -d "+7 days" '+%Y-%m-%dT23:59')
+END=$(date -d "+90 days" '+%Y-%m-%dT23:59')
 
 P=$(gcalcli agenda --nostarted --nocolor "now" "$END" 2>/dev/null | clean)
 K=$(XDG_DATA_HOME="$HOME/.local/share/gcalcli-ki" gcalcli agenda --nostarted --nocolor "now" "$END" 2>/dev/null | clean)
 
 BODY=$(printf "Personal:\n%s\n\nKI:\n%s" "${P:-No events}" "${K:-No events}")
-notify-send -a calendar -c calendar -t 15000 "Upcoming (7 days)" "$BODY"
+notify-send -a calendar -c calendar -t 15000 "Upcoming" "$BODY"
