@@ -663,7 +663,7 @@ return {
     vim.keymap.set("n", "<leader>oT", "<cmd>Obsidian template<cr>", { desc = "[O]bsidian insert from [T]emplate" })
 
     vim.keymap.set("n", "<leader>ot", "<cmd>Obsidian tags<cr>", { desc = "[O]bsidian search [T]ags" })
-    vim.keymap.set("n", "<leader>oq", "<cmd>Obsidian quick_switch<cr>", { desc = "[O]bsidian [Q]uickSwitch" })
+    vim.keymap.set("n", "<leader>oq", "<cmd>Obsidian quick_switch<cr>", { desc = "[O]bsidian [Q]uickSwitch ('exact ^prefix !exclude)" })
     vim.keymap.set("n", "<leader>os", "<cmd>Obsidian search<cr>", { desc = "[O]bsidian [S]earch" })
     vim.keymap.set("n", "<leader>op", "<cmd>Obsidian paste_img<cr>", { desc = "[O]bsidian [P]aste image" })
     vim.keymap.set("n", "<leader>oP", function()
