@@ -109,6 +109,29 @@ window#waybar {
 }
 
 
+/* Calendar Module */
+#custom-calendar {
+    padding: 0 8px;
+    margin: 0 4px;
+}
+
+#custom-calendar.free {
+    color: #a6da95;  /* Green - no meetings */
+}
+
+#custom-calendar.personal {
+    color: #8aadf4;  /* Blue - personal calendar */
+}
+
+#custom-calendar.ki {
+    color: #f5a97f;  /* Peach - KI calendar */
+}
+
+#custom-calendar.busy {
+    color: #eed49f;  /* Yellow - multiple calendars */
+    animation: pulse 2s ease-in-out infinite;
+}
+
 /* Git Sync Status Module */
 #custom-git-sync {
     padding: 0 10px;

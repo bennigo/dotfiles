@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+# nextmeeting-waybar — Merge nextmeeting output from multiple gcalcli accounts
+# for Waybar custom module display. Picks the soonest upcoming event.
+#
+# Outputs Waybar JSON: {"text": "...", "tooltip": "...", "class": "..."}
+
+set -euo pipefail
+
+KI_DATA_HOME="$HOME/.local/share/gcalcli-ki"
+NEXTMEETING_ARGS=(
+    --waybar
+    --skip-all-day-meeting
+    --time-format 24h
+    --max-title-length 30
+    --no-meeting-text "No meetings"
+    --cache-events-ttl 5
+)
+
+get_events() {
+    local label="$1"
+    shift
+    local env_prefix=("$@")
+
+    "${env_prefix[@]}" nextmeeting \
+        --cache-dir "${XDG_CACHE_HOME:-$HOME/.cache}/nextmeeting/$label" \
+        "${NEXTMEETING_ARGS[@]}" \
+        2>/dev/null || echo '{"text":"","tooltip":"","class":""}'
+}
+
+# Get events from both accounts
+personal_json=""
+ki_json=""
+
+if [[ -f "$HOME/.local/share/gcalcli/oauth" ]]; then
+    personal_json=$(get_events "personal" env)
+fi
+
+if [[ -f "$KI_DATA_HOME/gcalcli/oauth" ]]; then
+    ki_json=$(get_events "ki" env XDG_DATA_HOME="$KI_DATA_HOME")
+fi
+
+# Pick the result that has content
+pick_result() {
+    local p_text k_text
+    p_text=$(echo "${personal_json:-}" | jq -r '.text // ""' 2>/dev/null)
+    k_text=$(echo "${ki_json:-}" | jq -r '.text // ""' 2>/dev/null)
+
+    # Both empty
+    if [[ -z "$p_text" || "$p_text" == No\ meetings* ]] && \
+       [[ -z "$k_text" || "$k_text" == No\ meetings* ]]; then
+        echo '{"text":"No meetings","tooltip":"No upcoming meetings today","class":"free"}'
+        return
+    fi
+
+    # Only personal
+    if [[ -n "$p_text" && "$p_text" != "No meetings" ]] && \
+       [[ -z "$k_text" || "$k_text" == No\ meetings* ]]; then
+        echo "$personal_json" | jq --arg cls "personal" '.class = $cls'
+        return
+    fi
+
+    # Only KI
+    if [[ -z "$p_text" || "$p_text" == No\ meetings* ]] && \
+       [[ -n "$k_text" && "$k_text" != "No meetings" ]]; then
+        echo "$ki_json" | jq --arg cls "ki" '.class = $cls'
+        return
+    fi
+
+    # Both have events — merge tooltips
+    local p_tooltip k_tooltip
+    p_tooltip=$(echo "$personal_json" | jq -r '.tooltip // ""' 2>/dev/null)
+    k_tooltip=$(echo "$ki_json" | jq -r '.tooltip // ""' 2>/dev/null)
+
+    echo "$personal_json" | jq \
+        --arg tooltip "Personal:\n${p_tooltip}\n\nKI:\n${k_tooltip}" \
+        --arg cls "busy" \
+        '.tooltip = $tooltip | .class = $cls'
+}
+
+pick_result

@@ -1,0 +1,10 @@
+[Unit]
+Description=Calendar event notification check
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/calendar-notify
+# Ensure notify-send can reach Mako via D-Bus
+Environment=DISPLAY=:0

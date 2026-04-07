@@ -12,6 +12,7 @@
         "sway/mode"
     ],
     "modules-right": [
+        "custom/calendar",
         "custom/weather",
         "custom/wlsunset",
         "custom/playerctl",
@@ -277,6 +278,15 @@
         "format": "",
         "on-click": "/usr/share/sway/scripts/help.sh --toggle",
         "tooltip": "false"
+    },
+    "custom/calendar": {
+        "exec": "~/.config/waybar/scripts/nextmeeting-waybar",
+        "return-type": "json",
+        "interval": 60,
+        "tooltip": true,
+        "format": " {}",
+        "on-click": "nextmeeting --open-meet-url 2>/dev/null; XDG_DATA_HOME=$HOME/.local/share/gcalcli-ki nextmeeting --open-meet-url 2>/dev/null",
+        "on-click-right": "~/.config/waybar/scripts/calendar-agenda"
     },
     "custom/git-sync": {
         "exec": "/home/bgo/.config/waybar/scripts/git-sync-status",
