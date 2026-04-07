@@ -37,6 +37,13 @@ border-color=#d08770
 border-color=#bf616a
 default-timeout=0
 
+[category=calendar]
+border-color=#88c0d0
+default-timeout=0
+group-by=category
+width=400
+height=300
+
 [category=mpd]
 default-timeout=2000
 group-by=category

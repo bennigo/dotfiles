@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+# calendar-notify — Check Google Calendar events and send Mako notifications
+# Runs via systemd timer. Uses gcalcli with XDG_DATA_HOME override for
+# per-account token isolation.
+#
+# Token locations:
+#   ~/.local/share/gcalcli/oauth          (bgovedur@gmail.com)
+#   ~/.local/share/gcalcli-ki/gcalcli/oauth  (benedikt@klifursamband.is)
+#
+# State tracking: ~/.cache/calendar-notify/ stores notification hashes
+# to prevent duplicate alerts for the same event.
+
+set -euo pipefail
+
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/calendar-notify"
+STATE_FILE="$CACHE_DIR/notified"
+REMIND_MINUTES=15
+ICON="appointment-soon"
+KI_DATA_HOME="$HOME/.local/share/gcalcli-ki"
+
+mkdir -p "$CACHE_DIR"
+touch "$STATE_FILE"
+
+# Clean state file daily (remove entries older than 24h)
+find "$CACHE_DIR" -name "notified" -mmin +1440 -exec truncate -s 0 {} \;
+
+notify_events() {
+    local account_label="$1"
+    shift
+    # Remaining args are env prefix (empty for personal, XDG_DATA_HOME=... for KI)
+    local env_prefix=("$@")
+
+    local events
+    events=$("${env_prefix[@]}" gcalcli \
+        --nocache \
+        agenda --nostarted \
+        --tsv \
+        "$(date '+%Y-%m-%dT%H:%M')" \
+        "$(date -d "+${REMIND_MINUTES} minutes" '+%Y-%m-%dT%H:%M')" \
+        2>/dev/null) || true
+
+    [[ -z "$events" ]] && return 0
+
+    while IFS=$'\t' read -r start_date start_time end_date end_time url title location description; do
+        # Skip header or empty lines
+        [[ -z "$start_time" || "$start_date" == "start_date" ]] && continue
+
+        # Deduplicate: hash event identity
+        local event_hash
+        event_hash=$(echo -n "${start_date}${start_time}${title}" | md5sum | cut -d' ' -f1)
+        grep -q "$event_hash" "$STATE_FILE" 2>/dev/null && continue
+
+        # Calculate minutes until event
+        local event_epoch now_epoch mins_until
+        event_epoch=$(date -d "${start_date} ${start_time}" '+%s' 2>/dev/null) || continue
+        now_epoch=$(date '+%s')
+        mins_until=$(( (event_epoch - now_epoch) / 60 ))
+
+        # Build notification body
+        local body="in ${mins_until} min"
+        [[ -n "$location" ]] && body="${body}\n${location}"
+        [[ -n "$url" && "$url" != "N/A" ]] && body="${body}\n${url}"
+
+        notify-send \
+            -u critical \
+            -i "$ICON" \
+            -a "calendar" \
+            -c "calendar" \
+            -t 300000 \
+            "[$account_label] $title" \
+            "$body"
+
+        echo "$event_hash" >> "$STATE_FILE"
+    done <<< "$events"
+}
+
+# Personal account (default XDG_DATA_HOME)
+if [[ -f "$HOME/.local/share/gcalcli/oauth" ]]; then
+    notify_events "Personal" env
+fi
+
+# KI account (overridden XDG_DATA_HOME)
+if [[ -f "$KI_DATA_HOME/gcalcli/oauth" ]]; then
+    notify_events "KI" env XDG_DATA_HOME="$KI_DATA_HOME"
+fi

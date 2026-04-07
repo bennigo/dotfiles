@@ -23,6 +23,8 @@ git repo instead of in a real directory. Ansible handles this automatically duri
 | `password-store-sync.timer` | Timer | `enable --now` | Schedules periodic password store and dotfiles sync |
 | `password-store-sync.service` | Triggered | via `.timer` | Runs the actual sync (git pull/push) |
 | `tmux.service` | Forking | `enable` only | Starts detached tmux session at login |
+| `calendar-notify.timer` | Timer | `enable --now` | Checks Google Calendar events every 10 min, sends Mako notifications |
+| `calendar-notify.service` | Triggered | via `.timer` | Runs calendar-notify script for both Google accounts |
 | `spotify-notify.service` | Long-running | `enable --now` | Track change notifications via playerctl + notify-send |
 | `mtp-automount@.service` | Template | on-demand | MTP device automount (activated by udev rules) |
 
