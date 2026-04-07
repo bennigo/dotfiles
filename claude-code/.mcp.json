@@ -92,6 +92,17 @@
         "env": {
           "POSTGRES_CONNECTION": "${DEV_METRICS_URL}"
         }
+      },
+      "google-workspace": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@aaronsb/google-workspace-mcp"
+        ],
+        "env": {
+          "GOOGLE_CLIENT_ID": "${GOOGLE_MCP_CLIENT_ID}",
+          "GOOGLE_CLIENT_SECRET": "${GOOGLE_MCP_CLIENT_SECRET}"
+        }
       }
     }
   }
