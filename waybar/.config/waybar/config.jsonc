@@ -286,7 +286,7 @@
         "tooltip": true,
         "format": " {}",
         "on-click": "nextmeeting --open-meet-url 2>/dev/null; XDG_DATA_HOME=$HOME/.local/share/gcalcli-ki nextmeeting --open-meet-url 2>/dev/null",
-        "on-click-right": "~/.config/waybar/scripts/calendar-agenda"
+        "on-click-right": "bash ~/.config/waybar/scripts/calendar-agenda &"
     },
     "custom/git-sync": {
         "exec": "/home/bgo/.config/waybar/scripts/git-sync-status",
