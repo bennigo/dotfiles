@@ -24,7 +24,7 @@
 
 -- Refresh Wayland env vars from tmux (fixes xdg-open after session restore)
 if vim.env.TMUX and vim.env.TMUX ~= "" then
-  for _, var in ipairs({ "WAYLAND_DISPLAY", "SWAYSOCK", "DISPLAY" }) do
+  for _, var in ipairs({ "WAYLAND_DISPLAY", "SWAYSOCK", "DISPLAY", "KITTY_LISTEN_ON" }) do
     local ok, result = pcall(vim.fn.system, { "tmux", "show-environment", var })
     if ok and result and result:match("^" .. var .. "=") then
       vim.env[var] = result:match("^" .. var .. "=(.+)"):gsub("%s+$", "")

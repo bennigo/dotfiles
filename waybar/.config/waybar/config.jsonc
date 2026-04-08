@@ -283,8 +283,10 @@
         "exec": "~/.config/waybar/scripts/nextmeeting-waybar",
         "return-type": "json",
         "interval": 60,
+        "exec-on-event": false,
         "tooltip": true,
         "format": " {}",
+        "min-length": 5,
         "on-click": "nextmeeting --open-meet-url 2>/dev/null; XDG_DATA_HOME=$HOME/.local/share/gcalcli-ki nextmeeting --open-meet-url 2>/dev/null",
         "on-click-right": "bash ~/.config/waybar/scripts/calendar-agenda &"
     },
