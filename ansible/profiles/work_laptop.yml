@@ -22,7 +22,7 @@ work_packages:
   - postgresql-client
   - vpnc
   - remmina
-  - freerdp2-dev  
+  - freerdp3-dev
   - ansible
   - pass
 

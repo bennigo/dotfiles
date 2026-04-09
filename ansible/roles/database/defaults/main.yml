@@ -3,7 +3,7 @@
 # PostgreSQL installation and configuration
 
 # PostgreSQL version (will be automatically detected, but can be overridden)
-postgresql_version: "16"
+postgresql_version: "18"
 
 # PostgreSQL packages to install
 database_packages:

@@ -49,8 +49,8 @@
   block:
     - name: Download Go
       get_url:
-        url: "https://go.dev/dl/go1.24.5.linux-amd64.tar.gz"
-        dest: "/tmp/go1.24.5.linux-amd64.tar.gz"
+        url: "https://go.dev/dl/go{{ go_version }}.linux-amd64.tar.gz"
+        dest: "/tmp/go{{ go_version }}.linux-amd64.tar.gz"
         mode: '0644'
 
     - name: Remove existing Go installation
@@ -60,7 +60,7 @@
 
     - name: Extract Go
       unarchive:
-        src: "/tmp/go1.24.5.linux-amd64.tar.gz"
+        src: "/tmp/go{{ go_version }}.linux-amd64.tar.gz"
         dest: /usr/local
         remote_src: yes
         owner: root
@@ -354,9 +354,13 @@
           - liblapack-dev
         state: present
         update_cache: yes
+    - name: Get R major.minor version
+      shell: R --version | grep -oP 'R version \K[0-9]+\.[0-9]+'
+      register: r_version
+      changed_when: false
     - name: Create R user library directory
       file:
-        path: "{{ target_home }}/R/x86_64-pc-linux-gnu-library/4.4"
+        path: "{{ target_home }}/R/{{ ansible_architecture }}-pc-linux-gnu-library/{{ r_version.stdout }}"
         state: directory
         owner: "{{ target_user }}"
         group: "{{ target_user }}"
@@ -364,10 +368,10 @@
       become: no
     - name: Install R languageserver package
       shell: |
-        R --slave -e "install.packages('languageserver', repos='https://cran.rstudio.com/', lib='~/R/x86_64-pc-linux-gnu-library/4.4')"
+        R --slave -e "install.packages('languageserver', repos='https://cran.rstudio.com/', lib='~/R/{{ ansible_architecture }}-pc-linux-gnu-library/{{ r_version.stdout }}')"
       become: no
       args:
-        creates: "{{ target_home }}/R/x86_64-pc-linux-gnu-library/4.4/languageserver"
+        creates: "{{ target_home }}/R/{{ ansible_architecture }}-pc-linux-gnu-library/{{ r_version.stdout }}/languageserver"
       register: r_languageserver_install
       ignore_errors: yes
     - name: Display R installation results
