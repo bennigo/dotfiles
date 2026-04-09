@@ -1,0 +1,27 @@
+#!/bin/bash
+# Kitty scrollback pager - opens scrollback in nvim with vim motions
+# Strips ANSI/OSC sequences then opens clean text in nvim
+# q or Esc to quit, V to visual select, y to yank to clipboard
+
+tmp=$(mktemp /tmp/kitty-scrollback.XXXXXX)
+trap 'rm -f "$tmp"' EXIT
+
+# Strip all terminal escape sequences:
+#   CSI sequences: ESC [ ... letter
+#   OSC sequences: ESC ] ... BEL/ST
+#   ESC ( B, ESC >, ESC =, and other two-char ESC sequences
+#   Remaining control chars (BEL, SO, SI, etc.)
+perl -pe '
+  s/\e\][^\a\e]*(?:\a|\e\\)//g;   # OSC (terminated by BEL or ST)
+  s/\e\[[0-9;?]*[a-zA-Z]//g;      # CSI sequences
+  s/\e[()][A-Z0-9]//g;            # charset designations
+  s/\e[>=]//g;                     # keypad mode
+  s/\e.//g;                        # any remaining ESC + char
+  s/[\x00-\x08\x0e\x0f]//g;       # stray control chars (keep \t \n \r)
+' > "$tmp"
+
+exec nvim -u NONE -R "$tmp" \
+  -c "set nonumber norelativenumber noswapfile noshowcmd scrolloff=0 clipboard+=unnamedplus" \
+  -c "nnoremap q :qa!<CR>" \
+  -c "nnoremap <Esc> :qa!<CR>" \
+  -c "normal G"
