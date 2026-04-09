@@ -72,13 +72,17 @@ profiles:
     - dotfiles
     - agent
 
+# Version pins (bump here when upgrading)
+nvidia_driver_version: "580"
+go_version: "1.24.5"
+
 # Hardware-specific role activation
 hardware_roles:
   nvidia:
     enabled: "{{ has_nvidia_gpu | default(false) or force_nvidia | default(false) }}"
     packages:
-      - nvidia-driver-535
-      - nvidia-utils-535
+      - "nvidia-driver-{{ nvidia_driver_version }}"
+      - "nvidia-utils-{{ nvidia_driver_version }}"
     modprobe_configs:
       - "nvidia-drm modeset=1"
   

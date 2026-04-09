@@ -15,7 +15,7 @@ This Ansible-based bootstrap system will automatically:
 
 ## 🚀 Quick Start - Single Command Setup
 
-On a **fresh Ubuntu 25.04+** system with sudo access:
+On a **fresh Ubuntu 25.04+** (or **26.04 LTS**) system with sudo access:
 
 ```bash
 # Install prerequisites and bootstrap system
@@ -106,7 +106,7 @@ ansible-playbook bootstrap.yml --skip-tags "hardware" -K
 ## 🔧 Prerequisites
 
 ### Minimum Requirements
-- **OS**: Ubuntu 25.04+ (fresh installation recommended)
+- **OS**: Ubuntu 25.04+ / 26.04 LTS (fresh installation recommended)
 - **User**: Non-root user with sudo access
 - **Network**: Internet connection for package downloads
 - **Storage**: ~10GB free space for full installation

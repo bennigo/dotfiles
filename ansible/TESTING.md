@@ -6,10 +6,10 @@ Comprehensive testing procedures for the single-command Ubuntu setup system.
 
 ### Test Environments
 
-**Primary Test**: Fresh Ubuntu 25.04+ VM/container
+**Primary Test**: Fresh Ubuntu 25.04+ or 26.04 LTS VM/container
 ```bash
 # Recommended test setup
-multipass launch 25.04 --name ubuntu-test --disk 20G --memory 4G
+multipass launch 26.04 --name ubuntu-test --disk 20G --memory 4G  # 26.04 LTS
 multipass shell ubuntu-test
 ```
 
@@ -23,7 +23,7 @@ multipass shell ubuntu-test
 ### 1. Prerequisites Test
 ```bash
 # Verify clean Ubuntu system
-lsb_release -a  # Should show Ubuntu 25.04+
+lsb_release -a  # Should show Ubuntu 25.04+ or 26.04 LTS
 whoami         # Should be non-root user
 sudo -v        # Should prompt for password, then succeed
 ```
@@ -277,7 +277,7 @@ netstat -i    # Network utilization
 ## ✅ Acceptance Criteria
 
 ### Must Pass Tests
-- [ ] Fresh Ubuntu 25.04+ → Complete system in single command
+- [ ] Fresh Ubuntu 25.04+ / 26.04 LTS → Complete system in single command
 - [ ] Hardware auto-detection works correctly
 - [ ] All profiles install without errors
 - [ ] Sway desktop environment functional after reboot
@@ -303,7 +303,7 @@ netstat -i    # Network utilization
 ### Regular Validation
 ```bash
 # Monthly test routine
-multipass launch 25.04 --name monthly-test
+multipass launch 26.04 --name monthly-test  # 26.04 LTS
 # Run full installation test
 # Document any issues in this file
 ```
