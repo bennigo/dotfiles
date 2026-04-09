@@ -244,9 +244,9 @@ bindsym $mod+Shift+p exec $term --class "clipse" zsh -i ${HOME}/.local/bin/run_s
     exec --no-startup-id gtk-launch obsidian.desktop
     exec --no-startup-id $term --class "terminal_floating"
 
-# Browser profiles on dedicated workspaces
+# Browser profiles on dedicated workspaces (staggered to avoid snap race condition)
     exec firefox-profile work
-    exec firefox-profile personal
+    exec sleep 3 && firefox-profile personal
 # bindsym $mod+o exec gtk-launch obsidian.desktop
 
 ## Scratchpad // Show Zathura from scratchpad // 📚 ##
