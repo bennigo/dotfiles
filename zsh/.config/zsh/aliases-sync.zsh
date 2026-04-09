@@ -1,8 +1,7 @@
 # Dotfiles and Password Store Sync Aliases
 # Convenient shortcuts for keeping configurations synchronized
 
-# Main sync commands
-alias sync='dotfiles-sync'
+# Main sync commands (don't alias bare 'sync' — it shadows POSIX sync)
 alias sync-all='dotfiles-sync --all'
 alias sync-pass='dotfiles-sync --pass-only'
 alias sync-dotfiles='dotfiles-sync --dotfiles-only'
