@@ -49,6 +49,7 @@ command -v zoxide >/dev/null 2>&1 && eval "$(zoxide init zsh)"
 # Call load-mcp-credentials manually, or they auto-load on first access.
 load-mcp-credentials() {
     [[ -n "$_MCP_CREDS_LOADED" ]] && return 0
+    export ANTHROPIC_API_KEY=$(pass show tokens/anthropic_api_key 2>/dev/null || echo "")
     export BRAVE_API_KEY=$(pass show tokens/brave_api 2>/dev/null || echo "")
     export GOOGLE_MCP_CLIENT_ID=$(pass show tokens/google_mcp_claude_client_id 2>/dev/null || echo "")
     export GOOGLE_MCP_CLIENT_SECRET=$(pass show tokens/google_mcp_claude_client_secret 2>/dev/null || echo "")
@@ -57,7 +58,7 @@ load-mcp-credentials() {
 
 # Auto-load credentials before claude commands
 _preexec_load_mcp_creds() {
-    if [[ -z "$_MCP_CREDS_LOADED" && "$1" == claude* ]]; then
+    if [[ -z "$_MCP_CREDS_LOADED" && ("$1" == claude* || "$1" == crush*) ]]; then
         load-mcp-credentials
     fi
 }
