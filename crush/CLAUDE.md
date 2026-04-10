@@ -10,6 +10,8 @@ Installed via npm (`@charmland/crush`), config deployed via stow.
 | Provider | Type | Models |
 |----------|------|--------|
 | GitHub Copilot | OAuth (built-in) | Claude Sonnet 4.6 (large default), Gemini 2.5 Pro (small default), + 20 more |
+| Kimi (Moonshot AI) | `openai-compat` | Kimi K2.5 (256K ctx), Kimi K2 Turbo (256K ctx) |
+| DeepSeek | `openai-compat` | DeepSeek V3 (64K ctx), DeepSeek R1 (64K ctx) |
 | Ollama (local) | `openai-compat` | DeepSeek Coder V2 16B, Llama 3.1 8B, DeepSeek Coder 6.7B |
 
 ### Adding More Cloud Providers
@@ -21,7 +23,9 @@ Set environment variables in `zsh/.config/zsh/exports.zsh`, then add provider bl
 | Anthropic | `ANTHROPIC_API_KEY` | `anthropic` |
 | OpenAI | `OPENAI_API_KEY` | `openai` |
 | Google Gemini | `GEMINI_API_KEY` | `gemini` |
+| DeepSeek | `DEEPSEEK_API_KEY` | `openai-compat` |
 | Groq | `GROQ_API_KEY` | `openai-compat` |
+| Kimi (Moonshot) | `KIMI_API_KEY` | `openai-compat` |
 | OpenRouter | `OPENROUTER_API_KEY` | `openai-compat` |
 
 ## MCP Servers
