@@ -1,0 +1,76 @@
+{
+  "$schema": "https://charm.land/crush.json",
+  "models": {
+    "large": {
+      "model": "deepseek-coder-v2:16b",
+      "provider": "ollama"
+    },
+    "small": {
+      "model": "llama3.1:8b",
+      "provider": "ollama"
+    }
+  },
+  "providers": {
+    "ollama": {
+      "name": "Ollama (Local)",
+      "type": "openai-compat",
+      "base_url": "http://localhost:11434/v1/",
+      "models": [
+        {
+          "id": "deepseek-coder-v2:16b",
+          "name": "DeepSeek Coder V2 16B",
+          "context_window": 128000,
+          "default_max_tokens": 16384
+        },
+        {
+          "id": "llama3.1:8b",
+          "name": "Llama 3.1 8B",
+          "context_window": 128000,
+          "default_max_tokens": 8192
+        },
+        {
+          "id": "deepseek-coder:6.7b-instruct-q4_K_M",
+          "name": "DeepSeek Coder 6.7B",
+          "context_window": 16384,
+          "default_max_tokens": 4096
+        }
+      ]
+    }
+  },
+  "mcp": {
+    "fetch": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["mcp-server-fetch"]
+    },
+    "brave-search": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@brave/brave-search-mcp-server"],
+      "env": {
+        "BRAVE_API_KEY": "$(echo $BRAVE_API_KEY)"
+      }
+    }
+  },
+  "lsp": {
+    "python": {
+      "command": "pyright-langserver",
+      "args": ["--stdio"],
+      "filetypes": ["py"],
+      "root_markers": ["pyproject.toml", "setup.py", "setup.cfg"]
+    },
+    "lua": {
+      "command": "lua-language-server",
+      "args": [],
+      "filetypes": ["lua"],
+      "root_markers": [".luarc.json", ".luacheckrc"]
+    }
+  },
+  "options": {
+    "auto_lsp": true,
+    "disable_metrics": true,
+    "tui": {
+      "transparent": true
+    }
+  }
+}
