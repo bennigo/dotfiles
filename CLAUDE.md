@@ -38,6 +38,7 @@ architecture guidelines. Subdirectories with their own CLAUDE.md are marked with
 ├── qutebrowser/    # Keyboard-driven web browser
 ├── zsh/            # Shell configuration (Zap plugins, aliases) — see zsh/CLAUDE.md 📄
 ├── profile/        # Shell profile settings
+├── crush/          # Multi-provider AI coding TUI (Charmbracelet) — see crush/CLAUDE.md 📄
 ├── ollama/         # Local LLM config (DeepSeek Coder V2, Llama 3.1) — see ollama/README.md
 ├── swappy/         # Screenshot annotation tool
 ├── grim/           # Screenshot tool (integrates with swappy/slurp)
@@ -78,6 +79,7 @@ Sway config uses structured comments (`## Category // Description // Icon ##`) p
 
 ### Development Integration
 - **Neovim**: LazyVim + Claude Code + Database UI + Obsidian — see `neovim/.config/nvim/CLAUDE.md`
+- **Crush**: Multi-provider AI coding TUI (Gemini, GPT, Ollama, Copilot) — see `crush/CLAUDE.md`
 - **Ollama**: GPU-accelerated local LLM inference — see `ollama/README.md`
 - **PostgreSQL 18**: Secure credential management via `pass` — see `ansible/DATABASE_SETUP.md`
 - **Docker 28.4.0**: Container orchestration with VPN-friendly networking — see `docker/CLAUDE.md`
@@ -185,6 +187,7 @@ Edit source files in this repository, not deployed locations in `~/.config/`.
 | `tmux/.config/tmux/CLAUDE.md` | Session management, plugins, Wayland env fix, remote control |
 | `docker/CLAUDE.md` | Daemon config, VPN networking, scripts, compose templates |
 | `claude-code/CLAUDE.md` | MCP servers, notification hooks, remote control |
+| `crush/CLAUDE.md` | Multi-provider AI coding TUI, Ollama integration, cloud provider setup |
 | `systemd/CLAUDE.md` | 8 user service units, deployment, activation |
 | `zsh/CLAUDE.md` | Zap plugins, aliases, exports, Wayland env fix, stow conflict |
 | `waybar/CLAUDE.md` | Modules, git-sync status, custom scripts, clipboard |
