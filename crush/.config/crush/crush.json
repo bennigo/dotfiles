@@ -53,59 +53,58 @@
     },
     "postgres-local": {
       "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@crystaldba/postgres-mcp"],
+      "command": "uvx",
+      "args": ["postgres-mcp", "--access-mode=unrestricted"],
       "env": {
-        "POSTGRES_CONNECTION": "${LOCAL_POSTGRES_URL}",
-        "ALLOW_WRITE": "true"
+        "DATABASE_URI": "${LOCAL_POSTGRES_URL}"
       }
     },
     "postgres-gas-readonly": {
       "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@crystaldba/postgres-mcp", "--readonly"],
+      "command": "uvx",
+      "args": ["postgres-mcp", "--access-mode=restricted"],
       "env": {
-        "POSTGRES_CONNECTION": "${PROD_GAS_URL}"
+        "DATABASE_URI": "${PROD_GAS_URL}"
       }
     },
     "postgres-skjalftalisa-readonly": {
       "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@crystaldba/postgres-mcp", "--readonly"],
+      "command": "uvx",
+      "args": ["postgres-mcp", "--access-mode=restricted"],
       "env": {
-        "POSTGRES_CONNECTION": "${PROD_SKJALFTALISA_URL}"
+        "DATABASE_URI": "${PROD_SKJALFTALISA_URL}"
       }
     },
     "postgres-tos-readonly": {
       "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@crystaldba/postgres-mcp", "--readonly"],
+      "command": "uvx",
+      "args": ["postgres-mcp", "--access-mode=restricted"],
       "env": {
-        "POSTGRES_CONNECTION": "${PROD_TOS_URL}"
+        "DATABASE_URI": "${PROD_TOS_URL}"
       }
     },
     "postgres-epos-readonly": {
       "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@crystaldba/postgres-mcp", "--readonly"],
+      "command": "uvx",
+      "args": ["postgres-mcp", "--access-mode=restricted"],
       "env": {
-        "POSTGRES_CONNECTION": "${DEV_EPOS_URL}"
+        "DATABASE_URI": "${DEV_EPOS_URL}"
       }
     },
     "postgres-gnss-readonly": {
       "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@crystaldba/postgres-mcp", "--readonly"],
+      "command": "uvx",
+      "args": ["postgres-mcp", "--access-mode=restricted"],
       "env": {
-        "POSTGRES_CONNECTION": "${DEV_GNSS_URL}"
+        "DATABASE_URI": "${DEV_GNSS_URL}"
       }
     },
     "postgres-metrics-readonly": {
       "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@crystaldba/postgres-mcp", "--readonly"],
+      "command": "uvx",
+      "args": ["postgres-mcp", "--access-mode=restricted"],
       "env": {
-        "POSTGRES_CONNECTION": "${DEV_METRICS_URL}"
+        "DATABASE_URI": "${DEV_METRICS_URL}"
       }
     }
   },

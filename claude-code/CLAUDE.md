@@ -12,6 +12,7 @@ Deployed via stow to `~/.mcp.json` (user scope — must be at `~/`, not `~/.conf
 
 ### PostgreSQL Database Access
 
+Via `postgres-mcp` (PyPI, run with `uvx`). Uses `DATABASE_URI` env var and `--access-mode` flag.
 Multiple connections configured for various projects:
 
 | Server | Database | Access |
