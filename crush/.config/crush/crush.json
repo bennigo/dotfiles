@@ -40,8 +40,8 @@
   "mcp": {
     "fetch": {
       "type": "stdio",
-      "command": "uvx",
-      "args": ["mcp-server-fetch"]
+      "command": "uv",
+      "args": ["tool", "run", "mcp-server-fetch"]
     },
     "brave-search": {
       "type": "stdio",
@@ -53,56 +53,56 @@
     },
     "postgres-local": {
       "type": "stdio",
-      "command": "uvx",
-      "args": ["postgres-mcp", "--access-mode=unrestricted"],
+      "command": "uv",
+      "args": ["tool", "run", "postgres-mcp", "--access-mode=unrestricted"],
       "env": {
         "DATABASE_URI": "${LOCAL_POSTGRES_URL}"
       }
     },
     "postgres-gas-readonly": {
       "type": "stdio",
-      "command": "uvx",
-      "args": ["postgres-mcp", "--access-mode=restricted"],
+      "command": "uv",
+      "args": ["tool", "run", "postgres-mcp", "--access-mode=restricted"],
       "env": {
         "DATABASE_URI": "${PROD_GAS_URL}"
       }
     },
     "postgres-skjalftalisa-readonly": {
       "type": "stdio",
-      "command": "uvx",
-      "args": ["postgres-mcp", "--access-mode=restricted"],
+      "command": "uv",
+      "args": ["tool", "run", "postgres-mcp", "--access-mode=restricted"],
       "env": {
         "DATABASE_URI": "${PROD_SKJALFTALISA_URL}"
       }
     },
     "postgres-tos-readonly": {
       "type": "stdio",
-      "command": "uvx",
-      "args": ["postgres-mcp", "--access-mode=restricted"],
+      "command": "uv",
+      "args": ["tool", "run", "postgres-mcp", "--access-mode=restricted"],
       "env": {
         "DATABASE_URI": "${PROD_TOS_URL}"
       }
     },
     "postgres-epos-readonly": {
       "type": "stdio",
-      "command": "uvx",
-      "args": ["postgres-mcp", "--access-mode=restricted"],
+      "command": "uv",
+      "args": ["tool", "run", "postgres-mcp", "--access-mode=restricted"],
       "env": {
         "DATABASE_URI": "${DEV_EPOS_URL}"
       }
     },
     "postgres-gnss-readonly": {
       "type": "stdio",
-      "command": "uvx",
-      "args": ["postgres-mcp", "--access-mode=restricted"],
+      "command": "uv",
+      "args": ["tool", "run", "postgres-mcp", "--access-mode=restricted"],
       "env": {
         "DATABASE_URI": "${DEV_GNSS_URL}"
       }
     },
     "postgres-metrics-readonly": {
       "type": "stdio",
-      "command": "uvx",
-      "args": ["postgres-mcp", "--access-mode=restricted"],
+      "command": "uv",
+      "args": ["tool", "run", "postgres-mcp", "--access-mode=restricted"],
       "env": {
         "DATABASE_URI": "${DEV_METRICS_URL}"
       }

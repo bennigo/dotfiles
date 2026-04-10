@@ -69,10 +69,12 @@ function pg_url() {
   local host=$1
   local db=$2
   [[ ! -f ~/.pgpass ]] && return
-  local line=$(grep "^${host}:" ~/.pgpass 2>/dev/null | grep ":${db}:")
+  # Match host in field 1, then accept exact db or wildcard (*) in field 3
+  local line=$(awk -F: -v h="$host" -v d="$db" \
+    '$1 == h && ($3 == d || $3 == "*") {print; exit}' ~/.pgpass)
   if [[ -n "$line" ]]; then
-    IFS=':' read -r h p d u pw <<< "$line"
-    echo "postgresql://${u}:${pw}@${h}:${p}/${d}"
+    IFS=':' read -r h p _ u pw <<< "$line"
+    echo "postgresql://${u}:${pw}@${h}:${p}/${db}"
   fi
 }
 
