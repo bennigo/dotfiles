@@ -1,8 +1,9 @@
 {
   "mcpServers": {
     "fetch": {
-      "command": "uvx",
+      "command": "uv",
       "args": [
+        "tool", "run",
         "mcp-server-fetch"
       ]
     },
@@ -17,8 +18,9 @@
       }
     },
     "postgres-local": {
-      "command": "uvx",
+      "command": "uv",
       "args": [
+        "tool", "run",
         "postgres-mcp",
         "--access-mode=unrestricted"
       ],
@@ -27,8 +29,9 @@
       }
     },
     "postgres-gas-readonly": {
-      "command": "uvx",
+      "command": "uv",
       "args": [
+        "tool", "run",
         "postgres-mcp",
         "--access-mode=restricted"
       ],
@@ -37,8 +40,9 @@
       }
     },
     "postgres-skjalftalisa-readonly": {
-      "command": "uvx",
+      "command": "uv",
       "args": [
+        "tool", "run",
         "postgres-mcp",
         "--access-mode=restricted"
       ],
@@ -47,8 +51,9 @@
       }
     },
     "postgres-tos-readonly": {
-      "command": "uvx",
+      "command": "uv",
       "args": [
+        "tool", "run",
         "postgres-mcp",
         "--access-mode=restricted"
       ],
@@ -57,8 +62,9 @@
       }
     },
     "postgres-epos-readonly": {
-      "command": "uvx",
+      "command": "uv",
       "args": [
+        "tool", "run",
         "postgres-mcp",
         "--access-mode=restricted"
       ],
@@ -67,8 +73,9 @@
       }
     },
     "postgres-gnss-readonly": {
-      "command": "uvx",
+      "command": "uv",
       "args": [
+        "tool", "run",
         "postgres-mcp",
         "--access-mode=restricted"
       ],
@@ -77,8 +84,9 @@
       }
     },
     "postgres-metrics-readonly": {
-      "command": "uvx",
+      "command": "uv",
       "args": [
+        "tool", "run",
         "postgres-mcp",
         "--access-mode=restricted"
       ],
