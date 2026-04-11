@@ -5,9 +5,21 @@ all:
   children:
     agent_servers:
       hosts: {}
-      # Add agent servers here when Tailscale is configured, e.g.:
-      # agent-laptop:
+      # Dedicated headless agent servers (agent_server profile).
+      # Uncomment and fill in when Tailscale is configured:
+      # agent-vm:
       #   ansible_host: <tailscale-ip-or-hostname>
+      #   ansible_user: bgo
+      #   ansible_ssh_extra_args: "-o StrictHostKeyChecking=accept-new"
+
+    # Dual-use workstations running work_laptop + agent_addon.
+    # After first-run (local bootstrap + SSH key setup), uncomment and use:
+    #   ansible-playbook bootstrap.yml -i inventory.yml \
+    #     --extra-vars "@profiles/agent_addon.yml" --tags agent --limit <hostname>
+    dual_use_workstations:
+      hosts: {}
+      # newlaptop:
+      #   ansible_host: newlaptop.local   # or Tailscale hostname once joined
       #   ansible_user: bgo
       #   ansible_ssh_extra_args: "-o StrictHostKeyChecking=accept-new"
   vars:
