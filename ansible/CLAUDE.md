@@ -20,7 +20,8 @@ ansible-playbook bootstrap.yml --extra-vars "profile=work_laptop"
 | `full` | All including credentials | Complete setup |
 | `work_laptop` | Full + work tools + NVIDIA + laptop | Primary work machine |
 | `work_only` | Development without desktop/email | Work headless |
-| `agent_server` | base, credentials, docker, dotfiles, agent | OpenClaw AI agent server |
+| `agent_server` | base, credentials, docker, dotfiles, agent | OpenClaw AI agent server (dedicated) |
+| `agent_addon` | agent | Layer openclaw-agent onto an existing desktop (dual-use, skips firewall/vault/home-chmod) |
 
 **Tag-based selective runs:**
 ```bash

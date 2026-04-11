@@ -1,0 +1,38 @@
+---
+# Agent add-on profile — layer openclaw-agent onto an existing desktop/work machine
+#
+# Use this on a dual-use machine where {{ target_user }} already has a full setup
+# (work_laptop, desktop, development, etc.) and you want to add the isolated agent
+# user without touching firewall, bgovault, or the primary home directory.
+#
+# Usage (local):
+#   cd ~/.dotfiles/ansible
+#   ansible-playbook bootstrap.yml --extra-vars "@profiles/agent_addon.yml" --tags agent
+#
+# Dry-run first:
+#   ansible-playbook bootstrap.yml --check --diff \
+#     --extra-vars "@profiles/agent_addon.yml" --tags agent
+
+profile: agent_addon
+
+# Dual-use flag: agent role skips firewall, vault lockdown, and bgo home chmod
+agent_dual_use: true
+
+features:
+  setup_agent_server: true
+  setup_tailscale: false       # bgo accesses this machine locally, Tailscale not needed
+  setup_firewall: false        # UFW deny-all would break desktop networking
+  setup_personal_repos: false  # bgo already manages personal repos, do not touch bgovault
+
+# No base packages to add (already installed on work_laptop)
+base_packages: []
+
+# No stow deployment (bgo dotfiles already deployed)
+stow_directories: []
+dotfiles_systemd_services: []
+dotfiles_systemd_services_no_start: []
+dotfiles_verify_configs: []
+
+# Skip prompts for automated runs
+skip_confirmation: true
+skip_reboot_prompt: true

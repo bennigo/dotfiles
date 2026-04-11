@@ -12,7 +12,7 @@ Installed via npm (`@charmland/crush`), config deployed via stow.
 | GitHub Copilot | OAuth (built-in) | Claude Sonnet 4.6 (large default), Gemini 2.5 Pro (small default), + 20 more |
 | Kimi (Moonshot AI) | `openai-compat` | Kimi K2.5 (256K ctx), Kimi K2 Turbo (256K ctx) |
 | DeepSeek | `openai-compat` | DeepSeek V3 (64K ctx), DeepSeek R1 (64K ctx) |
-| Ollama (local) | `openai-compat` | DeepSeek Coder V2 16B, Llama 3.1 8B, DeepSeek Coder 6.7B |
+| Ollama (local) | `openai-compat` | qwen3.5 (default), qwen2.5-coder:7b, deepseek-r1:8b, qwen3:8b, deepseek-coder-v2:16b, llama3.2:3b, llama3.1:8b |
 
 ### Adding More Cloud Providers
 
