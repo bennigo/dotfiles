@@ -113,6 +113,23 @@ alias sat='sat-viewer --inline'        # Show latest comparison image
 alias sat3='sat-viewer --inline 3'     # Show latest 3 images
 alias satall='sat-viewer --inline 8'   # Show latest 8 images
 
+# Ollama model routing aliases (see ~/.dotfiles/ollama/MODEL_ROUTING.md)
+alias ai='ollama run qwen3.5'
+alias ai-fast='ollama run llama3.2:3b'
+alias ai-code='ollama run qwen2.5-coder:7b'
+alias ai-reason='ollama run deepseek-r1:8b'
+alias ai-heavy='ollama run deepseek-coder-v2:16b'
+alias ai-vision='ollama run moondream'
+ai-translate() {
+    local text="$*"
+    if [[ -z "$text" ]]; then
+        echo "Usage: ai-translate <text in any language>"
+        echo "       echo 'text' | ai-translate"
+        return 1
+    fi
+    echo "Translate the following to English. Output only the translation, nothing else:\n\n${text}" | ollama run qwen3.5 --nowordwrap
+}
+
 # RxTools aliases - use wrappers to avoid Qt version conflicts
 alias rxcontrol='/usr/local/rxtools/bin/runRxcontrol'
 alias rxdownload='/usr/local/rxtools/bin/runRxdownload'

@@ -57,22 +57,46 @@
       "base_url": "http://localhost:11434/v1/",
       "models": [
         {
+          "id": "qwen3.5:latest",
+          "name": "Qwen 3.5 (Default General)",
+          "context_window": 131072,
+          "default_max_tokens": 16384
+        },
+        {
+          "id": "qwen2.5-coder:7b",
+          "name": "Qwen 2.5 Coder 7B",
+          "context_window": 131072,
+          "default_max_tokens": 16384
+        },
+        {
+          "id": "deepseek-r1:8b",
+          "name": "DeepSeek R1 8B (Reasoning)",
+          "context_window": 131072,
+          "default_max_tokens": 16384
+        },
+        {
+          "id": "qwen3:8b",
+          "name": "Qwen 3 8B (Multilingual)",
+          "context_window": 131072,
+          "default_max_tokens": 16384
+        },
+        {
           "id": "deepseek-coder-v2:16b",
-          "name": "DeepSeek Coder V2 16B",
+          "name": "DeepSeek Coder V2 16B (Heavy)",
           "context_window": 128000,
           "default_max_tokens": 16384
+        },
+        {
+          "id": "llama3.2:3b",
+          "name": "Llama 3.2 3B (Fast)",
+          "context_window": 131072,
+          "default_max_tokens": 8192
         },
         {
           "id": "llama3.1:8b",
           "name": "Llama 3.1 8B",
           "context_window": 128000,
           "default_max_tokens": 8192
-        },
-        {
-          "id": "deepseek-coder:6.7b-instruct-q4_K_M",
-          "name": "DeepSeek Coder 6.7B",
-          "context_window": 16384,
-          "default_max_tokens": 4096
         }
       ]
     }

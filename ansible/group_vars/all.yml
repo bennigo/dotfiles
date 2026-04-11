@@ -64,12 +64,15 @@ profiles:
     - docker
     - credentials
     - dotfiles
-  # Agent server (OpenClaw AI agent with isolation)
+  # Agent server (OpenClaw AI agent with isolation) - dedicated machine
   agent_server:
     - base
     - credentials
     - docker
     - dotfiles
+    - agent
+  # Agent add-on - layer agent user onto an existing desktop/work machine
+  agent_addon:
     - agent
 
 # Version pins (bump here when upgrading)
@@ -161,6 +164,12 @@ desktop_packages:
 agent_user: "openclaw-agent"
 agent_home: "/home/openclaw-agent"
 agent_workspace: "/opt/openclaw"
+# Dual-use: agent layered onto an existing desktop (skip firewall, vault lockdown, bgo home chmod)
+agent_dual_use: false
+# npm packages installed globally for the agent user
+agent_npm_packages:
+  - "@anthropic-ai/claude-code"
+  - "openclaw"
 
 # Dotfiles deployment control (empty = auto-discover, backward-compatible)
 # Override in profile to limit which dirs are stowed

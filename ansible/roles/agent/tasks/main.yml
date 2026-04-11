@@ -20,8 +20,6 @@
   user:
     name: "{{ agent_user }}"
     group: "{{ agent_user }}"
-    groups: docker
-    append: yes
     shell: /bin/bash
     home: "{{ agent_home }}"
     create_home: yes
@@ -43,6 +41,7 @@
     mode: '0750'
     owner: "{{ target_user }}"
     group: "{{ target_user }}"
+  when: not (agent_dual_use | default(false))
   tags: ["agent", "user"]
 
 - name: Ensure openclaw-agent has NO sudo access
@@ -70,9 +69,10 @@
   debug:
     msg: |
       User isolation configured:
-        Admin user: {{ target_user }} (home: {{ target_home }}, mode: 0750, sudo: yes)
-        Agent user: {{ agent_user }} (home: {{ agent_home }}, mode: 0700, sudo: no)
+        Admin user: {{ target_user }} (home: {{ target_home }}, {{ 'mode: 0750' if not (agent_dual_use | default(false)) else 'mode: unchanged (dual-use)' }}, sudo: yes)
+        Agent user: {{ agent_user }} (home: {{ agent_home }}, mode: 0700, sudo: no, docker: no)
         Workspace: {{ agent_workspace }}
+        Mode: {{ 'DUAL-USE (layered on existing desktop)' if agent_dual_use | default(false) else 'DEDICATED' }}
   tags: ["agent", "user"]
 
 # ============================================================
@@ -113,8 +113,7 @@
         export PATH="{{ agent_home }}/.local/share/fnm:$PATH"
         eval "$(fnm env --use-on-cd)"
         npm install --global {{ item }}
-      loop:
-        - "@anthropic-ai/claude-code"
+      loop: "{{ agent_npm_packages }}"
       become: yes
       become_user: "{{ agent_user }}"
       ignore_errors: yes
@@ -137,8 +136,11 @@
           {% if agent_node_version.rc == 0 %}
           Version: {{ agent_node_version.stdout }}
           {% endif %}
-          Note: OpenClaw install is manual until package name confirmed:
-            sudo -u {{ agent_user }} bash -c 'export PATH="$HOME/.local/share/fnm:$PATH"; eval "$(fnm env)"; npm install -g @openclaw/openclaw'
+          npm packages installed globally: {{ agent_npm_packages | join(', ') }}
+          OpenClaw daemon onboarding (manual, run as agent user):
+            sudo -u {{ agent_user }} -i
+            export PATH="$HOME/.local/share/fnm:$PATH" && eval "$(fnm env)"
+            openclaw onboard --install-daemon
   tags: ["agent", "nodejs"]
 
 # ============================================================
@@ -183,7 +185,9 @@
 
           This authenticates the machine and enables SSH over Tailscale.
           After auth, connect from ThinkPad via: ssh <tailscale-hostname>
-  when: features.setup_tailscale | default(false)
+  when:
+    - features.setup_tailscale | default(false)
+    - not (agent_dual_use | default(false))
   tags: ["agent", "tailscale"]
 
 # ============================================================
@@ -252,7 +256,9 @@
           POLICY: deny incoming, deny outgoing
           ALLOWED OUT: HTTPS (443), HTTP (80), DNS (53), SSH (22)
           ALLOWED IN: SSH (22), Tailscale interface
-  when: features.setup_firewall | default(false)
+  when:
+    - features.setup_firewall | default(false)
+    - not (agent_dual_use | default(false))
   tags: ["agent", "firewall"]
 
 # ============================================================
@@ -394,7 +400,9 @@
             git clone {{ personal_repos.obsidian_vault.url }} {{ personal_repos.obsidian_vault.dest }}
           Then re-run this playbook to disable push.
           {% endif %}
-  when: features.setup_personal_repos | default(false)
+  when:
+    - features.setup_personal_repos | default(false)
+    - not (agent_dual_use | default(false))
   tags: ["agent", "bgovault", "readonly"]
 
 # ============================================================
@@ -406,70 +414,113 @@
     content: |
       # OpenClaw Agent Server - Progressive Trust Guide
 
+      Mode: {{ 'DUAL-USE (layered on existing desktop)' if agent_dual_use | default(false) else 'DEDICATED agent server' }}
+
       ## Architecture
-      - Admin user: {{ target_user }} (SSH, sudo, dotfiles)
-      - Agent user: {{ agent_user }} (restricted, no sudo)
+      - Admin user: {{ target_user }} (SSH, sudo, dotfiles, full desktop)
+      - Agent user: {{ agent_user }} (restricted, no sudo, no docker)
       - Workspace: {{ agent_workspace }}
-      - API keys: {{ agent_workspace }}/config/agent.env
-
-      ## Current Permissions (Initial)
-      - Outbound HTTPS only (cloud APIs)
-      - No GitHub write access (push disabled on bgovault)
-      - No vedur.is VPN/network access
-      - bgovault is read-only (no auto-sync)
-      - {{ agent_user }} has no sudo
-
-      ## Monitoring (from ThinkPad)
-      ```bash
-      ssh <tailscale-hostname> 'tail -f {{ agent_workspace }}/logs/*.log'
-      ssh <tailscale-hostname> 'sudo ufw status'
-      ssh <tailscale-hostname> 'tailscale status'
-      ssh <tailscale-hostname> 'sudo -u {{ agent_user }} ps aux'
-      ```
+      - API keys: {{ agent_workspace }}/config/agent.env (mode 0600, owned by agent)
 
       ## Running OpenClaw
       ```bash
-      sudo -u {{ agent_user }} bash
-      export PATH="$HOME/.local/share/fnm:$PATH"
-      eval "$(fnm env)"
+      sudo -u {{ agent_user }} -i
+      export PATH="$HOME/.local/share/fnm:$PATH" && eval "$(fnm env)"
       source {{ agent_workspace }}/config/agent.env
-      openclaw onboard  # First time setup
+      openclaw onboard --install-daemon    # first-time setup, installs systemd unit
+      openclaw agents list --bindings
+      openclaw gateway                      # start control plane on ws://127.0.0.1:18789
       ```
 
-      ## Expanding Permissions
+      ## Security review — what isolation IS and IS NOT
 
-      ### Level 1: Enable GitHub push on bgovault
+      ### Protected by unix DAC:
+      - Agent cannot read `/home/{{ target_user }}/**` ({{ target_user }} not in {{ agent_user }} group, and vice versa)
+        → protects ssh keys, gpg, password store, browser profiles, bgovault
+      - Agent cannot write to `/etc`, `/usr`, `/opt` (only owns `{{ agent_workspace }}`)
+      - Agent has **no sudo** (`/etc/sudoers.d/{{ agent_user }}` explicitly absent)
+      - Agent is **not in docker group** — docker socket access == root-equivalent escape
+      - API keys in `{{ agent_workspace }}/config/agent.env` are 0600, readable only by {{ agent_user }}
+
+      ### NOT protected (shared resources):
+      - **Network:** same kernel network stack as {{ target_user }}; agent can reach any IP,
+        sniff DNS queries, see ports bound to 0.0.0.0. No per-user firewall on dual-use hosts.
+      - **Kernel:** same kernel and syscall surface — kernel exploit bypasses everything.
+      - **/tmp:** world-readable unless mounted with `noexec` (it isn't by default).
+      - **D-Bus system bus:** agent can talk to systemd, NetworkManager, etc.
+      - **Process visibility:** `ps aux` shows all processes; hidepid is not set.
+
+      ## Progressive Hardening roadmap
+
+      Raise the isolation level as trust in the agent grows — or lower it when something breaks.
+
+      ### Level 1 — per-user network filter (nftables owner match)
+      Restrict outbound traffic only for `{{ agent_user }}` UID, without touching {{ target_user }}:
       ```bash
-      cd ~/notes/bgovault
-      git remote set-url --push origin git@github.com:bennigo/bgovault.git
-      rm .sync-disabled
+      AGENT_UID=$(id -u {{ agent_user }})
+      sudo nft add table inet agent_filter
+      sudo nft 'add chain inet agent_filter output { type filter hook output priority 0 ; }'
+      # Example: allow only GitHub + Anthropic API ranges
+      sudo nft add rule inet agent_filter output meta skuid $AGENT_UID \
+        ip daddr != { 140.82.112.0/20, 185.199.108.0/22, 160.79.104.0/23 } drop
       ```
 
-      ### Level 2: Additional outbound ports
+      ### Level 2 — grant docker access (CAUTION: root-equivalent)
       ```bash
-      sudo ufw allow out <port>/tcp
+      sudo usermod -aG docker {{ agent_user }}
+      # Only do this if you're OK with the agent being effectively root
       ```
 
-      ### Level 3: Grant agent additional group access
+      ### Level 3 — systemd user-slice resource limits
       ```bash
-      sudo usermod -aG <group> {{ agent_user }}
+      sudo systemctl edit user-$(id -u {{ agent_user }}).slice
+      # [Slice]
+      # CPUQuota=50%
+      # MemoryMax=4G
+      # TasksMax=512
       ```
 
-      ## Emergency Lockdown
+      ### Level 4 — full container isolation (systemd-nspawn / podman)
       ```bash
-      sudo ufw default deny outgoing
-      sudo systemctl stop tailscaled
-      sudo pkill -u {{ agent_user }}
+      sudo machinectl clone ubuntu-base openclaw-sandbox
+      # Agent runs in private rootfs + netns
+      ```
+
+      ### Level 5 — dedicated VM
+      Reprovision with `profiles/agent_server.yml` on a separate host (VM or physical box)
+      — full firewall lockdown, Tailscale-only access, zero shared kernel with {{ target_user }}.
+
+      ## Monitoring
+      ```bash
+      sudo -u {{ agent_user }} tail -f {{ agent_workspace }}/logs/*.log
+      sudo -u {{ agent_user }} ps -u {{ agent_user }} fuxw
+      sudo ss -tnp | grep {{ agent_user }}
+      ```
+
+      ## Emergency lockdown
+      ```bash
+      sudo pkill -KILL -u {{ agent_user }}
+      sudo usermod --lock {{ agent_user }}
+      sudo systemctl stop user-$(id -u {{ agent_user }}).slice
       ```
 
       ## Re-provisioning
+      {% if agent_dual_use | default(false) %}
       ```bash
-      # From ThinkPad:
+      # Dual-use (this machine):
+      cd ~/.dotfiles/ansible
+      ansible-playbook bootstrap.yml \
+        --extra-vars "@profiles/agent_addon.yml" --tags agent
+      ```
+      {% else %}
+      ```bash
+      # Dedicated agent server:
       cd ~/.dotfiles/ansible
       ansible-playbook bootstrap.yml -i inventory.yml \
         --extra-vars "@profiles/agent_server.yml" \
         --limit agent_servers
       ```
+      {% endif %}
     dest: "{{ target_home }}/AGENT_SERVER_GUIDE.md"
     owner: "{{ target_user }}"
     group: "{{ target_user }}"
