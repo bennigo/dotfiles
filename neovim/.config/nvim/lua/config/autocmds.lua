@@ -50,24 +50,79 @@ vim.api.nvim_create_autocmd("FileType", {
         end
       end
 
-      -- Fall back to default gx for URLs and non-wikilink text
+      -- Fall back: check for markdown link syntax [text](path) under cursor
       if not target then
-        vim.ui.open(vim.fn.expand("<cfile>"))
+        local cfile = vim.fn.expand("<cfile>")
+
+        -- Extract path from markdown link [text](path) if cursor is on it
+        for s, path in line:gmatch("()%[.-%]%(([^%)]+)%)") do
+          local e = s + #line:match("%[.-%]%([^%)]+%)", s) - 1
+          if col >= s and col <= e then
+            cfile = path
+            break
+          end
+        end
+
+        -- Split off fragment anchor (e.g. "file.md#heading" or "#heading")
+        local filepath, fragment = cfile:match("^(.-)#(.+)$")
+        if not filepath then
+          filepath = cfile
+        end
+
+        -- Helper: jump to heading matching a GitHub-style slug
+        local function jump_to_anchor(slug)
+          slug = slug:lower()
+          local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+          for i, l in ipairs(lines) do
+            local heading = l:match("^#+%s+(.*)")
+            if heading then
+              local h_slug = heading:lower():gsub("%s+", "-"):gsub("[^%w%-]", "")
+              if h_slug == slug then
+                vim.api.nvim_win_set_cursor(0, { i, 0 })
+                return true
+              end
+            end
+          end
+          return false
+        end
+
+        -- Fragment-only anchor: jump within current buffer
+        if fragment and filepath == "" then
+          if not jump_to_anchor(fragment) then
+            vim.notify("Heading not found: #" .. fragment, vim.log.levels.WARN)
+          end
+          return
+        end
+
+        -- Local file: open in buffer instead of external app
+        local resolved = vim.fn.resolve(vim.fn.expand("%:p:h") .. "/" .. filepath)
+        if not filepath:match("^https?://") and vim.fn.filereadable(resolved) == 1 then
+          vim.cmd.edit(resolved)
+          if fragment then
+            if not jump_to_anchor(fragment) then
+              vim.notify("Heading not found: #" .. fragment, vim.log.levels.WARN)
+            end
+          end
+          return
+        end
+
+        -- URLs and non-existent files: system handler
+        vim.ui.open(cfile)
         return
       end
 
-      -- Resolve the target to a vault path
+      -- Resolve wikilink target to a vault path and open in buffer
       local vault = vim.fn.expand("~/notes/bgovault")
       local direct = vault .. "/" .. target
       if vim.fn.filereadable(direct) == 1 then
-        vim.ui.open(direct)
+        vim.cmd.edit(direct)
         return
       end
 
       -- Search vault for the file
       local found = vim.fn.globpath(vault, "**/" .. target, false, true)
       if #found > 0 then
-        vim.ui.open(found[1])
+        vim.cmd.edit(found[1])
       else
         vim.notify("Not found in vault: " .. target, vim.log.levels.WARN)
       end
