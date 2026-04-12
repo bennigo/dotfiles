@@ -6,13 +6,13 @@ bootstrap for fresh machines. Runs on Ubuntu 26.04 (Resolute Raccoon) and 24.04 
 
 ## Quick links
 
-| I want to… | Start here |
-|------------|------------|
-| **Set up a fresh machine** | [`ansible/FIRST_RUN.md`](ansible/FIRST_RUN.md) |
-| **Choose a profile / decide what to install** | [`PLAYBOOK_GUIDE.md`](PLAYBOOK_GUIDE.md) |
-| **Understand the module structure** | [`CLAUDE.md`](CLAUDE.md) |
-| **Deploy configs on an existing system** | See [Stow deployment](#stow-deployment) below |
-| **Sync dotfiles between machines** | [`SYNC_WORKFLOW.md`](SYNC_WORKFLOW.md) |
+| I want to…                                    | Start here                                     |
+| --------------------------------------------- | ---------------------------------------------- |
+| **Set up a fresh machine**                    | [`ansible/FIRST_RUN.md`](ansible/FIRST_RUN.md) |
+| **Choose a profile / decide what to install** | [`PLAYBOOK_GUIDE.md`](PLAYBOOK_GUIDE.md)       |
+| **Understand the module structure**           | [`CLAUDE.md`](CLAUDE.md)                       |
+| **Deploy configs on an existing system**      | See [Stow deployment](#stow-deployment) below  |
+| **Sync dotfiles between machines**            | [`SYNC_WORKFLOW.md`](SYNC_WORKFLOW.md)         |
 
 ## What's in this repo
 
@@ -72,20 +72,20 @@ profile matrix, and step-by-step recipes for common scenarios.
 
 ## Documentation map
 
-| File | Purpose |
-|------|---------|
-| [`CLAUDE.md`](CLAUDE.md) | Hub for per-module documentation (AI agent context) |
-| [`PLAYBOOK_GUIDE.md`](PLAYBOOK_GUIDE.md) | Decision tree, profile comparison, setup recipes |
-| [`STOW_ORDER.md`](STOW_ORDER.md) | Module deployment order, dependencies, conflicts |
-| [`SYNC_WORKFLOW.md`](SYNC_WORKFLOW.md) | Multi-machine sync architecture |
-| [`SYNC_DEPLOYMENT.md`](SYNC_DEPLOYMENT.md) | Sync system deployment guide |
-| [`ansible/FIRST_RUN.md`](ansible/FIRST_RUN.md) | Fresh 26.04 two-phase bootstrap procedure |
-| [`ansible/README.md`](ansible/README.md) | Full Ansible usage guide |
-| [`ansible/INSTALL.md`](ansible/INSTALL.md) | Detailed installation walkthrough |
-| [`ansible/DATABASE_SETUP.md`](ansible/DATABASE_SETUP.md) | PostgreSQL 18 setup + credential management |
-| [`system/credentials.md`](system/credentials.md) | GPG / Pass / Ansible Vault workflow |
-| [`system/emergency-recovery.md`](system/emergency-recovery.md) | Credential lockout recovery |
+| File                                                           | Purpose                                             |
+| -------------------------------------------------------------- | --------------------------------------------------- |
+| [`CLAUDE.md`](CLAUDE.md)                                       | Hub for per-module documentation (AI agent context) |
+| [`PLAYBOOK_GUIDE.md`](PLAYBOOK_GUIDE.md)                       | Decision tree, profile comparison, setup recipes    |
+| [`STOW_ORDER.md`](STOW_ORDER.md)                               | Module deployment order, dependencies, conflicts    |
+| [`SYNC_WORKFLOW.md`](SYNC_WORKFLOW.md)                         | Multi-machine sync architecture                     |
+| [`SYNC_DEPLOYMENT.md`](SYNC_DEPLOYMENT.md)                     | Sync system deployment guide                        |
+| [`ansible/FIRST_RUN.md`](ansible/FIRST_RUN.md)                 | Fresh 26.04 two-phase bootstrap procedure           |
+| [`ansible/README.md`](ansible/README.md)                       | Full Ansible usage guide                            |
+| [`ansible/INSTALL.md`](ansible/INSTALL.md)                     | Detailed installation walkthrough                   |
+| [`ansible/DATABASE_SETUP.md`](ansible/DATABASE_SETUP.md)       | PostgreSQL 18 setup + credential management         |
+| [`system/credentials.md`](system/credentials.md)               | GPG / Pass / Ansible Vault workflow                 |
+| [`system/emergency-recovery.md`](system/emergency-recovery.md) | Credential lockout recovery                         |
 
 ---
 
-*Last reviewed: 2026-04-11*
+_Last reviewed: 2026-04-11_

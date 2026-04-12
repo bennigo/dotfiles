@@ -155,7 +155,7 @@ This configuration extends LazyVim rather than replacing it:
    - `options.lua`: Editor settings (spell check, line numbers, etc.)
    - `keymaps.lua`: Global keymaps
    - `lazy.lua`: Plugin manager setup
-   - `autocmds.lua`: Auto commands
+   - `autocmds.lua`: Auto commands (Wayland env refresh, markdown `gx` link handler, Mermaid auto-PDF)
 
 2. **Plugin Configs** (`lua/plugins/`)
    - Individual plugin configurations
@@ -356,6 +356,22 @@ Shared helpers: `now_tt()`, `now_dt()`, `now_td()`, `unit_to_seconds()`, `future
 - `*`, `#`, `g*`, `g#`: Search word under cursor centered (zz)
 - `J`: Join lines preserving cursor position
 
+### Markdown Link Following (gx)
+
+**File**: `lua/config/autocmds.lua`
+**Scope**: Markdown buffers only (FileType autocmd)
+
+`gx` in markdown buffers resolves links in this priority:
+
+1. **Wikilinks** `[[target]]` or `![[target]]` — resolves in vault (`~/notes/bgovault/`), opens in buffer
+2. **Markdown links** `[text](path)` — if path is a readable local file, opens in buffer
+3. **Relative paths** under cursor — if readable, opens in buffer
+4. **URLs** (`https://...`) — opens with system handler (xdg-open)
+5. **Fallback** — `vim.ui.open()` for anything else
+
+Local files always open in the current Neovim window as a new buffer. Only URLs
+and unresolvable paths go to the external system handler.
+
 ### Mermaid Diagram Workflow
 
 **Keymap**: `<leader>mp` (Mermaid Preview)
@@ -417,6 +433,7 @@ Shared helpers: `now_tt()`, `now_dt()`, `now_td()`, `unit_to_seconds()`, `future
 **Bullets**: bullets.vim (smart lists)
 **Preview**: markdown-preview.nvim (browser)
 **Integration**: Obsidian.nvim for vault files
+**Link following**: `gx` opens local files in buffer, URLs externally (autocmds.lua)
 **Diagrams**: Mermaid support via custom workflow
 **Snippets**: LuaSnip markdown snippets for timestamps, tasks, journal entries (see Snippets section above)
 
