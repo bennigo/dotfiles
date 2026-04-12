@@ -108,3 +108,7 @@ Core dependencies used across multiple scripts:
 - **MTP system setup**: `system/CLAUDE.md` (udev rules, helper scripts)
 - **Sync workflow**: `SYNC_WORKFLOW.md`
 - **Top-level overview**: `../CLAUDE.md`
+
+---
+
+*Last reviewed: 2026-04-11*

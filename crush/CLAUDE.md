@@ -79,3 +79,7 @@ Ctrl+O                   # Open external editor for prompt
 - **Claude Code MCP config**: `claude-code/CLAUDE.md`
 - **Ollama setup**: `ollama/README.md`
 - **Shell env vars**: `zsh/.config/zsh/exports.zsh`
+
+---
+
+*Last reviewed: 2026-04-11*

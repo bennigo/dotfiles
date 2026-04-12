@@ -200,3 +200,7 @@ Edit source files in this repository, not deployed locations in `~/.config/`.
 | `SYNC_WORKFLOW.md` | Multi-machine sync architecture |
 | `SYNC_DEPLOYMENT.md` | Sync system deployment guide |
 | `/home/bgo/CLAUDE.md` | Global workspace context |
+
+---
+
+*Last reviewed: 2026-04-11*

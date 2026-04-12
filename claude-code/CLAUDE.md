@@ -133,3 +133,7 @@ Ansible bootstrap automatically deploys this with other dotfiles.
 - **Tmux remote control**: `tmux/.config/tmux/CLAUDE.md`
 - **Database setup**: `ansible/DATABASE_SETUP.md`
 - **Top-level overview**: `../CLAUDE.md`
+
+---
+
+*Last reviewed: 2026-04-11*

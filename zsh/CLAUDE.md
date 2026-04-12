@@ -82,3 +82,7 @@ stow -R --ignore='\.zshenv' zsh
 - **Sync system**: `SYNC_WORKFLOW.md` (aliases-sync.zsh, hooks-sync.zsh)
 - **Claude Code MCP env vars**: `claude-code/CLAUDE.md`
 - **Top-level overview**: `../CLAUDE.md`
+
+---
+
+*Last reviewed: 2026-04-11*

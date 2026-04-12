@@ -87,3 +87,7 @@ Hardware roles can be manually overridden via `--extra-vars`.
 - **System files**: `../system/CLAUDE.md` (hardware config, credential management)
 - **Database credentials**: `DATABASE_SETUP.md`
 - **Top-level overview**: `../CLAUDE.md`
+
+---
+
+*Last reviewed: 2026-04-11*

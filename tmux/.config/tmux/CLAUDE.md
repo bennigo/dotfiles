@@ -107,3 +107,7 @@ if-shell '! tmux list-windows -F "#W" | grep -q "^claude-rc$"' {
 - **Systemd tmux service**: `systemd/CLAUDE.md` (`tmux.service`)
 - **Claude Code remote control**: `claude-code/CLAUDE.md`
 - **Top-level overview**: `../../CLAUDE.md`
+
+---
+
+*Last reviewed: 2026-04-11*

@@ -4,7 +4,7 @@ This directory contains Docker Engine configuration, utility scripts, and compos
 
 ## Overview
 
-**Docker Version**: 28.4.0 (Docker Engine - Community)
+**Docker Version**: 29.2.1 (Docker Engine - Community)
 **Compose Version**: v2.39.4 (integrated plugin)
 **Storage Driver**: overlay2
 **Cgroup Driver**: systemd (Cgroup v2)
@@ -637,6 +637,10 @@ services:
 ---
 
 **Created**: 2025-10-05
-**Docker Version**: 28.4.0
+**Docker Version**: 29.2.1
 **Purpose**: Production-ready Docker configuration for scientific computing and web development
 **Context Level**: Docker-specific configuration and workflow guidance
+
+---
+
+*Last reviewed: 2026-04-11*

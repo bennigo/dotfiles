@@ -62,3 +62,7 @@ Updates every 60 seconds.
 - **Sync system**: `SYNC_WORKFLOW.md`, `local_bin/CLAUDE.md` (dotfiles-sync)
 - **Sway integration**: `sway/.config/sway/CLAUDE.md`
 - **Top-level overview**: `../CLAUDE.md`
+
+---
+
+*Last reviewed: 2026-04-11*
