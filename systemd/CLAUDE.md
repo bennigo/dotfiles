@@ -64,3 +64,7 @@ systemctl --user daemon-reload
 - **Sync system**: `SYNC_WORKFLOW.md`, `SYNC_DEPLOYMENT.md`
 - **MTP setup**: `system/CLAUDE.md` (udev rules, device configuration)
 - **Top-level overview**: `../CLAUDE.md`
+
+---
+
+*Last reviewed: 2026-04-11*

@@ -431,8 +431,18 @@ bindsym $mod+key command
 - [ ] Test Nvidia 580 driver when available in Ubuntu 25.04
 - [ ] Consider elogind vs systemd-logind for non-systemd setups
 
+## Cross-References
+
+| File | Content |
+|------|---------|
+| `system/CLAUDE.md` | GPU/NVIDIA configuration, hardware fixes |
+| `local_bin/CLAUDE.md` | `sway-shortcuts.sh` and other sway-integrated scripts |
+| `waybar/CLAUDE.md` | Status bar modules and custom scripts |
+| `claude-code/CLAUDE.md` | Notification hooks (Mako integration via D-Bus) |
+| `systemd/CLAUDE.md` | User services that run under the sway session |
+| `PLAYBOOK_GUIDE.md` | Setup recipes for desktop profiles that include sway |
+| `STOW_ORDER.md` | Stow deployment (sway is independent, no ordering needed) |
+
 ---
 
-**Last Updated**: 2025-10-08
-**Maintainer**: BGO
-**Status**: Production - tested on fresh Ubuntu 25.04 installation
+*Last reviewed: 2026-04-11*

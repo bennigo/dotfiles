@@ -69,3 +69,7 @@ firefox/
 - **Sway keybindings**: `sway/.config/sway/CLAUDE.md`
 - **Launcher scripts**: `local_bin/CLAUDE.md` (firefox-profile, toggle-firefox-scratchpad)
 - **Top-level overview**: `../CLAUDE.md`
+
+---
+
+*Last reviewed: 2026-04-11*

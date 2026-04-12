@@ -170,3 +170,7 @@ OAuth credentials for `@modelcontextprotocol/server-gdrive`:
 - **Systemd services**: `../systemd/CLAUDE.md`
 - **MTP scripts**: `../local_bin/` (mtp-automount, mount-yolobox)
 - **Global workspace context**: `/home/bgo/CLAUDE.md`
+
+---
+
+*Last reviewed: 2026-04-11*

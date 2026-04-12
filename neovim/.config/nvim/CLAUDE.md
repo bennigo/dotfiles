@@ -774,3 +774,7 @@ See: `~/.dotfiles/ansible/DATABASE_SETUP.md`
 **Base Framework**: LazyVim
 **Primary Use Cases**: Scientific computing (GPS/GNSS), Knowledge management (Obsidian), Multi-language development
 **Context Level**: Plugin-specific guidance for Neovim configuration
+
+---
+
+*Last reviewed: 2026-04-11*
