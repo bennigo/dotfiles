@@ -242,6 +242,7 @@ bindsym $mod+Shift+p exec $term --class "clipse" zsh -i ${HOME}/.local/bin/run_s
 # cisco secure client
     exec_always --no-startup-id gtk-launch com.cisco.secureclient.gui.desktop
     exec --no-startup-id gtk-launch obsidian.desktop
+    exec --no-startup-id google-chrome-stable
     exec --no-startup-id $term --class "terminal_floating"
 
 # Browser profiles on dedicated workspaces (staggered to avoid snap race condition)
@@ -266,7 +267,9 @@ bindsym $mod+y exec ~/.local/bin/sat-viewer
 ## Scratchpad // Show floating terminal // 🪟🖥️ ##
 bindsym $mod+Shift+Return [app_id="terminal_floating"] scratchpad show
 ## Scratchpad // Toggle default Firefox scratchpad // 🦊 ##
-bindsym $mod+Shift+b exec ~/.local/bin/toggle-firefox-scratchpad
+bindsym $mod+b exec ~/.local/bin/toggle-firefox-scratchpad
+## Scratchpad // Show Chrome from scratchpad // 🌐 ##
+bindsym $mod+Shift+b [app_id="google-chrome"] scratchpad show, move position center
 
 # Screenshot the monitor
 # take screenshot and copy to clipboard
@@ -420,7 +423,7 @@ bindsym $mod+Shift+0 move container to workspace number 10
 # $mod+b or $mod+v, for horizontal and vertical splits
 # respectively.
 ## Layout // Horizontal split // ↔️ ##
-bindsym $mod+b splith
+bindsym $mod+backslash splith
 ## Layout // Vertical split // ↕️ ##
 bindsym $mod+v splitv
 
@@ -530,6 +533,7 @@ for_window [app_id="com.cisco.secureclient.gui"] move scratchpad, floating enabl
 # Obsidian can launch as native Wayland (app_id) or XWayland (class) — match both
 for_window [app_id="obsidian"] move scratchpad, floating enable, resize set width 2000 px height 1190 px, move position center
 for_window [class="obsidian"] move scratchpad, floating enable, resize set width 2000 px height 1190 px, move position center
+for_window [app_id="google-chrome"] move scratchpad, floating enable, resize set width 2000 px height 1190 px, move position center
 for_window [app_id="org.zotero.Zotero"] move scratchpad, floating enable, resize set width 1900 px height 1100 px, move position center
 for_window [app_id="^libreoffice"] floating enable, resize set width 3200 px height 2000 px, move scratchpad
 for_window [app_id="terminal_floating"] move scratchpad, move container to workspace current, resize set width 1500 px height 900 px

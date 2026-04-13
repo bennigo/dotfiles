@@ -428,3 +428,25 @@
       become: no
       when: obsidian_install_result.failed == false
   tags: ["desktop", "obsidian", "applications"]
+
+- name: Install Google Chrome
+  block:
+    - name: Add Google Chrome GPG key
+      shell: |
+        curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | \
+        gpg --dearmor -o /usr/share/keyrings/google-chrome-keyring.gpg
+      args:
+        creates: /usr/share/keyrings/google-chrome-keyring.gpg
+
+    - name: Add Google Chrome repository
+      apt_repository:
+        repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main"
+        state: present
+        filename: google-chrome
+        update_cache: yes
+
+    - name: Install Google Chrome
+      apt:
+        name: google-chrome-stable
+        state: present
+  tags: ["desktop", "chrome", "applications"]
