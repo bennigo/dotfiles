@@ -1,119 +1,123 @@
 #!/usr/bin/env python3
 """
-Script to add a signature image to a PDF document.
-Usage: python sign_pdf.py <input.pdf> <signature.png> <output.pdf> [--position x y] [--page N]
+Add a signature image to a PDF document.
+
+Uses reportlab to create a transparent overlay and pypdf to merge it,
+preserving the original PDF's vector text quality.
+
+Supports auto-detection: searches for a name pattern (e.g. "Benedikt Gunnar")
+and places the signature on the line just above it.
+
+Usage:
+    sign-pdf input.pdf signature.png signed.pdf --auto
+    sign-pdf input.pdf signature.png signed.pdf --auto --name "Jón Jónsson"
+    sign-pdf input.pdf signature.png signed.pdf --position 100 200
+    sign-pdf input.pdf signature.png signed.pdf --page -1 --width 200
+    sign-pdf input.pdf signature.png signed.pdf --preview
 """
+import io
+import os
+import subprocess
 import sys
 from pathlib import Path
-from pypdf import PdfReader, PdfWriter, PageObject
-from PIL import Image
-import io
+
+from pypdf import PdfReader, PdfWriter
+from reportlab.lib.utils import ImageReader
+from reportlab.pdfgen import canvas
+
+DEFAULT_NAME = "Benedikt Gunnar"
+
+
+def find_name_position(
+    reader: PdfReader, name_pattern: str
+) -> tuple[int, float, float, float] | None:
+    """
+    Search all pages for text matching name_pattern.
+
+    Returns (page_index, abs_x, abs_y, text_width) using pypdf's visitor_text
+    callback with cm+tm matrix composition for absolute coordinates.
+    Returns None if not found.
+    """
+    for page_idx, page in enumerate(reader.pages):
+        matches: list[tuple[float, float, float]] = []
+
+        def visitor(text, cm, tm, font_dict, font_size):
+            if name_pattern.lower() in text.lower():
+                # Compose cm (current transform) and tm (text matrix)
+                # to get absolute page coordinates
+                abs_x = cm[0] * tm[4] + cm[2] * tm[5] + cm[4]
+                abs_y = cm[1] * tm[4] + cm[3] * tm[5] + cm[5]
+                text_width = len(text) * font_size * 0.5
+                matches.append((abs_x, abs_y, text_width))
+
+        page.extract_text(visitor_text=visitor)
+
+        if matches:
+            abs_x, abs_y, text_width = matches[0]
+            return page_idx, abs_x, abs_y, text_width
+
+    return None
 
 
 def add_signature_to_pdf(
     input_pdf: str,
     signature_image: str,
     output_pdf: str,
-    position: tuple[float, float] = None,
+    position: tuple[float, float] | None = None,
     page_num: int = 0,
-    signature_width: float = 150,
-    signature_height: float = 50,
-):
+    signature_width: float = 180,
+    signature_height: float = 35,
+) -> tuple[int, float, float]:
     """
-    Add a signature image to a PDF.
+    Add a signature image to a PDF page via overlay merge.
 
-    Args:
-        input_pdf: Path to input PDF file
-        signature_image: Path to signature image (PNG recommended)
-        output_pdf: Path to output PDF file
-        position: (x, y) position in points from bottom-left corner.
-                  If None, defaults to bottom-right corner
-        page_num: Page number to sign (0-indexed). Default is first page.
-        signature_width: Width of signature in points (default 150)
-        signature_height: Height of signature in points (default 50)
+    Returns (page_num, x, y) where the signature was placed.
     """
-    # Read the input PDF
     reader = PdfReader(input_pdf)
-    writer = PdfWriter()
 
-    # Get the page to sign
     if page_num >= len(reader.pages):
         print(f"Warning: Page {page_num} doesn't exist. Using last page.")
         page_num = len(reader.pages) - 1
 
-    # Process each page
+    writer = PdfWriter()
+    x, y = 0.0, 0.0
+
     for i, page in enumerate(reader.pages):
         if i == page_num:
-            # Get page dimensions
             page_width = float(page.mediabox.width)
             page_height = float(page.mediabox.height)
 
-            # Calculate position if not specified (bottom-right with 20pt margin)
+            # Default: bottom-right with 20pt margin
             if position is None:
                 x = page_width - signature_width - 20
                 y = 20
             else:
                 x, y = position
 
-            # Load and prepare signature image
-            img = Image.open(signature_image)
+            # Create overlay PDF with signature image
+            overlay_buffer = io.BytesIO()
+            c = canvas.Canvas(overlay_buffer, pagesize=(page_width, page_height))
+            c.drawImage(
+                ImageReader(signature_image),
+                x, y,
+                width=signature_width,
+                height=signature_height,
+                mask="auto",
+                preserveAspectRatio=True,
+            )
+            c.save()
 
-            # Convert to RGB if necessary (remove transparency)
-            if img.mode in ('RGBA', 'LA', 'P'):
-                # Create white background
-                background = Image.new('RGB', img.size, (255, 255, 255))
-                if img.mode == 'P':
-                    img = img.convert('RGBA')
-                if 'A' in img.mode:
-                    background.paste(img, mask=img.split()[-1])  # Use alpha channel as mask
-                else:
-                    background.paste(img)
-                img = background
-
-            # Resize image to fit signature dimensions while maintaining aspect ratio
-            img.thumbnail((signature_width, signature_height), Image.Resampling.LANCZOS)
-
-            # Save to bytes
-            img_bytes = io.BytesIO()
-            img.save(img_bytes, format='PNG')
-            img_bytes.seek(0)
-
-            # Create a new PDF page with the signature
-            from pypdf.generic import NameObject, DictionaryObject, ArrayObject, NumberObject
-
-            # Add image to page
-            page.merge_page(page)  # This is a workaround to ensure proper page handling
-
-            # Alternative approach: use reportlab to create overlay
-            try:
-                from reportlab.pdfgen import canvas
-                from reportlab.lib.utils import ImageReader
-
-                # Create overlay PDF with signature
-                overlay_buffer = io.BytesIO()
-                c = canvas.Canvas(overlay_buffer, pagesize=(page_width, page_height))
-                c.drawImage(ImageReader(Image.open(signature_image)),
-                           x, y, width=signature_width, height=signature_height,
-                           mask='auto', preserveAspectRatio=True)
-                c.save()
-
-                # Merge overlay with original page
-                overlay_buffer.seek(0)
-                overlay_pdf = PdfReader(overlay_buffer)
-                page.merge_page(overlay_pdf.pages[0])
-
-            except ImportError:
-                print("Warning: reportlab not installed. Signature may not be added correctly.")
-                print("Install with: uv pip install --system reportlab")
+            # Merge overlay onto original page
+            overlay_buffer.seek(0)
+            overlay_pdf = PdfReader(overlay_buffer)
+            page.merge_page(overlay_pdf.pages[0])
 
         writer.add_page(page)
 
-    # Write output PDF
-    with open(output_pdf, 'wb') as output_file:
-        writer.write(output_file)
+    with open(output_pdf, "wb") as f:
+        writer.write(f)
 
-    print(f"✓ Signed PDF saved to: {output_pdf}")
-    print(f"  Signature added to page {page_num + 1} at position ({x:.1f}, {y:.1f})")
+    return page_num, x, y
 
 
 def main():
@@ -122,37 +126,60 @@ def main():
     parser = argparse.ArgumentParser(
         description="Add signature image to PDF document",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
+        epilog="""\
 Examples:
-  # Sign first page at bottom-right corner
-  python sign_pdf.py input.pdf signature.png output.pdf
+  # Auto-detect signature line (searches for "Benedikt Gunnar")
+  sign-pdf document.pdf signature.png signed.pdf --auto
 
-  # Sign specific position
-  python sign_pdf.py input.pdf signature.png output.pdf --position 100 100
+  # Auto-detect with custom name
+  sign-pdf document.pdf signature.png signed.pdf --auto --name "Jón Jónsson"
 
-  # Sign last page
-  python sign_pdf.py input.pdf signature.png output.pdf --page -1
+  # Manual position
+  sign-pdf document.pdf signature.png signed.pdf --position 100 100
 
-  # Custom signature size
-  python sign_pdf.py input.pdf signature.png output.pdf --width 200 --height 80
-        """
+  # Sign last page, custom size
+  sign-pdf document.pdf signature.png signed.pdf --page -1 --width 200 --height 80
+
+  # Preview result in zathura
+  sign-pdf document.pdf signature.png signed.pdf --auto --preview
+        """,
     )
 
     parser.add_argument("input_pdf", help="Input PDF file")
     parser.add_argument("signature_image", help="Signature image file (PNG/JPG)")
     parser.add_argument("output_pdf", help="Output PDF file")
-    parser.add_argument("--position", nargs=2, type=float, metavar=("X", "Y"),
-                       help="Position in points from bottom-left corner (default: bottom-right)")
-    parser.add_argument("--page", type=int, default=0,
-                       help="Page number to sign (0-indexed, -1 for last page)")
-    parser.add_argument("--width", type=float, default=150,
-                       help="Signature width in points (default: 150)")
-    parser.add_argument("--height", type=float, default=50,
-                       help="Signature height in points (default: 50)")
+    parser.add_argument(
+        "--auto", action="store_true",
+        help=f'Auto-detect signature line by searching for name (default: "{DEFAULT_NAME}")',
+    )
+    parser.add_argument(
+        "--name", type=str, default=DEFAULT_NAME,
+        help=f'Name to search for in auto mode (default: "{DEFAULT_NAME}")',
+    )
+    parser.add_argument(
+        "--position", nargs=2, type=float, metavar=("X", "Y"),
+        help="Position in points from bottom-left corner",
+    )
+    parser.add_argument(
+        "--page", type=int, default=None,
+        help="Page number to sign (0-indexed, -1 for last page)",
+    )
+    parser.add_argument(
+        "--width", type=float, default=180,
+        help="Signature width in points (default: 180)",
+    )
+    parser.add_argument(
+        "--height", type=float, default=35,
+        help="Signature height in points (default: 35)",
+    )
+    parser.add_argument(
+        "--preview", action="store_true",
+        help="Open the signed PDF in zathura after signing",
+    )
 
     args = parser.parse_args()
 
-    # Validate files
+    # Validate inputs
     if not Path(args.input_pdf).exists():
         print(f"Error: Input PDF not found: {args.input_pdf}")
         sys.exit(1)
@@ -161,21 +188,59 @@ Examples:
         print(f"Error: Signature image not found: {args.signature_image}")
         sys.exit(1)
 
-    # Handle negative page numbers
-    if args.page < 0:
-        reader = PdfReader(args.input_pdf)
-        args.page = len(reader.pages) + args.page
+    position = tuple(args.position) if args.position else None
+    page_num = args.page
 
-    # Add signature
-    add_signature_to_pdf(
+    # Auto-detect mode: find the name and place signature above it
+    if args.auto:
+        reader = PdfReader(args.input_pdf)
+        result = find_name_position(reader, args.name)
+        if result is None:
+            print(f'Error: Could not find "{args.name}" in {args.input_pdf}')
+            sys.exit(1)
+
+        found_page, name_x, name_y, text_width = result
+        print(f'Found "{args.name}" on page {found_page + 1} at ({name_x:.0f}, {name_y:.0f})')
+
+        if page_num is None:
+            page_num = found_page
+
+        if position is None:
+            # Left-align signature with the name text,
+            # place it above the signature line
+            sig_x = name_x
+            # Place above the signature line, below "Fyrir hönd..." text
+            sig_y = name_y + 22
+            position = (sig_x, sig_y)
+
+    # Defaults if nothing was set
+    if page_num is None:
+        page_num = 0
+
+    # Handle negative page numbers
+    if page_num < 0:
+        reader = PdfReader(args.input_pdf)
+        page_num = len(reader.pages) + page_num
+
+    signed_page, x, y = add_signature_to_pdf(
         args.input_pdf,
         args.signature_image,
         args.output_pdf,
-        position=tuple(args.position) if args.position else None,
-        page_num=args.page,
+        position=position,
+        page_num=page_num,
         signature_width=args.width,
         signature_height=args.height,
     )
+
+    print(f"Signed PDF saved to: {args.output_pdf}")
+    print(f"  Signature on page {signed_page + 1} at ({x:.0f}, {y:.0f})")
+
+    if args.preview:
+        subprocess.Popen(
+            ["zathura", args.output_pdf],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
 
 
 if __name__ == "__main__":
