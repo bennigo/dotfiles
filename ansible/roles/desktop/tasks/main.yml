@@ -49,6 +49,8 @@
       - flatpak
       - jmtpfs            # FUSE-based MTP filesystem for device file transfer
       - mtp-tools          # MTP device detection and diagnostics
+      - qpdf              # PDF transformation and overlay tool
+      - xournalpp         # PDF annotation and signature tool
     state: present
   tags: ["desktop", "utilities"]
 
