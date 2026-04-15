@@ -59,6 +59,7 @@ return {
 
           -- Common Obsidian attachments folders
           local candidates = {
+            vim.fs.joinpath(vault, "Assets", "diagrams", path),
             vim.fs.joinpath(vault, "Assets", "attachments", path),
             vim.fs.joinpath(vault, "assets", "attachments", path),
             vim.fs.joinpath(vault, "Attachments", path),

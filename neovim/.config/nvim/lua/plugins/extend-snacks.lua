@@ -23,6 +23,7 @@ return {
       end
       local candidates = {
         vault .. "/" .. src,
+        vault .. "/Assets/diagrams/" .. src,
         vault .. "/Assets/charts/" .. src,
         vault .. "/Assets/attachments/" .. src,
         vault .. "/Assets/" .. src,
