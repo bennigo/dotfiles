@@ -50,6 +50,30 @@ vim.api.nvim_create_autocmd("FileType", {
         end
       end
 
+      -- Excalidraw embed: open associated PNG with imv
+      if target and target:match("%.excalidraw$") then
+        local row = vim.api.nvim_win_get_cursor(0)[1]
+        local total = vim.api.nvim_buf_line_count(0)
+        -- Search next 3 lines for %%png: path%%
+        for i = row, math.min(row + 3, total) do
+          local next_line = vim.api.nvim_buf_get_lines(0, i - 1, i, false)[1] or ""
+          local png_path = next_line:match("%%%%png:%s*(.-)%%%%")
+          if png_path then
+            local vault = vim.fn.expand("~/notes/bgovault")
+            local full = vault .. "/" .. png_path
+            if vim.fn.filereadable(full) == 1 then
+              vim.fn.jobstart({ "imv", full }, { detach = true })
+              return
+            else
+              vim.notify("PNG not found: " .. full, vim.log.levels.WARN)
+              return
+            end
+          end
+        end
+        vim.notify("No %%png: reference found near excalidraw embed", vim.log.levels.WARN)
+        return
+      end
+
       -- Fall back: check for markdown link syntax [text](path) under cursor
       if not target then
         local cfile = vim.fn.expand("<cfile>")

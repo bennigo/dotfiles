@@ -264,6 +264,8 @@ bindsym $mod+Shift+d exec /home/bgo/.local/bin/toggle-libreoffice.sh
 bindsym $mod+g [app_id="org.zotero.Zotero"] scratchpad show, move position center
 ## Scratchpad // Toggle satellite imagery viewer // 🛰️ ##
 bindsym $mod+y exec ~/.local/bin/sat-viewer
+## Scratchpad // Toggle diagram viewer (imv) // 📊 ##
+bindsym $mod+Shift+g [app_id="imv"] scratchpad show, move position center
 ## Scratchpad // Show floating terminal // 🪟🖥️ ##
 bindsym $mod+Shift+Return [app_id="terminal_floating"] scratchpad show
 ## Scratchpad // Toggle default Firefox scratchpad // 🦊 ##
@@ -527,6 +529,7 @@ for_window [app_id="(?i)(?:htop)"] floating enable, resize set width 1900 px hei
 
 for_window [app_id="Cisco Secure Client"] floating enable, sticky enable
 for_window [app_id="org.gnome.Calculator"] floating enable,  sticky enable
+for_window [app_id="imv"] floating enable, resize set width 1800 px height 1100 px, move scratchpad, scratchpad show, move position center
 
 
 for_window [app_id="com.cisco.secureclient.gui"] move scratchpad, floating enable
