@@ -8,14 +8,7 @@
       ]
     },
     "brave-search": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@brave/brave-search-mcp-server"
-      ],
-      "env": {
-        "BRAVE_API_KEY": "${BRAVE_API_KEY}"
-      }
+      "command": "/home/bgo/.scripts/brave-mcp-wrapper.sh"
     },
     "postgres-local": {
       "command": "uv",
