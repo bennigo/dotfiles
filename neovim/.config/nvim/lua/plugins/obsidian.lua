@@ -658,6 +658,7 @@ return {
 
     -- New command format (legacy_commands = false)
     vim.keymap.set("n", "<leader>ob", "<cmd>Obsidian backlinks<cr>", { desc = "[O]bsidian [B]backlinks" })
+    vim.keymap.set("n", "<leader>ol", "<cmd>Obsidian links<cr>", { desc = "[O]bsidian [L]inks (outgoing)" })
     vim.keymap.set("n", "<leader>or", "<cmd>Obsidian rename<cr>", { desc = "[O]bsidian [R]ename" })
     vim.keymap.set("n", "<leader>oo", "<cmd>Obsidian open<cr>", { desc = "[O]bsidian [O]pen" })
     vim.keymap.set("n", "<leader>oT", "<cmd>Obsidian template<cr>", { desc = "[O]bsidian insert from [T]emplate" })
