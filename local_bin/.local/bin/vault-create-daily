@@ -125,7 +125,7 @@ resource: ""
 
 # ${NOTE_DATE}
 
-<< [[${PREV}]] | [[${NEXT}]] >>
+<< [[Journal/daily/${PREV}|${PREV}]] | [[Journal/daily/${NEXT}|${NEXT}]] >>
 
 ## Skyndiminnispunktar
 
@@ -151,6 +151,11 @@ due before ${NOTE_DATE}
 limit 10
 short mode
 \`\`\`
+
+## Alþjóðastofnanir / UN
+
+> UNSC/UNGA — fundir, atkvæðagreiðslur, yfirlýsingar. Sjá [[1775694600-unsc-tracker-moc|UNSC Tracker]].
+
 
 ## Dagbók
 

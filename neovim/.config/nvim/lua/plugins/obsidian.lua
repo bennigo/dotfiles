@@ -399,50 +399,154 @@ local function setup()
       -- Runs anytime you enter the buffer for a note.
       ---@param note obsidian.Note
       enter_note = function(note)
-        -- Auto-apply daily template when a bare daily note is opened (e.g. from wikilink follow).
-        -- Uses the note's date (from filename) instead of wall-clock date for all substitutions.
+        -- For daily notes: render any unresolved Templater <% ... %> expressions and
+        -- the <%* ... %> execution block that Obsidian Templater would have processed.
+        -- Also auto-applies the daily template for "bare" notes (only frontmatter, no body) —
+        -- useful when a wikilink click on mobile or another device created an empty daily note.
         local path = tostring(note.path)
         local date_str = path:match("Journal/daily/(%d%d%d%d%-%d%d%-%d%d)%.md$")
         if not date_str then
           return
         end
-        -- Check if note is bare (only frontmatter, no body content)
-        local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-        local past_frontmatter = false
-        local frontmatter_count = 0
-        for _, line in ipairs(lines) do
-          if line:match("^%-%-%-") then
-            frontmatter_count = frontmatter_count + 1
-            if frontmatter_count == 2 then
-              past_frontmatter = true
-            end
-          elseif past_frontmatter and line:match("%S") then
-            return -- has real content already
-          end
-        end
-        if not past_frontmatter then return end
 
-        -- Parse note date from filename and compute yesterday/tomorrow
+        -- Compute date context (use note-date, not wall clock, so historical notes render correctly)
         local y, m, d = date_str:match("(%d+)-(%d+)-(%d+)")
         local note_ts = os.time({ year = tonumber(y), month = tonumber(m), day = tonumber(d), hour = 12 })
-        local yesterday = os.date("%Y-%m-%d", note_ts - 86400)
-        local tomorrow = os.date("%Y-%m-%d", note_ts + 86400)
-        local time_now = os.date("%H:%M")
+        local ctx = {
+          date = date_str,
+          yesterday = os.date("%Y-%m-%d", note_ts - 86400),
+          tomorrow = os.date("%Y-%m-%d", note_ts + 86400),
+          time = os.date("%H:%M"),
+          alias_day = string.format(
+            "📅 %s %d, %s day: %s",
+            os.date("%B", note_ts),
+            tonumber(os.date("%d", note_ts)),
+            os.date("%Y", note_ts),
+            tostring(tonumber(os.date("%j", note_ts))) -- strip leading zeros
+          ),
+        }
 
-        -- Read template, strip its frontmatter, substitute with note-correct dates
-        local vault = vim.fn.expand("~/notes/bgovault")
-        local f = io.open(vault .. "/Templates/template_daily.md", "r")
-        if not f then return end
-        local tmpl = f:read("*a")
-        f:close()
-        tmpl = tmpl:gsub("^%-%-%-.-%-%-%-\n?", "")
-        tmpl = tmpl:gsub("{{date}}", date_str)
-        tmpl = tmpl:gsub("{{yesterday}}", yesterday)
-        tmpl = tmpl:gsub("{{tomorrow}}", tomorrow)
-        tmpl = tmpl:gsub("{{time}}", time_now)
+        -- Escape Lua pattern magic characters so a literal string can be used as a pattern
+        local function lua_escape(s)
+          return (s:gsub("([%^%$%(%)%%%.%[%]%*%+%-%?])", "%%%1"))
+        end
+        -- Escape % in gsub replacement (% is special there too)
+        local function gsub_repl(s)
+          return (s:gsub("%%", "%%%%"))
+        end
 
-        local new_lines = vim.split(tmpl, "\n")
-        vim.api.nvim_buf_set_lines(0, #lines, #lines, false, new_lines)
+        -- Render Templater/mustache tags over a text blob.
+        -- Handles the expressions actually used in Templates/template_daily.md —
+        -- add more entries here when the template grows.
+        local function render_tags(text)
+          -- 1. Strip <%* ... %> execution blocks entirely (Obsidian-only — run inside Obsidian, no-op in Neovim).
+          text = text:gsub("<%%%*.-%%>", "")
+
+          -- 2. Known literal Templater expressions (most specific first).
+          local subs = {
+            { "<% tp.date.now('📅 MMMM D, YYYY [day:] DDD', 0, tp.file.title, 'YYYY-MM-DD') %>", ctx.alias_day },
+            { "<% tp.date.now(\"YYYY-MM-DD\", -1, tp.file.title, \"YYYY-MM-DD\") %>",            ctx.yesterday },
+            { "<% tp.date.now(\"YYYY-MM-DD\", 1, tp.file.title, \"YYYY-MM-DD\") %>",             ctx.tomorrow },
+            { "<% tp.date.now('HH:mm') %>",                                                      ctx.time },
+            { "<% tp.date.now(\"HH:mm\") %>",                                                    ctx.time },
+            { "<% tp.file.title %>",                                                             ctx.date },
+          }
+          for _, sub in ipairs(subs) do
+            text = text:gsub(lua_escape(sub[1]), gsub_repl(sub[2]))
+          end
+
+          -- 3. Mustache fallbacks (legacy / obsidian.nvim style).
+          text = text:gsub("{{date}}", gsub_repl(ctx.date))
+          text = text:gsub("{{yesterday}}", gsub_repl(ctx.yesterday))
+          text = text:gsub("{{tomorrow}}", gsub_repl(ctx.tomorrow))
+          text = text:gsub("{{time}}", gsub_repl(ctx.time))
+
+          return text
+        end
+
+        -- Dedupe items under `aliases:` in YAML frontmatter (obsidian.nvim + Templater sometimes
+        -- append the same alias twice — one from the template, one from note_frontmatter_func).
+        local function dedupe_aliases(lines)
+          local out = {}
+          local in_front = false
+          local in_aliases = false
+          local seen = {}
+          local hr_count = 0
+          for _, ln in ipairs(lines) do
+            if ln:match("^%-%-%-%s*$") then
+              hr_count = hr_count + 1
+              in_front = hr_count == 1
+              in_aliases = false
+              table.insert(out, ln)
+            elseif in_front and ln:match("^aliases:%s*$") then
+              in_aliases = true
+              seen = {}
+              table.insert(out, ln)
+            elseif in_aliases then
+              local item = ln:match("^%s*%-%s*(.*)$")
+              if item then
+                local norm = item:gsub('^["\']', ''):gsub('["\']%s*$', '') -- strip quotes
+                if not seen[norm] then
+                  seen[norm] = true
+                  table.insert(out, ln)
+                end
+              else
+                in_aliases = false
+                table.insert(out, ln)
+              end
+            else
+              table.insert(out, ln)
+            end
+          end
+          return out
+        end
+
+        -- Read current buffer
+        local buf_lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+
+        -- If the note is "bare" (frontmatter only, no body), append a rendered template body.
+        local past_frontmatter = false
+        local frontmatter_count = 0
+        local has_body = false
+        for _, line in ipairs(buf_lines) do
+          if line:match("^%-%-%-") then
+            frontmatter_count = frontmatter_count + 1
+            if frontmatter_count == 2 then past_frontmatter = true end
+          elseif past_frontmatter and line:match("%S") then
+            has_body = true
+            break
+          end
+        end
+
+        if past_frontmatter and not has_body then
+          local vault = vim.fn.expand("~/notes/bgovault")
+          local f = io.open(vault .. "/Templates/template_daily.md", "r")
+          if f then
+            local tmpl = f:read("*a")
+            f:close()
+            -- Strip template's own frontmatter; the note already has one
+            tmpl = tmpl:gsub("^%-%-%-.-%-%-%-\n?", "")
+            tmpl = render_tags(tmpl)
+            local new_lines = vim.split(tmpl, "\n")
+            vim.api.nvim_buf_set_lines(0, #buf_lines, #buf_lines, false, new_lines)
+            buf_lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+          end
+        end
+
+        -- Whether bare or not, render any leftover <% ... %> tags in the buffer.
+        local body = table.concat(buf_lines, "\n")
+        if body:find("<%%") then -- literal "<%"
+          local rendered = render_tags(body)
+          local new_lines = vim.split(rendered, "\n")
+          new_lines = dedupe_aliases(new_lines)
+          vim.api.nvim_buf_set_lines(0, 0, -1, false, new_lines)
+        else
+          -- Even without tags, run alias dedupe once on entry.
+          local deduped = dedupe_aliases(buf_lines)
+          if #deduped ~= #buf_lines then
+            vim.api.nvim_buf_set_lines(0, 0, -1, false, deduped)
+          end
+        end
       end,
 
       -- Runs anytime you leave the buffer for a note.
