@@ -54,6 +54,27 @@
     state: present
   tags: ["desktop", "utilities"]
 
+- name: Install Syncthing (LAN file sync — phone<->desktop for meeting audio pipeline)
+  block:
+    - name: Install syncthing package
+      apt:
+        name: syncthing
+        state: present
+        update_cache: yes
+
+    - name: Enable and start syncthing user service (per-user, no sudo)
+      # Runs as the invoking user (default) so `systemctl --user` works.
+      # On a fresh bootstrap, after this task the web UI is at http://127.0.0.1:8384
+      # and the user pairs their device via QR/Device-ID in that UI.
+      ansible.builtin.systemd:
+        name: syncthing
+        scope: user
+        enabled: yes
+        state: started
+      become: false
+      tags: ["syncthing", "user-service"]
+  tags: ["desktop", "syncthing", "packages"]
+
 - name: Set up Flatpak
   block:
     - name: Add Flathub repository
