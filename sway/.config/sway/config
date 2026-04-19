@@ -121,10 +121,17 @@ exec_always --no-startup-id ~/.config/sway/scripts/swayidle-power-aware.sh
 bindswitch --reload lid:on exec ~/.config/sway/scripts/lid-handler.sh close
 bindswitch --reload lid:off exec ~/.config/sway/scripts/lid-handler.sh open 
 
-# Optional: a panic key if you ever land on a black screen 
-# Press $mod+Ctrl+b to force panel on and set 50% brightness 
+# Optional: a panic key if you ever land on a black screen
+# Press $mod+Ctrl+b to force panel on and set 50% brightness
 ## Power // Force panel on and set 50% brightness // 💡 ##
-bindsym $mod+Ctrl+b exec 'swaymsg output $laptop power on; brightnessctl set 50%' 
+bindsym $mod+Ctrl+b exec 'swaymsg output $laptop power on; brightnessctl set 50%'
+
+## Voice capture // Toggle desktop-audio meeting recording // 🎙️ ##
+# First press starts ffmpeg (system audio + mic mixed); second press stops and
+# hands the file to watch-meeting-audio.sh for local transcription.
+bindsym $mod+Ctrl+r exec ~/.local/bin/record-desktop toggle
+## Voice capture // Toggle desktop-audio PROMPT recording (clipboard-ready) // 🎙️🤖 ##
+bindsym $mod+Ctrl+p exec ~/.local/bin/record-desktop toggle prompt
 # Optional: if you often dock to external monitors and don’t want the laptop panel 
 # to be touched by idle, drop the 900s power off timeout above. 
 # Alternatively, increase the timeout to avoid overlap with lid events.
