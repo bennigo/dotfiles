@@ -83,3 +83,25 @@ on-button-middle=dismiss-group
 on-button-right=dismiss
 on-touch=invoke-default-action
 on-notify=exec mpv /usr/share/sounds/freedesktop/stereo/message.oga
+
+# Corner variant for the live refreshing clock (corner-clock.sh) — roughly
+# half the size of sway-overlay, pinned to the upper-right, silent. The
+# daemon re-sends every second using x-canonical-private-synchronous so
+# each tick replaces the previous bubble in place. We use a short finite
+# timeout here (not -t 0 / default-timeout=0) because this Mako treats
+# timeout=0 as "expire immediately" rather than "persistent"; the 2s
+# window gives ~1s of overlap against refresh jitter and also makes the
+# overlay self-dismiss if the daemon is SIGKILL'd.
+# This block is kept LAST so its on-notify=none is not re-overridden by
+# the trailing sound-effect line above.
+[app-name=sway-overlay-corner]
+anchor=top-right
+width=360
+height=120
+font=HackNerdFont 14
+border-size=2
+border-color=#88c0d0
+padding=14
+margin=8
+group-by=app-name
+on-notify=none

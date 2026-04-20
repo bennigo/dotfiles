@@ -249,6 +249,8 @@ bindsym $mod+Shift+p exec $term --class "clipse" zsh -i ${HOME}/.local/bin/run_s
 # Time / date / GPS info overlay
 ## Info // Show time, date, GPS week, DOY (5s toast) // 🕒 ##
 bindsym $mod+u exec ~/.config/sway/scripts/show-time-gps.sh
+## Info // Toggle live corner clock (upper-right, half size, refreshes every second) // 🕰️ ##
+bindsym $mod+Shift+u exec ~/.config/sway/scripts/corner-clock.sh
 
 # Keyboard layout indicator.
 # - Bare Alt Gr: xkb's grp:toggle cycles, and we additionally flash the
