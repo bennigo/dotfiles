@@ -250,17 +250,19 @@ bindsym $mod+Shift+p exec $term --class "clipse" zsh -i ${HOME}/.local/bin/run_s
 ## Info // Show time, date, GPS week, DOY (5s toast) // 🕒 ##
 bindsym $mod+u exec ~/.config/sway/scripts/show-time-gps.sh
 
-# Keyboard layout indicator. Bare Alt Gr is left alone so xkb's grp:toggle
-# can cycle silently (user preference). `$mod+Alt Gr` displays the current
-# layout in a big toast without actually switching — because xkb will cycle
-# once for any Alt Gr press, the script uses --restore to step back and
-# undo that cycle before reading and displaying the "real" current layout.
-#
+# Keyboard layout indicator.
+# - Bare Alt Gr: xkb's grp:toggle cycles, and we additionally flash the
+#   newly-active layout (--show-only; script reads post-cycle state).
+# - $mod+Alt Gr: same toast but with --restore — xkb still cycles, then
+#   the script steps back one position before displaying, so the combo
+#   becomes a no-op preview of the current layout.
 # NOTE: sway 1.10.1 silently drops `bindsym $mod+ISO_Level3_Shift` (can't
 # combine a modifier-class keysym as the non-modifier part of a combo), so
 # we use bindcode with the xkb keycode for Right Alt (kernel KEY_RIGHTALT
 # = 100, +8 for the xkb offset = 108).
-## Info // Show current keyboard layout (1s toast) // ⌨️ ##
+## Info // Show layout on Alt Gr cycle (1s toast) // ⌨️ ##
+bindcode 108 exec ~/.config/sway/scripts/show-layout.sh --show-only
+## Info // Preview current keyboard layout (1s toast) // ⌨️ ##
 bindcode $mod+108 exec ~/.config/sway/scripts/show-layout.sh --restore
 
 # cisco secure client
