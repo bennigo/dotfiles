@@ -48,6 +48,36 @@ height=300
 default-timeout=2000
 group-by=category
 
+# Sway on-screen overlays: centered, large font, silent (no notification sound).
+# Used by ~/.config/sway/scripts/show-time-gps.sh (the big time/GPS/DOY toast).
+# Each new toast with the same app-name replaces the previous (via the
+# x-canonical-private-synchronous hint set by the callers).
+[app-name=sway-overlay]
+anchor=center
+width=720
+height=240
+font=HackNerdFont 28
+border-size=3
+border-color=#88c0d0
+padding=28
+margin=0
+group-by=app-name
+on-notify=none
+
+# Compact variant for the keyboard-layout toast (show-layout.sh) — the text
+# is short (e.g. "⌨️ US") so we tighten the box accordingly.
+[app-name=sway-layout]
+anchor=center
+width=360
+height=130
+font=HackNerdFont 26
+border-size=3
+border-color=#88c0d0
+padding=16
+margin=0
+group-by=app-name
+on-notify=none
+
 on-button-left=invoke-default-action
 on-button-middle=dismiss-group
 on-button-right=dismiss

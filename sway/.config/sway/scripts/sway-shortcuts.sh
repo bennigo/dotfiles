@@ -39,6 +39,70 @@ done
 
 user_cfg="${XDG_CONFIG_HOME:-$HOME/.config}/sway/config"
 
+# Track every mktemp we create so a single EXIT trap can clean them up.
+# NOTE: `_mk NAME` assigns into the named variable *by reference* instead of
+# returning via stdout. Returning via $(...) would run the body in a subshell,
+# which silently discards the `_tmp_files+=(...)` append and defeats cleanup.
+_tmp_files=()
+_mk() {
+  local __mk_var="$1" __mk_file
+  __mk_file="$(mktemp)"
+  _tmp_files+=("$__mk_file")
+  printf -v "$__mk_var" '%s' "$__mk_file"
+}
+cleanup_tmp() {
+  if [[ ${#_tmp_files[@]} -gt 0 ]]; then
+    rm -f -- "${_tmp_files[@]}"
+  fi
+}
+trap cleanup_tmp EXIT INT TERM
+
+# Inline `include` directives so smart comments living in `config.d/*.conf`
+# (or any other included file) are parsed too. Sway include semantics:
+#   - relative paths resolve against the including file's directory
+#   - globs are allowed
+#   - env vars in the path are expanded (sway uses $XDG_CONFIG_HOME)
+#   - missing files are silently skipped
+expand_env() {
+  # Expand env vars in $1. Substitute the XDG/HOME vars sway configs
+  # commonly use first (applying sane defaults when unset — sway itself
+  # falls back to ~/.config when XDG_CONFIG_HOME is unset), then hand off
+  # to envsubst for anything else if it is available.
+  local s="$1"
+  local xdg="${XDG_CONFIG_HOME:-$HOME/.config}"
+  s="${s//\$\{XDG_CONFIG_HOME\}/$xdg}"
+  s="${s//\$XDG_CONFIG_HOME/$xdg}"
+  s="${s//\$\{HOME\}/$HOME}"
+  s="${s//\$HOME/$HOME}"
+  if command -v envsubst >/dev/null 2>&1; then
+    printf '%s' "$s" | envsubst
+  else
+    printf '%s' "$s"
+  fi
+}
+
+expand_includes() {
+  local f="$1" dir line pat inc
+  [[ -r "$f" ]] || return 0
+  dir="$(dirname -- "$f")"
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    if [[ "$line" =~ ^[[:space:]]*include[[:space:]]+(.+)$ ]]; then
+      pat="${BASH_REMATCH[1]}"
+      # strip trailing whitespace / inline comment
+      pat="${pat%%#*}"
+      pat="${pat%"${pat##*[![:space:]]}"}"
+      pat="$(expand_env "$pat")"
+      [[ "$pat" != /* ]] && pat="$dir/$pat"
+      # shellcheck disable=SC2086  # intentional word-splitting for glob expansion
+      for inc in $pat; do
+        [[ -f "$inc" ]] && expand_includes "$inc"
+      done
+    else
+      printf '%s\n' "$line"
+    fi
+  done <"$f"
+}
+
 collect_bindings_json() {
   local include_bindcode="${1:-0}"
   local include_xf86="${2:-0}"
@@ -295,10 +359,14 @@ build_description_map_from_source() {
       pending_desc_line = ""  # consume
       next
     }
-  ' "$user_cfg"
+  ' < <(expand_includes "$user_cfg")
 }
 
 show_with_terminal() {
+  # This tmp file is owned by the backgrounded terminal (which removes it
+  # itself). Deliberately NOT registered with _tmp_files so our trap
+  # doesn't pull the rug before `less` reads it.
+  local tmp
   tmp="$(mktemp)"
   cat >"$tmp"
   if command -v foot >/dev/null 2>&1; then
@@ -307,19 +375,23 @@ show_with_terminal() {
     kitty --class sway-shortcuts sh -lc "less -R '$tmp'; rm -f '$tmp'" &
   elif command -v alacritty >/dev/null 2>&1; then
     alacritty --class sway-shortcuts -e sh -lc "less -R '$tmp'; rm -f '$tmp'" &
-  else
+  elif command -v xterm >/dev/null 2>&1; then
     xterm -class sway-shortcuts -e sh -lc "less -R '$tmp'; rm -f '$tmp'" &
+  else
+    echo "sway-shortcuts: no terminal emulator (foot/kitty/alacritty/xterm) found" >&2
+    rm -f "$tmp"
+    return 1
   fi
 }
 
 main() {
   # 1) Description map from source config (keeps comments)
-  desc_file="$(mktemp)"
+  _mk desc_file
   build_description_map_from_source >"$desc_file" || true
   [ "$DEBUG" -eq 1 ] && echo "[debug] description map lines: $(wc -l <"$desc_file")" >&2
 
   # 2) Bindings (live if possible)
-  binds_file="$(mktemp)"
+  _mk binds_file
   if ! collect_bindings_json "$INCLUDE_BINDCODE" "$INCLUDE_XF86" >"$binds_file"; then
     [ "$DEBUG" -eq 1 ] && echo "[debug] falling back to config parsing for bindings" >&2
     if ! collect_bindings_from_config "$INCLUDE_BINDCODE" "$INCLUDE_XF86" >"$binds_file"; then
@@ -330,7 +402,7 @@ main() {
   [ "$DEBUG" -eq 1 ] && echo "[debug] bindings lines: $(wc -l <"$binds_file")" >&2
 
   # 3) Join: mode|combo -> desc, category, icon
-  joined_file="$(mktemp)"
+  _mk joined_file
   awk '
     BEGIN { FS="\t"; OFS="\t" }
     # Load desc map
@@ -354,19 +426,19 @@ main() {
 
   # 4) Optionally require descriptions
   if [ "$DESC_REQUIRED" -eq 1 ]; then
-    tmpf="$(mktemp)"
+    _mk tmpf
     awk 'BEGIN{FS=OFS="\t"} length($2)>0' "$joined_file" >"$tmpf"
-    mv "$tmpf" "$joined_file"
+    cp -- "$tmpf" "$joined_file"
   fi
 
   # 5) Sort by Category then Description (case-insensitive)
   TAB="$(printf '\t')"
-  sorted_file="$(mktemp)"
+  _mk sorted_file
   LC_ALL=C sort -f -t "$TAB" -k1,1 -k2,2 "$joined_file" >"$sorted_file"
 
   # 6) Build display and action map in one awk pass
-  display_file="$(mktemp)"
-  actions_file="$(mktemp)"
+  _mk display_file
+  _mk actions_file
   awk -v FS="\t" -v detail="$DETAIL_VIEW" -v disp_out="$display_file" -v map_out="$actions_file" '
     function esc(s,  t) { t=s; gsub(/&/, "\\&amp;", t); gsub(/</, "\\&lt;", t); gsub(/>/, "\\&gt;", t); return t }
     function map_mod(m) {
