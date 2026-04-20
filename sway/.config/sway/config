@@ -244,7 +244,24 @@ bindsym $mod+t exec $term --class "terminal_floating"
 ## Clipboard // Open Clipse (clipboard/TUI) // 📋 ##
 bindsym $mod+p exec $term --class "clipse" ${HOME}/.local/bin/clipse
 ## Screenshots // Screen annotate (swappy) // ✍️ ##
-bindsym $mod+Shift+p exec $term --class "clipse" zsh -i ${HOME}/.local/bin/run_swappy.sh 
+bindsym $mod+Shift+p exec $term --class "clipse" zsh -i ${HOME}/.local/bin/run_swappy.sh
+
+# Time / date / GPS info overlay
+## Info // Show time, date, GPS week, DOY (5s toast) // 🕒 ##
+bindsym $mod+u exec ~/.config/sway/scripts/show-time-gps.sh
+
+# Keyboard layout indicator. Bare Alt Gr is left alone so xkb's grp:toggle
+# can cycle silently (user preference). `$mod+Alt Gr` displays the current
+# layout in a big toast without actually switching — because xkb will cycle
+# once for any Alt Gr press, the script uses --restore to step back and
+# undo that cycle before reading and displaying the "real" current layout.
+#
+# NOTE: sway 1.10.1 silently drops `bindsym $mod+ISO_Level3_Shift` (can't
+# combine a modifier-class keysym as the non-modifier part of a combo), so
+# we use bindcode with the xkb keycode for Right Alt (kernel KEY_RIGHTALT
+# = 100, +8 for the xkb offset = 108).
+## Info // Show current keyboard layout (1s toast) // ⌨️ ##
+bindcode $mod+108 exec ~/.config/sway/scripts/show-layout.sh --restore
 
 # cisco secure client
     exec_always --no-startup-id gtk-launch com.cisco.secureclient.gui.desktop
