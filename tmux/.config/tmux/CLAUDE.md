@@ -34,7 +34,7 @@ Terminal multiplexer setup with session persistence, plugin ecosystem, and Wayla
 - `prefix + p` — Toggle floating pane (floax)
 - `prefix + P` — Floating pane menu
 - `prefix + o` — Session picker (sessionx with zoxide integration)
-- `prefix + E` — Bulk refresh Wayland env vars in all panes (see below)
+- `prefix + E` — Bulk refresh shell env (aliases-claude.zsh) + Wayland env in all panes (see below)
 
 ## Wayland Environment Fix
 
@@ -47,8 +47,11 @@ session env (populated by `update-environment` on attach). Runs automatically on
 startup when `WAYLAND_DISPLAY` is empty inside tmux.
 
 ### Bulk refresh (all panes)
-`prefix + E` sends `refresh-wayland-env` + Enter to every pane across all sessions —
-useful for long-running shells that never re-sourced.
+`prefix + E` sends `refresh-shell-env` + Enter to every pane across all sessions —
+useful for long-running shells that never re-sourced. The function is a superset:
+it sources `aliases-claude.zsh` (Claude effort/model launcher aliases) and then
+calls `refresh-wayland-env`. Extend the function in `zsh/exports.zsh` as new
+alias/export files are added.
 
 ### How it works
 The `update-environment` setting in tmux.conf ensures the session env gets fresh values on attach:
