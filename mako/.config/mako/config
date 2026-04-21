@@ -102,6 +102,11 @@ font=HackNerdFont 14
 border-size=2
 border-color=#88c0d0
 padding=14
-margin=8
+# margin=vertical,horizontal. Vertical is offset from the top edge Mako
+# sees (which is already below Waybar's 20px exclusive zone). 30px puts
+# the overlay just below the tmux status line at typical font sizes;
+# bump the first value if your tmux header uses a larger font and the
+# bubble still overlaps, or lower it to sit snugger to the top.
+margin=30,8
 group-by=app-name
 on-notify=none
