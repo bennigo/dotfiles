@@ -15,13 +15,14 @@
 #                       layout before sway fired the binding, so we need
 #                       to step back one to reveal the *actual* current
 #                       layout). Implies --show-only.
-#   -t, --timeout S     Overlay duration in seconds (default: 2).
+#   -t, --timeout S     Overlay duration in seconds (default: 0.5).
+#                       Accepts fractional values, e.g. 0.5 or 1.2.
 
 set -euo pipefail
 
 SHOW_ONLY=0
 RESTORE=0
-TIMEOUT_SEC=1
+TIMEOUT_SEC=0.5
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -38,10 +39,12 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if ! [[ "$TIMEOUT_SEC" =~ ^[0-9]+$ ]]; then
-  echo "error: timeout must be a non-negative integer" >&2
+if ! [[ "$TIMEOUT_SEC" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+  echo "error: timeout must be a non-negative number (integer or decimal)" >&2
   exit 2
 fi
+
+TIMEOUT_MS=$(awk -v t="$TIMEOUT_SEC" 'BEGIN { printf "%d", (t * 1000) + 0.5 }')
 
 if (( RESTORE == 1 )); then
   # xkb has already cycled the layout (because this script was fired from a
@@ -88,7 +91,7 @@ esac
 
 notify-send \
   -a sway-layout \
-  -t "$(( TIMEOUT_SEC * 1000 ))" \
+  -t "$TIMEOUT_MS" \
   -h "string:x-canonical-private-synchronous:kbd-layout" \
   "⌨️  ${short}" \
   "${layout}"
