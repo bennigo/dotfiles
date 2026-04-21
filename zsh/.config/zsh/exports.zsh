@@ -115,6 +115,14 @@ refresh-wayland-env() {
     done
 }
 
+# Superset refresh — sources custom alias files and refreshes Wayland env.
+# Called by tmux `prefix + E` to bring long-running shells up to date after
+# any zsh config change. Add new alias/export files to the source list below.
+refresh-shell-env() {
+    [ -f ~/.config/zsh/aliases-claude.zsh ] && source ~/.config/zsh/aliases-claude.zsh
+    refresh-wayland-env
+}
+
 # Auto-refresh Wayland env in tmux (handles continuum-restored shells too).
 # A precmd hook retries each prompt until WAYLAND_DISPLAY is set, then
 # removes itself so there is zero overhead after the first successful refresh.
