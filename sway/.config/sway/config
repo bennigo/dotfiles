@@ -262,9 +262,9 @@ bindsym $mod+Shift+u exec ~/.config/sway/scripts/corner-clock.sh
 # combine a modifier-class keysym as the non-modifier part of a combo), so
 # we use bindcode with the xkb keycode for Right Alt (kernel KEY_RIGHTALT
 # = 100, +8 for the xkb offset = 108).
-## Info // Show layout on Alt Gr cycle (1s toast) // ⌨️ ##
+## Info // Show layout on Alt Gr cycle (0.5s toast) // ⌨️ ##
 bindcode 108 exec ~/.config/sway/scripts/show-layout.sh --show-only
-## Info // Preview current keyboard layout (1s toast) // ⌨️ ##
+## Info // Preview current keyboard layout (0.5s toast) // ⌨️ ##
 bindcode $mod+108 exec ~/.config/sway/scripts/show-layout.sh --restore
 
 # cisco secure client
