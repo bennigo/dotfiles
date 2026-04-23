@@ -6,6 +6,11 @@ Configuration for Claude Code CLI tool, MCP servers, notification hooks, and rem
 
 Deployed via stow to `~/.mcp.json` (user scope — must be at `~/`, not `~/.config/`).
 
+**Format**: Flat object — server names at top level (no `mcpServers` wrapper). Claude Code 2.x
+changed this; the old `{ "mcpServers": { ... } }` format causes an "invalid settings file" warning.
+
+**Dependencies**: `postgres-mcp` must be installed: `uv tool install postgres-mcp`
+
 ### Web & Search
 - **fetch**: Web content fetching (via uvx/mcp-server-fetch)
 - **brave-search**: Web search via Brave Search API
