@@ -4,10 +4,13 @@ Configuration for Claude Code CLI tool, MCP servers, notification hooks, and rem
 
 ## MCP Servers (`.mcp.json`)
 
-Deployed via stow to `~/.mcp.json` (user scope — must be at `~/`, not `~/.config/`).
+Deployed via stow to `~/.mcp.json` (global project scope — found by Claude Code's directory tree
+walk, applies to all projects under `$HOME`).
 
-**Format**: Flat object — server names at top level (no `mcpServers` wrapper). Claude Code 2.x
-changed this; the old `{ "mcpServers": { ... } }` format causes an "invalid settings file" warning.
+**Format**: `{ "mcpServers": { ... } }` wrapper required. Claude Code 2.x reads `.mcp.json` files
+via a project-scope tree walk (from CWD up to `/`) using a schema that requires the `mcpServers`
+key. Flat format (no wrapper) fails schema validation with "Does not adhere to MCP server
+configuration schema".
 
 **Dependencies**: `postgres-mcp` must be installed: `uv tool install postgres-mcp`
 
