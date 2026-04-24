@@ -1,100 +1,102 @@
 {
-  "fetch": {
-    "command": "uv",
-    "args": [
-      "tool", "run",
-      "mcp-server-fetch"
-    ]
-  },
-  "brave-search": {
-    "command": "/home/bgo/.scripts/brave-mcp-wrapper.sh"
-  },
-  "postgres-local": {
-    "command": "uv",
-    "args": [
-      "tool", "run",
-      "postgres-mcp",
-      "--access-mode=unrestricted"
-    ],
-    "env": {
-      "DATABASE_URI": "${LOCAL_POSTGRES_URL}"
-    }
-  },
-  "postgres-gas-readonly": {
-    "command": "uv",
-    "args": [
-      "tool", "run",
-      "postgres-mcp",
-      "--access-mode=restricted"
-    ],
-    "env": {
-      "DATABASE_URI": "${PROD_GAS_URL}"
-    }
-  },
-  "postgres-skjalftalisa-readonly": {
-    "command": "uv",
-    "args": [
-      "tool", "run",
-      "postgres-mcp",
-      "--access-mode=restricted"
-    ],
-    "env": {
-      "DATABASE_URI": "${PROD_SKJALFTALISA_URL}"
-    }
-  },
-  "postgres-tos-readonly": {
-    "command": "uv",
-    "args": [
-      "tool", "run",
-      "postgres-mcp",
-      "--access-mode=restricted"
-    ],
-    "env": {
-      "DATABASE_URI": "${PROD_TOS_URL}"
-    }
-  },
-  "postgres-epos-readonly": {
-    "command": "uv",
-    "args": [
-      "tool", "run",
-      "postgres-mcp",
-      "--access-mode=restricted"
-    ],
-    "env": {
-      "DATABASE_URI": "${DEV_EPOS_URL}"
-    }
-  },
-  "postgres-gnss-readonly": {
-    "command": "uv",
-    "args": [
-      "tool", "run",
-      "postgres-mcp",
-      "--access-mode=restricted"
-    ],
-    "env": {
-      "DATABASE_URI": "${DEV_GNSS_URL}"
-    }
-  },
-  "postgres-metrics-readonly": {
-    "command": "uv",
-    "args": [
-      "tool", "run",
-      "postgres-mcp",
-      "--access-mode=restricted"
-    ],
-    "env": {
-      "DATABASE_URI": "${DEV_METRICS_URL}"
-    }
-  },
-  "google-workspace": {
-    "command": "npx",
-    "args": [
-      "-y",
-      "@aaronsb/google-workspace-mcp"
-    ],
-    "env": {
-      "GOOGLE_CLIENT_ID": "${GOOGLE_MCP_CLIENT_ID}",
-      "GOOGLE_CLIENT_SECRET": "${GOOGLE_MCP_CLIENT_SECRET}"
+  "mcpServers": {
+    "fetch": {
+      "command": "uv",
+      "args": [
+        "tool", "run",
+        "mcp-server-fetch"
+      ]
+    },
+    "brave-search": {
+      "command": "/home/bgo/.scripts/brave-mcp-wrapper.sh"
+    },
+    "postgres-local": {
+      "command": "uv",
+      "args": [
+        "tool", "run",
+        "postgres-mcp",
+        "--access-mode=unrestricted"
+      ],
+      "env": {
+        "DATABASE_URI": "${LOCAL_POSTGRES_URL}"
+      }
+    },
+    "postgres-gas-readonly": {
+      "command": "uv",
+      "args": [
+        "tool", "run",
+        "postgres-mcp",
+        "--access-mode=restricted"
+      ],
+      "env": {
+        "DATABASE_URI": "${PROD_GAS_URL}"
+      }
+    },
+    "postgres-skjalftalisa-readonly": {
+      "command": "uv",
+      "args": [
+        "tool", "run",
+        "postgres-mcp",
+        "--access-mode=restricted"
+      ],
+      "env": {
+        "DATABASE_URI": "${PROD_SKJALFTALISA_URL}"
+      }
+    },
+    "postgres-tos-readonly": {
+      "command": "uv",
+      "args": [
+        "tool", "run",
+        "postgres-mcp",
+        "--access-mode=restricted"
+      ],
+      "env": {
+        "DATABASE_URI": "${PROD_TOS_URL}"
+      }
+    },
+    "postgres-epos-readonly": {
+      "command": "uv",
+      "args": [
+        "tool", "run",
+        "postgres-mcp",
+        "--access-mode=restricted"
+      ],
+      "env": {
+        "DATABASE_URI": "${DEV_EPOS_URL}"
+      }
+    },
+    "postgres-gnss-readonly": {
+      "command": "uv",
+      "args": [
+        "tool", "run",
+        "postgres-mcp",
+        "--access-mode=restricted"
+      ],
+      "env": {
+        "DATABASE_URI": "${DEV_GNSS_URL}"
+      }
+    },
+    "postgres-metrics-readonly": {
+      "command": "uv",
+      "args": [
+        "tool", "run",
+        "postgres-mcp",
+        "--access-mode=restricted"
+      ],
+      "env": {
+        "DATABASE_URI": "${DEV_METRICS_URL}"
+      }
+    },
+    "google-workspace": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@aaronsb/google-workspace-mcp"
+      ],
+      "env": {
+        "GOOGLE_CLIENT_ID": "${GOOGLE_MCP_CLIENT_ID}",
+        "GOOGLE_CLIENT_SECRET": "${GOOGLE_MCP_CLIENT_SECRET}"
+      }
     }
   }
 }
