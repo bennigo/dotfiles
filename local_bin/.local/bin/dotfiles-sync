@@ -289,7 +289,7 @@ sync_claude_live_to_repo() {
 
     # Directories containing important backup data (encrypted via git-crypt)
     # --max-size=95M: GitHub rejects files >100MB; 95MB gives headroom for git-crypt overhead
-    local sync_dirs=("projects" "todos" "shell-snapshots" "plans" "tasks")
+    local sync_dirs=("projects" "shell-snapshots" "plans")
 
     for dir in "${sync_dirs[@]}"; do
         if [ -d "$live_dir/$dir" ] && [ "$(ls -A "$live_dir/$dir" 2>/dev/null)" ]; then
@@ -322,7 +322,11 @@ sync_claude_private() {
     # Ensure git-crypt is unlocked before touching any staged content.
     # When locked, git-crypt's clean filter silently passes plaintext — never commit without this guard.
     # Skip the unlock call if already unlocked (keys dir exists after a successful unlock).
-    if [ ! -d ".git/git-crypt/keys" ]; then
+    # Use git rev-parse --git-dir to resolve the real gitdir — claude-private is a submodule so .git
+    # is a file (pointer), not a directory; the actual gitdir is in ../.git/modules/claude-private/.
+    local _gitdir
+    _gitdir=$(git rev-parse --git-dir 2>/dev/null)
+    if [ ! -d "$_gitdir/git-crypt/keys" ]; then
         # git-crypt unlock requires a clean working directory before it contacts the GPG agent.
         # Stash everything (including untracked) so the unlock can proceed. Drop afterward — never
         # pop, because sync_claude_live_to_repo will immediately restore the current live state.
