@@ -1,0 +1,13 @@
+# Suspend when AC power is disconnected while the lid is closed.
+#
+# This covers the case where the lid is closed on AC (screen off, system running),
+# then the charger is unplugged — without this rule the system keeps running hot
+# inside the bag until swayidle eventually triggers suspend (up to 30 min).
+#
+# The helper script checks lid state and suspends only if the lid is closed.
+#
+# Install helper: sudo cp ~/.dotfiles/local_bin/.local/bin/lid-ac-suspend-check /usr/local/bin/
+# Reload rules:   sudo udevadm control --reload-rules
+
+ACTION=="change", SUBSYSTEM=="power_supply", KERNEL=="AC", ATTR{online}=="0", \
+    RUN+="/usr/bin/systemd-run --no-block --description='lid-ac-suspend-check' /usr/local/bin/lid-ac-suspend-check"

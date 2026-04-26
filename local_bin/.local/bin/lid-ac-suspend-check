@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Triggered by udev when AC power is disconnected.
+# Suspends the system only if the lid is currently closed.
+# Runs as root via systemd-run from a udev RUN+ directive.
+
+set -euo pipefail
+
+LID_STATE=""
+for state_file in /proc/acpi/button/lid/*/state; do
+    [[ -f "$state_file" ]] && LID_STATE=$(awk '{print $2}' "$state_file") && break
+done
+
+if [[ "$LID_STATE" == "closed" ]]; then
+    logger -t lid-ac-suspend "AC disconnected with lid closed — suspending"
+    systemctl suspend
+else
+    logger -t lid-ac-suspend "AC disconnected, lid is open — no action"
+fi
