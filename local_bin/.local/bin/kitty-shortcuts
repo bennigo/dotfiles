@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+# kitty-shortcuts — Browse kitty key bindings from annotated kitty.conf.
+# Reads  ## Category // Description // Icon ##  comments (inline or line-before).
+
+set -euo pipefail
+
+KITTY_CONF="${XDG_CONFIG_HOME:-$HOME/.config}/kitty/kitty.conf"
+[[ -r "$KITTY_CONF" ]] || { echo "kitty.conf not found: $KITTY_CONF" >&2; exit 1; }
+
+KITTY_MOD=$(grep -E '^kitty_mod[[:space:]]' "$KITTY_CONF" 2>/dev/null \
+  | awk '{print $2}' | tail -1 || true)
+KITTY_MOD="${KITTY_MOD:-ctrl+shift}"
+
+parse_annotated() {
+  awk -v KITTY_MOD="$KITTY_MOD" '
+    function trim(s) { gsub(/^[ \t]+|[ \t]+$/, "", s); return s }
+
+    BEGIN { pending = "" }
+
+    # Line-before comment:  # ## Category // Description // Icon ##
+    /^[ \t]*#[ \t]*##.*\/\/.*##/ {
+      t = $0
+      sub(/^[^#]*#[ \t]*##[ \t]*/, "", t)
+      sub(/[ \t]*##[[:space:]]*$/, "", t)
+      pending = trim(t)
+      next
+    }
+
+    # map line
+    /^[ \t]*map[ \t]/ {
+      comment = ""
+      line = $0
+
+      if (match(line, /##[^#]+##/)) {
+        t = substr(line, RSTART + 2, RLENGTH - 4)
+        comment = trim(t)
+      } else if (pending != "") {
+        comment = pending
+      }
+      pending = ""
+      if (comment == "") next
+
+      n = split(comment, parts, /\/\//)
+      cat  = (n >= 1 ? trim(parts[1]) : "Other")
+      desc = (n >= 2 ? trim(parts[2]) : "")
+      icon = (n >= 3 ? trim(parts[3]) : "•")
+      if (icon == "") icon = "•"
+
+      # Extract key combo and expand kitty_mod alias
+      l = line
+      sub(/^[ \t]*map[ \t]+/, "", l)
+      sub(/[ \t]*#.*$/, "", l)
+      l = trim(l)
+      split(l, ka, /[ \t]+/)
+      key = ka[1]
+      gsub("kitty_mod", KITTY_MOD, key)
+
+      print cat "\t" icon "\t" desc "\t" key
+      next
+    }
+
+    !/^[ \t]*#/ && !/^$/ { pending = "" }
+  ' "$KITTY_CONF"
+}
+
+main() {
+  local rows
+  rows="$(parse_annotated | LC_ALL=C sort -t$'\t' -k1,1 -k3,3)"
+
+  if command -v fzf >/dev/null 2>&1; then
+    printf '%s\n' "$rows" | awk '
+      BEGIN { FS = "\t" }
+      { printf "\033[2m[%-12s]\033[0m  %s  \033[0;36m%-34s\033[0m  \033[2m%s\033[0m\n",
+          $1, $2, $3, $4 }
+    ' | fzf \
+        --ansi --no-sort --reverse \
+        --header=" Kitty Shortcuts   kitty_mod: $KITTY_MOD   —   type to filter" \
+        --header-first \
+        --prompt="  " \
+        --height=100% \
+        --border=rounded \
+        --margin=1,2 \
+        --padding=1 \
+        --color='header:bold,header:blue,prompt:cyan,pointer:cyan' \
+        || true
+  else
+    printf '%s\n' "$rows" | awk '
+      BEGIN { FS = "\t"; cur = ""; first = 1 }
+      {
+        if ($1 != cur) {
+          if (!first) printf "\n"
+          printf "\033[1;34m── %s ──\033[0m\n", $1
+          cur = $1; first = 0
+        }
+        printf "  %s  \033[0;36m%-34s\033[0m  \033[2m%s\033[0m\n", $2, $3, $4
+      }
+    ' | less -R
+  fi
+}
+
+main
