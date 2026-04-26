@@ -321,11 +321,35 @@ sync_claude_private() {
 
     # Ensure git-crypt is unlocked before touching any staged content.
     # When locked, git-crypt's clean filter silently passes plaintext — never commit without this guard.
-    if ! git-crypt unlock 2>/dev/null; then
-        log_error "git-crypt could not be unlocked (GPG agent unavailable?) — skipping claude-private sync to prevent plaintext commit"
-        return 1
+    # Skip the unlock call if already unlocked (keys dir exists after a successful unlock).
+    if [ ! -d ".git/git-crypt/keys" ]; then
+        # git-crypt unlock requires a clean working directory before it contacts the GPG agent.
+        # Stash everything (including untracked) so the unlock can proceed. Drop afterward — never
+        # pop, because sync_claude_live_to_repo will immediately restore the current live state.
+        local _stashed=false
+        if [ -n "$(git status --porcelain 2>/dev/null | head -1)" ]; then
+            if git stash push --include-untracked --quiet -m "dotfiles-sync pre-unlock" 2>/dev/null; then
+                _stashed=true
+            fi
+        fi
+
+        local _unlock_err
+        _unlock_err=$(git-crypt unlock 2>&1)
+        local _unlock_exit=$?
+
+        if [ $_unlock_exit -ne 0 ]; then
+            $_stashed && git stash pop --quiet 2>/dev/null || true
+            log_error "git-crypt could not be unlocked — skipping claude-private sync to prevent plaintext commit"
+            log_error "Reason: $_unlock_err"
+            return 1
+        fi
+
+        # Drop (not pop) — the live sync below restores current state; stashed versions are stale.
+        $_stashed && git stash drop --quiet 2>/dev/null || true
+        log_info "git-crypt unlocked"
+    else
+        log_info "git-crypt already unlocked"
     fi
-    log_info "git-crypt unlocked"
 
     # Reverse sync: pull new files from live ~/.claude/ into repo
     sync_claude_live_to_repo
