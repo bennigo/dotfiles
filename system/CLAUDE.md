@@ -20,6 +20,33 @@ for the dotfiles repository. For general repository usage, see the main `CLAUDE.
 
 ## System-Level Fixes
 
+### Power Management
+
+**Files**:
+- `etc/UPower/UPower.conf` — critical battery action
+- `etc/udev/rules.d/99-lid-ac-suspend.rules` — AC-unplug + lid-closed suspend
+- `local_bin/.local/bin/lid-ac-suspend-check` — helper called by udev rule
+
+**Critical battery (suspend at 10% instead of poweroff)**:
+- `PercentageAction=10.0` — triggers at 10%, not 2%
+- `AllowRiskyCriticalPowerAction=true` + `CriticalPowerAction=Suspend`
+- Without this the fallback chain (HybridSleep → Hibernate → PowerOff) reaches PowerOff when hibernation is not configured
+
+**Lid closed while on AC, then charger unplugged**:
+- The `lid-handler.sh` only fires on lid events, not power-state changes
+- The udev rule fires on AC disconnect, checks `/proc/acpi/button/lid/*/state`, suspends if closed
+
+**Deploy after reinstall**:
+```bash
+sudo mkdir -p /etc/UPower
+sudo cp etc/UPower/UPower.conf /etc/UPower/UPower.conf
+sudo cp etc/udev/rules.d/99-lid-ac-suspend.rules /etc/udev/rules.d/
+sudo cp ~/.local/bin/lid-ac-suspend-check /usr/local/bin/
+sudo chmod +x /usr/local/bin/lid-ac-suspend-check
+sudo systemctl restart upower
+sudo udevadm control --reload-rules
+```
+
 ### Thunderbolt 4 Resume Fix
 **File**: `usr/lib/systemd/system-sleep/thunderbolt-fix`
 
