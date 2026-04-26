@@ -319,6 +319,14 @@ sync_claude_private() {
     log_info "Checking claude-private for changes..."
     cd "$CLAUDE_PRIVATE_DIR"
 
+    # Ensure git-crypt is unlocked before touching any staged content.
+    # When locked, git-crypt's clean filter silently passes plaintext — never commit without this guard.
+    if ! git-crypt unlock 2>/dev/null; then
+        log_error "git-crypt could not be unlocked (GPG agent unavailable?) — skipping claude-private sync to prevent plaintext commit"
+        return 1
+    fi
+    log_info "git-crypt unlocked"
+
     # Reverse sync: pull new files from live ~/.claude/ into repo
     sync_claude_live_to_repo
 
