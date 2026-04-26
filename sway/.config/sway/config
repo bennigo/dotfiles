@@ -270,6 +270,7 @@ bindcode $mod+108 exec ~/.config/sway/scripts/show-layout.sh --restore
 # cisco secure client
     exec_always --no-startup-id gtk-launch com.cisco.secureclient.gui.desktop
     exec --no-startup-id gtk-launch obsidian.desktop
+    exec --no-startup-id gtk-launch org.zotero.Zotero.desktop
     exec --no-startup-id google-chrome-stable
     exec --no-startup-id $term --class "terminal_floating"
 
