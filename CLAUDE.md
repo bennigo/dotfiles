@@ -12,7 +12,7 @@ architecture guidelines. Subdirectories with their own CLAUDE.md are marked with
 ## System Environment
 
 - **Hardware**: ThinkPad P1 Gen 6, NVIDIA RTX 2000 Ada (8GB VRAM)
-- **OS**: Linux (Ubuntu-based), kernel 6.14.0-37-generic, x86_64
+- **OS**: Linux (Ubuntu 26.04 LTS "Resolute Ringtail"), kernel 6.17.0-22-generic, x86_64
 - **Desktop**: Sway (Wayland) + Waybar + Rofi + Mako + Kitty/Foot
 - **Package managers**: apt, snap, flatpak
 

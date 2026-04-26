@@ -6,8 +6,8 @@ for the dotfiles repository. For general repository usage, see the main `CLAUDE.
 ## System Environment
 
 - **Hardware**: ThinkPad P1 Gen 6
-- **OS**: Linux (Ubuntu-based), kernel 6.14.0-37-generic, x86_64
-- **GPU**: NVIDIA RTX 2000 Ada (8GB VRAM) with proprietary drivers
+- **OS**: Linux (Ubuntu 26.04 LTS "Resolute Ringtail"), kernel 6.17.0-22-generic, x86_64
+- **GPU**: NVIDIA RTX 2000 Ada (8GB VRAM) with open kernel drivers (nvidia-driver-595-open)
 - **Thunderbolt**: Intel Maple Ridge TB4 controller
 - **Package managers**: apt, snap, flatpak
 
