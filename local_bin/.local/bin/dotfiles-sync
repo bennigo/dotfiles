@@ -328,7 +328,7 @@ sync_claude_private() {
         # pop, because sync_claude_live_to_repo will immediately restore the current live state.
         local _stashed=false
         if [ -n "$(git status --porcelain 2>/dev/null | head -1)" ]; then
-            if git stash push --include-untracked --quiet -m "dotfiles-sync pre-unlock" 2>/dev/null; then
+            if git stash push --quiet -m "dotfiles-sync pre-unlock" 2>/dev/null; then
                 _stashed=true
             fi
         fi
