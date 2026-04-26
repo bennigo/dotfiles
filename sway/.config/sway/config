@@ -274,8 +274,8 @@ bindcode $mod+108 exec ~/.config/sway/scripts/show-layout.sh --restore
     exec --no-startup-id $term --class "terminal_floating"
 
 # Browser profiles on dedicated workspaces (staggered to avoid snap race condition)
-    exec firefox-profile work
-    exec sleep 3 && firefox-profile personal
+    exec ~/.local/bin/firefox-profile work
+    exec sleep 3 && ~/.local/bin/firefox-profile personal
 # bindsym $mod+o exec gtk-launch obsidian.desktop
 
 ## Scratchpad // Show Zathura from scratchpad // 📚 ##
