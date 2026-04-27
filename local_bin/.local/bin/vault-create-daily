@@ -143,19 +143,6 @@ group by filename
 short mode
 \`\`\`
 
-### Tímasett / Yfirstandandi
-
-\`\`\`tasks
-not done
-due before ${NOTE_DATE}
-limit 10
-short mode
-\`\`\`
-
-## Alþjóðastofnanir / UN
-
-> UNSC/UNGA — fundir, atkvæðagreiðslur, yfirlýsingar. Sjá [[1775694600-unsc-tracker-moc|UNSC Tracker]].
-
 
 ## Dagbók
 
@@ -170,6 +157,33 @@ short mode
 **Þakklæti / jákvætt**
 
 
+## Morning Source Scan
+
+### 🌅 Morgunyfirlit — ${NOTE_DATE}
+
+### IFSC — Íslenskir keppendur
+
+### Sport News
+
+### Alþjóðastofnanir / UN
+
+> UNSC/UNGA — fundir, atkvæðagreiðslur, yfirlýsingar. Sjá [[1775694600-unsc-tracker-moc|UNSC Tracker]].
+
+### Tímasett / Yfirstandandi
+
+\`\`\`tasks
+not done
+due before ${NOTE_DATE}
+limit 10
+short mode
+\`\`\`
+
+
+## P1 Source Scan — Morgunyfirlit
+
+### Notable P1 Items
+
+
 ## Nótur dagsins
 
 \`\`\`dataview
@@ -179,6 +193,21 @@ TABLE WITHOUT ID
 FROM "" AND -"Templates" AND -"4.Archive" AND -"Journal"
 WHERE file.cday = date("${NOTE_DATE}")
 SORT file.ctime ASC
+\`\`\`
+
+## Vikan til þessa
+
+> Nótur og lotur síðustu 7 daga — lifandi dataview. Frystur vikusnarmynd með athugasemdum: \`/weekly\`.
+
+\`\`\`dataview
+TABLE WITHOUT ID
+  file.link as "Nóta",
+  file.folder as "Svæði",
+  file.cday as "Dagur"
+FROM "" AND -"Templates" AND -"4.Archive" AND -"Journal"
+WHERE file.cday >= (date("${NOTE_DATE}") - dur(7 days)) AND file.cday < date("${NOTE_DATE}")
+SORT file.cday DESC
+LIMIT 15
 \`\`\`
 TEMPLATE
 
