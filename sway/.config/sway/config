@@ -275,7 +275,7 @@ bindcode $mod+108 exec ~/.config/sway/scripts/show-layout.sh --restore
 
 # cisco secure client
     exec_always --no-startup-id gtk-launch com.cisco.secureclient.gui.desktop
-    exec --no-startup-id gtk-launch obsidian.desktop
+    exec --no-startup-id obsidian --no-sandbox
     exec --no-startup-id gtk-launch org.zotero.Zotero.desktop
     exec --no-startup-id google-chrome-stable
     exec --no-startup-id $term --class "terminal_floating"
@@ -339,12 +339,13 @@ bindsym $mod+Shift+Print exec ${HOME}/.local/bin/run_screenshot.sh -e -c -m regi
     assign [app_id="firefox-work"] workspace 2
     assign [app_id="firefox-personal"] workspace 3
 
-    assign [class="Spotify"] 10
-    for_window [class="Spotify"] floating enable
-    for_window [class="Spotify"] resize set width 1800 height 1100
+    assign [app_id="spotify"] workspace 10
+    for_window [app_id="spotify"] floating enable
+    for_window [app_id="spotify"] resize set width 1900 height 1150
+    for_window [app_id="spotify"] move position center
 
 ## Media // Launch Spotify // 🎵 ##
-bindsym $mod+colon exec spotify
+bindsym $mod+colon exec spotify, workspace 10
 ## Media // Play/Pause Spotify // ⏯️ ##
 bindsym $mod+semicolon exec playerctl --player=spotify play-pause
 ## Media // Previous track (Spotify) // ⏮️ ##
