@@ -294,6 +294,13 @@
         creates: "{{ target_home }}/.local/bin/getnf"
   tags: ["desktop", "cli-tools"]
 
+- name: Install rofimoji (emoji/symbol/icon picker for rofi)
+  community.general.pipx:
+    name: rofimoji
+    state: present
+  become: no
+  tags: ["desktop", "rofi", "pickers"]
+
 - name: Install tmux plugin manager
   git:
     repo: https://github.com/tmux-plugins/tpm
