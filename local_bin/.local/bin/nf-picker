@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Nerd Font icon picker — uses rofimoji's built-in nerd_font dataset (10k+ icons)
+# Typed at cursor; U+XXXX codepoint copied to clipboard
+exec rofimoji \
+    --files nerd_font \
+    --action type copy-unicode \
+    --prompt "nf> " \
+    --selector-args="-font 'HackNerdFont 14' -markup-rows"

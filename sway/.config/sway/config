@@ -184,7 +184,13 @@ bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
 # Show shortcuts overlay 
 # bindsym $mod+slash exec ~/.config/sway/sway-shortcuts.sh 
 ## Apps // Show shortcuts overlay // ❓ ##
-bindsym $mod+slash exec ~/.config/sway/scripts/sway-shortcuts.sh 
+bindsym $mod+slash exec ~/.config/sway/scripts/sway-shortcuts.sh
+## Apps // Emoji picker // 😀 ##
+bindsym $mod+period exec ~/.local/bin/emoji-picker
+## Apps // Nerd Font icon picker (codepoint copied to clipboard) // 🔣 ##
+bindsym $mod+comma exec ~/.local/bin/nf-picker
+## Apps // Unicode symbol picker (arrows, math, box-drawing, dingbats) // ✦ ##
+bindsym $mod+Ctrl+period exec ~/.local/bin/sym-picker
 
 #
 # Basics:
@@ -563,8 +569,8 @@ for_window [app_id="imv"] floating enable, resize set width 1800 px height 1100 
 
 for_window [app_id="com.cisco.secureclient.gui"] move scratchpad, floating enable
 # Obsidian can launch as native Wayland (app_id) or XWayland (class) — match both
-for_window [app_id="obsidian"] move scratchpad, floating enable, resize set width 2000 px height 1190 px, move position center
-for_window [class="obsidian"] move scratchpad, floating enable, resize set width 2000 px height 1190 px, move position center
+for_window [app_id="obsidian"] floating enable, resize set width 2000 px height 1190 px, move position center, move scratchpad
+for_window [class="obsidian"] floating enable, resize set width 2000 px height 1190 px, move position center, move scratchpad
 for_window [app_id="google-chrome"] move scratchpad, floating enable, resize set width 2000 px height 1190 px, move position center
 for_window [app_id="org.zotero.Zotero"] move scratchpad, floating enable, resize set width 1900 px height 1100 px, move position center
 for_window [app_id="^libreoffice"] floating enable, resize set width 3200 px height 2000 px, move scratchpad

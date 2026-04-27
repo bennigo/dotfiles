@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Unicode symbol picker — arrows, dingbats, box-drawing, math, geometric shapes
+exec rofimoji \
+    --files arrows dingbats box_drawing geometric_shapes miscellaneous_technical \
+            supplemental_arrows-a supplemental_arrows-b ornamental_dingbats \
+            weathericons math mathematical_operators \
+    --action type \
+    --prompt "sym> " \
+    --selector-args="-font 'HackNerdFont 14'"
