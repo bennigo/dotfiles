@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# sway-obsidian-toggle — Toggle Obsidian scratchpad window.
+# If running, toggle scratchpad visibility. If not, launch and show.
+
+set -euo pipefail
+
+RESIZE_W=2000
+RESIZE_H=1190
+
+_show() {
+    swaymsg "[app_id=\"obsidian\"] scratchpad show, resize set width ${RESIZE_W} px height ${RESIZE_H} px, move position center" 2>/dev/null || true
+    swaymsg "[class=\"obsidian\"]  scratchpad show, resize set width ${RESIZE_W} px height ${RESIZE_H} px, move position center" 2>/dev/null || true
+}
+
+_has_window() {
+    swaymsg -t get_tree \
+        | jq -r '.. | (.app_id? // empty), (.window_properties?.class? // empty)' 2>/dev/null \
+        | grep -qix 'obsidian'
+}
+
+if _has_window; then
+    _show
+else
+    gtk-launch obsidian.desktop &
+    for _ in $(seq 1 30); do
+        sleep 0.3
+        if _has_window; then
+            sleep 0.3  # let for_window rule fire before calling scratchpad show
+            _show
+            exit 0
+        fi
+    done
+fi

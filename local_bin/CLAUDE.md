@@ -51,6 +51,7 @@
 | Script | Purpose |
 |--------|---------|
 | `toggle-libreoffice.sh` | Toggle LibreOffice scratchpad window |
+| `sway-obsidian-toggle` | Toggle Obsidian scratchpad (launch on cold start via gtk-launch) |
 
 ### Office / Applications
 | Script | Purpose |
