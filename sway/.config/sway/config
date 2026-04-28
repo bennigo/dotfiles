@@ -275,7 +275,7 @@ bindcode $mod+108 exec ~/.config/sway/scripts/show-layout.sh --restore
 
 # cisco secure client
     exec_always --no-startup-id gtk-launch com.cisco.secureclient.gui.desktop
-    exec --no-startup-id obsidian --no-sandbox
+    exec --no-startup-id gtk-launch obsidian.desktop
     exec --no-startup-id gtk-launch org.zotero.Zotero.desktop
     exec --no-startup-id google-chrome-stable
     exec --no-startup-id $term --class "terminal_floating"
@@ -290,7 +290,7 @@ bindsym $mod+z [app_id="org.pwmt.zathura"] scratchpad show
 ## Scratchpad // Show Cisco client from scratchpad // 🛡️ ##
 bindsym $mod+c [app_id="com.cisco.secureclient.gui"] scratchpad show
 ## Scratchpad // Show Obsidian from scratchpad // 🗒️ ##
-bindsym $mod+Shift+o [app_id="obsidian"] scratchpad show; [class="obsidian"] scratchpad show; [app_id="obsidian"] resize set width 2000 px height 1190 px, move position center; [class="obsidian"] resize set width 2000 px height 1190 px, move position center
+bindsym $mod+Shift+o exec ~/.local/bin/sway-obsidian-toggle
 ## Scratchpad // Show Neovim from scratchpad (any nvim window) // ⚡ ##
 bindsym $mod+o [con_mark="nvim_today"] scratchpad show, move position center; [con_mark="nvim_new"] scratchpad show, move position center; [con_mark="nvim_quick"] scratchpad show, move position center
 ## Scratchpad // Toggle LibreOffice scratchpad // 📄 ##
