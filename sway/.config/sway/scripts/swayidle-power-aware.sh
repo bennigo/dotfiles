@@ -78,5 +78,5 @@ exec swayidle -w \
     timeout $TIMEOUT_SCREEN_OFF "swaymsg output $LAPTOP_DISPLAY power off" \
         resume "swaymsg output $LAPTOP_DISPLAY power on" \
     timeout $TIMEOUT_SUSPEND "$0 --suspend-check" \
-    before-sleep "swaymsg output $LAPTOP_DISPLAY power on; sleep 0.3; swaylock -f -c 000000 -i $WALLPAPER" \
-    after-resume "swaymsg output $LAPTOP_DISPLAY power on; brightnessctl -r"
+    before-sleep "tmux-pre-sleep; swaymsg output $LAPTOP_DISPLAY power on; sleep 0.3; swaylock -f -c 000000 -i $WALLPAPER" \
+    after-resume "swaymsg output $LAPTOP_DISPLAY power on; brightnessctl -r; tmux-post-wake"

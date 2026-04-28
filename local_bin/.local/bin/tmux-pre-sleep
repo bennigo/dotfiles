@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Save tmux resurrect state before system sleep.
+# Called from swayidle before-sleep hook, which fires on PrepareForSleep
+# D-Bus signal — covers all suspend paths: lid, mod+shift+x, idle timeout.
+if pgrep -x tmux &>/dev/null; then
+    ~/.config/tmux/plugins/tmux-resurrect/scripts/save.sh
+fi

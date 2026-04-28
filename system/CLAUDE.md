@@ -47,6 +47,20 @@ sudo systemctl restart upower
 sudo udevadm control --reload-rules
 ```
 
+### NVIDIA Suspend User-Session Freeze Override
+**File**: `usr/lib/systemd/system/systemd-suspend.service.d/nvidia-suspend-nofreeze.conf`
+
+Clears the Xorg-era `SYSTEMD_SLEEP_FREEZE_USER_SESSIONS=false` workaround. On Wayland (Sway),
+user session freezing is required before GPU suspend — without it Sway tries to composite while
+`nvidia-suspend.service` is powering down the GPU and crashes to GDM on resume.
+
+**Deploy after any NVIDIA driver upgrade** (driver packages may overwrite this drop-in):
+```bash
+sudo cp ~/.dotfiles/system/usr/lib/systemd/system/systemd-suspend.service.d/nvidia-suspend-nofreeze.conf \
+    /usr/lib/systemd/system/systemd-suspend.service.d/
+sudo systemctl daemon-reload
+```
+
 ### Thunderbolt 4 Resume Fix
 **File**: `usr/lib/systemd/system-sleep/thunderbolt-fix`
 
