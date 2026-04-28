@@ -138,3 +138,11 @@ _auto_refresh_wayland_precmd() {
 if [[ -n "$TMUX" && -z "$WAYLAND_DISPLAY" ]]; then
     precmd_functions+=(_auto_refresh_wayland_precmd)
 fi
+
+# Track active conda/mamba env in a tmux pane option so resurrect hooks can
+# restore it. The option is read by save-conda-envs.sh at save time.
+_tmux_track_conda() {
+    [[ -z "$TMUX" ]] && return
+    tmux set-option -p @conda_env "${CONDA_DEFAULT_ENV:-}" 2>/dev/null || true
+}
+precmd_functions+=(_tmux_track_conda)
