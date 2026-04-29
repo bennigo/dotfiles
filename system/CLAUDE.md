@@ -47,21 +47,27 @@ sudo systemctl restart upower
 sudo udevadm control --reload-rules
 ```
 
-### NVIDIA Driver Version (suspend-critical)
+### NVIDIA Suspend + Kernel Version (suspend-critical)
 
-**Current**: `nvidia-driver-580-open` (580.142). Do NOT upgrade to 595.x without testing suspend.
+**Current driver**: `nvidia-driver-580-open` (580.142).
+**Current boot kernel**: 6.17.0-22-generic (pinned in `/etc/default/grub`).
 
-`nvidia_modeset.ko` 595.58.03 has a broken jump_label at `nvkms_kthread_q_callback+0x8e` —
-bytes `e9 9b 00 00 00` (JMP) where the kernel expects `0f 1f 44 00 00` (NOP). This triggers
-`kernel BUG at jump_label.c:73` on every suspend attempt via `freeze_processes()`, causing
-a kernel panic → kdump → kexec-reboot. The bug affects both the `-open` and proprietary
-(non-open) 595.58.03 packages — they share the same `nvidia_modeset.ko` binary.
+**Do NOT boot kernel 7.0.0-14-generic** until this is resolved: that kernel has a regression
+in jump_label patching of DKMS modules during `freeze_processes()` on suspend. Every nvidia
+driver version tested (595.58.03 and 580.142) panics identically at
+`nvkms_kthread_q_callback+0x8e` in `nvidia_modeset.ko`. The same driver on 6.17.0-22 works
+correctly — confirming it is a kernel regression, not a driver bug.
 
-When 595.x is patched upstream, test with: `sudo apt install nvidia-driver-595-open` followed
-by `mod+shift+x` suspend test. If the panic returns, downgrade immediately: `sudo apt install
-nvidia-driver-580-open && sudo update-initramfs -u && sudo reboot`.
+Crash dumps are at `/var/crash/` — inspect with:
+```bash
+sudo grep -a "jump_label\|BUG at\|nvkms" /var/crash/<timestamp>/dmesg.<timestamp>
+```
 
-Crash dumps are at `/var/crash/` and can be inspected with `strings dmesg.* | grep jump_label`.
+**When a new kernel 7.0.0-x appears in apt**:
+1. `sudo grub-reboot "Advanced options for Ubuntu>Ubuntu, with Linux 7.0.0-XX-generic"`
+2. Reboot and test: `mod+shift+x` → should resume to swaylock, not GDM
+3. If fixed: set `GRUB_DEFAULT` back to 7.0.x + `sudo update-grub`
+4. If still panics: `sudo grub-reboot` back to 6.17
 
 ### Thunderbolt 4 Resume Fix
 **File**: `usr/lib/systemd/system-sleep/thunderbolt-fix`
