@@ -7,7 +7,7 @@ for the dotfiles repository. For general repository usage, see the main `CLAUDE.
 
 - **Hardware**: ThinkPad P1 Gen 6
 - **OS**: Linux (Ubuntu 26.04 LTS "Resolute Ringtail"), kernel 6.17.0-22-generic, x86_64
-- **GPU**: NVIDIA RTX 2000 Ada (8GB VRAM) with open kernel drivers (nvidia-driver-580-open)
+- **GPU**: NVIDIA RTX 2000 Ada (8GB VRAM) with open kernel drivers (nvidia-driver-595-open)
 - **Thunderbolt**: Intel Maple Ridge TB4 controller
 - **Package managers**: apt, snap, flatpak
 
@@ -49,7 +49,7 @@ sudo udevadm control --reload-rules
 
 ### NVIDIA Suspend + Kernel Version (suspend-critical)
 
-**Current driver**: `nvidia-driver-580-open` (580.142).
+**Current driver**: `nvidia-driver-595-open` (595.58.03).
 **Current boot kernel**: 6.17.0-22-generic (pinned in `/etc/default/grub`).
 
 **Do NOT boot kernel 7.0.0-14-generic** until this is resolved: that kernel has a regression
