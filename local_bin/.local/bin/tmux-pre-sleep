@@ -2,6 +2,18 @@
 # Save tmux resurrect state before system sleep.
 # Called from swayidle before-sleep hook, which fires on PrepareForSleep
 # D-Bus signal — covers all suspend paths: lid, mod+shift+x, idle timeout.
-if pgrep -x tmux &>/dev/null; then
-    ~/.config/tmux/plugins/tmux-resurrect/scripts/save.sh
-fi
+pgrep -x tmux &>/dev/null || exit 0
+
+# Tell every active nvim pane to save its session.
+# tmux-resurrect's nvim_session strategy restores `nvim -S` only when
+# Session.vim exists in the pane's directory — it never writes that file itself.
+tmux list-panes -a -F '#{pane_id}:#{pane_current_command}' 2>/dev/null |
+    while IFS=: read -r pane_id cmd; do
+        [[ "$cmd" == "nvim" ]] || continue
+        tmux send-keys -t "$pane_id" Escape ':mksession! Session.vim' Enter 2>/dev/null || true
+    done
+
+# Brief pause so nvim has time to write Session.vim files before we snapshot.
+sleep 0.5
+
+~/.config/tmux/plugins/tmux-resurrect/scripts/save.sh
