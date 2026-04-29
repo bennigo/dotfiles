@@ -36,8 +36,8 @@ is_valid() {
     # so a truncated file has panes without matching windows.
     local orphans
     orphans=$(comm -23 \
-        <(awk -F'\t' '/^pane/{print $2}' "$file" | sort -u) \
-        <(awk -F'\t' '/^window/{print $2}' "$file" | sort -u))
+        <(awk -F'\t' '/^pane/{print $2}' "$file" | LC_ALL=C sort -u) \
+        <(awk -F'\t' '/^window/{print $2}' "$file" | LC_ALL=C sort -u))
 
     [ -z "$orphans" ] || return 1
 
