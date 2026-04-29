@@ -7,7 +7,7 @@ for the dotfiles repository. For general repository usage, see the main `CLAUDE.
 
 - **Hardware**: ThinkPad P1 Gen 6
 - **OS**: Linux (Ubuntu 26.04 LTS "Resolute Ringtail"), kernel 6.17.0-22-generic, x86_64
-- **GPU**: NVIDIA RTX 2000 Ada (8GB VRAM) with open kernel drivers (nvidia-driver-595-open)
+- **GPU**: NVIDIA RTX 2000 Ada (8GB VRAM) with open kernel drivers (nvidia-driver-580-open)
 - **Thunderbolt**: Intel Maple Ridge TB4 controller
 - **Package managers**: apt, snap, flatpak
 
@@ -47,19 +47,21 @@ sudo systemctl restart upower
 sudo udevadm control --reload-rules
 ```
 
-### NVIDIA Suspend User-Session Freeze Override
-**File**: `usr/lib/systemd/system/systemd-suspend.service.d/nvidia-suspend-nofreeze.conf`
+### NVIDIA Driver Version (suspend-critical)
 
-Clears the Xorg-era `SYSTEMD_SLEEP_FREEZE_USER_SESSIONS=false` workaround. On Wayland (Sway),
-user session freezing is required before GPU suspend — without it Sway tries to composite while
-`nvidia-suspend.service` is powering down the GPU and crashes to GDM on resume.
+**Current**: `nvidia-driver-580-open` (580.142). Do NOT upgrade to 595.x without testing suspend.
 
-**Deploy after any NVIDIA driver upgrade** (driver packages may overwrite this drop-in):
-```bash
-sudo cp ~/.dotfiles/system/usr/lib/systemd/system/systemd-suspend.service.d/nvidia-suspend-nofreeze.conf \
-    /usr/lib/systemd/system/systemd-suspend.service.d/
-sudo systemctl daemon-reload
-```
+`nvidia_modeset.ko` 595.58.03 has a broken jump_label at `nvkms_kthread_q_callback+0x8e` —
+bytes `e9 9b 00 00 00` (JMP) where the kernel expects `0f 1f 44 00 00` (NOP). This triggers
+`kernel BUG at jump_label.c:73` on every suspend attempt via `freeze_processes()`, causing
+a kernel panic → kdump → kexec-reboot. The bug affects both the `-open` and proprietary
+(non-open) 595.58.03 packages — they share the same `nvidia_modeset.ko` binary.
+
+When 595.x is patched upstream, test with: `sudo apt install nvidia-driver-595-open` followed
+by `mod+shift+x` suspend test. If the panic returns, downgrade immediately: `sudo apt install
+nvidia-driver-580-open && sudo update-initramfs -u && sudo reboot`.
+
+Crash dumps are at `/var/crash/` and can be inspected with `strings dmesg.* | grep jump_label`.
 
 ### Thunderbolt 4 Resume Fix
 **File**: `usr/lib/systemd/system-sleep/thunderbolt-fix`
