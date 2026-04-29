@@ -288,7 +288,8 @@ sync_claude_live_to_repo() {
     log_info "Reverse-syncing live Claude files to repository..."
 
     # Directories containing important backup data (encrypted via git-crypt)
-    # --max-size=45M: GitHub warns at 50MB; 45MB gives headroom for git-crypt overhead
+    # --max-size=90M + --exclude=tool-results/: conversation JSONL files up to 90M are kept;
+    # tool-results/ dirs (ephemeral bash output captures, often 60MB+) are excluded entirely.
     local sync_dirs=("projects" "shell-snapshots" "plans")
 
     for dir in "${sync_dirs[@]}"; do
@@ -303,7 +304,8 @@ sync_claude_live_to_repo() {
                 continue
             fi
             mkdir -p "$repo_dir/$dir"
-            rsync -a --max-size=45M "$live_dir/$dir/" "$repo_dir/$dir/"
+            # Exclude tool-results/: ephemeral bash output captures that can be 65MB+ each.
+            rsync -a --max-size=90M --exclude='tool-results/' "$live_dir/$dir/" "$repo_dir/$dir/"
         fi
     done
 
