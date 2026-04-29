@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Obsidian
+Comment=A powerful knowledge base on top of local Markdown files
+Exec=obsidian-launch %u
+Icon=obsidian
+Type=Application
+Categories=Office;TextEditor;
+MimeType=x-scheme-handler/obsidian;
+StartupWMClass=obsidian
+StartupNotify=true

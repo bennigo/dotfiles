@@ -2,10 +2,13 @@
 # sway-obsidian-toggle — Toggle Obsidian scratchpad window.
 # If running, toggle scratchpad visibility. If not, launch and show.
 
-set -euo pipefail
+set -uo pipefail
 
+LOG="${XDG_RUNTIME_DIR:-/tmp}/sway-obsidian-toggle.log"
 RESIZE_W=2000
 RESIZE_H=1190
+
+_log() { echo "[$(date '+%H:%M:%S')] $*" >> "$LOG"; }
 
 _show() {
     swaymsg "[app_id=\"obsidian\"] scratchpad show, resize set width ${RESIZE_W} px height ${RESIZE_H} px, move position center" 2>/dev/null || true
@@ -15,19 +18,26 @@ _show() {
 _has_window() {
     swaymsg -t get_tree \
         | jq -r '.. | (.app_id? // empty), (.window_properties?.class? // empty)' 2>/dev/null \
-        | grep -qix 'obsidian'
+        | grep -qi 'obsidian'
 }
 
+_log "invoked"
+
 if _has_window; then
+    _log "window found — showing scratchpad"
     _show
 else
-    gtk-launch obsidian.desktop &
-    for _ in $(seq 1 30); do
-        sleep 0.3
+    _log "no window — launching obsidian-launch"
+    obsidian-launch &
+    for _ in $(seq 1 60); do
+        sleep 0.5
         if _has_window; then
             sleep 0.3  # let for_window rule fire before calling scratchpad show
+            _log "window appeared — showing scratchpad"
             _show
             exit 0
         fi
     done
+    _log "ERROR: window never appeared after 30s"
+    notify-send -u critical -t 8000 "Obsidian" "Failed to launch after 30s — check ${LOG}"
 fi
