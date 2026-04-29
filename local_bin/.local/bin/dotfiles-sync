@@ -288,13 +288,22 @@ sync_claude_live_to_repo() {
     log_info "Reverse-syncing live Claude files to repository..."
 
     # Directories containing important backup data (encrypted via git-crypt)
-    # --max-size=95M: GitHub rejects files >100MB; 95MB gives headroom for git-crypt overhead
+    # --max-size=45M: GitHub warns at 50MB; 45MB gives headroom for git-crypt overhead
     local sync_dirs=("projects" "shell-snapshots" "plans")
 
     for dir in "${sync_dirs[@]}"; do
         if [ -d "$live_dir/$dir" ] && [ "$(ls -A "$live_dir/$dir" 2>/dev/null)" ]; then
+            # Guard against stow symlinks: if live resolves to the same path as repo,
+            # rsync would copy a directory into itself, creating nested duplicates.
+            local real_src real_dst
+            real_src=$(realpath "$live_dir/$dir" 2>/dev/null)
+            real_dst=$(realpath "$repo_dir/$dir" 2>/dev/null)
+            if [ "$real_src" = "$real_dst" ]; then
+                log_info "Skipping $dir: source is symlinked to destination (already in repo)"
+                continue
+            fi
             mkdir -p "$repo_dir/$dir"
-            rsync -a --max-size=95M "$live_dir/$dir/" "$repo_dir/$dir/"
+            rsync -a --max-size=45M "$live_dir/$dir/" "$repo_dir/$dir/"
         fi
     done
 
