@@ -93,13 +93,30 @@ def move_group(group_name: str, src_name: str, dst_name: str, dry_run: bool) -> 
     src_dir = FIREFOX_DIR / profiles[src_name]
     dst_dir = FIREFOX_DIR / profiles[dst_name]
 
+    # Destination must be closed: Firefox overwrites sessionstore.jsonlz4 on
+    # clean shutdown, clobbering any changes we make while it is running.
+    if is_running(dst_dir) and not dry_run:
+        print(f"✋  {dst_name} Firefox is running.")
+        print(f"   Close it first, then run this command again.")
+        print(f"   Firefox writes sessionstore.jsonlz4 on exit — we patch that file.")
+        sys.exit(1)
+
     src_path, src_kind = best_session_path(src_dir)
-    dst_path, dst_kind = best_session_path(dst_dir)
+
+    # Destination: prefer sessionstore.jsonlz4 (written on clean shutdown).
+    # recovery.jsonlz4 is only a fallback when sessionstore doesn't exist yet.
+    dst_session = dst_dir / "sessionstore.jsonlz4"
+    dst_recovery = dst_dir / "sessionstore-backups" / "recovery.jsonlz4"
+    if dst_session.exists():
+        dst_path = dst_session
+    elif dst_recovery.exists():
+        dst_path = dst_recovery
+    else:
+        print(f"No session file found for {dst_name}.")
+        sys.exit(1)
 
     if is_running(src_dir) and src_kind == "recovery":
         print(f"ℹ  {src_name} Firefox is running — reading live recovery file")
-    if is_running(dst_dir):
-        print(f"⚠  {dst_name} Firefox is running — changes will take effect after restart")
 
     src_sess = read_mozlz4(src_path)
     dst_sess = read_mozlz4(dst_path)
@@ -151,16 +168,12 @@ def move_group(group_name: str, src_name: str, dst_name: str, dry_run: bool) -> 
     dst_win.setdefault("groups", []).append(new_group)
     dst_win["tabs"].extend(new_tabs)
 
-    # Write recovery (picked up by running Firefox after restart)
-    dst_recovery = dst_dir / "sessionstore-backups" / "recovery.jsonlz4"
-    write_mozlz4(dst_recovery, dst_sess)
-
-    # Also write sessionstore.jsonlz4 so a clean startup picks it up
-    dst_session = dst_dir / "sessionstore.jsonlz4"
-    write_mozlz4(dst_session, dst_sess)
+    # Write to the file Firefox will read on next startup.
+    # sessionstore.jsonlz4 exists only when Firefox is closed (we enforce that above).
+    write_mozlz4(dst_path, dst_sess)
 
     print(f"✓  Moved {group['name']!r} ({len(src_tabs)} tabs)  {src_name} → {dst_name}")
-    print(f"   Restart {dst_name} Firefox to see the group.")
+    print(f"   Open {dst_name} Firefox now — the group will be there.")
 
 
 # ── CLI ────────────────────────────────────────────────────────────────────────
