@@ -82,7 +82,21 @@ def new_group_id() -> str:
     return f"{int(time.time() * 1000)}-{random.randint(1, 99)}"
 
 
-def move_group(group_name: str, src_name: str, dst_name: str, dry_run: bool) -> None:
+def remove_group_from_session(sess: dict, group_name: str) -> int:
+    """Remove group and its tabs from session in-place. Returns tab count removed."""
+    win = sess["windows"][0]
+    groups = win.get("groups", [])
+    match = next((g for g in groups if g.get("name") == group_name), None)
+    if not match:
+        return 0
+    gid = match["id"]
+    win["groups"] = [g for g in groups if g["id"] != gid]
+    before = len(win.get("tabs", []))
+    win["tabs"] = [t for t in win.get("tabs", []) if t.get("groupId") != gid]
+    return before - len(win["tabs"])
+
+
+def move_group(group_name: str, src_name: str, dst_name: str, dry_run: bool, do_move: bool = False) -> None:
     profiles = load_profiles()
 
     for name in (src_name, dst_name):
@@ -93,12 +107,16 @@ def move_group(group_name: str, src_name: str, dst_name: str, dry_run: bool) -> 
     src_dir = FIREFOX_DIR / profiles[src_name]
     dst_dir = FIREFOX_DIR / profiles[dst_name]
 
-    # Destination must be closed: Firefox overwrites sessionstore.jsonlz4 on
-    # clean shutdown, clobbering any changes we make while it is running.
+    # Both src (if --move) and dst must be closed before we touch their session files.
+    blocked = []
     if is_running(dst_dir) and not dry_run:
-        print(f"✋  {dst_name} Firefox is running.")
-        print(f"   Close it first, then run this command again.")
-        print(f"   Firefox writes sessionstore.jsonlz4 on exit — we patch that file.")
+        blocked.append(dst_name)
+    if do_move and is_running(src_dir) and not dry_run:
+        blocked.append(src_name)
+    if blocked:
+        for name in blocked:
+            print(f"✋  {name} Firefox is running — close it first, then run again.")
+        print(f"   Firefox overwrites its session on exit; we must patch after that.")
         sys.exit(1)
 
     src_path, src_kind = best_session_path(src_dir)
@@ -171,9 +189,19 @@ def move_group(group_name: str, src_name: str, dst_name: str, dry_run: bool) -> 
     # Write to the file Firefox will read on next startup.
     # sessionstore.jsonlz4 exists only when Firefox is closed (we enforce that above).
     write_mozlz4(dst_path, dst_sess)
+    print(f"✓  Copied {group['name']!r} ({len(src_tabs)} tabs)  {src_name} → {dst_name}")
 
-    print(f"✓  Moved {group['name']!r} ({len(src_tabs)} tabs)  {src_name} → {dst_name}")
-    print(f"   Open {dst_name} Firefox now — the group will be there.")
+    if do_move:
+        src_session = src_dir / "sessionstore.jsonlz4"
+        src_recovery = src_dir / "sessionstore-backups" / "recovery.jsonlz4"
+        src_write = src_session if src_session.exists() else src_recovery
+        src_backup = src_write.with_suffix(".jsonlz4.bak")
+        shutil.copy2(src_write, src_backup)
+        removed = remove_group_from_session(src_sess, group_name)
+        write_mozlz4(src_write, src_sess)
+        print(f"✓  Removed {group['name']!r} ({removed} tabs) from {src_name}")
+
+    print(f"   Open {dst_name} Firefox — the group will be there.")
 
 
 # ── CLI ────────────────────────────────────────────────────────────────────────
@@ -188,9 +216,10 @@ def main() -> None:
     parser.add_argument("src",   help="Source profile (e.g. personal)")
     parser.add_argument("dst",   help="Destination profile (e.g. work)")
     parser.add_argument("--dry-run", action="store_true", help="Preview without writing")
+    parser.add_argument("--move", action="store_true", help="Remove group from source after copying")
     args = parser.parse_args()
 
-    move_group(args.group, args.src, args.dst, args.dry_run)
+    move_group(args.group, args.src, args.dst, args.dry_run, do_move=args.move)
 
 
 if __name__ == "__main__":
