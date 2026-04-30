@@ -1,0 +1,184 @@
+#!/usr/bin/env python3
+"""Move a tab group between Firefox profiles.
+
+Usage:
+    firefox-move-tabgroup <group-name> <src-profile> <dst-profile> [--dry-run]
+
+Example:
+    firefox-move-tabgroup "software" personal work
+
+Reads profiles from profiles.ini automatically.
+Handles running Firefox by writing both recovery.jsonlz4 and
+sessionstore.jsonlz4 — restart the destination profile to see the group.
+
+Requires: pip install lz4
+"""
+
+import argparse
+import configparser
+import json
+import lz4.block
+import random
+import shutil
+import sys
+import time
+from pathlib import Path
+
+MAGIC = b"mozLz40\0"
+FIREFOX_DIR = Path.home() / "snap/firefox/common/.mozilla/firefox"
+
+
+# ── mozlz4 I/O ────────────────────────────────────────────────────────────────
+
+def read_mozlz4(path: Path) -> dict:
+    with open(path, "rb") as f:
+        magic = f.read(8)
+        if magic != MAGIC:
+            raise ValueError(f"Not a mozlz4 file: {path}")
+        raw = f.read()
+    size = int.from_bytes(raw[:4], "little")
+    return json.loads(lz4.block.decompress(raw[4:], uncompressed_size=size))
+
+
+def write_mozlz4(path: Path, data: dict) -> None:
+    raw = json.dumps(data, separators=(",", ":")).encode()
+    with open(path, "wb") as f:
+        f.write(MAGIC)
+        f.write(lz4.block.compress(raw, store_size=True))
+
+
+# ── Profile helpers ────────────────────────────────────────────────────────────
+
+def load_profiles() -> dict[str, str]:
+    """Return {name: path} from profiles.ini."""
+    ini = FIREFOX_DIR / "profiles.ini"
+    cfg = configparser.ConfigParser()
+    cfg.read(ini)
+    profiles = {}
+    for section in cfg.sections():
+        if cfg.has_option(section, "Name") and cfg.has_option(section, "Path"):
+            profiles[cfg[section]["Name"]] = cfg[section]["Path"]
+    return profiles
+
+
+def is_running(profile_dir: Path) -> bool:
+    return (profile_dir / "lock").exists()
+
+
+def best_session_path(profile_dir: Path) -> tuple[Path, str]:
+    """Return (path, kind). Prefer sessionstore over recovery."""
+    session = profile_dir / "sessionstore.jsonlz4"
+    recovery = profile_dir / "sessionstore-backups" / "recovery.jsonlz4"
+    if session.exists():
+        return session, "session"
+    if recovery.exists():
+        return recovery, "recovery"
+    raise FileNotFoundError(f"No session file found in {profile_dir}")
+
+
+# ── Core logic ─────────────────────────────────────────────────────────────────
+
+def new_group_id() -> str:
+    return f"{int(time.time() * 1000)}-{random.randint(1, 99)}"
+
+
+def move_group(group_name: str, src_name: str, dst_name: str, dry_run: bool) -> None:
+    profiles = load_profiles()
+
+    for name in (src_name, dst_name):
+        if name not in profiles:
+            print(f"Unknown profile {name!r}. Available: {list(profiles)}")
+            sys.exit(1)
+
+    src_dir = FIREFOX_DIR / profiles[src_name]
+    dst_dir = FIREFOX_DIR / profiles[dst_name]
+
+    src_path, src_kind = best_session_path(src_dir)
+    dst_path, dst_kind = best_session_path(dst_dir)
+
+    if is_running(src_dir) and src_kind == "recovery":
+        print(f"ℹ  {src_name} Firefox is running — reading live recovery file")
+    if is_running(dst_dir):
+        print(f"⚠  {dst_name} Firefox is running — changes will take effect after restart")
+
+    src_sess = read_mozlz4(src_path)
+    dst_sess = read_mozlz4(dst_path)
+
+    src_win = src_sess["windows"][0]
+    dst_win = dst_sess["windows"][0]
+
+    # Find the group in source
+    src_groups = src_win.get("groups", [])
+    matches = [g for g in src_groups if g.get("name") == group_name]
+    if not matches:
+        available = [g.get("name") for g in src_groups]
+        print(f"Group {group_name!r} not found in {src_name}.")
+        print(f"Available groups: {available}")
+        sys.exit(1)
+
+    group = matches[0]
+    old_id = group["id"]
+    src_tabs = [t for t in src_win.get("tabs", []) if t.get("groupId") == old_id]
+
+    print(f"Group   : {group['name']!r}  color={group.get('color')}  collapsed={group.get('collapsed')}")
+    print(f"Tabs ({len(src_tabs)}):")
+    for t in src_tabs:
+        entry = (t.get("entries") or [{}])[-1]
+        print(f"  {entry.get('title', '?')[:55]}")
+        print(f"    {entry.get('url', '?')[:80]}")
+
+    if dry_run:
+        print("\n[dry-run] No changes written.")
+        return
+
+    # Remap ID if it collides in destination
+    dst_ids = {g["id"] for g in dst_win.get("groups", [])}
+    if old_id in dst_ids:
+        new_id = new_group_id()
+        print(f"\nID collision — remapped: {old_id!r} → {new_id!r}")
+    else:
+        new_id = old_id
+
+    new_group = {**group, "id": new_id}
+    new_tabs = [{**t, "groupId": new_id} for t in src_tabs]
+
+    # Back up destination before writing
+    backup = dst_path.with_suffix(".jsonlz4.bak")
+    shutil.copy2(dst_path, backup)
+    print(f"\nBacked up: {backup.name}")
+
+    # Inject into destination
+    dst_win.setdefault("groups", []).append(new_group)
+    dst_win["tabs"].extend(new_tabs)
+
+    # Write recovery (picked up by running Firefox after restart)
+    dst_recovery = dst_dir / "sessionstore-backups" / "recovery.jsonlz4"
+    write_mozlz4(dst_recovery, dst_sess)
+
+    # Also write sessionstore.jsonlz4 so a clean startup picks it up
+    dst_session = dst_dir / "sessionstore.jsonlz4"
+    write_mozlz4(dst_session, dst_sess)
+
+    print(f"✓  Moved {group['name']!r} ({len(src_tabs)} tabs)  {src_name} → {dst_name}")
+    print(f"   Restart {dst_name} Firefox to see the group.")
+
+
+# ── CLI ────────────────────────────────────────────────────────────────────────
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Move a Firefox tab group between profiles",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=__doc__,
+    )
+    parser.add_argument("group", help="Tab group name")
+    parser.add_argument("src",   help="Source profile (e.g. personal)")
+    parser.add_argument("dst",   help="Destination profile (e.g. work)")
+    parser.add_argument("--dry-run", action="store_true", help="Preview without writing")
+    args = parser.parse_args()
+
+    move_group(args.group, args.src, args.dst, args.dry_run)
+
+
+if __name__ == "__main__":
+    main()
