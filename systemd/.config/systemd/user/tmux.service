@@ -9,6 +9,7 @@ ExecStart=/bin/bash -l -c '/usr/bin/tmux new-session -d'
 ExecStop=/home/bgo/.config/tmux/plugins/tmux-resurrect/scripts/save.sh
 ExecStop=/usr/bin/tmux kill-server
 KillMode=control-group
+TimeoutStopSec=10
 
 RestartSec=2
 

@@ -9,3 +9,6 @@ SIDECAR="${LAST%.txt}-conda.txt"
 tmux list-panes -a -F '#{session_name}:#{window_index}.#{pane_index} #{@conda_env}' 2>/dev/null \
     | grep -v ' $' \
     > "$SIDECAR"
+
+# Prune resurrect files (and their conda sidecars) older than 90 days.
+find "$RESURRECT_DIR" -maxdepth 1 -name 'tmux_resurrect_*.txt' -mtime +90 -delete 2>/dev/null
