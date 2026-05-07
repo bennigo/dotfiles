@@ -1,14 +1,22 @@
 #!/usr/bin/env bash
-# Connect to vpn.vedur.is using credentials from pass (accounts/bgo).
-# Credentials are held only in local variables and piped directly to the
-# Secure Client CLI — never echoed, never on the command line, never in history.
+# Connect to vpn.vedur.is via openconnect using credentials from pass (accounts/bgo).
+# Username + password are injected automatically via expect.
+# The MFA step requires typing the 6-digit rolling code from MS Authenticator.
+#
+# TODO: Full GUI automation (zero typing) was attempted but blocked —
+# the AnyConnect CEF browser resists all Wayland input injection (wtype,
+# ydotool keystrokes, ydotool clipboard paste). Revisit when a workaround
+# is found or if Cisco updates the client. Possible future angles:
+#   - AT-SPI accessibility API
+#   - Add explicit TOTP method in Azure AD (needs IT) → pass-otp auto-inject
+#   - openconnect --external-browser for SAML push flow (just phone tap)
 set -euo pipefail
 
 VPN_HOST="vpn.vedur.is"
-VPN_BIN="/opt/cisco/secureclient/bin/vpn"
 
 _creds=$(pass show accounts/bgo)
-_user=$(printf '%s\n' "$_creds" | awk -F': ' 'tolower($1) ~ /^(email|username|login)$/ { print $2; exit }')
+_user=$(printf '%s\n' "$_creds" | awk -F': ' 'tolower($1) == "email" { print $2; exit }')
+[[ -z "$_user" ]] && _user=$(printf '%s\n' "$_creds" | awk -F': ' 'tolower($1) ~ /^(username|login)$/ { print $2; exit }')
 _pass=$(printf '%s\n' "$_creds" | head -1)
 unset _creds
 
@@ -18,13 +26,14 @@ if [[ -z "$_user" || -z "$_pass" ]]; then
 fi
 
 printf 'Connecting to %s as %s...\n' "$VPN_HOST" "$_user"
-printf 'Approve the number on your phone when the prompt appears.\n'
+printf 'Password injected automatically — type the 6-digit code from MS Authenticator when prompted.\n\n'
 
-{
-  printf 'connect %s\n' "$VPN_HOST"
-  printf '%s\n' "$_user"
-  printf '%s\n' "$_pass"
-  printf 'y\n'
-} | "$VPN_BIN" -s
+VPNPASS="$_pass" VPNUSER="$_user" VPNHOST="$VPN_HOST" \
+  expect -c '
+    spawn sudo openconnect --protocol=anyconnect \
+      --user=$env(VPNUSER) $env(VPNHOST)
+    expect "Password:" { send "$env(VPNPASS)\r" }
+    interact
+  '
 
 unset _pass _user
