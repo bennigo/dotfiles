@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Connect to vpn.vedur.is using credentials from pass (accounts/bgo).
+# Credentials are held only in local variables and piped directly to the
+# Secure Client CLI — never echoed, never on the command line, never in history.
+set -euo pipefail
+
+VPN_HOST="vpn.vedur.is"
+VPN_BIN="/opt/cisco/secureclient/bin/vpn"
+
+_creds=$(pass show accounts/bgo)
+_user=$(printf '%s\n' "$_creds" | awk -F': ' 'tolower($1) ~ /^(email|username|login)$/ { print $2; exit }')
+_pass=$(printf '%s\n' "$_creds" | head -1)
+unset _creds
+
+if [[ -z "$_user" || -z "$_pass" ]]; then
+  echo "vpn-vedur: could not extract credentials from accounts/bgo" >&2
+  exit 1
+fi
+
+printf 'Connecting to %s as %s...\n' "$VPN_HOST" "$_user"
+printf 'Approve the number on your phone when the prompt appears.\n'
+
+{
+  printf 'connect %s\n' "$VPN_HOST"
+  printf '%s\n' "$_user"
+  printf '%s\n' "$_pass"
+  printf 'y\n'
+} | "$VPN_BIN" -s
+
+unset _pass _user
