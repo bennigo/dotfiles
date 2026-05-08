@@ -20,4 +20,5 @@ exec bash \
     "$SNAP/obsidian" \
     --no-sandbox \
     --ozone-platform=wayland \
+    --disable-features=UseWebGPU \
     "$@"
