@@ -39,6 +39,13 @@
 | `umount-yolobox` | Unmount YoloBox |
 | `rofi-mount-menu` | Interactive rofi UI for USB disk and MTP mount/unmount |
 
+### VPN
+| Script | Purpose |
+|--------|---------|
+| `vpn-public` | Public VPN client with backend dispatch (VPN Gate active, Mullvad placeholder); subcommands: `up <CC>`, `down`, `status`, `list`, `refresh`, `backend`. Uses NetworkManager via nmcli; refuses to run when work `openconnect` is active |
+| `vpn-public-menu` | Rofi country picker that calls `vpn-public list` (backend-agnostic) and dispatches `up <CC>` |
+| `vpn-vedur` | Work Cisco AnyConnect connector (openconnect + expect, password from `pass`) |
+
 ### Sync / Dotfiles
 | Script | Purpose |
 |--------|---------|

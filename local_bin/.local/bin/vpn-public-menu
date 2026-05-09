@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+# vpn-public-menu — rofi country picker for vpn-public.
+# Reads the active backend's country list (NOT the CSV directly), so the menu
+# stays correct when/if the Mullvad backend replaces gate.
+
+set -euo pipefail
+
+VPN_BIN="${VPN_BIN:-$HOME/.local/bin/vpn-public}"
+
+# vpn-public list (no CC) prints lines like:
+#   JP  Japan                          60 servers  top-score=2970419
+build_menu() {
+    "$VPN_BIN" list 2>/dev/null \
+        | awk '{
+            cc=$1
+            # The country name spans columns 2..(NF-3); rejoin them.
+            name=""
+            for (i=2; i<=NF-3; i++) name = name (i==2 ? "" : " ") $i
+            count=$(NF-2)
+            score=$NF
+            sub(/top-score=/, "", score)
+            printf "%-3s %s  (%s servers, top score %s)\n", cc, name, count, score
+        }'
+    echo "🔄 Refresh server list"
+    echo "🌐 Random country"
+    echo "❌ Disconnect"
+}
+
+handle_selection() {
+    local sel="$1"
+    case "$sel" in
+        "🔄 Refresh server list")
+            "$VPN_BIN" refresh && notify-send "VPN" "Server list refreshed"
+            exec "$0"
+            ;;
+        "🌐 Random country")
+            "$VPN_BIN" up --random
+            ;;
+        "❌ Disconnect")
+            "$VPN_BIN" down
+            ;;
+        *)
+            local cc
+            cc=$(awk '{print $1}' <<<"$sel")
+            [[ -n "$cc" && "$cc" =~ ^[A-Z]{2}$ ]] \
+                || { notify-send "VPN" "Could not parse country code from: $sel"; exit 1; }
+            "$VPN_BIN" up "$cc"
+            ;;
+    esac
+}
+
+main() {
+    local sel
+    sel=$(build_menu \
+        | rofi -dmenu -i -p "🌐 VPN" -theme-str 'window {width: 50%;}' -no-custom) \
+        || exit 0
+    [[ -n "$sel" ]] && handle_selection "$sel"
+}
+
+main "$@"
