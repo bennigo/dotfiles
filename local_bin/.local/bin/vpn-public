@@ -1,0 +1,276 @@
+#!/usr/bin/env bash
+# vpn-public — connect to public VPN servers (VPN Gate now, Mullvad-ready).
+#
+# Backends:
+#   gate     VPN Gate (free, ~5000 volunteer OpenVPN servers; the public iphone
+#            API returns ~100 highest-rated at a time, so live country coverage
+#            is dynamic — typically JP/KR-heavy plus a rotating handful of others).
+#            Logs packet headers (documented). Suitable for public-WiFi privacy,
+#            geo-testing, and non-sensitive censorship/filter bypass.
+#   mullvad  Placeholder. €5/mo, ~50 countries, no email, audited no-logs.
+#            Activate by populating backend_mullvad_* below; see plan file.
+#
+# Usage:
+#   vpn-public up <CC>          Connect to best server in country (e.g. JP, DE)
+#   vpn-public up --random      Connect to a random country in the cache
+#   vpn-public down             Disconnect and clean up
+#   vpn-public status           Show state + public IP/country
+#   vpn-public list [CC]        List countries (or servers in one country)
+#   vpn-public refresh          Force-refresh the server cache (gate)
+#   vpn-public backend [name]   Show or report how to switch backend
+#
+# Switch backend per-invocation:  VPN_PUBLIC_BACKEND=mullvad vpn-public ...
+# Switch backend persistently:    export VPN_PUBLIC_BACKEND=mullvad in shell rc.
+
+set -euo pipefail
+
+VPN_PUBLIC_BACKEND="${VPN_PUBLIC_BACKEND:-gate}"
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/vpn-public"
+CSV="$CACHE_DIR/servers.csv"
+CSV_TTL=21600  # 6 h
+RUNDIR="${XDG_RUNTIME_DIR:-/run/user/$UID}"
+OVPN="$RUNDIR/vpn-public.ovpn"
+NMCONN="vpn-public-temp"
+WORK_VPN_PROC="openconnect"  # vpn-vedur invokes openconnect
+
+# DoH bypass: some networks (e.g. work resolvers using OpenDNS category filters)
+# hijack vpngate.net to a block page. DoH-via-Cloudflare resolves directly.
+GATE_API="https://www.vpngate.net/api/iphone/"
+GATE_DOH="https://cloudflare-dns.com/dns-query"
+
+#### Common helpers ####
+
+die()  { echo "vpn-public: $*" >&2; exit 1; }
+note() { command -v notify-send >/dev/null 2>&1 && notify-send "VPN" "$*" || true; }
+
+ensure_no_work_vpn() {
+    if pgrep -x "$WORK_VPN_PROC" >/dev/null 2>&1; then
+        die "work VPN ($WORK_VPN_PROC) is active — disconnect it first (the two cannot share tun0)"
+    fi
+}
+
+#### Backend dispatch ####
+
+backend_dispatch() {
+    local op="$1"; shift
+    local fn="backend_${VPN_PUBLIC_BACKEND}_${op}"
+    declare -F "$fn" >/dev/null \
+        || die "backend '$VPN_PUBLIC_BACKEND' has no '$op' implementation"
+    "$fn" "$@"
+}
+
+#### Gate backend ####
+
+gate_refresh() {
+    mkdir -p "$CACHE_DIR"
+    echo "Fetching VPN Gate server list (DoH bypass via $GATE_DOH)..." >&2
+    if ! curl -sSf --max-time 90 --connect-timeout 15 --doh-url "$GATE_DOH" \
+              -o "$CSV.tmp" "$GATE_API"; then
+        rm -f "$CSV.tmp"
+        die "fetch failed (network, DoH blocked, or VPN Gate down)"
+    fi
+    # Sanity-check the response really is the CSV header we expect.
+    if ! awk -F, 'NR==2 && $1=="#HostName" {found=1} END {exit !found}' "$CSV.tmp"; then
+        rm -f "$CSV.tmp"
+        die "VPN Gate response did not look like the expected CSV"
+    fi
+    mv "$CSV.tmp" "$CSV"
+    local n
+    n=$(awk -F, 'NR>2 && $0!~/^\*/ && NF==15' "$CSV" | wc -l)
+    echo "Cached $n servers in $CSV" >&2
+}
+
+gate_ensure_cache() {
+    if [[ ! -f "$CSV" ]]; then
+        gate_refresh
+        return
+    fi
+    local age=$(( $(date +%s) - $(stat -c %Y "$CSV") ))
+    (( age > CSV_TTL )) && gate_refresh
+    return 0
+}
+
+# Best server for a country (highest Score among rows in CC).
+gate_pick_server() {
+    local cc="$1"
+    awk -F, -v cc="$cc" '
+        NR<=2 || $0~/^\*/ || NF!=15 { next }
+        $7 == cc { if ($3+0 > best+0) { best=$3; row=$0 } }
+        END { if (row) print row }
+    ' "$CSV"
+}
+
+backend_gate_list() {
+    gate_ensure_cache
+    if [[ $# -ge 1 ]]; then
+        local cc="$1"
+        # Score-prefix lines so we can sort cheaply by the prefix, then strip it.
+        awk -F, -v cc="$cc" '
+            NR<=2 || $0~/^\*/ || NF!=15 { next }
+            $7 == cc { printf "%012d\t%-30s %-15s ping=%-4s speed=%-12s score=%s\n",
+                              $3, $1, $2, $4, $5, $3 }
+        ' "$CSV" | sort -rn | cut -f2-
+    else
+        # Per-country summary, sorted by country code.
+        awk -F, '
+            NR<=2 || $0~/^\*/ || NF!=15 { next }
+            { count[$7]++; long[$7]=$6; if ($3+0 > best[$7]+0) best[$7]=$3 }
+            END {
+                for (cc in count)
+                    printf "%-3s %-30s %4d servers  top-score=%s\n",
+                           cc, long[cc], count[cc], best[cc]
+            }
+        ' "$CSV" | sort
+    fi
+}
+
+backend_gate_up() {
+    [[ $# -ge 1 ]] || die "usage: vpn-public up <CC|--random>"
+    ensure_no_work_vpn
+    gate_ensure_cache
+
+    local cc="$1"
+    if [[ "$cc" == "--random" ]]; then
+        cc=$(awk -F, 'NR>2 && $0!~/^\*/ && NF==15 {print $7}' "$CSV" \
+             | sort -u | shuf -n1)
+        echo "Random country: $cc" >&2
+    fi
+
+    local row host ip country b64
+    row=$(gate_pick_server "$cc")
+    [[ -n "$row" ]] || die "no server in country '$cc' (try: vpn-public list)"
+    host=$(   awk -F, '{print $1}' <<<"$row")
+    ip=$(     awk -F, '{print $2}' <<<"$row")
+    country=$(awk -F, '{print $6}' <<<"$row")
+    b64=$(    awk -F, '{print $15}' <<<"$row")
+
+    mkdir -p "$RUNDIR"
+    umask 077
+    echo "$b64" | base64 -d > "$OVPN" 2>/dev/null \
+        || die "failed to decode OpenVPN config from VPN Gate row"
+
+    # A small fraction of VPN Gate servers require username/password — we have
+    # no creds for those, so refuse early rather than fail mid-import.
+    if grep -q '^auth-user-pass' "$OVPN"; then
+        rm -f "$OVPN"
+        die "server $host requires user/pass auth (rare on VPN Gate); try another in '$cc' (vpn-public list $cc)"
+    fi
+
+    # Clear any stale temp connection from a previous run.
+    nmcli -t -f NAME connection show 2>/dev/null | grep -qx "$NMCONN" \
+        && nmcli connection delete "$NMCONN" >/dev/null 2>&1 || true
+
+    # nmcli prints: Connection '<name>' (<uuid>) successfully added.
+    local imported import_out
+    import_out=$(nmcli connection import type openvpn file "$OVPN" 2>&1) \
+        || die "nmcli connection import failed: $import_out"
+    imported=$(sed -n "s/.*Connection '\([^']*\)'.*/\1/p" <<<"$import_out" | head -1)
+    [[ -n "$imported" ]] || die "could not parse imported connection name from: $import_out"
+
+    if [[ "$imported" != "$NMCONN" ]]; then
+        nmcli connection modify "$imported" connection.id "$NMCONN" >/dev/null
+    fi
+    nmcli connection modify "$NMCONN" \
+        ipv6.method ignore \
+        connection.autoconnect no >/dev/null
+
+    echo "Connecting to $country via $host ($ip)..." >&2
+    local up_err
+    if up_err=$(nmcli connection up "$NMCONN" 2>&1); then
+        note "Connected via $country ($host) [gate]"
+        echo "Connected. Verify with: curl -s ifconfig.io/country" >&2
+    else
+        nmcli connection delete "$NMCONN" >/dev/null 2>&1 || true
+        rm -f "$OVPN"
+        die "nmcli connection up failed: $up_err"
+    fi
+}
+
+backend_gate_down() {
+    local active=0
+    if nmcli -t -f NAME connection show --active 2>/dev/null | grep -qx "$NMCONN"; then
+        nmcli connection down "$NMCONN" >/dev/null 2>&1 || true
+        active=1
+    fi
+    if nmcli -t -f NAME connection show 2>/dev/null | grep -qx "$NMCONN"; then
+        nmcli connection delete "$NMCONN" >/dev/null 2>&1 || true
+    fi
+    rm -f "$OVPN"
+    if (( active )); then
+        note "Disconnected"
+        echo "Disconnected (vpn-public-temp removed)" >&2
+    else
+        echo "No active vpn-public connection. State cleaned." >&2
+    fi
+}
+
+backend_gate_status() {
+    if nmcli -t -f NAME connection show --active 2>/dev/null | grep -qx "$NMCONN"; then
+        echo "State:    Connected (backend=gate)"
+        nmcli -t -f connection.id,connection.type,GENERAL.DEVICES,IP4.ADDRESS \
+              connection show "$NMCONN" 2>/dev/null \
+            | sed 's/^/  /'
+        local ip cc
+        ip=$(curl -s --max-time 8 ifconfig.io 2>/dev/null || echo "?")
+        cc=$(curl -s --max-time 8 ifconfig.io/country 2>/dev/null || echo "?")
+        echo "  Public IP: $ip ($cc)"
+    else
+        echo "State:    Disconnected (backend=gate)"
+        [[ -f "$OVPN" ]] && echo "  (stale ovpn at $OVPN — run 'vpn-public down' to clean)"
+    fi
+}
+
+backend_gate_refresh() { gate_refresh; }
+
+#### Mullvad backend (placeholder) ####
+
+mullvad_not_configured() {
+    cat >&2 <<'EOF'
+Mullvad backend not configured.
+
+Activation steps (see ~/.claude/plans/can-we-set-up-inherited-kurzweil.md):
+  1. apt install mullvad-vpn
+  2. Generate an account number at mullvad.net (no email needed); top up €5
+  3. pass insert vpn/mullvad-account
+  4. Implement backend_mullvad_{up,down,status,list,refresh} in this script
+     (each ~5 LOC wrapping `mullvad relay set location` / `mullvad connect|disconnect`)
+  5. export VPN_PUBLIC_BACKEND=mullvad
+
+Falling back to gate:  VPN_PUBLIC_BACKEND=gate vpn-public ...
+EOF
+    exit 1
+}
+
+backend_mullvad_up()      { mullvad_not_configured; }
+backend_mullvad_down()    { mullvad_not_configured; }
+backend_mullvad_status()  { mullvad_not_configured; }
+backend_mullvad_list()    { mullvad_not_configured; }
+backend_mullvad_refresh() { mullvad_not_configured; }
+
+#### CLI ####
+
+usage() {
+    sed -n '2,/^set -euo/p' "$0" | sed -E 's/^# ?//; /^set -euo/d'
+    exit "${1:-0}"
+}
+
+main() {
+    local cmd="${1:-status}"
+    [[ $# -gt 0 ]] && shift || true
+    case "$cmd" in
+        up|down|status|list|refresh)
+            backend_dispatch "$cmd" "$@" ;;
+        backend)
+            if [[ $# -ge 1 ]]; then
+                echo "To switch, run:  export VPN_PUBLIC_BACKEND=$1" >&2
+                echo "(env var only — there is no persistent state file by design)" >&2
+            else
+                echo "Active backend: $VPN_PUBLIC_BACKEND"
+                echo "Available:      gate, mullvad (placeholder)"
+            fi ;;
+        -h|--help|help) usage 0 ;;
+        *) echo "vpn-public: unknown command '$cmd'" >&2; usage 1 ;;
+    esac
+}
+
+main "$@"

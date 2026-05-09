@@ -51,6 +51,8 @@
       - mtp-tools          # MTP device detection and diagnostics
       - qpdf              # PDF transformation and overlay tool
       - xournalpp         # PDF annotation and signature tool
+      - openvpn                  # OpenVPN client (used by vpn-public via NM)
+      - network-manager-openvpn  # NM plugin for vpn-public (VPN Gate / public VPN)
     state: present
   tags: ["desktop", "utilities"]
 

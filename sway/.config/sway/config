@@ -208,6 +208,9 @@ bindsym $mod+Shift+z exec 'swaymsg output $laptop power on; brightnessctl -r'
 # mounting usb disks
 ## Apps // Mount/Unmount menu (USB + MTP) // 💽 ##
 bindsym $mod+m exec ~/.local/bin/rofi-mount-menu
+
+## Apps // Public VPN country picker (VPN Gate / Mullvad) // 🌐 ##
+bindsym $mod+Ctrl+v exec ~/.local/bin/vpn-public-menu
      
 # Start a terminal
 ## Apps // Open terminal // 🖥️ ##
