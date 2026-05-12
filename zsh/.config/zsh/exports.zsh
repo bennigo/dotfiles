@@ -28,6 +28,10 @@ export SWAY_SCREENSHOT_DIR="${HOME}/Pictures/Screenshots"
 export GRIM_DEFAULT_DIR="${HOME}/Pictures/Screenshots"
 export GRIM_DEFAULT_QUALITY=90
 
+# Pi Coding Agent — override non-XDG defaults (~/.pi/agent)
+export PI_CODING_AGENT_DIR="${HOME}/.config/pi/agent"
+export PI_CODING_AGENT_SESSION_DIR="${HOME}/.local/share/pi/sessions"
+
 # Add miniforge3 bin to PATH for mamba/conda
 export PATH="$HOME/.local/share/miniforge3/bin:$PATH"
 
@@ -60,7 +64,7 @@ load-mcp-credentials() {
 
 # Auto-load credentials before claude commands
 _preexec_load_mcp_creds() {
-    if [[ -z "$_MCP_CREDS_LOADED" && ("$1" == claude* || "$1" == crush*) ]]; then
+    if [[ -z "$_MCP_CREDS_LOADED" && ("$1" == claude* || "$1" == crush* || "$1" == "pi" || "$1" == "pi "*) ]]; then
         load-mcp-credentials
     fi
 }
