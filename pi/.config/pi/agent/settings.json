@@ -2,5 +2,7 @@
   "extensions": [],
   "skills": [],
   "packages": [],
-  "lastChangelogVersion": "0.74.0"
+  "lastChangelogVersion": "0.74.0",
+  "defaultProvider": "anthropic",
+  "defaultModel": "claude-opus-4-7"
 }
