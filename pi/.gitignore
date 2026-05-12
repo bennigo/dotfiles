@@ -1,0 +1,4 @@
+# Pi runtime / credentials — never commit.
+auth.json
+sessions/
+*.log
