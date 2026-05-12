@@ -7,7 +7,7 @@ Terminal multiplexer setup with session persistence, plugin ecosystem, and Wayla
 - **Prefix**: `C-a` (rebound from default `C-b`)
 - **Theme**: Catppuccin (omerxx fork with meetings module)
 - **Plugin manager**: TPM (Tmux Plugin Manager) at `~/.local/share/tmux/plugins/tpm/`
-- **Session persistence**: tmux-resurrect + tmux-continuum (auto-save every 60s, auto-restore on boot)
+- **Session persistence**: tmux-resurrect + tmux-continuum (auto-save every 90 min, auto-restore on boot — `@continuum-save-interval` unit is *minutes* per upstream)
 - **Status bar**: Top position, Catppuccin theme with directory, date/time, battery, continuum modules
 
 ## Plugin Ecosystem (13 plugins)
@@ -18,7 +18,7 @@ Terminal multiplexer setup with session persistence, plugin ecosystem, and Wayla
 | `tmux-sensible` | Sensible defaults |
 | `tmux-yank` | Clipboard integration |
 | `tmux-resurrect` | Session save/restore (captures pane contents, nvim session strategy) |
-| `tmux-continuum` | Automatic save/restore (60s interval, boot restore) |
+| `tmux-continuum` | Automatic save/restore (90-min interval, boot restore) |
 | `tmux-thumbs` | Quick text selection/copy |
 | `tmux-fzf` | Fuzzy finder integration |
 | `tmux-fzf-url` | URL extraction and opening |
@@ -85,14 +85,21 @@ if-shell '! tmux list-windows -F "#W" | grep -q "^claude-rc$"' {
 
 - **SessionX**: `prefix + o` opens session picker with zoxide integration, fzf-marks, and tmuxinator support
 - **Resurrect**: Saves/restores pane layout, working directories, and Neovim sessions
-- **Continuum**: Auto-saves every 60s, auto-restores on tmux server start
-- **Resurrect guard**: `scripts/resurrect-guard.sh` runs as pre-restore hook for safety checks
+- **Continuum**: Auto-saves every 90 min, auto-restores on tmux server start
+- **Resurrect guard**: `scripts/resurrect-guard.sh` runs as pre-restore hook. Checks for empty / corrupt files AND "regressed" saves (valid structure but <40% of recent-history pane count). When a bad file is the restore source, walks back to the most recent good save.
+- **Post-save guard**: `scripts/save-regression-guard.sh` (chained via `post-save.sh`) runs after every save. If the new save is regressed, renames it to `*-regressed.txt`, repoints `last` to the previous good save, and fires a critical Mako notification. Self-heals state collapses in real time, not just on reboot.
 
 ## Configuration Files
 
 - `tmux.conf` — Main configuration (this directory)
 - `tmux.reset.conf` — Key binding reset (sourced first)
-- `scripts/` — Helper scripts (resurrect-guard, calendar)
+- `scripts/` — Helper scripts:
+  - `resurrect-guard.sh` — pre-restore guard; library for the post-save guard
+  - `save-regression-guard.sh` — post-save state-collapse detector
+  - `post-save.sh` — wrapper chaining conda-env save + regression guard
+  - `save-conda-envs.sh` / `restore-conda-envs.sh` — per-pane conda env snapshot
+  - `fix-continuum-save.sh` — re-injects continuum's save interpolation after catppuccin clobbers status-right
+  - `cal.sh`, `tmux-shortcuts.sh` — calendar / help overlay
 
 ## Terminal & Color Support
 
