@@ -50,6 +50,18 @@ return {
         { "<leader>acm", desc = "Select Claude Model" },
         { "<leader>acd", desc = "Accept Diff" },
         { "<leader>acD", desc = "Reject Diff" },
+        -- Pi Coding Agent (minimal terminal-based AI)
+        {
+          "<leader>ai",
+          icon = "π",
+          group = "+pi",
+        },
+        { "<leader>ait", desc = "Toggle Pi" },
+        { "<leader>aif", desc = "Focus Pi" },
+        { "<leader>ais", desc = "Send selection to Pi", mode = "v" },
+        { "<leader>aip", desc = "Compose Pi prompt" },
+        { "<leader>aik", desc = "Kill Pi terminal" },
+        { "<leader>aiR", desc = "Restart Pi" },
         -- CodeCompanion (evaluation alternative to Avante)
         {
           "<leader>C",

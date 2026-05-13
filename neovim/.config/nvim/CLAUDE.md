@@ -69,6 +69,23 @@ This is a production IDE for scientific computing (GPS/GNSS data processing), kn
 - Assess diff application reliability
 - Evaluate overall workflow fit
 
+### Pi Coding Agent (Minimal Terminal AI)
+
+**File**: `lua/plugins/pi.lua`
+**Primary Keymap**: `<M-p>` (toggle)
+**Leader Mappings**: `<leader>ait` (toggle), `<leader>aif` (focus), `<leader>ais` (send selection, visual), `<leader>aip` (compose prompt), `<leader>aik` (kill), `<leader>aiR` (restart)
+
+**Configuration**:
+- Floating terminal window: 95% width, 95% height
+- Border: rounded, winblend: 30 (transparency)
+- Default: uses pi's settings.json defaults (currently deepseek-v4-pro). To switch provider, edit `pi/.config/pi/agent/settings.json` or use `/model` inside pi TUI.
+- Terminal hide: `<M-p>` from inside terminal mode
+- Prompt compose: `<leader>aip` opens scratch buffer, `<C-s>` sends to Pi
+
+**Approach**: Terminal wrapper (no dedicated Neovim plugin exists for pi). Pi's SDK and RPC mode could enable deeper integration later, but the terminal wrapper works well and mirrors the Claude Code pattern.
+
+**Cross-Reference**: See `~/.dotfiles/pi/CLAUDE.md` for pi configuration
+
 ### Database UI (PostgreSQL Integration)
 
 **File**: `lua/plugins/extend-dadbod.lua`
@@ -171,11 +188,12 @@ This configuration extends LazyVim rather than replacing it:
 
 ## Plugin Ecosystem
 
-### AI & Completion (8 plugins)
+### AI & Completion (9 plugins)
 
 - **claudecode.nvim**: Claude Code integration - primary AI (claude-code.lua)
 - **avante.nvim**: Secondary AI with Ollama + ACP support (avante.lua)
 - **codecompanion.nvim**: Evaluation alternative - "Zed AI" style (codecompanion.lua)
+- **pi.lua**: Pi Coding Agent - minimal terminal AI (pi.lua)
 - **blink.cmp**: Modern completion engine (fast, async)
 - **blink.compat**: Compatibility layer for cmp sources
 - **copilot.lua**: GitHub Copilot (disabled)
