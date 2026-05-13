@@ -71,7 +71,7 @@ This is a production IDE for scientific computing (GPS/GNSS data processing), kn
 
 ### Pi Coding Agent (Minimal Terminal AI)
 
-**File**: `lua/plugins/pi.lua`
+**File**: `lua/user/pi.lua` (module) + `lua/plugins/pi.lua` (loader)
 **Primary Keymap**: `<M-p>` (toggle)
 **Leader Mappings**: `<leader>ait` (toggle), `<leader>aif` (focus), `<leader>ais` (send selection, visual), `<leader>aip` (compose prompt), `<leader>aik` (kill), `<leader>aiR` (restart)
 
@@ -556,9 +556,11 @@ Also works in normal mode (`gsi` wraps word). `ds`/`cs` to delete/change emphasi
 │       ├── markdown-bullets.lua      # Bullet lists
 │       ├── markdown-formatting.lua   # Inline formatting (bold/italic/strikethrough/code)
 │       ├── mason-workaround.lua      # Mason fixes
+│       ├── pi.lua                    # Pi agent loader (hooks into snacks)
 │       ├── toggle_term.lua           # Terminal toggle
 │       └── example.lua               # LazyVim examples
 │   └── user/
+│       ├── pi.lua                     # Pi Coding Agent terminal integration
 │       ├── vault_ops.lua              # Vault wikilink wrapping, placeholder linking, Claude terminal send
 │       ├── footnote_nav.lua           # Footnote navigation (jump ref↔def, used by smart_action patch)
 │       ├── obsidian_helpers.lua       # Obsidian utility functions
