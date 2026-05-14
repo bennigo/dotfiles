@@ -1,6 +1,7 @@
 {
   "extensions": [],
-  "skills": [],
+  "skills": ["~/.claude/skills"],
+  "enableSkillCommands": true,
   "packages": [],
   "lastChangelogVersion": "0.74.0",
   "defaultProvider": "deepseek",

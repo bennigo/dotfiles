@@ -28,7 +28,7 @@ if _has_window; then
     _show
 else
     _log "no window — launching obsidian-launch"
-    obsidian-launch &
+    /home/bgo/.local/bin/obsidian-launch &
     for _ in $(seq 1 60); do
         sleep 0.5
         if _has_window; then
