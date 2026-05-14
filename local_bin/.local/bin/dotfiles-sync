@@ -81,6 +81,9 @@ generate_commit_message() {
         if echo "$modified_files" | grep -q "\.credentials"; then
             details+=("credentials")
         fi
+        if echo "$modified_files" | grep -q "\.pi-sessions/"; then
+            details+=("pi sessions")
+        fi
     fi
 
     # Analyze changes for main dotfiles
@@ -316,6 +319,16 @@ sync_claude_live_to_repo() {
             command cp -fp "$live_dir/$file" "$repo_dir/$file"
         fi
     done
+
+    # Pi sessions — same concept as Claude Code's history.jsonl, stored as JSONL.
+    # Sync from ~/.local/share/pi/sessions/ into claude-private/.pi-sessions/ (git-crypt encrypted).
+    local pi_sessions_live="${XDG_DATA_HOME:-$HOME/.local/share}/pi/sessions"
+    local pi_sessions_repo="$CLAUDE_PRIVATE_DIR/.pi-sessions"
+    if [ -d "$pi_sessions_live" ] && [ "$(ls -A "$pi_sessions_live" 2>/dev/null)" ]; then
+        mkdir -p "$pi_sessions_repo"
+        # Pi sessions are capped at ~550KB; 90M max-size is generous.
+        rsync -a --max-size=90M "$pi_sessions_live/" "$pi_sessions_repo/"
+    fi
 
     log_success "Live Claude files synced to repository"
 }
