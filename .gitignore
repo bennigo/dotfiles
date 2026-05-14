@@ -27,3 +27,7 @@ systemd/.config/systemd/user/*.wants/
 **/*.backup.*
 **/.tmp/
 **/tmp/
+
+# Application log files (Excalidraw MCP, etc.)
+excalidraw.log
+**/*.log
