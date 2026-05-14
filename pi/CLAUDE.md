@@ -26,16 +26,18 @@ and `PI_CODING_AGENT_SESSION_DIR` env vars in `zsh/exports.zsh`:
 
 ## Provider Setup
 
-Pi reads standard env vars; no separate provider config required for stock providers.
+Credentials are stored in `auth.json` (gitignored, not stow-managed — runtime file).
+Pi resolves keys from `auth.json` before falling back to environment variables.
 
-| Provider | Auth | Env var |
-|----------|------|---------|
-| **Anthropic (Claude Pro/Max)** | OAuth via `/login` | none (token stored by pi) |
-| Anthropic API | API key | `ANTHROPIC_API_KEY` |
+| Provider | Auth | Key source |
+|----------|------|-------------|
+| **Anthropic (Claude Pro/Max)** | OAuth via `/login` | token stored by pi in auth.json |
+| **DeepSeek** | API key | `!pass show tokens/deepseek_api_key` in auth.json |
+| **Kimi (Moonshot)** | API key | `!pass show tokens/kimi_api_key` in auth.json |
+| **GitHub Copilot** | OAuth via `/login` | token stored by pi in auth.json |
+| Anthropic API | API key | `ANTHROPIC_API_KEY` (env or auth.json) |
 | OpenAI | API key | `OPENAI_API_KEY` |
 | Google Gemini | API key | `GEMINI_API_KEY` |
-| Kimi (Moonshot) | API key | `KIMI_API_KEY` or `MOONSHOT_API_KEY` |
-| DeepSeek | API key | `DEEPSEEK_API_KEY` |
 | Groq | API key | `GROQ_API_KEY` |
 | OpenRouter | API key | `OPENROUTER_API_KEY` |
 | xAI Grok | API key | `XAI_API_KEY` |
@@ -43,7 +45,35 @@ Pi reads standard env vars; no separate provider config required for stock provi
 | Bedrock | AWS creds | `AWS_*` |
 | Ollama (local) | none | none |
 
-For custom/exotic providers, add entries to `models.json` (not yet present).
+For custom/exotic providers, add entries to `models.json` (also symlinked via stow).
+
+### Credential Resolution
+
+Pi supports three key formats in `auth.json`:
+
+```json
+{
+  "deepseek": {
+    "type": "api_key",
+    "key": "!pass show tokens/deepseek_api_key"
+  }
+}
+```
+
+| Format | Example | Notes |
+|--------|---------|-------|
+| Shell command | `"!pass show tokens/deepseek_api_key"` | **Preferred.** Runs on-demand, cached for session lifetime. Works regardless of how pi is launched (terminal, neovim, desktop). |
+| Env var reference | `"DEEPSEEK_API_KEY"` | Fragile — only works if the variable is already set in the process environment. Fails from neovim/desktop-launched pi where `load-mcp-credentials` preexec hook never fires. |
+| Literal value | `"sk-e07b91..."` | Plaintext — simple but avoid if you have `pass` set up. |
+
+**Why `!pass` instead of env vars:** The `exports.zsh` preexec hook loads credentials
+only when `pi`/`crush`/`claude` commands are typed at a shell prompt. When pi is
+launched by neovim (`Snacks.terminal("pi", ...)`) or another non-shell context, the
+environment variables are absent and `auth.json` env-var references resolve to empty
+strings → 401. Shell-command keys in `auth.json` are independent of the process
+environment and work from any launch context.
+
+Pi's key resolution order: `--api-key` flag → `auth.json` → env var → `models.json`.
 
 ## Shared Context
 
@@ -85,10 +115,21 @@ Alt+Enter                       # Send follow-up (waits for agent)
 
 ## Config Location
 
-- Source: `.dotfiles/pi/.config/pi/agent/settings.json`
+| File | Managed by | Purpose |
+|------|-----------|---------|
+| `settings.json` | stow | Default provider/model, skills, thinking level |
+| `models.json` | stow | Custom provider definitions (kimi-cn) |
+| `auth.json` | **runtime** (gitignored) | API keys and OAuth tokens |
+| `sessions/` | **runtime** (gitignored) | Session JSONL files |
+
+- Source: `.dotfiles/pi/.config/pi/agent/`
 - Deployed: `~/.config/pi/agent/` (stow symlink, via `PI_CODING_AGENT_DIR`)
 - Sessions: `~/.local/share/pi/sessions/` (via `PI_CODING_AGENT_SESSION_DIR`)
 - Global binary: `~/.local/share/npm-global/bin/pi`
+
+`auth.json` is the only file here that contains secrets — it's excluded from stow
+and git via `.gitignore`. Keys are fetched from `pass` on-demand via the `!pass show`
+shell-command format (see [Credential Resolution](#credential-resolution)).
 
 ## Install / Update
 
@@ -139,4 +180,4 @@ For pure coding, Pi's lean profile may be preferable.
 
 ---
 
-*Last reviewed: 2026-05-12*
+*Last reviewed: 2026-05-14*

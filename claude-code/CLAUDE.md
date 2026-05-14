@@ -115,6 +115,15 @@ with Pi. Both agents auto-discover this directory; no config needed on the Claud
 **40 skills available**: vault-health, jot, floorit, capture-to-vault, weave-links, transcribe,
 voice-input, expand-stub, sort-inbox, connect-orphans, and 30 more.
 
+**Runtime compatibility varies per skill.** 10 skills require Claude Code-specific tooling
+(MCP servers, `TaskCreate`, `WebFetch`, `WebSearch`) and fail at runtime in Pi (which has
+no MCP and no built-in WebSearch/WebFetch). These carry a `## Requirements` section in
+their `SKILL.md`. The remaining 30 are pure-Bash and work in both agents.
+
+Affected skills: `search-scholar`, `verify-claim`, `fetch-source`, `verify-damage`,
+`current-events`, `research-brief`, `expand-topic`, `add-citations`, `evaluate-sources`,
+`search-sources`.
+
 **Creating new skills**: `mkdir ~/.claude/skills/<name>/` + `SKILL.md` with frontmatter:
 ```markdown
 ---
