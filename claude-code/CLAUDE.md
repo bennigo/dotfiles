@@ -107,6 +107,29 @@ echo '{"notification_type":"idle_prompt","message":"Test","title":"Claude Code"}
 - Mako `[urgency=high]` has `default-timeout=0` (infinite) — always use `-t` flag in notify-send
 - The hook runs as a separate process, reaching Mako directly via D-Bus (bypasses Neovim terminal)
 
+## Skills (Shared with Pi)
+
+Skills are stored in `~/.claude/skills/<name>/SKILL.md` — this is the **shared source of truth**
+with Pi. Both agents auto-discover this directory; no config needed on the Claude Code side.
+
+**40 skills available**: vault-health, jot, floorit, capture-to-vault, weave-links, transcribe,
+voice-input, expand-stub, sort-inbox, connect-orphans, and 30 more.
+
+**Creating new skills**: `mkdir ~/.claude/skills/<name>/` + `SKILL.md` with frontmatter:
+```markdown
+---
+name: my-skill
+description: What it does and when to use
+---
+```
+Directory name must match `name:` field. Both Pi and Claude Code pick it up on next startup.
+
+**Claude Code commands** (`~/.claude/commands/*.md`) still exist for `/command` invocation
+and are Claude Code-only (Pi requires the skill format). Commands and skills can coexist
+with the same name — no conflict.
+
+**Cross-ref**: `pi/CLAUDE.md` for Pi-side skill configuration.
+
 ## Remote Control
 
 Claude Code can be accessed from phone or browser via remote control.

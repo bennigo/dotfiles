@@ -98,6 +98,30 @@ pi update self                                       # update pi itself
 pi update                                            # update installed extensions
 ```
 
+## Skills
+
+**Shared skill system** — Pi and Claude Code read skills from the same directory:
+
+```
+~/.claude/skills/          ← Single source of truth (40 skills)
+├── vault-health/SKILL.md
+├── jot/SKILL.md
+├── floorit/SKILL.md
+├── ...35 more...
+└── excalidraw-skill/SKILL.md
+```
+
+| Agent | How it reads | Config |
+|-------|-------------|--------|
+| **Pi** | `settings.json` → `"skills": ["~/.claude/skills"]` | Auto-discover at startup |
+| **Claude Code** | Auto-discovers `~/.claude/skills/*/SKILL.md` natively | None needed |
+
+**Creating new skills** — create a directory in `~/.claude/skills/<name>/` with `SKILL.md` containing proper frontmatter (`name:` must match directory). Both agents pick it up on next start, no config changes required.
+
+**Invoking skills in pi**: `/skill:name` (requires `enableSkillCommands: true` in settings.json, already set).
+
+**Origin**: 39 of these were converted from Claude Code slash commands (`~/.claude/commands/`) on 2026-05-13. The originals still exist and work as `/command` invocations in Claude Code.
+
 ## Why No MCP?
 
 Quoting Pi docs: *"No MCP. Build CLI tools with READMEs (see Skills), or build an extension
@@ -106,6 +130,8 @@ unavailable in Pi out of the box. For database/search work, prefer Crush or Clau
 For pure coding, Pi's lean profile may be preferable.
 
 ## Cross-References
+
+- **Shared skills**: `~/.claude/skills/` (also documented in `claude-code/CLAUDE.md`)
 
 - **Crush config**: `crush/CLAUDE.md` (other multi-provider TUI)
 - **Claude Code MCP config**: `claude-code/CLAUDE.md`

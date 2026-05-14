@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Obsidian
 Comment=A powerful knowledge base on top of local Markdown files
-Exec=obsidian-launch %u
+Exec=/home/bgo/.local/bin/obsidian-launch %u
 Icon=obsidian
 Type=Application
 Categories=Office;TextEditor;

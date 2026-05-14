@@ -188,9 +188,9 @@ Edit source files in this repository, not deployed locations in `~/.config/`.
 | `neovim/.config/nvim/CLAUDE.md` | 75+ plugins, AI integration, database UI, keymaps |
 | `tmux/.config/tmux/CLAUDE.md` | Session management, plugins, Wayland env fix, remote control |
 | `docker/CLAUDE.md` | Daemon config, VPN networking, scripts, compose templates |
-| `claude-code/CLAUDE.md` | MCP servers, notification hooks, remote control |
+| `claude-code/CLAUDE.md` | MCP servers, notification hooks, remote control, shared skills (with pi) |
 | `crush/CLAUDE.md` | Multi-provider AI coding TUI, Ollama integration, cloud provider setup |
-| `pi/CLAUDE.md` | Pi Coding Agent — minimal customizable harness, XDG override, no MCP |
+| `pi/CLAUDE.md` | Pi Coding Agent — minimal customizable harness, XDG override, no MCP, shared skills (with Claude Code) |
 | `systemd/CLAUDE.md` | 8 user service units, deployment, activation |
 | `zsh/CLAUDE.md` | Zap plugins, aliases, exports, Wayland env fix, stow conflict |
 | `waybar/CLAUDE.md` | Modules, git-sync status, custom scripts, clipboard |
@@ -206,4 +206,4 @@ Edit source files in this repository, not deployed locations in `~/.config/`.
 
 ---
 
-*Last reviewed: 2026-04-11*
+*Last reviewed: 2026-05-13*
