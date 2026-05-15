@@ -401,6 +401,28 @@ sync_claude_private() {
         return 0
     fi
 
+    # Warn about untracked files in key config directories (skills, agents, etc.)
+    # These are "source of truth" dirs that live only in the repo — easy to forget to add.
+    local untracked_files
+    untracked_files=$(git ls-files --others --exclude-standard)
+    if [ -n "$untracked_files" ]; then
+        echo ""
+        echo -e "${YELLOW}━━━ Untracked files in claude-private ━━━${NC}"
+        echo "$untracked_files" | while IFS= read -r f; do
+            echo -e "  ${YELLOW}?${NC} $f"
+        done
+        echo ""
+        # Only prompt if running interactively (terminal attached)
+        if [ -t 0 ]; then
+            echo -n -e "${YELLOW}Add these untracked files? [Y/n] ${NC}"
+            read -r add_untracked
+            if [ "$add_untracked" = "n" ] || [ "$add_untracked" = "N" ]; then
+                log_warning "Skipping untracked files — run 'git add' manually in $CLAUDE_PRIVATE_DIR"
+                return 0
+            fi
+        fi
+    fi
+
     # Stage all changes
     git add .
 
