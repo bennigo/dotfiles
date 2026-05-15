@@ -191,7 +191,7 @@ bindsym $mod+period exec ~/.local/bin/emoji-picker
 ## Apps // Nerd Font icon picker (codepoint copied to clipboard) // 🔣 ##
 bindsym $mod+comma exec ~/.local/bin/nf-picker
 ## Apps // Unicode symbol picker (arrows, math, box-drawing, dingbats) // ✦ ##
-bindsym $mod+Ctrl+period exec ~/.local/bin/sym-picker
+bindsym $mod+Ctrl+comma exec ~/.local/bin/sym-picker
 
 #
 # Basics:
