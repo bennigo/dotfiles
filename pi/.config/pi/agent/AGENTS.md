@@ -22,55 +22,70 @@ Custom tools from `bgo-toolkit` package:
 - `pg_query` — execute SQL with auto-introspection and EXPLAIN validation
 - `subagent` — delegate to scout, planner, reviewer, worker agents
 
+## Default Model
+
+**Copilot Claude Sonnet 4.6** is the default for interactive sessions. It's subscription-based so there's zero per-token cost to you — always the safe default for direct work.
+
+The context-model extension auto-detects project complexity on startup and suggests switching to DeepSeek for simple/familiar projects.
+
 ## Model Optimization Framework
 
 The agent system is designed to route tasks to the optimal LLM based on capability match:
 
-- **Expensive/capable models** (Copilot Sonnet 4.6, Kimi K2.5): complex reasoning, security, architecture
-- **Cheap/fast models** (DeepSeek V3, Kimi K2 Turbo): scouting, simple changes, documentation
+- **Subscription models** (Copilot Sonnet 4.6): complex reasoning, security, architecture — no per-token cost
+- **Mid-tier models** (Kimi K2.5): large context (256K) research, deep scouting
+- **Budget models** (DeepSeek V3, Kimi K2 Turbo): scouting, simple changes, documentation
 - **Free/local models** (Qwen 3.5, DeepSeek Coder V2 via Ollama): fallback when cloud is rate-limited
 
 Adding a new model: edit `models.json` (live-reloads via `/model`), then optionally create an agent that uses it.
 
-## Agent Roster (12 agents)
+### Auto-Detection
+- `/context-model` — analyze current project and recommend optimal default model
+- On startup, detects project complexity and notifies if a cheaper model would suffice
+
+## Agent Roster (13 agents)
 
 ### Exploration & Analysis
 
 | Agent | Model | Context | Use for |
 |-------|-------|---------|---------|
-| **scout** | DeepSeek V3 | 64K | Fast recon, small-medium codebases |
-| **deep-scout** | Kimi K2.5 | 256K | Multi-file analysis, large codebases, cross-cutting traces |
-| **researcher** | Kimi K2.5 | 256K | Web research, source synthesis, tech evaluation |
-| **db-analyst** | Claude Sonnet 4.6 | 200K | SQL queries, schema analysis, data exploration |
+| **scout** | DeepSeek V4 Pro | 1M | Fast recon, small-medium codebases |
+| **deep-scout** | DeepSeek V4 Pro | 1M | Multi-file analysis, large codebases, cross-cutting traces — #1 coding benchmarks |
+| **researcher** | DeepSeek V4 Pro | 1M | Web research, source synthesis, tech evaluation — 1M context for many sources |
+| **db-analyst** | DeepSeek V4 Pro | 1M | SQL queries, schema analysis, data exploration — coding proficiency → strong SQL |
 
 ### Design & Planning
 
 | Agent | Model | Context | Use for |
 |-------|-------|---------|---------|
-| **architect** | Claude Sonnet 4.6 | 200K | High-level design, tradeoff analysis, tech selection |
-| **planner** | Claude Sonnet 4.6 | 200K | Implementation plans from findings (existing) |
+| **architect** | GPT-5.5 (Copilot) | 400K | High-level design, tradeoff analysis — best reasoning, subscription |
+| **planner** | Claude Opus 4.7 (Copilot) | 144K | Implementation plans — methodical, precise |
 
 ### Implementation
 
 | Agent | Model | Context | Use for |
 |-------|-------|---------|---------|
-| **worker** | Claude Sonnet 4.6 | 200K | Complex implementation, multi-step refactors (existing) |
-| **quick-worker** | DeepSeek V3 | 64K | Boilerplate, simple changes, config updates |
+| **worker** | Claude Sonnet 4.6 (Copilot) | 1M | Complex implementation, multi-step refactors — known quantity |
+| **quick-worker** | DeepSeek V4 Pro | 1M | Boilerplate, simple changes — #1 coding, cheap |
 | **fallback-worker** | Qwen 3.5 (local) | 32K | Backup when cloud models rate-limited |
 
 ### Quality
 
 | Agent | Model | Context | Use for |
 |-------|-------|---------|---------|
-| **reviewer** | Claude Sonnet 4.6 | 200K | Code review, style, basic correctness (existing) |
-| **auditor** | Claude Sonnet 4.6 | 200K | Security audit, vulnerability analysis, threat modeling |
+| **reviewer** | Claude Opus 4.7 (Copilot) | 144K | Code review, style, correctness — best precision |
+| **auditor** | Claude Opus 4.7 (Copilot) | 144K | Security audit, vulnerability analysis — safety-critical |
 
 ### Meta
 
 | Agent | Model | Context | Use for |
 |-------|-------|---------|---------|
-| **router** | DeepSeek V3 | 64K | Task classification — recommends optimal agent/workflow |
-| **docs-writer** | DeepSeek V3 | 64K | READMEs, API docs, changelogs, code comments |
+| **router** | DeepSeek V4 Pro | 1M | Task classification — recommends optimal agent/workflow |
+| **docs-writer** | DeepSeek V4 Pro | 1M | READMEs, API docs, changelogs, code comments |
+
+### Second Opinion (Diversity)
+
+Kimi K2.5 (256K context, strong reasoning) is available for cases where model diversity helps — use as an alternative researcher or reviewer for independent second analysis. Not assigned to a permanent agent to keep the roster clean; invoke via `/model` switch or direct subagent call.
 
 ## Workflow Quick Reference
 
@@ -108,10 +123,23 @@ subagent: router, task: I need to add OAuth support to the API
 
 | Tier | Models | Cost |
 |------|--------|------|
-| **Premium** | Claude Sonnet 4.6 (Copilot) | Subscription |
-| **Mid** | Kimi K2.5 | ~$2.60/M tokens (in+out) |
-| **Budget** | DeepSeek V3, Kimi K2 Turbo | ~$0.30-$1.30/M tokens |
+| **Copilot Subscription** | GPT-5.5, Claude Opus 4.7, Claude Sonnet 4.6, Gemini 3.1 Pro, GPT-5.4, GPT-5.3-codex + 12 more | $0 marginal (subscription) |
+| **Budget** | DeepSeek V4 Pro (1M ctx, #1 coding) | ~$0.50-2.00/M tokens |
 | **Free** | Ollama local models (Qwen, DeepSeek Coder) | $0 |
+
+Copilot models available: claude-opus-4.7, claude-opus-4.6, claude-sonnet-4.6, gemini-3.1-pro-preview, gpt-5.5, gpt-5.4, gpt-5.3-codex, gpt-5.2-codex, gpt-5.1-codex-max, grok-code-fast-1, and 10+ more.
+
+## Final Agent↔Model Map
+
+```
+DeepSeek V4 Pro (9 agents): scout, deep-scout, quick-worker, docs-writer,
+                             db-analyst, researcher, router, + 2 existing
+
+Copilot GPT-5.5 (1):       architect
+Copilot Opus 4.7 (3):      planner, auditor, reviewer
+Copilot Sonnet 4.6 (1):    worker
+Ollama Qwen 3.5 (1):       fallback-worker
+```
 
 ## Routing Principles
 
