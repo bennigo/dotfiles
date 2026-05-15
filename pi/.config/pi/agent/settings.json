@@ -1,6 +1,8 @@
 {
   "extensions": [
-    "./extensions/bgo-toolkit"
+    "./extensions/bgo-toolkit",
+    "./extensions/context-model.ts",
+    "./extensions/model-discovery.ts"
   ],
   "skills": [
     "~/.claude/skills"
@@ -13,7 +15,7 @@
     "npm:@eko24ive/pi-ask"
   ],
   "lastChangelogVersion": "0.74.0",
-  "defaultProvider": "deepseek",
-  "defaultModel": "deepseek-v4-pro",
-  "defaultThinkingLevel": "high"
+  "defaultProvider": "github-copilot",
+  "defaultModel": "claude-opus-4.7",
+  "defaultThinkingLevel": "medium"
 }
