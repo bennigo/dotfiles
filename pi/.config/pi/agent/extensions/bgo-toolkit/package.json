@@ -1,0 +1,19 @@
+{
+  "name": "bgo-toolkit",
+  "version": "0.1.0",
+  "description": "Pi extensions for parity with Claude Code: postgres, web search, sub-agents, memory bridge, vault integration",
+  "keywords": ["pi-package"],
+  "pi": {
+    "extensions": [
+      "./subagent.ts",
+      "./pg.ts",
+      "./web.ts",
+      "./capture.ts",
+      "./memory-bridge.ts",
+      "./vault.ts",
+      "./git-checkpoint.ts",
+      "./protected-paths.ts"
+    ],
+    "skills": ["./skills"]
+  }
+}

@@ -4,6 +4,23 @@ Minimal, customizable terminal AI coding agent — "primitives, not features" al
 to Claude Code / Crush. Installed via npm (`@earendil-works/pi-coding-agent`), config
 deployed via stow.
 
+## ⛔ Credential Security — Hard Rule
+
+**NEVER expose passwords, API keys, tokens, or connection strings with embedded credentials in:**
+- Tool arguments visible to the model
+- Bash commands sent to the model
+- File writes or edits
+- Session exports or shared sessions
+
+**Always:**
+- Pass credentials via environment variables (`PGPASSWORD`, `DATABASE_URL`, etc.)
+- Use `!pass show <key>` shell-command format in `auth.json` (already configured)
+- Use `.pgpass` or env vars for postgres — never inline passwords in `psql -c` or connection URLs in visible arguments
+- Redact credentials from any output before returning to the model
+
+**Why:** Pi sessions are stored as JSONL and can be exported/shared. A single leaked credential
+in a tool call argument or bash command becomes a persistent secret in the session file.
+
 ## Philosophy vs Crush / Claude Code
 
 | | Claude Code | Crush | Pi |

@@ -1,10 +1,17 @@
 {
-  "extensions": [],
+  "extensions": [
+    "./extensions/bgo-toolkit"
+  ],
   "skills": [
     "~/.claude/skills"
   ],
   "enableSkillCommands": true,
-  "packages": [],
+  "packages": [
+    "npm:pi-skillful",
+    "npm:pi-docparser",
+    "npm:pi-conventions",
+    "npm:@eko24ive/pi-ask"
+  ],
   "lastChangelogVersion": "0.74.0",
   "defaultProvider": "deepseek",
   "defaultModel": "deepseek-v4-pro",
