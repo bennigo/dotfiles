@@ -105,6 +105,8 @@ if [[ -f ~/.pgpass ]]; then
   export DEV_EPOS_URL=$(pg_url "pgdev.vedur.is" "epos")
   export DEV_GNSS_URL=$(pg_url "pgdev.vedur.is" "gnss-europe-v0-2-9")
   export DEV_METRICS_URL=$(pg_url "pgdev.vedur.is" "gps_metrics")
+  export GPS_HEALTH_DEV_URL=$(pg_url "pgdev.vedur.is" "gps_health")
+  export GPS_HEALTH_LOCAL_URL=$(pg_url "localhost" "gps_health")
 fi
 
 # --- Wayland env refresh for tmux-continuum restored sessions ---

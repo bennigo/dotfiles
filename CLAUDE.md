@@ -3,6 +3,19 @@
 Personal dotfiles repository for Sway-based Linux desktop environment.
 Uses modular GNU Stow deployment and hub-and-spoke documentation.
 
+## ⛔ Credential Security — Hard Rule (Pi + Claude Code)
+
+**NEVER** expose passwords, API keys, tokens, or connection strings with embedded
+credentials in tool arguments, bash commands, file writes, or session output.
+
+- Postgres: use `PGPASSWORD` env var (never inline passwords in `psql` commands)
+- API keys: use `auth.json` with `!pass show` shell-command format, or env vars
+- Connection URLs: strip passwords before echoing to the model
+- Sessions are stored as JSONL and can be exported/shared — one leaked credential
+  becomes permanently embedded in the session file.
+
+Pi extension at `pg.ts` enforces this automatically for postgres.
+
 ## Documentation Architecture
 
 This repo uses hierarchical CLAUDE.md organization — detailed context lives in subdirectory

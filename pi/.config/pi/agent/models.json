@@ -8,14 +8,94 @@
         {
           "id": "kimi-k2.5",
           "name": "Kimi K2.5",
+          "reasoning": true,
+          "input": ["text"],
           "contextWindow": 256000,
-          "maxTokens": 16384
+          "maxTokens": 16384,
+          "cost": { "input": 0.6, "output": 2.0, "cacheRead": 0, "cacheWrite": 0 }
         },
         {
           "id": "kimi-k2-turbo-preview",
           "name": "Kimi K2 Turbo",
+          "reasoning": true,
+          "input": ["text"],
           "contextWindow": 256000,
-          "maxTokens": 16384
+          "maxTokens": 16384,
+          "cost": { "input": 0.3, "output": 1.0, "cacheRead": 0, "cacheWrite": 0 }
+        }
+      ]
+    },
+    "ollama": {
+      "baseUrl": "http://localhost:11434/v1",
+      "api": "openai-completions",
+      "apiKey": "ollama",
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsUsageInStreaming": false,
+        "maxTokensField": "max_tokens"
+      },
+      "models": [
+        {
+          "id": "qwen3.5:latest",
+          "name": "Qwen 3.5 (9.7B Local)",
+          "reasoning": false,
+          "input": ["text"],
+          "contextWindow": 32768,
+          "maxTokens": 4096,
+          "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 }
+        },
+        {
+          "id": "qwen2.5-coder:7b",
+          "name": "Qwen 2.5 Coder 7B (Local)",
+          "reasoning": false,
+          "input": ["text"],
+          "contextWindow": 32768,
+          "maxTokens": 4096,
+          "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 }
+        },
+        {
+          "id": "deepseek-coder-v2:16b",
+          "name": "DeepSeek Coder V2 16B (Local)",
+          "reasoning": false,
+          "input": ["text"],
+          "contextWindow": 32768,
+          "maxTokens": 4096,
+          "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 }
+        },
+        {
+          "id": "deepseek-r1:8b",
+          "name": "DeepSeek R1 8B (Local, Reasoning)",
+          "reasoning": true,
+          "input": ["text"],
+          "contextWindow": 32768,
+          "maxTokens": 4096,
+          "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 }
+        }
+      ]
+    },
+    "google": {
+      "baseUrl": "https://generativelanguage.googleapis.com/v1beta",
+      "api": "google-generative-ai",
+      "apiKey": "GEMINI_API_KEY",
+      "models": [
+        {
+          "id": "gemini-2.5-pro",
+          "name": "Gemini 2.5 Pro",
+          "reasoning": true,
+          "input": ["text"],
+          "contextWindow": 1048576,
+          "maxTokens": 65536,
+          "cost": { "input": 1.25, "output": 10.0, "cacheRead": 0, "cacheWrite": 0 }
+        },
+        {
+          "id": "gemini-2.5-flash",
+          "name": "Gemini 2.5 Flash",
+          "reasoning": true,
+          "input": ["text"],
+          "contextWindow": 1048576,
+          "maxTokens": 65536,
+          "cost": { "input": 0.15, "output": 1.0, "cacheRead": 0, "cacheWrite": 0 }
         }
       ]
     }
