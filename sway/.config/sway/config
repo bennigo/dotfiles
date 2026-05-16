@@ -344,6 +344,8 @@ bindsym $mod+Shift+Print exec ${HOME}/.local/bin/run_screenshot.sh -e -c -m regi
     assign [app_id="firefox-personal"] workspace 3
 
     assign [app_id="spotify"] workspace 10
+    assign [app_id="org.qlandkarte.qmapshack"] workspace 5
+    assign [app_id="viking"] workspace 5
     for_window [app_id="spotify"] floating enable
     for_window [app_id="spotify"] resize set width 1900 height 1150
     for_window [app_id="spotify"] move position center
@@ -574,6 +576,12 @@ for_window [app_id="imv"] floating enable, resize set width 1800 px height 1100 
 
 
 for_window [app_id="com.cisco.secureclient.gui"] move scratchpad, floating enable
+# QMapShack — GPS mapping tool, workspace 5, floating mostly-fullscreen
+## QMapShack // Assign to workspace 5 + float // 🗺️ ##
+for_window [app_id="org.qlandkarte.qmapshack"] floating enable, resize set width 2500 px height 1600 px, move position center
+for_window [class="(?i)qmapshack"] floating enable, resize set width 2500 px height 1600 px, move position center
+# Viking GPS — lighter alternative, also workspace 5, floating
+for_window [app_id="viking"] floating enable, resize set width 2500 px height 1600 px, move position center
 # Obsidian can launch as native Wayland (app_id) or XWayland (class) — match both
 for_window [app_id="obsidian"] floating enable, resize set width 2000 px height 1190 px, move position center, move scratchpad
 for_window [class="obsidian"] floating enable, resize set width 2000 px height 1190 px, move position center, move scratchpad
