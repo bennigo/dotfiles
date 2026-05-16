@@ -48,34 +48,8 @@ command -v zoxide >/dev/null 2>&1 && eval "$(zoxide init zsh)"
 # pip completion deferred — 110ms startup cost, rarely needed interactively
 # Run: eval "$(pip completion --zsh)" if you want tab completion for pip
 
-# API keys from pass - lazy-loaded to avoid ~900ms GPG overhead on every shell
-# These are only needed by Claude Code MCP servers, not general shell use.
-# Call load-mcp-credentials manually, or they auto-load on first access.
-load-mcp-credentials() {
-    [[ -n "$_MCP_CREDS_LOADED" ]] && return 0
-    export ANTHROPIC_API_KEY=$(pass show tokens/anthropic_api_key 2>/dev/null || echo "")
-    export BRAVE_API_KEY=$(pass show tokens/brave_api 2>/dev/null || echo "")
-    export KIMI_API_KEY=$(pass show tokens/kimi_api_key 2>/dev/null || echo "")
-    DEEPSEEK_API_KEY=$(pass show tokens/deepseek_api_key 2>/dev/null || true)
-    if [ -z "$DEEPSEEK_API_KEY" ]; then
-        unset DEEPSEEK_API_KEY
-        echo "⚠ DEEPSEEK_API_KEY not set — pass lookup failed (GPG agent locked?)" >&2
-    else
-        export DEEPSEEK_API_KEY
-    fi
-    export GOOGLE_MCP_CLIENT_ID=$(pass show tokens/google_mcp_claude_client_id 2>/dev/null || echo "")
-    export GOOGLE_MCP_CLIENT_SECRET=$(pass show tokens/google_mcp_claude_client_secret 2>/dev/null || echo "")
-    export _MCP_CREDS_LOADED=1
-}
-
-# Auto-load credentials before claude commands
-_preexec_load_mcp_creds() {
-    if [[ -z "$_MCP_CREDS_LOADED" && ("$1" == claude* || "$1" == crush* || "$1" == "pi" || "$1" == "pi "*) ]]; then
-        load-mcp-credentials
-    fi
-}
-autoload -Uz add-zsh-hook
-add-zsh-hook preexec _preexec_load_mcp_creds
+# API keys from pass — now in .zshenv so they're available to all zsh instances
+# (Pi, Crush, Claude Code all need these when launched from non-interactive contexts)
 
 # PostgreSQL connection URL builder from ~/.pgpass
 function pg_url() {
