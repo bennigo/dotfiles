@@ -1,0 +1,10 @@
+# Disable runtime PM on Intel Maple Ridge TB4 USB xHCI controller (8086:1138)
+# to prevent resume errors (USBSTS 0x401) that trigger cascading CNVi Bluetooth
+# enumeration failures on port 1-10 of the main xHCI (00:14.0).
+#
+# Root cause: the TB4 xHCI fails to resume from D3cold, tripping PCI subsystem power
+# transitions that briefly wake the CNVi BT companion, causing repetitive -71 protocol
+# errors as the main xHCI tries and fails to enumerate it.
+#
+# See: system/CLAUDE.md § Bluetooth CNVi Power Issue
+ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x8086", ATTR{device}=="0x1138", ATTR{power/control}="on"

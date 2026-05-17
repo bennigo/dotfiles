@@ -75,6 +75,32 @@ sudo grep -a "jump_label\|BUG at\|nvkms" /var/crash/<timestamp>/dmesg.<timestamp
 Fixes Intel Maple Ridge Thunderbolt 4 D3cold hang post-resume on ThinkPad P1 Gen 6.
 Removes and rescans PCI bridge `0000:20:00.0` as a systemd sleep hook.
 
+### Bluetooth CNVi Power Issue (Runtime PM)
+**Files**: `etc/udev/rules.d/99-tb4-xhci-pm.rules`
+
+The Intel CNVi Bluetooth companion (attached to USB port 1-10 on xHCI 00:14.0) can become
+permanently wedged in D3cold, requiring a **cold boot** to recover. The trigger is the
+**TB4 xHCI controller (57:00.0, 8086:1138)** failing to resume from runtime D3cold with
+`USBSTS 0x401`, which causes cascading PCI power transitions that briefly wake the CNVi
+companion — followed by hundreds of failed enumeration attempts (`-71` protocol errors).
+
+The `thunderbolt-fix` handles S3 suspend/resume, but this is a **runtime PM** issue.
+The udev rule sets `power/control=on` on the TB4 USB controller to prevent it from
+entering runtime suspend entirely.
+
+**Symptoms**: `bluetoothctl show` says "No default controller available", no `hci0`
+in `/sys/class/bluetooth/`, `CNVI_SCU_SEQ_DATA_DW9: 0x0` in dmesg.
+
+**Recovery**: Cold boot. No runtime fix exists — the CNVi companion must
+power-cycle. Toggling ThinkPad ACPI (`/proc/acpi/ibm/bluetooth`) or reloading
+btusb/btintel modules will not help once the device is in this state.
+
+**Deploy after reinstall**:
+```bash
+sudo cp etc/udev/rules.d/99-tb4-xhci-pm.rules /etc/udev/rules.d/
+sudo udevadm control --reload-rules
+```
+
 ### Cisco VPN Local Route Fix
 **File**: `etc/NetworkManager/dispatcher.d/99-fix-vpn-local-routes`
 
