@@ -9,6 +9,7 @@ export ZDOTDIR="${HOME}/.config/zsh"
 export ANTHROPIC_API_KEY=$(pass show tokens/anthropic_api_key 2>/dev/null || echo "")
 export BRAVE_API_KEY=$(pass show tokens/brave_api 2>/dev/null || echo "")
 export KIMI_API_KEY=$(pass show tokens/kimi_api_key 2>/dev/null || echo "")
+export OPENROUTER_API_KEY=$(pass show openrouter/api_key 2>/dev/null || echo "") 
 DEEPSEEK_API_KEY=$(pass show tokens/deepseek_api_key 2>/dev/null || true)
 if [ -n "$DEEPSEEK_API_KEY" ]; then
     export DEEPSEEK_API_KEY
