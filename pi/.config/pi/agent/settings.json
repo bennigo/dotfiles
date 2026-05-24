@@ -14,8 +14,8 @@
     "npm:pi-conventions",
     "npm:@eko24ive/pi-ask"
   ],
-  "lastChangelogVersion": "0.75.3",
-  "defaultProvider": "kimi-cn",
-  "defaultModel": "kimi-k2.5",
+  "lastChangelogVersion": "0.75.5",
+  "defaultProvider": "deepseek",
+  "defaultModel": "deepseek-v4-pro",
   "defaultThinkingLevel": "high"
 }
