@@ -51,7 +51,7 @@ set $wallpaper $XDG_CONFIG_HOME/sway/wallpapers/mahdi-khomsaz-asset.jpg
 # Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
 # output * bg $XDG_CONFIG_HOME/sway/wallpapers/mahdi-khomsaz-asset.jpg fill
 # output * bg $XDG_CONFIG_HOME/sway/wallpapers/mahdi-khomsaz-asset.jpg fill
-exec_always swaybg -i $wallpaper -m fit
+exec_always swaybg -i $wallpaper -m fill
 # automounting requires udisks2
 exec /usr/bin/lxqt-policykit-agent &
 exec udiskie --smart-tray --notify
@@ -80,6 +80,23 @@ exec $term
 # exec swaymsg "workspace 1 output eDP-1"
 # exec swaymsg "workspace 2 output DP-2"
 # exec swaymsg "workspace 3 output HDMI-A-1"
+
+# Workspace ↔ output assignments
+# Sway evaluates the output list left-to-right and uses the first connected one,
+# so workspace 5 lands on whichever external is plugged in (HDMI / DP / etc.),
+# and falls back to the laptop panel if nothing is connected.
+# All other workspaces are pinned to the laptop panel so switching to them
+# pulls focus back to eDP-1 instead of dragging onto the external.
+workspace 5 output HDMI-A-1 HDMI-A-2 DP-1 DP-2 DP-3 DP-4 DP-5 DP-6 eDP-1
+workspace 1 output eDP-1
+workspace 2 output eDP-1
+workspace 3 output eDP-1
+workspace 4 output eDP-1
+workspace 6 output eDP-1
+workspace 7 output eDP-1
+workspace 8 output eDP-1
+workspace 9 output eDP-1
+workspace 10 output eDP-1
 
 
 # output HDMI1 pos 0 0 mode 1920x1080@60Hz
