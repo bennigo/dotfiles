@@ -3,7 +3,7 @@
     "deepseek": {
       "baseUrl": "https://api.deepseek.com/v1",
       "api": "openai-completions",
-      "apiKey": "DEEPSEEK_API_KEY",
+      "apiKey": "$DEEPSEEK_API_KEY",
       "compat": {
         "supportsDeveloperRole": false,
         "supportsReasoningEffort": false,
@@ -14,44 +14,72 @@
           "id": "deepseek-v4-pro",
           "name": "DeepSeek V4 Pro",
           "reasoning": true,
-          "input": ["text"],
+          "input": [
+            "text"
+          ],
           "contextWindow": 1000000,
           "maxTokens": 32768,
-          "cost": { "input": 0.5, "output": 2.0, "cacheRead": 0.1, "cacheWrite": 0.2 }
+          "cost": {
+            "input": 0.5,
+            "output": 2,
+            "cacheRead": 0.1,
+            "cacheWrite": 0.2
+          }
         },
         {
           "id": "deepseek-v4-flash",
           "name": "DeepSeek V4 Flash",
           "reasoning": true,
-          "input": ["text"],
+          "input": [
+            "text"
+          ],
           "contextWindow": 1000000,
           "maxTokens": 32768,
-          "cost": { "input": 0.2, "output": 0.8, "cacheRead": 0, "cacheWrite": 0 }
+          "cost": {
+            "input": 0.2,
+            "output": 0.8,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          }
         }
       ]
     },
     "kimi-cn": {
       "baseUrl": "https://api.moonshot.cn/v1",
       "api": "openai-completions",
-      "apiKey": "KIMI_API_KEY",
+      "apiKey": "$KIMI_API_KEY",
       "models": [
         {
           "id": "kimi-k2.5",
           "name": "Kimi K2.5",
           "reasoning": true,
-          "input": ["text"],
+          "input": [
+            "text"
+          ],
           "contextWindow": 256000,
           "maxTokens": 16384,
-          "cost": { "input": 0.6, "output": 2.0, "cacheRead": 0, "cacheWrite": 0 }
+          "cost": {
+            "input": 0.6,
+            "output": 2,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          }
         },
         {
           "id": "kimi-k2-turbo-preview",
           "name": "Kimi K2 Turbo",
           "reasoning": true,
-          "input": ["text"],
+          "input": [
+            "text"
+          ],
           "contextWindow": 256000,
           "maxTokens": 16384,
-          "cost": { "input": 0.3, "output": 1.0, "cacheRead": 0, "cacheWrite": 0 }
+          "cost": {
+            "input": 0.3,
+            "output": 1,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          }
         }
       ]
     },
@@ -70,96 +98,162 @@
           "id": "qwen3.5:latest",
           "name": "Qwen 3.5 (9.7B Local)",
           "reasoning": false,
-          "input": ["text"],
+          "input": [
+            "text"
+          ],
           "contextWindow": 32768,
           "maxTokens": 4096,
-          "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 }
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          }
         },
         {
           "id": "qwen2.5-coder:7b",
           "name": "Qwen 2.5 Coder 7B (Local)",
           "reasoning": false,
-          "input": ["text"],
+          "input": [
+            "text"
+          ],
           "contextWindow": 32768,
           "maxTokens": 4096,
-          "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 }
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          }
         },
         {
           "id": "deepseek-coder-v2:16b",
           "name": "DeepSeek Coder V2 16B (Local)",
           "reasoning": false,
-          "input": ["text"],
+          "input": [
+            "text"
+          ],
           "contextWindow": 32768,
           "maxTokens": 4096,
-          "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 }
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          }
         },
         {
           "id": "deepseek-r1:8b",
           "name": "DeepSeek R1 8B (Local, Reasoning)",
           "reasoning": true,
-          "input": ["text"],
+          "input": [
+            "text"
+          ],
           "contextWindow": 32768,
           "maxTokens": 4096,
-          "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 }
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          }
         },
         {
           "id": "moondream:latest",
           "name": "Moondream (Local, Vision)",
           "reasoning": false,
-          "input": ["text", "image"],
+          "input": [
+            "text",
+            "image"
+          ],
           "contextWindow": 4096,
           "maxTokens": 2048,
-          "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 }
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          }
         },
         {
           "id": "dolphin-llama3:8b",
           "name": "Dolphin 2.9 Llama3 8B (Local, Uncensored)",
           "reasoning": false,
-          "input": ["text"],
+          "input": [
+            "text"
+          ],
           "contextWindow": 32768,
           "maxTokens": 4096,
-          "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 }
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          }
         },
         {
           "id": "hf.co/OBLITERATUS/gemma-4-E4B-it-OBLITERATED:latest",
           "name": "Gemma 4 E4B Obliterated (Local, Pliny)",
           "reasoning": false,
-          "input": ["text"],
+          "input": [
+            "text"
+          ],
           "contextWindow": 32768,
           "maxTokens": 4096,
-          "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 }
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          }
         }
       ]
     },
     "google": {
       "baseUrl": "https://generativelanguage.googleapis.com/v1beta",
       "api": "google-generative-ai",
-      "apiKey": "GEMINI_API_KEY",
+      "apiKey": "$GEMINI_API_KEY",
       "models": [
         {
           "id": "gemini-2.5-pro",
           "name": "Gemini 2.5 Pro",
           "reasoning": true,
-          "input": ["text", "image"],
+          "input": [
+            "text",
+            "image"
+          ],
           "contextWindow": 1048576,
           "maxTokens": 65536,
-          "cost": { "input": 1.25, "output": 10.0, "cacheRead": 0, "cacheWrite": 0 }
+          "cost": {
+            "input": 1.25,
+            "output": 10,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          }
         },
         {
           "id": "gemini-2.5-flash",
           "name": "Gemini 2.5 Flash",
           "reasoning": true,
-          "input": ["text", "image"],
+          "input": [
+            "text",
+            "image"
+          ],
           "contextWindow": 1048576,
           "maxTokens": 65536,
-          "cost": { "input": 0.15, "output": 1.0, "cacheRead": 0, "cacheWrite": 0 }
+          "cost": {
+            "input": 0.15,
+            "output": 1,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          }
         }
       ]
     },
     "openrouter": {
       "baseUrl": "https://openrouter.ai/api/v1",
       "api": "openai-completions",
-      "apiKey": "OPENROUTER_API_KEY",
+      "apiKey": "$OPENROUTER_API_KEY",
       "compat": {
         "openRouterRouting": {
           "allow_fallbacks": true,
@@ -169,19 +263,39 @@
       "modelOverrides": {
         "anthropic/claude-sonnet-4.6": {
           "name": "Claude Sonnet 4.6 (OpenRouter)",
-          "cost": { "input": 3.0, "output": 15.0, "cacheRead": 0.3, "cacheWrite": 3.75 }
+          "cost": {
+            "input": 3,
+            "output": 15,
+            "cacheRead": 0.3,
+            "cacheWrite": 3.75
+          }
         },
         "google/gemini-2.5-flash": {
           "name": "Gemini 2.5 Flash (OpenRouter)",
-          "cost": { "input": 0.15, "output": 0.6, "cacheRead": 0, "cacheWrite": 0 }
+          "cost": {
+            "input": 0.15,
+            "output": 0.6,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          }
         },
         "openai/gpt-5.5": {
           "name": "GPT-5.5 (OpenRouter)",
-          "cost": { "input": 3.75, "output": 15.0, "cacheRead": 0, "cacheWrite": 0 }
+          "cost": {
+            "input": 3.75,
+            "output": 15,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          }
         },
         "deepseek/deepseek-v4": {
           "name": "DeepSeek V4 (OpenRouter)",
-          "cost": { "input": 0.5, "output": 2.0, "cacheRead": 0, "cacheWrite": 0 }
+          "cost": {
+            "input": 0.5,
+            "output": 2,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          }
         }
       }
     }
