@@ -1,0 +1,17 @@
+# Disable the ELAN I2C touchpad as a system wakeup source.
+#
+# On kernel 7.0.0-x (Ubuntu 26.04) with s2idle, the touchpad (i2c-ELAN0686:00,
+# IRQ 56) fires a wakeup interrupt the instant the machine reaches s2idle, so
+# suspend exits ~3s after entry ("immediate wake"). This is NOT the old nvidia
+# jump_label panic (that was fixed in driver 595.71.05) — it is a spurious
+# wakeup source.
+#
+# Disabling power/wakeup on the touchpad leaves LID (lid-open) and SLPB (power
+# button) armed, so the intended wake paths still work; you only lose
+# "touchpad twitch wakes it from the bag".
+#
+# Confirm the culprit after a failed suspend with:  cat /sys/power/pm_wakeup_irq
+# Reload rules:   sudo udevadm control --reload-rules
+# Apply live now: echo disabled | sudo tee /sys/bus/i2c/devices/i2c-ELAN0686:00/power/wakeup
+
+ACTION=="add|change", SUBSYSTEM=="i2c", KERNEL=="i2c-ELAN0686:00", ATTR{power/wakeup}="disabled"
