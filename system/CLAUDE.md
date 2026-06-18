@@ -50,7 +50,8 @@ sudo udevadm control --reload-rules
 ### NVIDIA Suspend jump_label Panic — FIXED in driver 595.71.05 (2026-06-18)
 
 **Current driver**: `nvidia-driver-595-open` 595.71.05-0ubuntu0.26.04.1 (loaded module 595.71.05).
-**GRUB_DEFAULT**: still pinned to 6.17.0-22-generic, but **7.0.0-22 is now safe** re: this panic.
+**GRUB_DEFAULT**: re-pinned to **7.0.0-22-generic** (2026-06-18) now that the panic is fixed.
+Backup of the prior value: `/etc/default/grub.bak.before-7022-pin`.
 
 The old jump_label panic (kernel BUG at `jump_label.c:73`, `nvkms_kthread_q_callback+0x8e`
 in `nvidia_modeset.ko` during `freeze_processes()` on suspend) was **NOT a kernel regression
@@ -62,9 +63,8 @@ moot. Verified 2026-06-18: booted 7.0.0-22, `PM: suspend entry → suspend exit`
 
 There is **no pending kernel patch to monitor** — the kernel revert plan is obsolete.
 
-**Re-pin to 7.0.0-22 once you're confident** (optional): set `GRUB_DEFAULT` to the 7.0.0-22
-entry + `sudo update-grub`. Until then it boots 6.17 by default; one-shot 7.0.0-22 via
-`sudo grub-reboot "Advanced options for Ubuntu>Ubuntu, with Linux 7.0.0-22-generic"`.
+GRUB now boots 7.0.0-22 by default. To fall back to 6.17 for one boot if ever needed:
+`sudo grub-reboot "Advanced options for Ubuntu>Ubuntu, with Linux 6.17.0-22-generic"`.
 
 ### Touchpad Immediate-Wake on s2idle (suspend exits ~3s after entry)
 
