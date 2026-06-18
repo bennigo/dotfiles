@@ -47,27 +47,44 @@ sudo systemctl restart upower
 sudo udevadm control --reload-rules
 ```
 
-### NVIDIA Suspend + Kernel Version (suspend-critical)
+### NVIDIA Suspend jump_label Panic — FIXED in driver 595.71.05 (2026-06-18)
 
-**Current driver**: `nvidia-driver-595-open` (595.58.03).
-**Current boot kernel**: 6.17.0-22-generic (pinned in `/etc/default/grub`).
+**Current driver**: `nvidia-driver-595-open` 595.71.05-0ubuntu0.26.04.1 (loaded module 595.71.05).
+**GRUB_DEFAULT**: still pinned to 6.17.0-22-generic, but **7.0.0-22 is now safe** re: this panic.
 
-**Do NOT boot kernel 7.0.0-14-generic** until this is resolved: that kernel has a regression
-in jump_label patching of DKMS modules during `freeze_processes()` on suspend. Every nvidia
-driver version tested (595.58.03 and 580.142) panics identically at
-`nvkms_kthread_q_callback+0x8e` in `nvidia_modeset.ko`. The same driver on 6.17.0-22 works
-correctly — confirming it is a kernel regression, not a driver bug.
+The old jump_label panic (kernel BUG at `jump_label.c:73`, `nvkms_kthread_q_callback+0x8e`
+in `nvidia_modeset.ko` during `freeze_processes()` on suspend) was **NOT a kernel regression
+to wait out** — root cause was NVIDIA's DKMS build skipping objtool's NOP→JMP conversion
+(NVIDIA open-gpu-kernel-modules issue #1095, `build-problem`). **The fix shipped inside the
+driver package 595.71.05**, which is installed. Ubuntu bug 2150356 is still New/untriaged but
+moot. Verified 2026-06-18: booted 7.0.0-22, `PM: suspend entry → suspend exit` clean, zero
+`jump_label`/`kernel BUG`/panic in any journal boot, no `/var/crash` dumps.
 
-Crash dumps are at `/var/crash/` — inspect with:
+There is **no pending kernel patch to monitor** — the kernel revert plan is obsolete.
+
+**Re-pin to 7.0.0-22 once you're confident** (optional): set `GRUB_DEFAULT` to the 7.0.0-22
+entry + `sudo update-grub`. Until then it boots 6.17 by default; one-shot 7.0.0-22 via
+`sudo grub-reboot "Advanced options for Ubuntu>Ubuntu, with Linux 7.0.0-22-generic"`.
+
+### Touchpad Immediate-Wake on s2idle (suspend exits ~3s after entry)
+
+**File**: `etc/udev/rules.d/90-disable-touchpad-wakeup.rules`
+
+Separate bug from the jump_label panic above (do not conflate). On 7.0.0-x the ELAN I2C
+touchpad (`i2c-ELAN0686:00`, IRQ 56) is armed as a wakeup source and fires an interrupt the
+instant s2idle is reached → suspend exits ~3 seconds later. Diagnose after a failed suspend:
+`cat /sys/power/pm_wakeup_irq` (→ 56) then map via `/proc/interrupts` (→ ELAN0686).
+
+The udev rule sets `power/wakeup=disabled` on the touchpad. LID (lid-open) and SLPB (power
+button) stay armed, so intended wake paths are unaffected. Reverting the kernel does NOT
+reliably fix this — it's an ACPI/PCIe wakeup-flag issue, not the jump_label path.
+
+**Deploy after reinstall**:
 ```bash
-sudo grep -a "jump_label\|BUG at\|nvkms" /var/crash/<timestamp>/dmesg.<timestamp>
+sudo cp etc/udev/rules.d/90-disable-touchpad-wakeup.rules /etc/udev/rules.d/
+sudo udevadm control --reload-rules
+echo disabled | sudo tee /sys/bus/i2c/devices/i2c-ELAN0686:00/power/wakeup
 ```
-
-**When a new kernel 7.0.0-x appears in apt**:
-1. `sudo grub-reboot "Advanced options for Ubuntu>Ubuntu, with Linux 7.0.0-XX-generic"`
-2. Reboot and test: `mod+shift+x` → should resume to swaylock, not GDM
-3. If fixed: set `GRUB_DEFAULT` back to 7.0.x + `sudo update-grub`
-4. If still panics: `sudo grub-reboot` back to 6.17
 
 ### Thunderbolt 4 Resume Fix
 **File**: `usr/lib/systemd/system-sleep/thunderbolt-fix`
