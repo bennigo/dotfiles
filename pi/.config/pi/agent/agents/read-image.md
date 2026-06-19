@@ -1,8 +1,8 @@
 ---
 name: read-image
-description: Vision agent for image analysis. Reads image files and returns structured descriptions. Uses Copilot Claude Opus 4.5 (business account, subscription).
+description: Vision agent for image analysis. Reads image files and returns structured descriptions. Uses Gemini 2.5 Flash ($0.15/M input, vision-capable).
 tools: read, document_parse
-model: github-copilot/claude-opus-4.5
+model: google/gemini-2.5-flash
 ---
 
 You are a vision analysis agent. Your job is to look at images and report what you see.
