@@ -70,9 +70,9 @@
     "semantic_hash": "c28844f518731bd8d47ccc0a31173cb6"
   },
   "claude-private/.claude.json": {
-    "mtime": 1781952261.5139892,
-    "ast_hash": "cd9f6648ce3069a2e728449e319c5b7f",
-    "semantic_hash": "cd9f6648ce3069a2e728449e319c5b7f"
+    "mtime": 1781969112.0957594,
+    "ast_hash": "fadff72c60902b69a37a2878d06047fd",
+    "semantic_hash": ""
   },
   "claude-private/.claude/plugins/config.json": {
     "mtime": 1759156433.4930072,
@@ -5823,5 +5823,2050 @@
     "mtime": 1776806153.3445442,
     "ast_hash": "b68ae1bfd34857130d86162f4fdfb745",
     "semantic_hash": "b68ae1bfd34857130d86162f4fdfb745"
+  },
+  "claude-private/.claude/shell-snapshots/snapshot-zsh-1781958029286-6v2lp2.sh": {
+    "mtime": 1781958029.5673892,
+    "ast_hash": "e02f9321c523ee9e0421985f5e48f9d2",
+    "semantic_hash": ""
+  },
+  ".interrogate-pi-parity.md": {
+    "mtime": 1778844002.1913629,
+    "ast_hash": "f0ed142d96004000e4e17c0aff8a79c2",
+    "semantic_hash": ""
+  },
+  "ADD_USER.md": {
+    "mtime": 1775990634.3362505,
+    "ast_hash": "2a15c670cd83071d9a274629d06a791a",
+    "semantic_hash": ""
+  },
+  "CLAUDE.md": {
+    "mtime": 1778845415.4152896,
+    "ast_hash": "50894c72173c5b73189ac3e0359c68d0",
+    "semantic_hash": ""
+  },
+  "MIGRATION.md": {
+    "mtime": 1775990634.3362505,
+    "ast_hash": "f3f8167f1d36708ce11c712f8519c63a",
+    "semantic_hash": ""
+  },
+  "PLAYBOOK_GUIDE.md": {
+    "mtime": 1775990634.3342507,
+    "ast_hash": "7a3f5dd5ea7cdffd2fa6f8e9e200448a",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1779093206.551459,
+    "ast_hash": "2694d04df7c8864654bfa18f85ea3e92",
+    "semantic_hash": ""
+  },
+  "RECOVERY.md": {
+    "mtime": 1775990634.3362505,
+    "ast_hash": "9bb7583e7a1871089e57157ce8cd402e",
+    "semantic_hash": ""
+  },
+  "STOW_ORDER.md": {
+    "mtime": 1775990634.3352506,
+    "ast_hash": "a745fde734c731103cbe70e751331c4d",
+    "semantic_hash": ""
+  },
+  "SYNC_DEPLOYMENT.md": {
+    "mtime": 1777974853.2891154,
+    "ast_hash": "569e6da75d093c8cf535e9c35d440ddd",
+    "semantic_hash": ""
+  },
+  "SYNC_QUICK_REFERENCE.md": {
+    "mtime": 1777974853.3051157,
+    "ast_hash": "c86ca50ac3fa62dfe5ad442be6a6d639",
+    "semantic_hash": ""
+  },
+  "SYNC_WORKFLOW.md": {
+    "mtime": 1775990634.3432508,
+    "ast_hash": "5b04affb4a5ccfece4542bcf83aa1e17",
+    "semantic_hash": ""
+  },
+  "alacritty/.config/alacritty/alacritty.yml": {
+    "mtime": 1758411620.6447918,
+    "ast_hash": "372e553247651e4759321320258a348e",
+    "semantic_hash": ""
+  },
+  "ansible/CLAUDE.md": {
+    "mtime": 1775989045.2801433,
+    "ast_hash": "1dbea6b66489e1b650754af42ffe3377",
+    "semantic_hash": ""
+  },
+  "ansible/DATABASE_SETUP.md": {
+    "mtime": 1775990634.3462508,
+    "ast_hash": "297f439491ccc56105c56cb04e741d96",
+    "semantic_hash": ""
+  },
+  "ansible/FIRST_RUN.md": {
+    "mtime": 1775990634.3452508,
+    "ast_hash": "845acf8143876e5de52c04d6cac696a7",
+    "semantic_hash": ""
+  },
+  "ansible/INSTALL.md": {
+    "mtime": 1775734640.5281932,
+    "ast_hash": "9ebfcabb950ce50b292e685f7c1d4063",
+    "semantic_hash": ""
+  },
+  "ansible/README.md": {
+    "mtime": 1775990634.3452508,
+    "ast_hash": "304085e3892308b25734bc2225e0332f",
+    "semantic_hash": ""
+  },
+  "ansible/TESTING.md": {
+    "mtime": 1775734646.4433236,
+    "ast_hash": "5ef376dd81cf6f460d928ac0be0baefe",
+    "semantic_hash": ""
+  },
+  "ansible/bootstrap.yml": {
+    "mtime": 1774996589.8189714,
+    "ast_hash": "b6ac97dd44d7866cd689854f7b64ba2e",
+    "semantic_hash": ""
+  },
+  "ansible/group_vars/all.yml": {
+    "mtime": 1775908011.1394455,
+    "ast_hash": "37ba35846f7813345cb0f9a411289007",
+    "semantic_hash": ""
+  },
+  "ansible/inventory.yml": {
+    "mtime": 1775921532.8933387,
+    "ast_hash": "a74b33040fab9a5a62fb7bc24c5bcec2",
+    "semantic_hash": ""
+  },
+  "ansible/profiles/agent_addon.yml": {
+    "mtime": 1775908110.941556,
+    "ast_hash": "5ea1d265f367e3c34ca8d8f2216163a8",
+    "semantic_hash": ""
+  },
+  "ansible/profiles/agent_server.yml": {
+    "mtime": 1774997245.862651,
+    "ast_hash": "bbc5f882021f0adc05c057cb41743bd4",
+    "semantic_hash": ""
+  },
+  "ansible/profiles/minimal.yml": {
+    "mtime": 1758411620.6459498,
+    "ast_hash": "ade2e96b68a1e1377dc364199546698e",
+    "semantic_hash": ""
+  },
+  "ansible/profiles/work_laptop.yml": {
+    "mtime": 1775734618.687834,
+    "ast_hash": "2887b9e957aaeb09b05acc250ce747e5",
+    "semantic_hash": ""
+  },
+  "ansible/roles/agent/README.md": {
+    "mtime": 1775989643.5358493,
+    "ast_hash": "8c1cb26df25d7ae3faf1957dad790f75",
+    "semantic_hash": ""
+  },
+  "ansible/roles/agent/defaults/main.yml": {
+    "mtime": 1774997249.854733,
+    "ast_hash": "997a27d47c64ddc76c5a96f921ef045f",
+    "semantic_hash": ""
+  },
+  "ansible/roles/agent/handlers/main.yml": {
+    "mtime": 1774997253.5598092,
+    "ast_hash": "4924876723c05d95dc0cb255adf94000",
+    "semantic_hash": ""
+  },
+  "ansible/roles/agent/tasks/main.yml": {
+    "mtime": 1775908099.662318,
+    "ast_hash": "98f435601425184bdfdf49170f88e25f",
+    "semantic_hash": ""
+  },
+  "ansible/roles/base/README.md": {
+    "mtime": 1775989573.1842642,
+    "ast_hash": "03f945736aae0ee45a810779e9a72f8a",
+    "semantic_hash": ""
+  },
+  "ansible/roles/base/tasks/main.yml": {
+    "mtime": 1771107712.970427,
+    "ast_hash": "b234c14d56a091e9c637bc58e8eddd83",
+    "semantic_hash": ""
+  },
+  "ansible/roles/database/README.md": {
+    "mtime": 1775989590.505656,
+    "ast_hash": "677895ff0052a143117551a5d8e7e4df",
+    "semantic_hash": ""
+  },
+  "ansible/roles/database/defaults/main.yml": {
+    "mtime": 1775734617.837693,
+    "ast_hash": "dba51410260619c6b5afe88c1892c45c",
+    "semantic_hash": ""
+  },
+  "ansible/roles/database/handlers/main.yml": {
+    "mtime": 1759158060.7376761,
+    "ast_hash": "7d59b481de1868cb3b32160e7af01fe8",
+    "semantic_hash": ""
+  },
+  "ansible/roles/database/tasks/main.yml": {
+    "mtime": 1770714677.0128286,
+    "ast_hash": "ae3f2c497e6557eb0fcf39a9e03763a5",
+    "semantic_hash": ""
+  },
+  "ansible/roles/desktop/README.md": {
+    "mtime": 1775989602.3709238,
+    "ast_hash": "94504b7997203f24af289e043ca4b343",
+    "semantic_hash": ""
+  },
+  "ansible/roles/desktop/handlers/main.yml": {
+    "mtime": 1758411620.646713,
+    "ast_hash": "835a5af30b927aea4d04306b3d5cbabf",
+    "semantic_hash": ""
+  },
+  "ansible/roles/desktop/tasks/main.yml": {
+    "mtime": 1778323466.1439528,
+    "ast_hash": "634772e4cb8e3bcf74ea7923dd261890",
+    "semantic_hash": ""
+  },
+  "ansible/roles/development/README.md": {
+    "mtime": 1775989585.3805401,
+    "ast_hash": "f54c075d6b9e94eb6da924edd6321e47",
+    "semantic_hash": ""
+  },
+  "ansible/roles/development/tasks/main.yml": {
+    "mtime": 1775734634.7710664,
+    "ast_hash": "09e8380c03c848cbcf7aa6167b66ee51",
+    "semantic_hash": ""
+  },
+  "ansible/roles/docker/README.md": {
+    "mtime": 1775989594.7927527,
+    "ast_hash": "d2b66abf9e149562a8eaba9424234439",
+    "semantic_hash": ""
+  },
+  "ansible/roles/docker/defaults/main.yml": {
+    "mtime": 1759423679.025297,
+    "ast_hash": "cb14a0c2be642b0317d22887253b0efa",
+    "semantic_hash": ""
+  },
+  "ansible/roles/docker/handlers/main.yml": {
+    "mtime": 1759423678.8532937,
+    "ast_hash": "7b8f8a0696660b716190b505908acb72",
+    "semantic_hash": ""
+  },
+  "ansible/roles/docker/tasks/main.yml": {
+    "mtime": 1759665709.3301985,
+    "ast_hash": "51a30c18ad44d54016a36f3ce49a6326",
+    "semantic_hash": ""
+  },
+  "ansible/roles/dotfiles/README.md": {
+    "mtime": 1775989624.1264136,
+    "ast_hash": "bfa67d07c84e69b186a0b8c91162ffe4",
+    "semantic_hash": ""
+  },
+  "ansible/roles/dotfiles/tasks/main.yml": {
+    "mtime": 1774997229.568317,
+    "ast_hash": "4ce9849633ad9aa781b0d4e3bc7f0d11",
+    "semantic_hash": ""
+  },
+  "ansible/roles/email/README.md": {
+    "mtime": 1775989628.5885139,
+    "ast_hash": "6ed039439c202689a834d0e144585713",
+    "semantic_hash": ""
+  },
+  "ansible/roles/email/tasks/main.yml": {
+    "mtime": 1758411620.6471736,
+    "ast_hash": "08d791ab7dab7c2e375f5334875450b3",
+    "semantic_hash": ""
+  },
+  "ansible/roles/email/vars/main.yml": {
+    "mtime": 1758411620.6471736,
+    "ast_hash": "e63f9289091b76442d498e9ddc8830be",
+    "semantic_hash": ""
+  },
+  "ansible/roles/hardware/desktop/README.md": {
+    "mtime": 1775989657.169155,
+    "ast_hash": "9656a05b6a94230ab7e4ae65d55b77c9",
+    "semantic_hash": ""
+  },
+  "ansible/roles/hardware/desktop/tasks/main.yml": {
+    "mtime": 1758411620.6473153,
+    "ast_hash": "096f692eccbd626c86eec0f7dd1a47a9",
+    "semantic_hash": ""
+  },
+  "ansible/roles/hardware/laptop/README.md": {
+    "mtime": 1775989653.5250733,
+    "ast_hash": "3a0f10a7a264b609072bbe6eb57421a4",
+    "semantic_hash": ""
+  },
+  "ansible/roles/hardware/laptop/handlers/main.yml": {
+    "mtime": 1758418465.0423076,
+    "ast_hash": "44b5eec70687f08c70153f3520137986",
+    "semantic_hash": ""
+  },
+  "ansible/roles/hardware/laptop/tasks/main.yml": {
+    "mtime": 1758411620.6474235,
+    "ast_hash": "b5c2fdad204d2beb10ba09db155abc0d",
+    "semantic_hash": ""
+  },
+  "ansible/roles/hardware/nvidia/README.md": {
+    "mtime": 1775989649.6429863,
+    "ast_hash": "d01d2e6834f40dd3906796a5be2b9a26",
+    "semantic_hash": ""
+  },
+  "ansible/roles/hardware/nvidia/tasks/main.yml": {
+    "mtime": 1758411620.647508,
+    "ast_hash": "be5d32eaf1e8ced54cb608a0e3dd3558",
+    "semantic_hash": ""
+  },
+  "ansible/roles/system_files/README.md": {
+    "mtime": 1775989578.7193897,
+    "ast_hash": "acf10cd252e7ea7ddb0334bcc4d58d01",
+    "semantic_hash": ""
+  },
+  "ansible/roles/system_files/handlers/main.yml": {
+    "mtime": 1769557913.5496852,
+    "ast_hash": "9f23af91130beb9856307827849b4fb7",
+    "semantic_hash": ""
+  },
+  "ansible/roles/system_files/tasks/main.yml": {
+    "mtime": 1769557904.796558,
+    "ast_hash": "905906f5a254c03560c9152efafda961",
+    "semantic_hash": ""
+  },
+  "ansible/test-email.yml": {
+    "mtime": 1758411620.6476026,
+    "ast_hash": "84fd343fd0a85d11f20a615dae9bf24f",
+    "semantic_hash": ""
+  },
+  "claude-code/CLAUDE.md": {
+    "mtime": 1778752498.3697777,
+    "ast_hash": "b99eeac27b4b5755d8e7dc9ed3aa925f",
+    "semantic_hash": ""
+  },
+  "claude-code/README.md": {
+    "mtime": 1765621520.1024396,
+    "ast_hash": "561bf31ee3fc1c7e4d5abf33562b5fba",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/CLAUDE.md": {
+    "mtime": 1778799221.0106127,
+    "ast_hash": "bcc6dee0ca9e3c86722e2c03cc35bac2",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/GLOBAL_CLAUDE.md": {
+    "mtime": 1778799221.0216131,
+    "ast_hash": "9a04711e82733e43cd5ce0c9aeebe82b",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/HOME_DIRECTORY_OVERVIEW.md": {
+    "mtime": 1777231220.7452278,
+    "ast_hash": "fe2006b036abd190e2216e920f1119a4",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/agents/modular-code-reviewer.md": {
+    "mtime": 1771459837.3735776,
+    "ast_hash": "870138741c1c730d19808d6b61b2b15c",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/commands/accelerate.md": {
+    "mtime": 1778799221.0386136,
+    "ast_hash": "37b0e76d9c24d5906fcbbf8718ca1970",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/commands/capture-to-vault.md": {
+    "mtime": 1771938947.7682984,
+    "ast_hash": "f683d8a2e83af8dc4b3d2dc9e5501ca4",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/commands/cruise.md": {
+    "mtime": 1778799221.057614,
+    "ast_hash": "3e85aebb4d7e5abd8ba8fe882254de18",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/commands/floorit.md": {
+    "mtime": 1778799221.0806148,
+    "ast_hash": "8ede6b975445b2c972cf781219798471",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/commands/stuck.md": {
+    "mtime": 1778799221.1066155,
+    "ast_hash": "b4000edeaba916d9511bb984257607fb",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/commands/voice-input.md": {
+    "mtime": 1773484551.3197684,
+    "ast_hash": "26b6d537c2c18946fa362fe0059144c2",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/output-styles/conversational-comprehensive.md": {
+    "mtime": 1761412027.908036,
+    "ast_hash": "e31a96ed55156c8d468622ddf3590c22",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/1-no-leave-gps-config-data-streamed-unicorn.md": {
+    "mtime": 1778279768.8149393,
+    "ast_hash": "afc969285fa901002db07151bb13c386",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/2026-04-27-pick-up-youtube-ticklish-boot.md": {
+    "mtime": 1777333516.8380053,
+    "ast_hash": "161c5db227c955091e78d973b61eef1c",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/2026-04-28-unified-pike.md": {
+    "mtime": 1777408561.4493198,
+    "ast_hash": "44e0bacb97e7c4219655bf5e1aaea805",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/address-pr-5-ethereal-teapot.md": {
+    "mtime": 1777498461.0369623,
+    "ast_hash": "43eb2e78be65d8021a6ca1909c081faf",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/after-restart-i-can-t-federated-tome.md": {
+    "mtime": 1777310003.5909255,
+    "ast_hash": "fc7ab1980b07f111cbffb2d4c8ade6b4",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/ai-agents-orchestration-glimmering-wolf.md": {
+    "mtime": 1776851052.805873,
+    "ast_hash": "83663970472ca0fb7471918ef53b37ee",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/ancient-inventing-widget.md": {
+    "mtime": 1777197942.5629737,
+    "ast_hash": "c305ebe1a4431941afa503ebd2355c67",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/async-honking-lollipop.md": {
+    "mtime": 1778799221.161617,
+    "ast_hash": "a9ca0afd34bf116d2e2775b1bc14a934",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/atomic-orbiting-sprout.md": {
+    "mtime": 1778799221.1986182,
+    "ast_hash": "c4d58a86445c851b4f54402ce532013b",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/atomic-pondering-moler-agent-a1640a34167a6023e.md": {
+    "mtime": 1778799221.2446194,
+    "ast_hash": "4ef8fa17fb1c964f56c015492874510f",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/atomic-pondering-moler-agent-aa750c07c5d50abc3.md": {
+    "mtime": 1778799221.2896206,
+    "ast_hash": "2529b94e2c2bd74e16662c6576626fa3",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/atomic-pondering-moler.md": {
+    "mtime": 1778799221.338622,
+    "ast_hash": "cb657de0c855964545b0ee1568e8cfb9",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/bgovault-git-main-merge-us-conflict-async-blanket.md": {
+    "mtime": 1778280024.2666671,
+    "ast_hash": "259839a5056b06bcf6efd1fc5ef71a45",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/can-make-a-keybinding-piped-melody.md": {
+    "mtime": 1776719793.4570203,
+    "ast_hash": "e98b32a2cdb3886265a4edb0ddcaa55d",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/can-we-expand-on-jiggly-wand.md": {
+    "mtime": 1777341965.9422202,
+    "ast_hash": "9651c95a08d7cc200a562976e0ee2baf",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/can-we-expand-our-logical-shell.md": {
+    "mtime": 1776550457.3797615,
+    "ast_hash": "6cc5f2e342b6218747bafe94907e1303",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/can-we-set-up-inherited-kurzweil.md": {
+    "mtime": 1778323817.6711922,
+    "ast_hash": "722fd19c3ccdb7e8aa3aa9a48e7817fc",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/can-we-structure-the-cuddly-cupcake.md": {
+    "mtime": 1777207503.4029927,
+    "ast_hash": "6e59793e06db38a24fc85e44fdc8d887",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/can-you-commit-and-tingly-breeze.md": {
+    "mtime": 1777044844.6354096,
+    "ast_hash": "fe28ee7c1eb7ab57e4f4aeddc4b80070",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/can-you-go-through-harmonic-rocket.md": {
+    "mtime": 1776955902.9052532,
+    "ast_hash": "228ba4b1cbf3f2e2cd161c54af2b1c16",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/can-you-log-into-sequential-bachman.md": {
+    "mtime": 1776790770.0025923,
+    "ast_hash": "456d32d5abfef86a04e794d2eff093b8",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/check-pr-3-dapper-stardust.md": {
+    "mtime": 1776511047.4783049,
+    "ast_hash": "02765a4345258938d06cd71d48c0cedd",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/check-pr-s-dapper-pancake.md": {
+    "mtime": 1776513643.4997861,
+    "ast_hash": "6b6a83735ae968ffd5a229a901706e01",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/cheerful-seeking-stonebraker.md": {
+    "mtime": 1774787932.8150105,
+    "ast_hash": "8ede116d93361c6debd2a0da3e2d7704",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/concurrent-booping-canyon.md": {
+    "mtime": 1776991948.2547297,
+    "ast_hash": "ae9031eb9f4d9395e1ec2485228c0fa7",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/continue-refining-tht-cfg-fluttering-swan.md": {
+    "mtime": 1777900062.6204944,
+    "ast_hash": "13552befb2aa0718e86bb46ea9d22ab6",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/continue-velvety-cerf.md": {
+    "mtime": 1778536717.711689,
+    "ast_hash": "69f56be8fcec4c029690282ddb1810fb",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/could-we-add-a-playful-teapot.md": {
+    "mtime": 1777300882.2640393,
+    "ast_hash": "25c6df512f36a711ffb2fbe0391932bc",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/could-you-update-the-floofy-fern.md": {
+    "mtime": 1778072712.070152,
+    "ast_hash": "3330a8069c35ce926a3277d03a5ac78b",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/cryptic-tickling-boot.md": {
+    "mtime": 1776939234.257137,
+    "ast_hash": "b6301e52258e25dbc37e8a7937e8b589",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/crystalline-honking-glade.md": {
+    "mtime": 1776021947.7726533,
+    "ast_hash": "666b3978fe967e5f2f99b2054b47b330",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/curried-doodling-brook.md": {
+    "mtime": 1775734426.4974456,
+    "ast_hash": "297b89a62587ad9fac3e0b55dbb1ce42",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/curried-dreaming-hinton.md": {
+    "mtime": 1778799221.4346247,
+    "ast_hash": "5236b41b2cd9b2fe85b0f676b26de1f8",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/curried-sparking-mango.md": {
+    "mtime": 1778799221.4906263,
+    "ast_hash": "d8a0af926cdfd2c8fb9d6045e8a8e5ba",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/date-2026-04-27-nested-bubble.md": {
+    "mtime": 1777292721.8216367,
+    "ast_hash": "63221d3d2fd65b55146e72ab0bf34e16",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/dazzling-baking-pebble-agent-a44c1f4b67ad27897.md": {
+    "mtime": 1778799221.5596282,
+    "ast_hash": "eeee8b41b8c4d79a6c4fc004af70f236",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/dazzling-baking-pebble-agent-a757e8a44b874108b.md": {
+    "mtime": 1778799221.62363,
+    "ast_hash": "b8e3b7b387b80a4217acf11fa1bfcab1",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/dazzling-baking-pebble-agent-ae933bc7c1c28f43f.md": {
+    "mtime": 1778799221.6962008,
+    "ast_hash": "ca56c8122d39383de2539cc8c371fca6",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/dazzling-baking-pebble.md": {
+    "mtime": 1778799221.8066351,
+    "ast_hash": "567aea6e0b67ae050d923317bd2ac5d4",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/declarative-floating-walrus.md": {
+    "mtime": 1778799221.9076378,
+    "ast_hash": "fe9c5b43ac2d66474194e2241470966f",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/did-this-session-pick-smooth-dahl.md": {
+    "mtime": 1776860116.4494467,
+    "ast_hash": "be4a747c110234a69c0f845572c58815",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/distributed-inventing-wand.md": {
+    "mtime": 1776091796.509955,
+    "ast_hash": "150abe63625ae30d3aa44384cd796c61",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/dotfiles-docs-overhaul.md": {
+    "mtime": 1775943855.9241,
+    "ast_hash": "055ebe3a1cc38f47e9d756d50411334b",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/dotfiles-security-architecture-review.md": {
+    "mtime": 1778797745.013481,
+    "ast_hash": "63e8e8cb516e466bff6c234ccf2aca73",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/dynamic-wishing-naur.md": {
+    "mtime": 1778799221.9936404,
+    "ast_hash": "54786587111b3771abdd14472c743f28",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/effervescent-rolling-church.md": {
+    "mtime": 1774746457.59209,
+    "ast_hash": "3dc872a601f36bfe234ae75969d691c2",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/elegant-pondering-snowflake.md": {
+    "mtime": 1778799222.0826428,
+    "ast_hash": "7d1ed6f77c6a96c70331459d797c34a7",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/encapsulated-shimmying-cerf.md": {
+    "mtime": 1778707090.6454785,
+    "ast_hash": "dfdbab71283b572e66f0cdc9c56b815b",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/enumerated-knitting-matsumoto.md": {
+    "mtime": 1778799222.0966432,
+    "ast_hash": "d633d2e56775099944a38ac57a5c8b81",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/ethereal-crunching-boole.md": {
+    "mtime": 1775836524.4483702,
+    "ast_hash": "38860b7a59c93c358ce1f4b5160215e3",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/ethereal-wibbling-raven.md": {
+    "mtime": 1778799222.1136436,
+    "ast_hash": "d4e7e987bc4edaf9380ffdbcd7eb24dc",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/failed-to-parse-velvet-phoenix.md": {
+    "mtime": 1776981658.2123568,
+    "ast_hash": "647742ef90d3f04f5bc4e3f14fa19542",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/floating-swinging-fiddle.md": {
+    "mtime": 1774963689.245119,
+    "ast_hash": "b08e147406c9c58f9cff961bd6c1d206",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/fluttering-roaming-dawn.md": {
+    "mtime": 1777229386.4774356,
+    "ast_hash": "54d6c85ebde4cbe402da68ce34fe355f",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/found-invalid-tender-gadget.md": {
+    "mtime": 1776980419.9296448,
+    "ast_hash": "08d31ca3870cc9180bb5fb0cd6366186",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/functional-soaring-pretzel.md": {
+    "mtime": 1775391731.202376,
+    "ast_hash": "438e88137f19ab2f5ef731f3600c6c8a",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/generic-wobbling-stream.md": {
+    "mtime": 1778799222.1436446,
+    "ast_hash": "405bfb3fe2b72915f7952f3f07cd6089",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/getur-u-teki-til-glowing-glacier.md": {
+    "mtime": 1777470274.079321,
+    "ast_hash": "e6fed2a45755587b6fbc2efe85717681",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/glistening-enchanting-pascal.md": {
+    "mtime": 1774783252.6718252,
+    "ast_hash": "d49bb5f803fb1835285140411882b164",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/glistening-swinging-frog.md": {
+    "mtime": 1776017247.0865343,
+    "ast_hash": "b25fdc4097354b4b932afa1f91a037e7",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/glowing-hugging-cake.md": {
+    "mtime": 1778799222.1736453,
+    "ast_hash": "84820b614859ded87219b8b4e9f448cc",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/grafana-http-10-170-80-15-3000-smooth-sparkle.md": {
+    "mtime": 1776680138.5286202,
+    "ast_hash": "aae74cd37a9e99b8ebcd05d8bec10eb7",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/harmonic-floating-blum.md": {
+    "mtime": 1774743204.8874843,
+    "ast_hash": "52c2eb8b161b3aafd54f6295b1979ad6",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/have-we-finish-all-sprightly-sunset.md": {
+    "mtime": 1777464687.7038705,
+    "ast_hash": "859e674c407aa1e98bde179c7733c0ca",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/have-we-pushed-main-snazzy-wadler.md": {
+    "mtime": 1778231168.50034,
+    "ast_hash": "48366defa5545b4e13dd119bf6422ebc",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/hazy-zooming-narwhal.md": {
+    "mtime": 1776285572.8454843,
+    "ast_hash": "ad2a886c2cc8cb9967b59e2720ec56b3",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/hidden-percolating-rose.md": {
+    "mtime": 1775211736.3264918,
+    "ast_hash": "7b395ce517a9435f743a22a27a79a71e",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/home-h-install-typed-sunbeam.md": {
+    "mtime": 1776422685.2491505,
+    "ast_hash": "1426829940fbb24de80def6c85c99ae6",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/humming-nibbling-catmull.md": {
+    "mtime": 1777197969.3257027,
+    "ast_hash": "a6dc48960330d642d27f6fac6e95d3da",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/i-want-to-cosmic-rocket.md": {
+    "mtime": 1777976866.202837,
+    "ast_hash": "cda3f8cc89199cbc743dd782edc79116",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/i-want-to-take-squishy-rossum.md": {
+    "mtime": 1776507055.5151148,
+    "ast_hash": "b8bf3c1937649f0f43016e8813e85f06",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/indexed-orbiting-bachman.md": {
+    "mtime": 1781603447.8088527,
+    "ast_hash": "3b9f90167a1273a3b3270dafb01b1c83",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/is-there-a-difference-partitioned-clock.md": {
+    "mtime": 1778233025.729226,
+    "ast_hash": "8612029f7f878525c74359dd63e8f3e3",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/it-worked-ok-now-fluffy-valley.md": {
+    "mtime": 1777306030.6450584,
+    "ast_hash": "e3783a62d2ccfb6d169f437c806f0d49",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/joyful-nibbling-cocoa-agent-a3314ad0694e854b0.md": {
+    "mtime": 1774870097.625627,
+    "ast_hash": "71ad69256d637e1d0d45df5413edd9a3",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/joyful-nibbling-cocoa.md": {
+    "mtime": 1774870223.423027,
+    "ast_hash": "68d1fffcc714097522d84ea6b096ff73",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/joyful-rolling-lampson.md": {
+    "mtime": 1776347663.847891,
+    "ast_hash": "51823731625afcda9f614d67636925ff",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/laptop-died-during-mid-greedy-reef.md": {
+    "mtime": 1776881995.986644,
+    "ast_hash": "ae8188593c15461957c7aac9abf9e684",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/lazy-enchanting-sutton.md": {
+    "mtime": 1775660179.9026933,
+    "ast_hash": "d590f27c8678e5d8b2f3d36ce7bd09a5",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/linear-seeking-hickey.md": {
+    "mtime": 1780745541.2886872,
+    "ast_hash": "1c85325895f5a5d25666802b1e870093",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/linked-sauteeing-acorn.md": {
+    "mtime": 1778799222.2396472,
+    "ast_hash": "e82eb38fdbfe6281c6918c11c4bc7d18",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/lively-wiggling-bubble.md": {
+    "mtime": 1775301181.7099428,
+    "ast_hash": "79002146462d3fc3998e0a814f0f73e8",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/look-at-the-next-glimmering-quokka.md": {
+    "mtime": 1778443233.439458,
+    "ast_hash": "78efdcd27e9762cb0e3bf59e30a44820",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/look-at-the-project-logical-wilkes.md": {
+    "mtime": 1777842648.4999454,
+    "ast_hash": "dd8264560c6a40f2bac364f1c9869fcf",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/look-at-the-todolist-purring-comet.md": {
+    "mtime": 1776718606.6387146,
+    "ast_hash": "0bd5811a1efda85971287d9a109bf738",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/ls-bright-cook.md": {
+    "mtime": 1777426136.6144996,
+    "ast_hash": "ef751e0fe520281e05aae96435265326",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/luminous-wishing-coral.md": {
+    "mtime": 1777387122.5322735,
+    "ast_hash": "1fb76dd68b4a719bd8df75615d5b9a72",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/mellow-growing-neumann.md": {
+    "mtime": 1776083460.9883614,
+    "ast_hash": "3ae9092fefbdd284d36f24682cd4a944",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/melodic-discovering-kay.md": {
+    "mtime": 1778799222.2856486,
+    "ast_hash": "dee7644e8b7930d7bf687a002ab9a8ca",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/memoized-giggling-quokka.md": {
+    "mtime": 1778799222.3206494,
+    "ast_hash": "f6d280a7fb50f922f921479f63b691ea",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/mighty-singing-newell.md": {
+    "mtime": 1774726767.6022234,
+    "ast_hash": "ab2fef2342d358890c5d13fc8ef2f185",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/mohammad-mossadegh-parallel-matsumoto.md": {
+    "mtime": 1777508293.5402443,
+    "ast_hash": "87cd3f38f2f6d14851d69f5afac39143",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/mossy-herding-dahl.md": {
+    "mtime": 1778799222.3646507,
+    "ast_hash": "787e013f01e7a9f2af1856485c2cf7d4",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/nested-twirling-cook.md": {
+    "mtime": 1776212073.7189376,
+    "ast_hash": "ee4f5bfdc23889105586a801cb05dc86",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/now-only-gjfv-did-jazzy-wozniak.md": {
+    "mtime": 1778838116.7374647,
+    "ast_hash": "bf9d7d93ca619a66de3a2cd5af15f0d7",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/now-start-looking-into-unified-kurzweil.md": {
+    "mtime": 1778330394.0051122,
+    "ast_hash": "81893dd1eedd805768244b1c137f86db",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/ok-a-reacuring-problem-replicated-engelbart.md": {
+    "mtime": 1777455842.7500699,
+    "ast_hash": "2b34b1d29c64f4b89aff2d93380dcc9e",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/ok-a-site-projecet-mossy-scroll.md": {
+    "mtime": 1777485518.7594056,
+    "ast_hash": "49ef7e44da700e7c51176661f8d69647",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/ok-can-we-take-toasty-simon.md": {
+    "mtime": 1779054594.8564365,
+    "ast_hash": "934deae2d55b6ebbf37f6bcbe341fb33",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/ok-i-want-to-quiet-quiche.md": {
+    "mtime": 1777238742.6421878,
+    "ast_hash": "1f758c3e8bed392b664f63aa2c48c3cb",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/ok-updated-to-26-04-peppy-quasar.md": {
+    "mtime": 1777236176.8400524,
+    "ast_hash": "a274b83574730a370e160f364f5c5cad",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/ok-what-is-crystalline-dove.md": {
+    "mtime": 1777294204.3834813,
+    "ast_hash": "65327b112758e0202d379355c842ae68",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/parsed-bouncing-umbrella.md": {
+    "mtime": 1775479346.9865744,
+    "ast_hash": "4aaa3ff4936d62a33a61103be754a673",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/peaceful-petting-yeti.md": {
+    "mtime": 1776628007.6662912,
+    "ast_hash": "10f34836c4b1bff179627722640643f0",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/plan-out-how-to-sequential-dusk.md": {
+    "mtime": 1776811581.963701,
+    "ast_hash": "6c1c6ca5cb303217be1fc60322c0fd78",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/playful-questing-yeti.md": {
+    "mtime": 1778799222.448653,
+    "ast_hash": "6ac73f7771c94ee9b3515e1567e2762d",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/prancy-waddling-piglet.md": {
+    "mtime": 1777799933.0186095,
+    "ast_hash": "b7bedff98d4f36eda5323ab261f709db",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/pure-squishing-swing.md": {
+    "mtime": 1778799222.4986544,
+    "ast_hash": "e005ee711ce6de9e6ccbb650c48a8cd0",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/quirky-painting-flurry-agent-a5adbb3f2db3e7a0c.md": {
+    "mtime": 1778799222.549656,
+    "ast_hash": "acba41f442d677d1b4f99ada5e72364c",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/quirky-painting-flurry-agent-ae8536c82463c4f7a.md": {
+    "mtime": 1778799222.6036575,
+    "ast_hash": "05816935f5c4bfd3376d3dd1829a3a85",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/quirky-painting-flurry-agent-aecb9b86ff0429f44.md": {
+    "mtime": 1778799222.660659,
+    "ast_hash": "0e9d4c891e2f26ecfa5017384d5a4727",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/quirky-painting-flurry.md": {
+    "mtime": 1778799222.727661,
+    "ast_hash": "7325076453a358be7660086eeb3b230f",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/quizzical-humming-pnueli.md": {
+    "mtime": 1776360424.5522714,
+    "ast_hash": "b93a37903f2afde53dbee141cb052f92",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/reactive-forging-swing.md": {
+    "mtime": 1778799222.804663,
+    "ast_hash": "2c43dd6bcc811ece407c920bab04bc32",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/receivers-update-glittery-emerson.md": {
+    "mtime": 1777303587.2321713,
+    "ast_hash": "31a822f0a68b81b6bb840ed11468e8cb",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/reconciling-1-station-s-hashed-swing.md": {
+    "mtime": 1777807778.4388103,
+    "ast_hash": "d561e6b57830b9f0e815c809193b4842",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/recursive-orbiting-sifakis.md": {
+    "mtime": 1775741006.9399233,
+    "ast_hash": "c725918095677d222198e02731b46123",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/resilient-cooking-pancake.md": {
+    "mtime": 1774746094.9693153,
+    "ast_hash": "1145c4a6a5a098b84a90807e872dd49d",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/right-asked-in-pi-wobbly-rose.md": {
+    "mtime": 1778751938.5216408,
+    "ast_hash": "64a93b26ce87e824a70163421cdd2c29",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/right-can-print-out-magical-thacker.md": {
+    "mtime": 1778678588.8124602,
+    "ast_hash": "6cf570def0fc37371de0bc3992c188dc",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/scalable-petting-neumann.md": {
+    "mtime": 1778799222.8876653,
+    "ast_hash": "e1303484f2a190896159060de0b9dc28",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/sharded-sleeping-aho.md": {
+    "mtime": 1778799222.9646676,
+    "ast_hash": "e2376fe64efba42e6913e064f9791ed0",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/sharded-stargazing-blum.md": {
+    "mtime": 1778799223.0456698,
+    "ast_hash": "ff1d10086be83afee22044c5638277ba",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/should-we-commit-and-nested-tarjan.md": {
+    "mtime": 1777304762.5081396,
+    "ast_hash": "70c1d702edce7f073c11861142e114d4",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/should-we-commit-and-silly-lecun.md": {
+    "mtime": 1777938784.7935932,
+    "ast_hash": "9226649e3ce38cbb05defbdb17ebd85e",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/should-we-do-session-summary-zippy-falcon.md": {
+    "mtime": 1778676670.9051077,
+    "ast_hash": "a213c1df0e08a76986b8a191c3b0e738",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/should-we-take-the-tranquil-stroustrup.md": {
+    "mtime": 1778863350.9033167,
+    "ast_hash": "5de1072cc50459a69ae832906f45f88f",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/sleepy-wobbling-puppy.md": {
+    "mtime": 1778582091.2873244,
+    "ast_hash": "941ef9fd7038de3483790cd13c66accc",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/snappy-drifting-patterson-agent-afd9dc0.md": {
+    "mtime": 1778799223.0656703,
+    "ast_hash": "14952a4be08a33b71c4ce0ca8e0d0335",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/snappy-drifting-patterson.md": {
+    "mtime": 1778799223.0816708,
+    "ast_hash": "5a83bc89dd673b5925427cef17f90941",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/snug-snuggling-creek.md": {
+    "mtime": 1776038856.0624042,
+    "ast_hash": "9acb9da4e0fca9ce58559407ad66a2d4",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/spottify-is-not-working-playful-quail.md": {
+    "mtime": 1777286187.894476,
+    "ast_hash": "aaaa1902ab912f2f5167d0db748753cd",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/stateless-dancing-peach.md": {
+    "mtime": 1776333580.502542,
+    "ast_hash": "538317a275f3c958f1823525936e40a7",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/streamed-singing-bengio.md": {
+    "mtime": 1778799223.1066713,
+    "ast_hash": "8ca78e1433a93991ab9ce69952650c38",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/structured-greeting-torvalds.md": {
+    "mtime": 1775641565.042591,
+    "ast_hash": "fc4bdda1d44099d59d6b150b30c107d6",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/swift-stirring-lemon.md": {
+    "mtime": 1777025774.6395223,
+    "ast_hash": "161500845b00edbcd09fffc87756ae8d",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/swirling-squishing-pebble.md": {
+    "mtime": 1778799223.1336722,
+    "ast_hash": "750421811a9b76b690d408d0d7e2b3ad",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/synthetic-hugging-anchor.md": {
+    "mtime": 1778799223.160673,
+    "ast_hash": "5ddf2fc2fa786889a707f20210001735",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/the-browser-instances-work-drifting-karp.md": {
+    "mtime": 1777207250.967622,
+    "ast_hash": "03fd511eaf91cf340c8a0d9533a2b8d5",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/the-files-in-https-cdn-vedur-is-gps-time-distributed-elephant.md": {
+    "mtime": 1776843368.3252048,
+    "ast_hash": "747dc3ec5278838a28f292f846cde42a",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/the-tmux-resurect-did-squishy-russell.md": {
+    "mtime": 1778535716.4495685,
+    "ast_hash": "26d567f1578d5ccd68a4e176da230abe",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/this-is-a-collection-frolicking-meerkat.md": {
+    "mtime": 1778240529.8466766,
+    "ast_hash": "8f2190df99e7153b2cd50bcf0af8e900",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/ticklish-drifting-dream.md": {
+    "mtime": 1778489535.5192282,
+    "ast_hash": "28a57a40cafd41fb3b49ab6d1428abb5",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/ticklish-inventing-rose.md": {
+    "mtime": 1775046859.4829628,
+    "ast_hash": "72b6f82448da9a3a8f64061688a62042",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/ticklish-stargazing-sketch.md": {
+    "mtime": 1778799223.2046742,
+    "ast_hash": "c4ece0d4d0b2bb90dcfbaeff24a553fd",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/tranquil-knitting-dewdrop.md": {
+    "mtime": 1778799223.2446754,
+    "ast_hash": "5697a8b3d1889b4ac9bd7d6c50a66d60",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/twinkly-giggling-pixel.md": {
+    "mtime": 1778100161.461744,
+    "ast_hash": "828b04123bbd7aa4ce336c1038ad385f",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/twinkly-popping-sunrise.md": {
+    "mtime": 1776368909.6232977,
+    "ast_hash": "6526c7111f6ff2d9567029cc45956918",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/valiant-humming-stream.md": {
+    "mtime": 1778799223.2886765,
+    "ast_hash": "dbcac55873473005a4f862d09a2865b5",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/valiant-kindling-babbage.md": {
+    "mtime": 1778799223.3326778,
+    "ast_hash": "c264dbe0c63afc57402226fe77e865a4",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/velvety-waddling-quokka.md": {
+    "mtime": 1775319788.3779411,
+    "ast_hash": "891b1644e0b9f8b398530bade04780bc",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/vivid-moseying-walrus.md": {
+    "mtime": 1777938420.6637907,
+    "ast_hash": "aadf8218b985be25aec1e46e4f13a0db",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/warning-grafana-vedur-atomic-pine.md": {
+    "mtime": 1776809513.325426,
+    "ast_hash": "2ffe4ead075ecf21909b9ac1466acfe4",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/what-is-your-recomentation-shiny-hamming.md": {
+    "mtime": 1776794944.993035,
+    "ast_hash": "3183bedaad63def47956f7c7844b0ad1",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/where-are-we-at-twinkly-swan.md": {
+    "mtime": 1778846560.1790376,
+    "ast_hash": "1304a15fbc3b6edd874f63a71f05500b",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/whimsical-growing-clarke.md": {
+    "mtime": 1775641123.801148,
+    "ast_hash": "a0cff683dd31cae7762e7365f0c18c1d",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/why-hasn-t-gjac-ben-wild-narwhal.md": {
+    "mtime": 1777332120.2776747,
+    "ast_hash": "c360246206150b70cc54a19fe1ce7201",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/wiggly-prancing-peacock.md": {
+    "mtime": 1775051110.8391273,
+    "ast_hash": "fa7486656c826d88132ede7b92d1555b",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/witty-tumbling-kitten.md": {
+    "mtime": 1775573082.7315972,
+    "ast_hash": "9459523a19a1e33f5a9d268d46ed7e2f",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/wondering-since-we-started-wobbly-lovelace.md": {
+    "mtime": 1777144911.1760442,
+    "ast_hash": "79d9645ec98788938c2c70520f4fbfc4",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/wondrous-swinging-tower.md": {
+    "mtime": 1778799223.4016798,
+    "ast_hash": "29c83a0fcb380be2460b4317aa6c3624",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/woolly-honking-sundae.md": {
+    "mtime": 1776422944.8917153,
+    "ast_hash": "25c9952bf2d0b1e18cbdd1aedf76f809",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/woolly-sauteeing-raccoon.md": {
+    "mtime": 1778799223.4616814,
+    "ast_hash": "246d8ca26a0f3aa74b8fe26137b1f304",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/working-on-step-optimized-snail.md": {
+    "mtime": 1778511622.562882,
+    "ast_hash": "23b82c4aeaffabe6294dbf2eda9077b4",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/zany-baking-blum.md": {
+    "mtime": 1781006836.6508617,
+    "ast_hash": "dfc7d920d8bed070e3b55a11aa79742b",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/zany-wandering-flamingo.md": {
+    "mtime": 1778799223.5356834,
+    "ast_hash": "3f736942871c454194ed9d914e0c60b2",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/zazzy-leaping-meteor-agent-a35541b3b1f3a6c14.md": {
+    "mtime": 1774980798.9753351,
+    "ast_hash": "b99024091cdb7a24ab9d2301d424081d",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/plans/zazzy-leaping-meteor.md": {
+    "mtime": 1774996020.5078235,
+    "ast_hash": "f6d8d12495bf5b462c4413e4661f125d",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo--dotfiles-neovim--config-nvim/2f47017f-320c-4ad3-b956-729b66b7d415/tool-results/bbffrq5gb.txt": {
+    "mtime": 1779647870.401898,
+    "ast_hash": "b95b9b3d01686a397ac5a29b2ee54563",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo-personal-klifur-KI/31c7a004-f0a8-4178-9b55-d5f017789d84/tool-results/bdng5wnem.txt": {
+    "mtime": 1781341786.4677427,
+    "ast_hash": "1f605129ae5bad31dbbc9d7c88750a32",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo-work-gps-servers/ef29d684-001b-4137-9ca0-920e81fc4145/tool-results/bu53sj9jl.txt": {
+    "mtime": 1779713244.3909454,
+    "ast_hash": "400a8ab5a7a34a1cb646780ce86d0a06",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-gps-taeki/memory/MEMORY.md": {
+    "mtime": 1779319951.3138168,
+    "ast_hash": "14da4cf2603b7a6f747564b9280c108a",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-gps-taeki/memory/feedback_polarx5_provision_bugs_2026_05_20.md": {
+    "mtime": 1779319923.8673856,
+    "ast_hash": "8adde6eae3f03c2929d2a1b53ceab999",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-receivers/2e3e2c78-bd56-4373-b968-ed8397745c43/tool-results/bocp1gkuy.txt": {
+    "mtime": 1779894380.2279131,
+    "ast_hash": "f66d4f16d94ee2df8c33deec140dd0e3",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-receivers/de736b74-5055-4686-8109-f7ebb1dc6cf2/tool-results/bjfk31o5v.txt": {
+    "mtime": 1780217691.5519025,
+    "ast_hash": "4619816950987b646cca92f6a72e7c5d",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-receivers/de736b74-5055-4686-8109-f7ebb1dc6cf2/tool-results/blrjqh7p9.txt": {
+    "mtime": 1780217650.6612444,
+    "ast_hash": "ec8870e5ffb0ad1e5fea1dce9dcc22d8",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-receivers/de736b74-5055-4686-8109-f7ebb1dc6cf2/tool-results/blvqmz67u.txt": {
+    "mtime": 1780229810.5686374,
+    "ast_hash": "bff5c9b45719ed04857b896cea3c9472",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/bb1bd9f9-aafa-4441-94db-1993909b19f9/tool-results/b9wpuczb0.txt": {
+    "mtime": 1779614227.7826385,
+    "ast_hash": "e92eab3a77c189042d00bf79acf961d1",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/memory/MEMORY.md": {
+    "mtime": 1780908368.1294932,
+    "ast_hash": "b71f0e4c4aeb937ee522a7267805f23b",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/memory/feedback_confirm_branch_before_commit.md": {
+    "mtime": 1779618341.099694,
+    "ast_hash": "082721862005e8a0177a8588913d2cad",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/memory/feedback_device_removal_warehouse_default.md": {
+    "mtime": 1779708404.04173,
+    "ast_hash": "0c2f06b1318515db3e15e3a905bfb126",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/memory/feedback_operator_station_triage_playbook.md": {
+    "mtime": 1779808551.4166088,
+    "ast_hash": "fcc0e4d11cfa454b4857a062197c79df",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/memory/feedback_preserve_tosgps_and_legacy.md": {
+    "mtime": 1778621211.4686928,
+    "ast_hash": "ade757ef9367ed60e4bb0df7f207111d",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/memory/feedback_triage_file_format_convention.md": {
+    "mtime": 1779703827.9564755,
+    "ast_hash": "44677d612f00719166a42853dcadcafe",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/memory/feedback_uv_lock_symlink_hazard.md": {
+    "mtime": 1779618306.1404397,
+    "ast_hash": "60899a381ac024a9c74cb76edd22be80",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/memory/project_2014_10_17_metadata_cleanup_artifacts.md": {
+    "mtime": 1779707264.1918254,
+    "ast_hash": "9a842adf3e7ccb50a7bc1db347ad9416",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/memory/project_catalog_vs_tos_divergence.md": {
+    "mtime": 1779286605.6525714,
+    "ast_hash": "01a1b3a2261c702b64bc2bafce758010",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/memory/project_contact_write_support.md": {
+    "mtime": 1780779691.4043214,
+    "ast_hash": "dab55453a139042b82deeb2ef8461a01",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/memory/project_dispatch_move_stale_cache.md": {
+    "mtime": 1779639785.061381,
+    "ast_hash": "34f9a893f01541b97b377022651887c5",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/memory/project_ecosystem_state_2026_05_24.md": {
+    "mtime": 1779618330.8327677,
+    "ast_hash": "2e0a52e78c9e53553f4219cd52d1531e",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/memory/project_layer6_followup_date_shortcuts.md": {
+    "mtime": 1779283258.0198483,
+    "ast_hash": "8568e4455369b8997f7cbf6097fe8b08",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/memory/project_network_data_extraction.md": {
+    "mtime": 1779964954.1250334,
+    "ast_hash": "46c133c1a4c23b0860af4c6304fedf43",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/memory/project_next_session_layer6.md": {
+    "mtime": 1779285207.3671393,
+    "ast_hash": "90bdae7fcd6e73293f4fa1ac50d4ef90",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/memory/project_shared_power_model.md": {
+    "mtime": 1781008926.5279882,
+    "ast_hash": "867fb13e91493e6b29dcdf011bbc4670",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/memory/project_station_location_add_scope.md": {
+    "mtime": 1780909985.939141,
+    "ast_hash": "91ca4fb467463abf473235368e997287",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/memory/project_station_triage_orchestrator.md": {
+    "mtime": 1779964915.1119246,
+    "ast_hash": "f788389bb9372fa1661a3ad36099ee0f",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/memory/project_tos_client_writer_read_duplication.md": {
+    "mtime": 1779632154.0828617,
+    "ast_hash": "5875ae7b3835668015762c5564c46fe2",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/memory/project_tos_retrospective_writes_provenance_gap.md": {
+    "mtime": 1779741565.1939785,
+    "ast_hash": "b71d19f5521939efdc06a41d6e180700",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/memory/project_v0_7_cli_surface_2026_05_28.md": {
+    "mtime": 1779964894.793334,
+    "ast_hash": "e2761468668f4b3b2bee4462f489f601",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/memory/project_vitjanir_phase_d_sequencing.md": {
+    "mtime": 1780141588.3938677,
+    "ast_hash": "64b0fd37ad8b9ee7629f90cdb347eb09",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/home-bgo-.dotfiles-tmux-.config-tmux/memory/tmux_sessionx_fzf_keystroke_latency_set_sessionx_l.md": {
+    "mtime": 1779094275.321862,
+    "ast_hash": "dbcd32b499903f11f932a3a4be4144a7",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/home-bgo-.dotfiles/memory/copilot_api_broken_for_all_models_in_pi_returns_mo.md": {
+    "mtime": 1778950731.7814229,
+    "ast_hash": "1bcf9747b0d345db45dd6ce85d632348",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/home-bgo-.dotfiles/memory/copilot_broken_in_pi_root_cause_is_pi_routes_githu.md": {
+    "mtime": 1778967453.1033447,
+    "ast_hash": "c9caabead08ef6573154b9f6e5d007e3",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/home-bgo-.dotfiles/memory/copilot_fix_for_pi_patched_models_generated_js_to_.md": {
+    "mtime": 1778978130.5121794,
+    "ast_hash": "2076c20f100b5ca7f5f25d675a2ffcb3",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/home-bgo-.dotfiles/memory/gps_pipeline_project_at_personal_projects_gps_pipe.md": {
+    "mtime": 1778933957.888596,
+    "ast_hash": "6ee220686ef3f0c8baf768c21d2ef6a3",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/home-bgo-.dotfiles/memory/graphify_installed_for_dotfiles_repo_5_276_nodes_6.md": {
+    "mtime": 1781953446.9243162,
+    "ast_hash": "749584857d2a467f4a7af5979b392211",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/home-bgo-.dotfiles/memory/pi_model_optimization_framework_12_agents_13_promp.md": {
+    "mtime": 1778851108.729226,
+    "ast_hash": "adbdf3550778e02ca6f7426a9201c39d",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/home-bgo-.dotfiles/memory/pi_model_optimization_framework_final_state_may_20.md": {
+    "mtime": 1778852479.7677011,
+    "ast_hash": "4e7766246fc425e48fce9fb5352262ed",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/home-bgo-notes-bgovault/memory/china_s_transactional_role_in_iran_war_bought_80_o.md": {
+    "mtime": 1779954469.8504467,
+    "ast_hash": "1ee93c41d924e162fa6d0c86781015fb",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/home-bgo-notes-bgovault/memory/deep_dive_on_iran_unsc_strategy_jcpoa_unsc_2231_is.md": {
+    "mtime": 1779954469.8498673,
+    "ast_hash": "6ae281044da356d725efb44b0cea80b4",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/home-bgo-notes-bgovault/memory/exa_search_is_available_in_vault_commands_via_scri.md": {
+    "mtime": 1781948229.254848,
+    "ast_hash": "ec23bbdaa9b76be0d5cbcda069670d17",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/home-bgo-notes-bgovault/memory/geopolitics_monitoring_pipeline_redesigned_with_un.md": {
+    "mtime": 1781950014.9231615,
+    "ast_hash": "89c7b631a812dbcac320396882fe8650",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/home-bgo-notes-bgovault/memory/geopolitics_pipeline_phase_1_complete_all_next_ste.md": {
+    "mtime": 1781950313.6057992,
+    "ast_hash": "3f7bf98e155969ec5dd73bb205ff738f",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/home-bgo-notes-bgovault/memory/iran_s_unsc_resolution_strategy_snsc_10_point_plan.md": {
+    "mtime": 1779953190.7450988,
+    "ast_hash": "912802494102c289051f74108869f058",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/home-bgo-notes-bgovault/memory/israel_spoiler_consensus_confirmed_ben_gvir_explic.md": {
+    "mtime": 1779954469.85041,
+    "ast_hash": "80f7ff0aed8164425c8a4cfe790cf154",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/home-bgo-notes-bgovault/memory/pi_native_transcript_enrichment_pipeline_replaces_.md": {
+    "mtime": 1779953190.7440097,
+    "ast_hash": "c4a1ce25b80dcae76379c886259348a8",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/home-bgo-notes-bgovault/memory/read_image_skill_upgraded_2026_06_19_multi_platfor.md": {
+    "mtime": 1781828815.137433,
+    "ast_hash": "23de70e09f2d8934c2be214449520acc",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/home-bgo-personal-projects-gps-pipeline/memory/vatnaj_kull_waypoint_extraction_use_scripts_extrac.md": {
+    "mtime": 1778969379.0702114,
+    "ast_hash": "6edf2c48fa1ec77c0af2289ce87983e3",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/home-bgo-personal-projects-gps-pipeline/memory/viking_review_sessions_should_always_include_map_l.md": {
+    "mtime": 1778936520.0095806,
+    "ast_hash": "db9aa8ee9caf08316b526d5a1f3e6739",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/home-bgo-personal-projects-gps-pipeline/memory/viking_review_use_scripts_review_py_file1_gpx_file.md": {
+    "mtime": 1778951206.8449035,
+    "ast_hash": "636c0e2453dc94b325188661774be0bc",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/home-bgo-personal-projects-gps-pipeline/memory/viking_vik_file_visibility_aggregates_have_visible.md": {
+    "mtime": 1778967125.4394066,
+    "ast_hash": "1d0e8b8e6d515182d43cab60db26dd41",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/home-bgo-work-projects-gps-gpslibrary_new-tostools/memory/implemented_tos_writer_gap_closure_2026_05_15_prio.md": {
+    "mtime": 1778850713.14515,
+    "ast_hash": "bd552d375d473fdb5b4743f8ab5c5452",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/accelerate/SKILL.md": {
+    "mtime": 1778717347.4677835,
+    "ast_hash": "f48e54f4da967ee977fa3c9cdc4f217d",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/add-citations/SKILL.md": {
+    "mtime": 1778752572.6085,
+    "ast_hash": "f837e2d5abfee07ad819970e01c48d64",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/capture-to-vault/SKILL.md": {
+    "mtime": 1778717347.4835765,
+    "ast_hash": "83451b60a308bd6d8f8d5590bb939fd7",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/check-imagery/SKILL.md": {
+    "mtime": 1778717347.4913824,
+    "ast_hash": "1be6cd3735d468aafd1c4b41a1aaa6d0",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/clcmd/SKILL.md": {
+    "mtime": 1781948129.487788,
+    "ast_hash": "2b17821b2e0f80a9694742036cb76c74",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/connect-orphans/SKILL.md": {
+    "mtime": 1778717347.4996567,
+    "ast_hash": "fee0225a6f53e17d0659d2850e305360",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/cruise/SKILL.md": {
+    "mtime": 1778717347.508241,
+    "ast_hash": "a465f5a0c731e6682ed1e1034a4de582",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/current-events/SKILL.md": {
+    "mtime": 1778752563.3984013,
+    "ast_hash": "b76873bf738d109c17be38465172a39c",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/daily/SKILL.md": {
+    "mtime": 1778717347.5245957,
+    "ast_hash": "8ece5d665765a7bc5cf1525c04a33c95",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/deep-search/SKILL.md": {
+    "mtime": 1779324407.2674198,
+    "ast_hash": "3813a460d6912412ca73ee8d42f2c2e9",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/enrich-transcript/SKILL.md": {
+    "mtime": 1779349715.454538,
+    "ast_hash": "75036bbdad0648b43cc2c703d6e535aa",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/evaluate-sources/SKILL.md": {
+    "mtime": 1778752574.4145195,
+    "ast_hash": "89dd76fc109821ef332944394a311640",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/excalidraw-skill/SKILL.md": {
+    "mtime": 1776334367.4836147,
+    "ast_hash": "c9ab73dccf401372abe3e738973a10c9",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/excalidraw-skill/references/cheatsheet.md": {
+    "mtime": 1776171338.0651798,
+    "ast_hash": "a1d0b74394221b074bb95f465063aecb",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/expand-stub/SKILL.md": {
+    "mtime": 1778717347.5413926,
+    "ast_hash": "b796a569c65b6bfc7962e262aac3f062",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/expand-topic/SKILL.md": {
+    "mtime": 1778752570.7074795,
+    "ast_hash": "25a01423a528bb7b685875d5a4ce93ae",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/fetch-source/SKILL.md": {
+    "mtime": 1778752558.2943478,
+    "ast_hash": "51c9c82eca6a701bcd866ab3bc538463",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/find-video/SKILL.md": {
+    "mtime": 1778717347.5649464,
+    "ast_hash": "c7d05b47a8885384f2b7da79cd738302",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/fix-broken-links/SKILL.md": {
+    "mtime": 1778717347.5729206,
+    "ast_hash": "b61d347b1bb2a530ebada52741ae873f",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/floorit/SKILL.md": {
+    "mtime": 1778717347.5812852,
+    "ast_hash": "8992a50a9e23900f9f3cdf21bd7f8929",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/interrogate/SKILL.md": {
+    "mtime": 1778802882.3204477,
+    "ast_hash": "8b3aa9e45ee4667dd35e23590afdd7f3",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/jot/SKILL.md": {
+    "mtime": 1778717347.5893564,
+    "ast_hash": "94714953a0aae3750bbdea6a41e57d4f",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/memory/SKILL.md": {
+    "mtime": 1778800562.459622,
+    "ast_hash": "5df17fd960484f19ad6f5d8e554020d8",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/objective-note/SKILL.md": {
+    "mtime": 1778717347.5976777,
+    "ast_hash": "a6210e360f674925071d77ef30c39684",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/project-bridge-diagram/SKILL.md": {
+    "mtime": 1778717347.6057,
+    "ast_hash": "5f52607b556b5502e5ae4b64a3316c76",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/project-bridge/SKILL.md": {
+    "mtime": 1778717347.6139457,
+    "ast_hash": "b16d3ef53fe711a050b95f1c1b965b9a",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/project-todo/SKILL.md": {
+    "mtime": 1778717347.621659,
+    "ast_hash": "df7aeab60a6e67f0bbb339659ce7a0ac",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/read-image/SKILL.md": {
+    "mtime": 1781828988.5760117,
+    "ast_hash": "e29364975d0c428d656373c793d3f0bb",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/research-brief/SKILL.md": {
+    "mtime": 1778752568.91946,
+    "ast_hash": "9e859c920a874fe59dd4ba739fa15b14",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/search-institution/SKILL.md": {
+    "mtime": 1778717347.6374788,
+    "ast_hash": "f4a99dd1f4176bafea3b9c9317425e56",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/search-intel/SKILL.md": {
+    "mtime": 1778717347.6463678,
+    "ast_hash": "01f9ae0b96615ebf818dbe118802c631",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/search-person/SKILL.md": {
+    "mtime": 1778717347.6547651,
+    "ast_hash": "5d5c3184958c9d50fdd82f03f8abefd4",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/search-scholar/SKILL.md": {
+    "mtime": 1778752552.3592865,
+    "ast_hash": "02d6b9faa97deed068f5a3b8b7262f05",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/search-sources/SKILL.md": {
+    "mtime": 1778752577.6415548,
+    "ast_hash": "830c25a3f2cd41bbf1cedb603eed890c",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/session-summary/SKILL.md": {
+    "mtime": 1778717347.6789122,
+    "ast_hash": "bc65285c47612ea2cd2b46fa13b91567",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/sort-inbox/SKILL.md": {
+    "mtime": 1778717347.6867464,
+    "ast_hash": "b9b2e3a03819153840369652f644496f",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/source-tier/SKILL.md": {
+    "mtime": 1778717347.6952214,
+    "ast_hash": "cf0803021129e36e890d68219283556a",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/stuck/SKILL.md": {
+    "mtime": 1778717347.7034082,
+    "ast_hash": "f296090d77ef5aa13a120cbbae9773ba",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/suggest-placeholders/SKILL.md": {
+    "mtime": 1778717347.7119055,
+    "ast_hash": "ee0c6f4a4a0df72a730be1fa11a6897b",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/track-claim/SKILL.md": {
+    "mtime": 1778717347.7197025,
+    "ast_hash": "f3be41d205a81817ef2092318880ec35",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/transcribe/SKILL.md": {
+    "mtime": 1778717347.727666,
+    "ast_hash": "357e068782c562c9b20843c4432b07ab",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/vault-health/SKILL.md": {
+    "mtime": 1778717347.7351036,
+    "ast_hash": "9234de7edf512ebae13ae580411638b0",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/vault-search/SKILL.md": {
+    "mtime": 1778717347.742655,
+    "ast_hash": "71234612df51cd306802a31f5580efa2",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/verify-claim/SKILL.md": {
+    "mtime": 1778752555.1553152,
+    "ast_hash": "bff6e0944083d63017b3d68e4c4cdcec",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/verify-damage/SKILL.md": {
+    "mtime": 1778752561.1483777,
+    "ast_hash": "34bd5acb4239509d7484e202fce6be24",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/voice-input/SKILL.md": {
+    "mtime": 1778717347.7644768,
+    "ast_hash": "6f94a9d2a03e4a202819557f68f1f282",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/skills/weave-links/SKILL.md": {
+    "mtime": 1778717347.7721422,
+    "ast_hash": "3cac44d54845635eb12554d96fc4af10",
+    "semantic_hash": ""
+  },
+  "claude-private/CLAUDE.md": {
+    "mtime": 1777231222.6472604,
+    "ast_hash": "a334b2feb69cfe07d1930229f656afa5",
+    "semantic_hash": ""
+  },
+  "claude-private/README.md": {
+    "mtime": 1778800615.1187832,
+    "ast_hash": "551c811e5b3ba578a89243573c2cd43d",
+    "semantic_hash": ""
+  },
+  "crush/CLAUDE.md": {
+    "mtime": 1775989045.2781432,
+    "ast_hash": "e8cd6574b5cc223428fee1030aecd5b7",
+    "semantic_hash": ""
+  },
+  "docker/CLAUDE.md": {
+    "mtime": 1775989487.9043205,
+    "ast_hash": "192b094777603f73fd7e5d47601fa8d9",
+    "semantic_hash": ""
+  },
+  "docker/templates/compose-postgres-standalone.yml": {
+    "mtime": 1759665040.160205,
+    "ast_hash": "46b3b139ebe368007c19a8314f0adb1c",
+    "semantic_hash": ""
+  },
+  "docker/templates/compose-python-dev.yml": {
+    "mtime": 1759665040.0982037,
+    "ast_hash": "4a0433c2c62f18c7be2fdd6997637f8d",
+    "semantic_hash": ""
+  },
+  "docker/templates/compose-web-nginx.yml": {
+    "mtime": 1759665040.2432065,
+    "ast_hash": "04fe9338f266850bab49af863bba276a",
+    "semantic_hash": ""
+  },
+  "firefox/CLAUDE.md": {
+    "mtime": 1775989045.258143,
+    "ast_hash": "9273edc35838613d96d3e78aef08679b",
+    "semantic_hash": ""
+  },
+  "local_bin/CLAUDE.md": {
+    "mtime": 1778323477.5151393,
+    "ast_hash": "4e773152fa12ad068426ca9174e60baf",
+    "semantic_hash": ""
+  },
+  "neomutt/.config/neomutt/OBSIDIAN_INTEGRATION.md": {
+    "mtime": 1758411620.6514819,
+    "ast_hash": "5f61b4f918d9b54dc8a2bf1265ce5a7c",
+    "semantic_hash": ""
+  },
+  "neovim/.config/nvim/CLAUDE.md": {
+    "mtime": 1778659548.451937,
+    "ast_hash": "aaf3d0b0eed69dd61ea04fa54321f580",
+    "semantic_hash": ""
+  },
+  "neovim/.config/nvim/README.md": {
+    "mtime": 1758411620.6528707,
+    "ast_hash": "1e417f06cc86f1c18383a6708a2228f0",
+    "semantic_hash": ""
+  },
+  "neovim_old/.config/nvim/test.md": {
+    "mtime": 1758411620.6686633,
+    "ast_hash": "5dd98917c6104943b7e22ab1b0ee3680",
+    "semantic_hash": ""
+  },
+  "neovim_old/.config/nvim/undodir/%home%bgo%.dotfiles%neovim%.config%nvim%test.md": {
+    "mtime": 1758411620.6697571,
+    "ast_hash": "a12bf91b824c0dafe27d5a9b3657b645",
+    "semantic_hash": ""
+  },
+  "neovim_old/.config/nvim/undodir/%home%bgo%notes%bgovault%Journal%daily%2024-10-26.md": {
+    "mtime": 1758411620.6697571,
+    "ast_hash": "99c66242d84ae4a596fe95ddcb738987",
+    "semantic_hash": ""
+  },
+  "ollama/README.md": {
+    "mtime": 1775904866.907816,
+    "ast_hash": "b2652d8482e3fd998c645e94da11b510",
+    "semantic_hash": ""
+  },
+  "pi/.config/pi/agent/AGENTS.md": {
+    "mtime": 1778852394.6309,
+    "ast_hash": "f1553692fa19ef672ed568cb635e5474",
+    "semantic_hash": ""
+  },
+  "pi/.config/pi/agent/agents/architect.md": {
+    "mtime": 1778852352.1850007,
+    "ast_hash": "ace42b1d558dd3c6d9ca0bf3ff63e760",
+    "semantic_hash": ""
+  },
+  "pi/.config/pi/agent/agents/auditor.md": {
+    "mtime": 1778852352.1850007,
+    "ast_hash": "282a90a9734c6596dcddd321fbeefbc0",
+    "semantic_hash": ""
+  },
+  "pi/.config/pi/agent/agents/db-analyst.md": {
+    "mtime": 1778852088.1773784,
+    "ast_hash": "cc4f10cc6344d32e54efb66ea2e01978",
+    "semantic_hash": ""
+  },
+  "pi/.config/pi/agent/agents/deep-scout.md": {
+    "mtime": 1778852115.4509618,
+    "ast_hash": "e58457b6caf9c46b27bed3c6ba511c92",
+    "semantic_hash": ""
+  },
+  "pi/.config/pi/agent/agents/docs-writer.md": {
+    "mtime": 1778849923.7994778,
+    "ast_hash": "42179c4a7fc981b7b2dcef57ce278244",
+    "semantic_hash": ""
+  },
+  "pi/.config/pi/agent/agents/fallback-worker.md": {
+    "mtime": 1778849923.7994778,
+    "ast_hash": "8307d6014923489110ee1733f99e2533",
+    "semantic_hash": ""
+  },
+  "pi/.config/pi/agent/agents/planner.md": {
+    "mtime": 1778852352.1850007,
+    "ast_hash": "bcbb6523439bc35cc82e14caa1d8c2bb",
+    "semantic_hash": ""
+  },
+  "pi/.config/pi/agent/agents/quick-worker.md": {
+    "mtime": 1778849923.7994778,
+    "ast_hash": "8d1d373196928ec89559ab973a0e8d97",
+    "semantic_hash": ""
+  },
+  "pi/.config/pi/agent/agents/read-image.md": {
+    "mtime": 1781828984.4089737,
+    "ast_hash": "8d68a254f9d3f16bb29a6758c9a14de6",
+    "semantic_hash": ""
+  },
+  "pi/.config/pi/agent/agents/researcher.md": {
+    "mtime": 1778852115.4509618,
+    "ast_hash": "f1a3abbfffd3732f870e82fdb97126f4",
+    "semantic_hash": ""
+  },
+  "pi/.config/pi/agent/agents/reviewer.md": {
+    "mtime": 1778852352.1850007,
+    "ast_hash": "4c329100077a2f373f4137f80c4d7d55",
+    "semantic_hash": ""
+  },
+  "pi/.config/pi/agent/agents/router.md": {
+    "mtime": 1778849923.7994778,
+    "ast_hash": "7c094418a41d411483a2932b3029433a",
+    "semantic_hash": ""
+  },
+  "pi/.config/pi/agent/agents/scout.md": {
+    "mtime": 1778844112.219808,
+    "ast_hash": "a4ad00b225bb6cd25f58e44bf4260f9e",
+    "semantic_hash": ""
+  },
+  "pi/.config/pi/agent/agents/worker.md": {
+    "mtime": 1778844112.220808,
+    "ast_hash": "3c0f92f8c62177acab93b83110e1be91",
+    "semantic_hash": ""
+  },
+  "pi/.config/pi/agent/prompts/architecture.md": {
+    "mtime": 1778849980.0695567,
+    "ast_hash": "6bd09a5c137832cc5cdd1f522c172be9",
+    "semantic_hash": ""
+  },
+  "pi/.config/pi/agent/prompts/audit.md": {
+    "mtime": 1778849980.0695567,
+    "ast_hash": "d1a54225414b5a2c33bd43ab8763bfee",
+    "semantic_hash": ""
+  },
+  "pi/.config/pi/agent/prompts/db-analyze.md": {
+    "mtime": 1778849980.0695567,
+    "ast_hash": "4de9b0dbc84e2d95570ef57fa7864383",
+    "semantic_hash": ""
+  },
+  "pi/.config/pi/agent/prompts/db-explore.md": {
+    "mtime": 1778844236.191536,
+    "ast_hash": "4e81ef828573e1b9c16f934fce72f545",
+    "semantic_hash": ""
+  },
+  "pi/.config/pi/agent/prompts/docs.md": {
+    "mtime": 1778849980.0695567,
+    "ast_hash": "f37c8631c8f1d82d52ef4222d4e92998",
+    "semantic_hash": ""
+  },
+  "pi/.config/pi/agent/prompts/implement-and-review.md": {
+    "mtime": 1778844236.191536,
+    "ast_hash": "08d86ba9f27019aff94f62ac52a7b838",
+    "semantic_hash": ""
+  },
+  "pi/.config/pi/agent/prompts/implement-deep.md": {
+    "mtime": 1778849980.0695567,
+    "ast_hash": "8ad7ba04fd6b913751e0cb33ed2a0013",
+    "semantic_hash": ""
+  },
+  "pi/.config/pi/agent/prompts/implement.md": {
+    "mtime": 1778844236.191536,
+    "ast_hash": "9da072db1b6e4aa3fc162492884b2bdb",
+    "semantic_hash": ""
+  },
+  "pi/.config/pi/agent/prompts/quick.md": {
+    "mtime": 1778849980.0695567,
+    "ast_hash": "076492551de73d0acf3ceb8eafbfb8cc",
+    "semantic_hash": ""
+  },
+  "pi/.config/pi/agent/prompts/research.md": {
+    "mtime": 1778849980.0695567,
+    "ast_hash": "d8baee5e540409ec12ad00f3a7875129",
+    "semantic_hash": ""
+  },
+  "pi/.config/pi/agent/prompts/route.md": {
+    "mtime": 1778849980.0695567,
+    "ast_hash": "2cf4e81a94313578285f266b7a860e62",
+    "semantic_hash": ""
+  },
+  "pi/.config/pi/agent/prompts/scout-and-plan.md": {
+    "mtime": 1778844236.191536,
+    "ast_hash": "5625119027df46c962a11b2e8fd10cad",
+    "semantic_hash": ""
+  },
+  "pi/CLAUDE.md": {
+    "mtime": 1778845386.5977516,
+    "ast_hash": "944b3cb43ea9e55a31313740f3ab749d",
+    "semantic_hash": ""
+  },
+  "qutebrowser/.config/qutebrowser/autoconfig.yml": {
+    "mtime": 1758411620.6700845,
+    "ast_hash": "450e582a3e979c3e14840df137d70ff2",
+    "semantic_hash": ""
+  },
+  "sway-remix/.config/sway/variables.d/README.md": {
+    "mtime": 1758411620.6708317,
+    "ast_hash": "9f59b6614eaecc2c73e5a01ac8430e88",
+    "semantic_hash": ""
+  },
+  "sway/.config/sway/CLAUDE.md": {
+    "mtime": 1775989007.8973796,
+    "ast_hash": "c278d89609591fa06af79afdac6280c5",
+    "semantic_hash": ""
+  },
+  "system/CLAUDE.md": {
+    "mtime": 1781824828.65268,
+    "ast_hash": "128b6b3005477654f616249530df43eb",
+    "semantic_hash": ""
+  },
+  "system/add-credentials-procedure.md": {
+    "mtime": 1758411620.6747642,
+    "ast_hash": "6b25456c09c4cb235ef6b4332bf676ba",
+    "semantic_hash": ""
+  },
+  "system/emergency-recovery.md": {
+    "mtime": 1775990634.7942603,
+    "ast_hash": "c3e76dc1e4c87de8e4418ea975f4411e",
+    "semantic_hash": ""
+  },
+  "system/etc/udevmon.yaml": {
+    "mtime": 1758411620.675727,
+    "ast_hash": "9368cf62d1b98f62da80eb2a3d726d59",
+    "semantic_hash": ""
+  },
+  "system/gpg-pass-tutorial.md": {
+    "mtime": 1758457093.912236,
+    "ast_hash": "34abb67feb58a2a22e33eaa59110a368",
+    "semantic_hash": ""
+  },
+  "system/gpg_backup_strategies.md": {
+    "mtime": 1758411620.675727,
+    "ast_hash": "cda7f394ca64d6cd7e7c38cdd7c6d5c8",
+    "semantic_hash": ""
+  },
+  "system/install.txt": {
+    "mtime": 1758411620.675727,
+    "ast_hash": "19056dd3cb04f69a6c1c0ec56c7a8d80",
+    "semantic_hash": ""
+  },
+  "system/password-memory-strategy.md": {
+    "mtime": 1758457146.297145,
+    "ast_hash": "c24f01412a5d80f75fba7ab76f4fe25b",
+    "semantic_hash": ""
+  },
+  "system/scripts/README.md": {
+    "mtime": 1758411620.675727,
+    "ast_hash": "08b9a2d4a2a90a21160a8847e9703ec3",
+    "semantic_hash": ""
+  },
+  "system/testfile.txt": {
+    "mtime": 1758411620.6759307,
+    "ast_hash": "9b58c8805c021cb02f2c4b485aac439a",
+    "semantic_hash": ""
+  },
+  "system/udevadm.txt": {
+    "mtime": 1758411620.6759307,
+    "ast_hash": "e5c77b353b3637130537f7a7ec76871a",
+    "semantic_hash": ""
+  },
+  "systemd/CLAUDE.md": {
+    "mtime": 1775989045.273143,
+    "ast_hash": "5b2337d6bd4c6517720121ce23ffb5f3",
+    "semantic_hash": ""
+  },
+  "tmux/.config/tmux/CLAUDE.md": {
+    "mtime": 1778536037.387184,
+    "ast_hash": "21a17c7e1156cfc51543a9212216cf02",
+    "semantic_hash": ""
+  },
+  "waybar/.config/waybar/SETUP_GIT_SYNC.md": {
+    "mtime": 1759757132.1096542,
+    "ast_hash": "64458c3913bb017b8ff8bdccf625e72d",
+    "semantic_hash": ""
+  },
+  "waybar/CLAUDE.md": {
+    "mtime": 1775989045.264143,
+    "ast_hash": "ccfd82fc7c17864b10e176003f6ae1dc",
+    "semantic_hash": ""
+  },
+  "zsh/CLAUDE.md": {
+    "mtime": 1775989045.262143,
+    "ast_hash": "64da51cb8d3f5b99647c2422c6947823",
+    "semantic_hash": ""
+  },
+  "sway/.config/sway/wallpapers/daniel-bayona-hobbit03.jpg": {
+    "mtime": 1758411620.6716633,
+    "ast_hash": "1fd222b2ad0efea5bf195b9526389e46",
+    "semantic_hash": ""
+  },
+  "sway/.config/sway/wallpapers/mahdi-khomsaz-asset.jpg": {
+    "mtime": 1758411620.6726635,
+    "ast_hash": "97ad5cd0214b60b80beb18770e962b13",
+    "semantic_hash": ""
+  },
+  "sway/.config/sway/wallpapers/sara-lazzeroni-rivendell-4k.jpg": {
+    "mtime": 1758411620.6736634,
+    "ast_hash": "a2484fc30e61d3e7e3a153cbeff8f59e",
+    "semantic_hash": ""
   }
 }
