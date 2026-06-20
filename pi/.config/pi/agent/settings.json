@@ -14,7 +14,7 @@
     "npm:pi-conventions",
     "npm:@eko24ive/pi-ask"
   ],
-  "lastChangelogVersion": "0.79.7",
+  "lastChangelogVersion": "0.79.8",
   "defaultProvider": "deepseek",
   "defaultModel": "deepseek-v4-pro",
   "defaultThinkingLevel": "high",
