@@ -1,0 +1,1 @@
+{"nodes": [{"id": "home_bgo_dotfiles_neovim_config_nvim_lua_plugins_extend_dadbod_lua", "label": "extend-dadbod.lua", "file_type": "code", "source_file": "neovim/.config/nvim/lua/plugins/extend-dadbod.lua", "source_location": "L1"}], "edges": [], "raw_calls": []}

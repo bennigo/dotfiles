@@ -1,0 +1,1 @@
+{"nodes": [], "edges": [{"source": "vault_create_daily", "target": "vault_daily_template", "relation": "calls", "confidence": "EXTRACTED", "confidence_score": 1.0, "source_file": "claude-private/.claude/plans/sleepy-wobbling-puppy.md", "source_location": null, "weight": 1.0}], "hyperedges": []}
