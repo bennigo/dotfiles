@@ -106,6 +106,7 @@ rollover_tasks() {
 # Compute template values
 PREV=$(date -d "${NOTE_DATE} - 1 day" +%Y-%m-%d)
 NEXT=$(date -d "${NOTE_DATE} + 1 day" +%Y-%m-%d)
+VIKAN=$(date -d "${NOTE_DATE} - 6 days" +%Y-%m-%d)
 ALIAS=$(date -d "${NOTE_DATE}" +"📅 %B %-d, %Y day: %j")
 NOW=$(date +%H:%M)
 CREATED=$(date +"%Y-%m-%d %H:%M")
@@ -143,6 +144,48 @@ group by filename
 short mode
 \`\`\`
 
+### Tímasett / Yfirstandandi
+
+\`\`\`tasks
+not done
+due before ${NOTE_DATE}
+limit 10
+short mode
+\`\`\`
+
+
+## 🌍 Geopolitics Scan
+
+> _Populated by \`/morning-v2\` — calls \`monitor-domain\` for each domain._
+
+### 🏴 Iran-US War
+
+### 🏴 Ukraine-Russia
+
+### 🏴 Caucasus Watch
+
+### 🇨🇳 China Strategic
+
+### 🇹🇷 Turkey Regional
+
+### 🇮🇳🇵🇰 South Asia
+
+### 🇺🇳 UNSC/UNGA Activity
+
+
+## 🇮🇸 Iceland Monitor
+
+### Utanríkismál / ESB aðild
+
+### Innanríkismál
+
+
+## 🧗 IFSC Tracker
+
+### Íslenskir keppendur
+
+### Alþjóðlegt
+
 
 ## Dagbók
 
@@ -155,33 +198,6 @@ short mode
 
 
 **Þakklæti / jákvætt**
-
-
-## Morning Source Scan
-
-### 🌅 Morgunyfirlit — ${NOTE_DATE}
-
-### IFSC — Íslenskir keppendur
-
-### Sport News
-
-### Alþjóðastofnanir / UN
-
-> UNSC/UNGA — fundir, atkvæðagreiðslur, yfirlýsingar. Sjá [[1775694600-unsc-tracker-moc|UNSC Tracker]].
-
-### Tímasett / Yfirstandandi
-
-\`\`\`tasks
-not done
-due before ${NOTE_DATE}
-limit 10
-short mode
-\`\`\`
-
-
-## P1 Source Scan — Morgunyfirlit
-
-### Notable P1 Items
 
 
 ## Nótur dagsins
@@ -201,13 +217,11 @@ SORT file.ctime ASC
 
 \`\`\`dataview
 TABLE WITHOUT ID
-  file.link as "Nóta",
-  file.folder as "Svæði",
-  file.cday as "Dagur"
-FROM "" AND -"Templates" AND -"4.Archive" AND -"Journal"
-WHERE file.cday >= (date("${NOTE_DATE}") - dur(7 days)) AND file.cday < date("${NOTE_DATE}")
-SORT file.cday DESC
-LIMIT 15
+  file.link as "Daily",
+  file.cday as "Búin til"
+FROM "Journal/daily"
+WHERE file.day >= date("${VIKAN}") AND file.day <= date("${NOTE_DATE}")
+SORT file.day ASC
 \`\`\`
 TEMPLATE
 
