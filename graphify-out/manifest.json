@@ -70,8 +70,8 @@
     "semantic_hash": "c28844f518731bd8d47ccc0a31173cb6"
   },
   "claude-private/.claude.json": {
-    "mtime": 1781969112.0957594,
-    "ast_hash": "fadff72c60902b69a37a2878d06047fd",
+    "mtime": 1781985429.338104,
+    "ast_hash": "953304c3331d316a4d55d58ad12ff66d",
     "semantic_hash": ""
   },
   "claude-private/.claude/plugins/config.json": {
@@ -7867,6 +7867,11 @@
   "sway/.config/sway/wallpapers/sara-lazzeroni-rivendell-4k.jpg": {
     "mtime": 1758411620.6736634,
     "ast_hash": "a2484fc30e61d3e7e3a153cbeff8f59e",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/projects/home-bgo-.dotfiles/memory/graphify_vault_graph_built_rebuild_2_7_622_nodes_8.md": {
+    "mtime": 1781976646.0319717,
+    "ast_hash": "75fcf6ac00c346e28b7546386c614bd9",
     "semantic_hash": ""
   }
 }
