@@ -70,8 +70,8 @@
     "semantic_hash": "c28844f518731bd8d47ccc0a31173cb6"
   },
   "claude-private/.claude.json": {
-    "mtime": 1782118609.0169353,
-    "ast_hash": "7e20ae0b8d9d1482fba241ef6a2ca4b7",
+    "mtime": 1782204991.8870564,
+    "ast_hash": "6f22bec29426d879cfc9d40d5a4d09e4",
     "semantic_hash": ""
   },
   "claude-private/.claude/plugins/config.json": {
@@ -7872,6 +7872,11 @@
   "claude-private/.claude/projects/home-bgo-.dotfiles/memory/graphify_vault_graph_built_rebuild_2_7_622_nodes_8.md": {
     "mtime": 1781976646.0319717,
     "ast_hash": "75fcf6ac00c346e28b7546386c614bd9",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/shell-snapshots/snapshot-zsh-1782120777794-bj7z60.sh": {
+    "mtime": 1782120778.464681,
+    "ast_hash": "3eeedc3636777eab16aac2347669d2ab",
     "semantic_hash": ""
   }
 }
