@@ -70,8 +70,8 @@
     "semantic_hash": "c28844f518731bd8d47ccc0a31173cb6"
   },
   "claude-private/.claude.json": {
-    "mtime": 1782540965.5416977,
-    "ast_hash": "843eb33f96592c500fd87360731d0e15",
+    "mtime": 1782562565.5420494,
+    "ast_hash": "b6bafe5ad6888fa8798be454fcaf6ce7",
     "semantic_hash": ""
   },
   "claude-private/.claude/plugins/config.json": {
@@ -123,36 +123,6 @@
     "mtime": 1779647602.719993,
     "ast_hash": "36585d922d7dffe9015098adf32e7048",
     "semantic_hash": "36585d922d7dffe9015098adf32e7048"
-  },
-  "claude-private/.claude/projects/-home-bgo-notes-bgovault/a4701f8f-3676-4da1-b60c-76abd818074b/tool-results/toolu_01AGPDSETQhHkQoLBWFPAWM6.json": {
-    "mtime": 1779613538.784518,
-    "ast_hash": "0ce1351d17c7fab20e664d3a5002fd38",
-    "semantic_hash": "0ce1351d17c7fab20e664d3a5002fd38"
-  },
-  "claude-private/.claude/projects/-home-bgo-notes-bgovault/a4701f8f-3676-4da1-b60c-76abd818074b/tool-results/toolu_01MbJWzEUZgwvH3aTSPYWr6r.json": {
-    "mtime": 1779584051.6915812,
-    "ast_hash": "f530a6fc4c812c388bdf8623b5556294",
-    "semantic_hash": "f530a6fc4c812c388bdf8623b5556294"
-  },
-  "claude-private/.claude/projects/-home-bgo-notes-bgovault/a4701f8f-3676-4da1-b60c-76abd818074b/tool-results/toolu_01SiiexX3JrmruGi3RmGJCGT.json": {
-    "mtime": 1779927496.7318637,
-    "ast_hash": "cc2c637fa75f2eb3f3f8d59c2d603c8e",
-    "semantic_hash": "cc2c637fa75f2eb3f3f8d59c2d603c8e"
-  },
-  "claude-private/.claude/projects/-home-bgo-notes-bgovault/a4701f8f-3676-4da1-b60c-76abd818074b/tool-results/toolu_01TP4e6pRsFn51NuJL1SpVb2.json": {
-    "mtime": 1779612930.22594,
-    "ast_hash": "066a2ebe4a07724eed74b1deded366f8",
-    "semantic_hash": "066a2ebe4a07724eed74b1deded366f8"
-  },
-  "claude-private/.claude/projects/-home-bgo-notes-bgovault/a4701f8f-3676-4da1-b60c-76abd818074b/tool-results/toolu_01U87YgNPnGqzy8cD6v7sZAf.json": {
-    "mtime": 1779584055.6446617,
-    "ast_hash": "b1ec6897839afe052197402a1f5c0044",
-    "semantic_hash": "b1ec6897839afe052197402a1f5c0044"
-  },
-  "claude-private/.claude/projects/-home-bgo-notes-bgovault/a4701f8f-3676-4da1-b60c-76abd818074b/tool-results/toolu_01URPRB51zfnxW8vwQntobcU.json": {
-    "mtime": 1779804658.418706,
-    "ast_hash": "1c2913c9843f13ba665e737fc59adcfd",
-    "semantic_hash": "1c2913c9843f13ba665e737fc59adcfd"
   },
   "claude-private/.claude/projects/-home-bgo-notes-bgovault/sessions-index.json": {
     "mtime": 1777223022.025304,
@@ -249,55 +219,10 @@
     "ast_hash": "516e89778f4b435cbdd327c28678abb1",
     "semantic_hash": "516e89778f4b435cbdd327c28678abb1"
   },
-  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-receivers/f7410eeb-c522-48c8-a54f-5eaed8310b1a/subagents/agent-a5f7630d886965849.meta.json": {
-    "mtime": 1779613226.7615795,
-    "ast_hash": "f58ab786be1368c6bcf82b05965072df",
-    "semantic_hash": "f58ab786be1368c6bcf82b05965072df"
-  },
-  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-receivers/f7410eeb-c522-48c8-a54f-5eaed8310b1a/subagents/agent-a6378dd8232a59079.meta.json": {
-    "mtime": 1779612712.1157966,
-    "ast_hash": "b2d417ecac3c38b56db4ddd0270c17be",
-    "semantic_hash": "b2d417ecac3c38b56db4ddd0270c17be"
-  },
-  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-receivers/f7410eeb-c522-48c8-a54f-5eaed8310b1a/subagents/agent-a7c98fe12126a253d.meta.json": {
-    "mtime": 1779612961.105527,
-    "ast_hash": "f64586dba137cceb424f48ca7c6ebb21",
-    "semantic_hash": "f64586dba137cceb424f48ca7c6ebb21"
-  },
   "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-receivers/sessions-index.json": {
     "mtime": 1777229864.9919538,
     "ast_hash": "49d7e2d938c655b95ced038260675e0e",
     "semantic_hash": "49d7e2d938c655b95ced038260675e0e"
-  },
-  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/3b3d1d4d-8a6e-4ae6-9f7f-3c3ce6b98f57/subagents/agent-a82d907950c374ba3.meta.json": {
-    "mtime": 1779750654.5593352,
-    "ast_hash": "c9998be6a6a2e9bcf4b541a21c4a5ade",
-    "semantic_hash": "c9998be6a6a2e9bcf4b541a21c4a5ade"
-  },
-  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/3b3d1d4d-8a6e-4ae6-9f7f-3c3ce6b98f57/subagents/agent-a9b113cc1b65b2e57.meta.json": {
-    "mtime": 1779750258.1059506,
-    "ast_hash": "5c1255e23cabb9ad09bb5aa590802816",
-    "semantic_hash": "5c1255e23cabb9ad09bb5aa590802816"
-  },
-  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/3b3d1d4d-8a6e-4ae6-9f7f-3c3ce6b98f57/subagents/agent-a9d6b4424db0869d1.meta.json": {
-    "mtime": 1779749505.930899,
-    "ast_hash": "42647158a343ce3c26a1af04d3b7e63f",
-    "semantic_hash": "42647158a343ce3c26a1af04d3b7e63f"
-  },
-  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/3b3d1d4d-8a6e-4ae6-9f7f-3c3ce6b98f57/subagents/agent-ae4bf4548bacacf22.meta.json": {
-    "mtime": 1779748836.8478384,
-    "ast_hash": "78ff238e09c5400f8aabb50a6227ca45",
-    "semantic_hash": "78ff238e09c5400f8aabb50a6227ca45"
-  },
-  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/3b3d1d4d-8a6e-4ae6-9f7f-3c3ce6b98f57/subagents/agent-ae644ccaa1bc213c9.meta.json": {
-    "mtime": 1779750398.7791042,
-    "ast_hash": "8203bdc2130e6640ee541df2899c472b",
-    "semantic_hash": "8203bdc2130e6640ee541df2899c472b"
-  },
-  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/74942eee-0116-4a60-90ad-d28717dc2001/subagents/agent-ab9cc23d1bae2adef.meta.json": {
-    "mtime": 1779902114.8485377,
-    "ast_hash": "df76680192c6325d7ca217612b9b4b44",
-    "semantic_hash": "df76680192c6325d7ca217612b9b4b44"
   },
   "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/b327d5be-708b-4ffe-bce7-8e881a44426d/subagents/agent-aceea1cf5d5313edb.meta.json": {
     "mtime": 1779963622.0311277,
@@ -7034,19 +6959,9 @@
     "ast_hash": "f6d8d12495bf5b462c4413e4661f125d",
     "semantic_hash": ""
   },
-  "claude-private/.claude/projects/-home-bgo--dotfiles-neovim--config-nvim/2f47017f-320c-4ad3-b956-729b66b7d415/tool-results/bbffrq5gb.txt": {
-    "mtime": 1779647870.401898,
-    "ast_hash": "b95b9b3d01686a397ac5a29b2ee54563",
-    "semantic_hash": ""
-  },
   "claude-private/.claude/projects/-home-bgo-personal-klifur-KI/31c7a004-f0a8-4178-9b55-d5f017789d84/tool-results/bdng5wnem.txt": {
     "mtime": 1781341786.4677427,
     "ast_hash": "1f605129ae5bad31dbbc9d7c88750a32",
-    "semantic_hash": ""
-  },
-  "claude-private/.claude/projects/-home-bgo-work-gps-servers/ef29d684-001b-4137-9ca0-920e81fc4145/tool-results/bu53sj9jl.txt": {
-    "mtime": 1779713244.3909454,
-    "ast_hash": "400a8ab5a7a34a1cb646780ce86d0a06",
     "semantic_hash": ""
   },
   "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-gps-taeki/memory/MEMORY.md": {
@@ -7057,11 +6972,6 @@
   "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-gps-taeki/memory/feedback_polarx5_provision_bugs_2026_05_20.md": {
     "mtime": 1779319923.8673856,
     "ast_hash": "8adde6eae3f03c2929d2a1b53ceab999",
-    "semantic_hash": ""
-  },
-  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-receivers/2e3e2c78-bd56-4373-b968-ed8397745c43/tool-results/bocp1gkuy.txt": {
-    "mtime": 1779894380.2279131,
-    "ast_hash": "f66d4f16d94ee2df8c33deec140dd0e3",
     "semantic_hash": ""
   },
   "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-receivers/de736b74-5055-4686-8109-f7ebb1dc6cf2/tool-results/bjfk31o5v.txt": {
@@ -7077,11 +6987,6 @@
   "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-receivers/de736b74-5055-4686-8109-f7ebb1dc6cf2/tool-results/blvqmz67u.txt": {
     "mtime": 1780229810.5686374,
     "ast_hash": "bff5c9b45719ed04857b896cea3c9472",
-    "semantic_hash": ""
-  },
-  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/bb1bd9f9-aafa-4441-94db-1993909b19f9/tool-results/b9wpuczb0.txt": {
-    "mtime": 1779614227.7826385,
-    "ast_hash": "e92eab3a77c189042d00bf79acf961d1",
     "semantic_hash": ""
   },
   "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/memory/MEMORY.md": {
