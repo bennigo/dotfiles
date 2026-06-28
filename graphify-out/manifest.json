@@ -70,8 +70,8 @@
     "semantic_hash": "c28844f518731bd8d47ccc0a31173cb6"
   },
   "claude-private/.claude.json": {
-    "mtime": 1782666106.1808717,
-    "ast_hash": "c70de63d696fab49c2ac8fc5afe955d5",
+    "mtime": 1782671231.8483155,
+    "ast_hash": "c61f30dc7517c2888a6cb080acd4a545",
     "semantic_hash": ""
   },
   "claude-private/.claude/plugins/config.json": {
@@ -7807,6 +7807,16 @@
   "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-receivers/36ec678a-4dc7-45b7-b1b3-22045374608d/subagents/agent-a9aba5d1dc7383612.meta.json": {
     "mtime": 1782646726.879874,
     "ast_hash": "786da9b128e770a1e8c53e52bbb609b1",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/shell-snapshots/snapshot-zsh-1782671188606-rnyx90.sh": {
+    "mtime": 1782671188.8603537,
+    "ast_hash": "f5cf1aa33896b0c9b218e77e45ee06f0",
+    "semantic_hash": ""
+  },
+  "claude-private/.claude/shell-snapshots/snapshot-zsh-1782671210416-8047o5.sh": {
+    "mtime": 1782671210.7420614,
+    "ast_hash": "ba36a1c628f36c6fdfc6e158798ed2d1",
     "semantic_hash": ""
   }
 }
