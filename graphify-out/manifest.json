@@ -70,8 +70,8 @@
     "semantic_hash": "c28844f518731bd8d47ccc0a31173cb6"
   },
   "claude-private/.claude.json": {
-    "mtime": 1782671231.8483155,
-    "ast_hash": "c61f30dc7517c2888a6cb080acd4a545",
+    "mtime": 1782675273.147365,
+    "ast_hash": "2841dd6a87852b262e3f820cb0c5887f",
     "semantic_hash": ""
   },
   "claude-private/.claude/plugins/config.json": {
@@ -223,11 +223,6 @@
     "mtime": 1777229864.9919538,
     "ast_hash": "49d7e2d938c655b95ced038260675e0e",
     "semantic_hash": "49d7e2d938c655b95ced038260675e0e"
-  },
-  "claude-private/.claude/projects/-home-bgo-work-projects-gps-gpslibrary-new-tostools/b327d5be-708b-4ffe-bce7-8e881a44426d/subagents/agent-aceea1cf5d5313edb.meta.json": {
-    "mtime": 1779963622.0311277,
-    "ast_hash": "97b0acf2345eec53845f9b9ac309f816",
-    "semantic_hash": "97b0acf2345eec53845f9b9ac309f816"
   },
   "claude-private/.claude/projects/-home-bgo/sessions-index.json": {
     "mtime": 1777229865.010955,
