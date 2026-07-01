@@ -14,9 +14,9 @@
     "npm:pi-conventions",
     "npm:@eko24ive/pi-ask"
   ],
-  "lastChangelogVersion": "0.79.8",
-  "defaultProvider": "deepseek",
-  "defaultModel": "deepseek-v4-pro",
+  "lastChangelogVersion": "0.80.3",
+  "defaultProvider": "openrouter",
+  "defaultModel": "z-ai/glm-5.2",
   "defaultThinkingLevel": "high",
   "theme": "dark"
 }
