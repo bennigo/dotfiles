@@ -1,0 +1,4 @@
+# Never index the git-crypt-encrypted submodule — its content (session
+# transcripts, shell snapshots) must not produce plaintext derivatives
+# in graphify-out/, which is committed to the public-facing dotfiles repo.
+claude-private/
