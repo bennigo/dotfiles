@@ -76,6 +76,16 @@ return {
         { "<leader>Cf", desc = "Fix Code", mode = "v" },
         { "<leader>Ct", desc = "Generate Tests", mode = "v" },
         { "<leader>Cb", desc = "Chat with Buffer" },
+        -- Database (vim-dadbod-ui)
+        {
+          "<leader>D",
+          icon = "🗄️",
+          group = "+database",
+        },
+        { "<leader>Dt", desc = "Toggle DBUI" },
+        { "<leader>Db", desc = "Bind connection to buffer" },
+        { "<leader>Dw", desc = "Save query (named)" },
+        { "<leader>Dr", desc = "Run buffer/selection", mode = { "n", "v" } },
         -- Markdown inline formatting (markdown.nvim)
         {
           "gs",
