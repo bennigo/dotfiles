@@ -36,7 +36,6 @@ architecture guidelines. Subdirectories with their own CLAUDE.md are marked with
 ├── sway/           # Sway compositor — see sway/.config/sway/CLAUDE.md 📄
 ├── waybar/         # Status bar with custom modules — see waybar/CLAUDE.md 📄
 ├── neovim/         # LazyVim-based IDE (75+ plugins) — see neovim/.config/nvim/CLAUDE.md 📄
-├── neovim_old/     # Previous neovim configuration backup
 ├── tmux/           # Terminal multiplexer + plugins — see tmux/.config/tmux/CLAUDE.md 📄
 ├── local_bin/      # Custom executable scripts (~28 scripts) — see local_bin/CLAUDE.md 📄
 ├── system/         # System configs, hardware, installation — see system/CLAUDE.md 📄
@@ -64,7 +63,6 @@ architecture guidelines. Subdirectories with their own CLAUDE.md are marked with
 ├── ranger/         # File manager (minimal, needs setup)
 ├── neomutt/        # Email client (needs post-reinstall setup — see system/CLAUDE.md)
 ├── claude-private/ # Encrypted submodule (git-crypt, GPG key 0FA08B1A9096B394) — stow-deployed
-├── i3/             # Legacy i3 configuration (excluded from stow)
 └── [app]/          # Per-application config directories
 ```
 
@@ -83,7 +81,7 @@ stow -t ~ sway                 # Deploy single config
 - Subdirectory CLAUDE.md files use `.stow-local-ignore` to prevent deployment to `~/`
 
 **Stow exclusions** (not stowed by Ansible):
-`ansible/`, `system/`, `i3/`, `sway-remix/`, `systemd/` (separate), `.git/`, hidden dirs
+`ansible/`, `system/`, `systemd/` (separate), `.git/`, hidden dirs
 
 ## Key Features
 

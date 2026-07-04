@@ -1,8 +1,12 @@
 zsh/.config/zsh/.zcompdump
 zsh/.config/zsh/.zsh_history
+zsh/.config/zsh/zsh_history
 tmux/.config/tmux/plugins/
 neovim/.config/nvim/lazy-lock.json
 system/.credentials_and_logins/
+
+# Generated tool output (graphify skill)
+graphify-out/
 # Unencrypted credential files (encrypted .vault files are safe to commit)
 **/credentials_template.yml
 **/credentials_unencrypted.yml
