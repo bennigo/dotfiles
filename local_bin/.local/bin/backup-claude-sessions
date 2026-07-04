@@ -1,0 +1,42 @@
+#!/bin/bash
+## Backup // Back up Claude/Pi session transcripts to Google Drive (restic) ##
+#
+# Session transcripts (.claude/projects/*.jsonl, .pi-sessions/,
+# .claude/shell-snapshots/, .claude/history.jsonl) are append-only logs,
+# not curated memory — kept out of git, backed up here instead.
+#
+# Curated memory (.claude/projects/*/memory/, .claude/*.md, plans, skills,
+# agents) stays in git-crypt and is NOT handled by this script.
+#
+# Run manually, or via backup-claude-sessions.timer (daily 03:00).
+#
+# NOTE: requires GPG agent unlocked for `pass show restic/ai-sessions`.
+# If the agent is locked at timer time, the run fails — re-runs next day.
+
+set -euo pipefail
+
+export RESTIC_REPOSITORY="rclone:bgovedur:restic/ai-sessions"
+export RESTIC_PASSWORD_COMMAND="pass show restic/ai-sessions"
+
+CLAUDE_PRIVATE="${HOME}/.dotfiles/claude-private"
+
+# Paths to back up (live sessions reside here via stow symlinks)
+PATHS=(
+    "$CLAUDE_PRIVATE/.claude/projects"
+    "$CLAUDE_PRIVATE/.pi-sessions"
+    "$CLAUDE_PRIVATE/.claude/shell-snapshots"
+    "$CLAUDE_PRIVATE/.claude/history.jsonl"
+)
+
+echo "[$(date -Iseconds)] backing up session transcripts to $RESTIC_REPOSITORY"
+restic backup --tag sessions "${PATHS[@]}"
+
+# Retention: 30 daily, 12 weekly, 12 monthly snapshots, prune the rest
+echo "[$(date -Iseconds)] applying retention policy"
+restic forget \
+    --keep-daily 30 \
+    --keep-weekly 12 \
+    --keep-monthly 12 \
+    --prune
+
+echo "[$(date -Iseconds)] done"

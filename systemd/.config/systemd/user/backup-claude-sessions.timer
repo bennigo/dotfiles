@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily Claude session transcript backup
+
+[Timer]
+# Run nightly after midnight; Persistent catches missed runs after sleep/boot
+OnCalendar=*-*-* 03:00:00
+Persistent=true
+RandomizedDelaySec=10min
+
+[Install]
+WantedBy=timers.target
