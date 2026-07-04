@@ -40,6 +40,16 @@ you're blocked after you've already typed the sudo password three times.
    ```bash
    rsync -av ~/.password-store/ newlaptop:~/.password-store/
    ```
+   This includes `restic/ai-sessions` — the restic repo password for session backups.
+
+4. **rclone config** (`~/.config/rclone/rclone.conf`): contains Google Drive OAuth
+   tokens for the `bgovedur:` remote used by restic session backups. Not in dotfiles
+   (contains OAuth tokens). Either copy from the old machine, or re-authenticate on
+   the target after phase 1:
+   ```bash
+   rclone config   # new remote → name: bgovedur → storage: drive → browser OAuth
+   rclone lsd bgovedur:   # verify — should list your Drive folders
+   ```
 
 ### On the target machine (fresh Ubuntu 26.04)
 
@@ -207,6 +217,10 @@ openclaw agents list --bindings
 - [ ] `dotfiles-sync` works (git pull/push on all tracked repos)
 - [ ] Waybar shows git-sync status correctly
 - [ ] `~/.password-store` populated and `pass ls` works
+- [ ] `rclone lsd bgovedur:` lists Google Drive folders (restic backup target)
+- [ ] `restic -r rclone:bgovedur:restic/ai-sessions snapshots` lists backups
+      (auth via `pass show restic/ai-sessions`)
+- [ ] `systemctl --user is-enabled backup-claude-sessions.timer` → enabled
 - [ ] `psql bgo` connects
 - [ ] `docker run hello-world` works (as bgo)
 - [ ] `sudo -u openclaw-agent bash` drops into restricted shell

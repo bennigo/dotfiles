@@ -84,6 +84,11 @@
 | `getnf` | Nerd Font installer (third-party, maintained by trimclain) |
 | `setup-family-laptop` | Create isolated credentials for family laptops |
 
+### Backup
+| Script | Purpose |
+|--------|---------|
+| `backup-claude-sessions` | Restic backup of session transcripts (`.claude/projects`, `.pi-sessions`, `shell-snapshots`, `history.jsonl`) to Google Drive. Nightly via `backup-claude-sessions.timer`. Requires `pass show restic/ai-sessions` + rclone `bgovedur:` remote. |
+
 ## Dependencies
 
 Core dependencies used across multiple scripts:
@@ -115,6 +120,7 @@ Core dependencies used across multiple scripts:
 - **Claude Code hooks**: `claude-code/CLAUDE.md` (claude-notify)
 - **MTP system setup**: `system/CLAUDE.md` (udev rules, helper scripts)
 - **Sync workflow**: `SYNC_WORKFLOW.md`
+- **Session backups**: `RECOVERY.md` (restic restore), `systemd/CLAUDE.md` (backup timer)
 - **Top-level overview**: `../CLAUDE.md`
 
 ---

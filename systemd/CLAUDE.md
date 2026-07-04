@@ -27,6 +27,8 @@ git repo instead of in a real directory. Ansible handles this automatically duri
 | `calendar-notify.service` | Triggered | via `.timer` | Runs calendar-notify script for both Google accounts |
 | `spotify-notify.service` | Long-running | `enable --now` | Track change notifications via playerctl + notify-send |
 | `mtp-automount@.service` | Template | on-demand | MTP device automount (activated by udev rules) |
+| `backup-claude-sessions.timer` | Timer | `enable --now` | Nightly (03:00) restic backup of session transcripts to Google Drive |
+| `backup-claude-sessions.service` | Triggered | via `.timer` | Runs `backup-claude-sessions` script (restic backup + retention) |
 
 ## Common Operations
 

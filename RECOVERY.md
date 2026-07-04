@@ -103,6 +103,33 @@ rsync -av oldmachine:~/.ssh/ ~/.ssh/
 chmod 700 ~/.ssh && chmod 600 ~/.ssh/id_*
 ```
 
+## Session transcript recovery
+
+Session transcripts (`.claude/projects/*.jsonl`, `.pi-sessions/`,
+`.claude/shell-snapshots/`, `.claude/history.jsonl`) are backed up to Google Drive
+via restic, **not** stored in git. Restore them with:
+
+```bash
+# List available snapshots
+RESTIC_PASSWORD_COMMAND="pass show restic/ai-sessions" \
+  restic -r rclone:bgovedur:restic/ai-sessions snapshots
+
+# Restore latest snapshot (into a temp dir first, then merge)
+RESTIC_PASSWORD_COMMAND="pass show restic/ai-sessions" \
+  restic -r rclone:bgovedur:restic/ai-sessions restore latest --target /tmp/restore
+
+# Or restore a specific path
+RESTIC_PASSWORD_COMMAND="pass show restic/ai-sessions" \
+  restic -r rclone:bgovedur:restic/ai-sessions restore latest \
+    --target /tmp/restore --include '.claude/history.jsonl'
+```
+
+Requires: `pass show restic/ai-sessions` (in password-store) and rclone `bgovedur:`
+remote configured (see `ansible/FIRST_RUN.md` prerequisites).
+
+Note: curated memory (`.claude/projects/*/memory/`, `.claude/*.md`, plans, skills)
+is in git-crypt and comes back with `git clone` + git-crypt unlock — no restore needed.
+
 ## Desktop / Wayland issues
 
 ### Sway won't start after reboot
@@ -184,8 +211,9 @@ cd ~/.dotfiles && git push
 # Then reinstall Ubuntu, and follow FIRST_RUN.md or MIGRATION.md
 ```
 
-Your data lives in git (dotfiles, bgovault, password-store). As long as the GPG key
-is safe, everything is recoverable.
+Your data lives in git (dotfiles, bgovault, password-store) and restic
+(session transcripts on Google Drive). As long as the GPG key is safe,
+everything is recoverable.
 
 ---
 

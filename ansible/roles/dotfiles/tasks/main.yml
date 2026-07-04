@@ -75,8 +75,8 @@
         enabled: yes
         state: started
         scope: user
-      loop: "{{ dotfiles_systemd_services | default(['claude-imports.service', 'mako-watcher.path', 'password-store-sync.timer']) }}"
-      when: (dotfiles_systemd_services | default(['claude-imports.service', 'mako-watcher.path', 'password-store-sync.timer'])) | length > 0
+      loop: "{{ dotfiles_systemd_services | default(['claude-imports.service', 'mako-watcher.path', 'password-store-sync.timer', 'backup-claude-sessions.timer']) }}"
+      when: (dotfiles_systemd_services | default(['claude-imports.service', 'mako-watcher.path', 'password-store-sync.timer', 'backup-claude-sessions.timer'])) | length > 0
 
     - name: Enable login-activated user services (no forced start)
       systemd:

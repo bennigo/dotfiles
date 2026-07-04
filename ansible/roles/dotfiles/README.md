@@ -17,7 +17,7 @@ ansible-playbook bootstrap.yml --tags dotfiles
 - Stows all directories listed in `stow_directories` (or auto-discovers from repo)
 - Deploys `systemd/` with `--no-folding` flag
 - Deploys `zsh/` with `--ignore=.zshenv` workaround
-- Enables systemd user services (claude-imports, mako-watcher, password-store-sync, tmux)
+- Enables systemd user services (claude-imports, mako-watcher, password-store-sync, backup-claude-sessions, tmux)
 - Deploys `~/.local/bin/` scripts
 - Configures shell integrations (cargo, fnm, fzf paths in `.zshrc`)
 
