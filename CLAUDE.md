@@ -40,7 +40,7 @@ architecture guidelines. Subdirectories with their own CLAUDE.md are marked with
 ├── local_bin/      # Custom executable scripts (~28 scripts) — see local_bin/CLAUDE.md 📄
 ├── system/         # System configs, hardware, installation — see system/CLAUDE.md 📄
 ├── ansible/        # System provisioning and automation — see ansible/CLAUDE.md 📄
-├── systemd/        # User systemd services (8 units) — see systemd/CLAUDE.md 📄
+├── systemd/        # User systemd services (9 units) — see systemd/CLAUDE.md 📄
 ├── docker/         # Docker Engine + compose templates — see docker/CLAUDE.md 📄
 ├── claude-code/    # Claude Code CLI + MCP servers — see claude-code/CLAUDE.md 📄
 ├── firefox/        # Multi-profile Firefox + Sway workspace integration — see firefox/CLAUDE.md 📄
@@ -102,7 +102,8 @@ Sway config uses structured comments (`## Category // Description // Icon ##`) p
 - **Ansible**: Profile-based bootstrap for fresh installations
 - **Multi-machine sync**: `dotfiles-sync` script with Waybar indicators — see `SYNC_WORKFLOW.md`
 - **Credentials**: Encrypted vault with GPG/pass integration
-- **Systemd**: 8 user services for session automation — see `systemd/CLAUDE.md`
+- **Session backups**: Restic → Google Drive (nightly via systemd timer) — see `RECOVERY.md`
+- **Systemd**: 9 user services for session automation — see `systemd/CLAUDE.md`
 
 ### Claude Code Integration
 - **MCP servers**: Database access, web search, Google Workspace — see `claude-code/CLAUDE.md`
@@ -202,7 +203,7 @@ Edit source files in this repository, not deployed locations in `~/.config/`.
 | `claude-code/CLAUDE.md` | MCP servers, notification hooks, remote control, shared skills (with pi) |
 | `crush/CLAUDE.md` | Multi-provider AI coding TUI, Ollama integration, cloud provider setup |
 | `pi/CLAUDE.md` | Pi Coding Agent — minimal customizable harness, XDG override, no MCP, shared skills (with Claude Code) |
-| `systemd/CLAUDE.md` | 8 user service units, deployment, activation |
+| `systemd/CLAUDE.md` | 9 user service units, deployment, activation |
 | `zsh/CLAUDE.md` | Zap plugins, aliases, exports, Wayland env fix, stow conflict |
 | `waybar/CLAUDE.md` | Modules, git-sync status, custom scripts, clipboard |
 | `system/CLAUDE.md` | Hardware fixes, GPU, credentials, installation, post-reinstall TODOs |

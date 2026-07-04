@@ -13,6 +13,7 @@ bootstrap for fresh machines. Runs on Ubuntu 26.04 (Resolute Raccoon) and 24.04 
 | **Understand the module structure**           | [`CLAUDE.md`](CLAUDE.md)                       |
 | **Deploy configs on an existing system**      | See [Stow deployment](#stow-deployment) below  |
 | **Sync dotfiles between machines**            | [`SYNC_WORKFLOW.md`](SYNC_WORKFLOW.md)         |
+| **Restore session transcripts**              | [`RECOVERY.md`](RECOVERY.md#session-transcript-recovery) |
 
 ## What's in this repo
 

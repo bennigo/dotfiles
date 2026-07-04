@@ -150,6 +150,8 @@ development_packages:
   - nodejs
   - npm
   - git-crypt
+  - restic      # session transcript backups (claude-private -> Google Drive)
+  - rclone      # Google Drive backend for restic
   
 desktop_packages:
   - sway
@@ -174,7 +176,7 @@ agent_npm_packages:
 # Dotfiles deployment control (empty = auto-discover, backward-compatible)
 # Override in profile to limit which dirs are stowed
 stow_directories: []
-# Systemd user services to enable (empty = use defaults: claude-imports, mako-watcher, password-store-sync)
+# Systemd user services to enable (empty = use defaults: claude-imports, mako-watcher, password-store-sync, backup-claude-sessions)
 dotfiles_systemd_services: []
 dotfiles_systemd_services_no_start: []
 # Config dirs to verify after stow (empty = use defaults: sway, waybar, foot)
