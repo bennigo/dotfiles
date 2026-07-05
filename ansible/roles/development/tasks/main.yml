@@ -586,6 +586,14 @@
       ignore_errors: yes
       register: claude_crypt_unlock
 
+    - name: Unlock git-crypt in main dotfiles repo (rclone.conf with OAuth tokens)
+      shell: |
+        cd {{ directories.dotfiles }}
+        git-crypt unlock
+      become: no
+      ignore_errors: yes
+      register: main_crypt_unlock
+
     - name: Deploy claude-private configs with stow
       shell: |
         cd {{ directories.dotfiles }}/claude-private

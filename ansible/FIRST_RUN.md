@@ -42,14 +42,10 @@ you're blocked after you've already typed the sudo password three times.
    ```
    This includes `restic/ai-sessions` — the restic repo password for session backups.
 
-4. **rclone config** (`~/.config/rclone/rclone.conf`): contains Google Drive OAuth
-   tokens for the `bgovedur:` remote used by restic session backups. Not in dotfiles
-   (contains OAuth tokens). Either copy from the old machine, or re-authenticate on
-   the target after phase 1:
-   ```bash
-   rclone config   # new remote → name: bgovedur → storage: drive → browser OAuth
-   rclone lsd bgovedur:   # verify — should list your Drive folders
-   ```
+4. **rclone config**: the Google Drive OAuth tokens for the `bgovedur:` remote now live
+   in `rclone/.config/rclone/rclone.conf`, **git-crypt encrypted** in the main dotfiles
+   repo (same GPG key as claude-private). No manual `rclone config` / browser OAuth
+   needed on new machines — `git-crypt unlock` in step 3 decrypts it automatically.
 
 ### On the target machine (fresh Ubuntu 26.04)
 
@@ -79,7 +75,7 @@ git submodule update --init --recursive
 The `claude-private` submodule will clone but files will be **encrypted** until you
 unlock git-crypt in the next step.
 
-### 3. Unlock git-crypt (so claude-private submodule is usable)
+### 3. Unlock git-crypt (so claude-private submodule AND rclone config are usable)
 
 ```bash
 # Import GPG key from USB/transferred file
@@ -88,12 +84,19 @@ gpg --import /path/to/git-crypt-key.asc
 # Verify the key imported
 gpg --list-secret-keys 0FA08B1A9096B394
 
+# Unlock the main repo (decrypts rclone/.config/rclone/rclone.conf — Google Drive OAuth)
+cd ~/.dotfiles
+git-crypt unlock
+
 # Unlock the submodule
 cd ~/.dotfiles/claude-private
 git-crypt unlock
 
 # Confirm: these files should now be readable plaintext, not binary garbage
 head -1 *.md 2>/dev/null
+
+# Confirm rclone config decrypted and OAuth token intact
+rclone listremotes   # should list 'bgovedur:'
 cd ~/.dotfiles
 ```
 

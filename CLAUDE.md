@@ -48,6 +48,7 @@ architecture guidelines. Subdirectories with their own CLAUDE.md are marked with
 ├── foot/           # Lightweight terminal emulator
 ├── alacritty/      # Cross-platform terminal emulator
 ├── qutebrowser/    # Keyboard-driven web browser
+├── rclone/         # Google Drive config (git-crypt encrypted — OAuth tokens) — see RECOVERY.md
 ├── zsh/            # Shell configuration (Zap plugins, aliases) — see zsh/CLAUDE.md 📄
 ├── profile/        # Shell profile settings
 ├── crush/          # Multi-provider AI coding TUI (Charmbracelet) — see crush/CLAUDE.md 📄
