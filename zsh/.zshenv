@@ -19,4 +19,5 @@ fi
 export GOOGLE_MCP_CLIENT_ID=$(pass show tokens/google_mcp_claude_client_id 2>/dev/null || echo "")
 export GOOGLE_MCP_CLIENT_SECRET=$(pass show tokens/google_mcp_claude_client_secret 2>/dev/null || echo "")
 export ZHIPU_API_KEY=$(pass show tokens/zhipu_api_key 2>/dev/null || echo "")
+export FIRECRAWL_API_KEY=$(pass show tokens/firecrawl_api_key 2>/dev/null || echo "")
 export ZAI_CODING_CN_API_KEY=$(pass show tokens/zhipu_api_key 2>/dev/null || echo "")

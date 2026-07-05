@@ -143,6 +143,22 @@
           }
         },
         {
+          "id": "hf.co/deepreinforce-ai/Ornith-1.0-9B-GGUF:latest",
+          "name": "Ornith 1.0 9B (Local, Agentic Coding)",
+          "reasoning": true,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 262144,
+          "maxTokens": 32768,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          }
+        },
+        {
           "id": "deepseek-r1:8b",
           "name": "DeepSeek R1 8B (Local, Reasoning)",
           "reasoning": true,

@@ -10,6 +10,13 @@
     "brave-search": {
       "command": "/home/bgo/.scripts/brave-mcp-wrapper.sh"
     },
+    "firecrawl": {
+      "command": "npx",
+      "args": ["-y", "firecrawl-mcp"],
+      "env": {
+        "FIRECRAWL_API_KEY": "${FIRECRAWL_API_KEY}"
+      }
+    },
     "postgres-local": {
       "command": "uv",
       "args": [
