@@ -1,0 +1,2 @@
+# Encrypt rclone config (contains OAuth tokens) — same git-crypt as claude-private
+.config/rclone/rclone.conf filter=git-crypt diff=git-crypt

@@ -1,0 +1,2 @@
+# .gitattributes is for git-crypt config in-repo, not for deployment
+\.gitattributes
