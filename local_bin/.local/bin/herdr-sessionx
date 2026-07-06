@@ -1,0 +1,47 @@
+#!/bin/bash
+## Herdr // sessionx-style workspace picker (fzf + zoxide) // 🦉 ##
+#
+# Bound to prefix+o in herdr config. Replaces herdr's basic workspace_picker
+# with a tmux-sessionx-style picker: existing workspaces (focus) + zoxide
+# recent dirs (open as new workspace).
+#
+# Lines are "type<TAB>target<TAB>display"; fzf shows only the display column.
+
+set -euo pipefail
+
+pick=$( {
+    # Existing workspaces — focus these
+    herdr workspace list 2>/dev/null | python3 -c "
+import json, sys
+try:
+    d = json.load(sys.stdin)
+    for w in d['result']['workspaces']:
+        focus = '*' if w['focused'] else ' '
+        agent = w.get('agent_status','') or ''
+        print(f'ws\t{w[\"workspace_id\"]}\t{focus} ws{w[\"number\"]}: {w[\"label\"]}  <{agent}>  [{w[\"tab_count\"]}t/{w[\"pane_count\"]}p]')
+except Exception:
+    pass
+"
+    # Zoxide recent dirs — open as a new workspace at this path
+    zoxide query -l 2>/dev/null | while IFS= read -r dir; do
+        [ -d "$dir" ] && printf 'zo\t%s\t  %s\n' "$dir" "$dir"
+    done
+} | fzf --ansi \
+       --delimiter='\t' \
+       --with-nth=3 \
+       --no-sort \
+       --header='Herdr workspace picker  —  * = focused, <agent> = state  —  ENTER open · ESC cancel' \
+       --preview='line={}; t=$(printf "%s" "$line" | cut -f1); p=$(printf "%s" "$line" | cut -f2); [ "$t" = zo ] && ls -la --color=always "$p" 2>/dev/null | head -40' \
+       --preview-window='right:50%:wrap' \
+       --prompt='workspace> ' || true )
+
+# ESC or empty selection
+[ -z "${pick:-}" ] && exit 0
+
+type=$(printf '%s' "$pick" | cut -f1)
+target=$(printf '%s' "$pick" | cut -f2)
+
+case "$type" in
+    ws)  herdr workspace focus "$target" ;;
+    zo)  herdr workspace create --cwd "$target" --focus ;;
+esac
