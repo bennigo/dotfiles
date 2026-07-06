@@ -8,10 +8,10 @@ prefix = "ctrl+a"
 # tmux default detach binding (tmux-sensible keeps prefix+d)
 detach = "prefix+d"
 
-# ctrl+a L — alternate/last session (tmux switch-client -l reflex, used constantly).
-# Clears the default swap_pane_right binding that also used prefix+shift+l.
-previous_workspace = "prefix+shift+l"
-swap_pane_right = ""
+# ctrl+a L — alternate session toggle (tmux switch-client -l reflex).
+# last_pane toggles to the last-focused pane, which jumps back to the
+# workspace you were just in (alt-tab for workspaces).
+last_pane = "prefix+shift+l"
 
 # workspace_picker replaced by the fzf custom command below (prefix+o)
 # — herdr's built-in picker only lists existing workspaces; the custom
