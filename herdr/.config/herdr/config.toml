@@ -1,0 +1,16 @@
+# herdr config — mirrors bgo's tmux workflow (prefix, session switch, theme)
+# Herdr merges this with its defaults; only overrides listed here.
+
+[keys]
+# Match tmux prefix (tmux.conf: unbind C-b; set prefix C-a)
+prefix = "ctrl+a"
+
+# Match tmux-sessionx binding (@sessionx-bind 'o') — fzf session picker reflex
+workspace_picker = "prefix+o"
+
+# tmux default detach binding (tmux-sensible keeps prefix+d)
+detach = "prefix+d"
+
+[theme]
+# Match omerxx/catppuccin-tmux
+name = "catppuccin"
