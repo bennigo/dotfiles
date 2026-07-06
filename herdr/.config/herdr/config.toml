@@ -34,3 +34,10 @@ description = "refresh env in all shell panes"
 [theme]
 # Match omerxx/catppuccin-tmux
 name = "catppuccin"
+
+[[keys.command]]
+# ctrl+a Alt+n — prepend "N. " to tab labels so they match the number keys
+key = "prefix+alt+n"
+type = "shell"
+command = "~/.local/bin/herdr-renumber-tabs"
+description = "renumber tabs in focused workspace"
