@@ -1,0 +1,6 @@
+# Encrypt ssh client config — the dotfiles repo is PUBLIC and the config maps
+# internal infrastructure (hostnames, usernames). Same git-crypt as rclone.
+.ssh/config filter=git-crypt diff=git-crypt
+
+# Don't encrypt git attributes
+.gitattributes !filter !diff
