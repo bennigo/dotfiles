@@ -5,11 +5,24 @@
 # Match tmux prefix (tmux.conf: unbind C-b; set prefix C-a)
 prefix = "ctrl+a"
 
-# Match tmux-sessionx binding (@sessionx-bind 'o') — fzf session picker reflex
-workspace_picker = "prefix+o"
-
 # tmux default detach binding (tmux-sensible keeps prefix+d)
 detach = "prefix+d"
+
+# ctrl+a L — alternate/last session (tmux switch-client -l reflex, used constantly).
+# Clears the default swap_pane_right binding that also used prefix+shift+l.
+previous_workspace = "prefix+shift+l"
+swap_pane_right = ""
+
+# workspace_picker replaced by the fzf custom command below (prefix+o)
+# — herdr's built-in picker only lists existing workspaces; the custom
+# command adds zoxide recent dirs (sessionx-style).
+
+[[keys.command]]
+# ctrl+a o — tmux-sessionx-style picker (existing workspaces + zoxide dirs)
+key = "prefix+o"
+type = "pane"
+command = "~/.local/bin/herdr-sessionx"
+description = "workspace picker (fzf + zoxide)"
 
 [theme]
 # Match omerxx/catppuccin-tmux
