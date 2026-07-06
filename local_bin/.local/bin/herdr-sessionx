@@ -9,6 +9,9 @@
 #   herdr-sessionx --source --all               print source lines (all)     ← fzf reload
 #   herdr-sessionx --preview <type> <target>    print preview pane content
 #
+# Preview shows git status + recent commits + recent files for BOTH workspaces
+# (resolving cwd via the pane API) and zoxide dirs. Empty sections are suppressed.
+#
 # Picker keys:  ctrl-r recent dirs · ctrl-w workspaces only · ctrl-p preview · ENTER open
 
 set -euo pipefail
@@ -16,44 +19,79 @@ set -euo pipefail
 ALL=0; SOURCE_ONLY=0; PREVIEW=0
 while [ $# -gt 0 ]; do
     case "$1" in
-        --all)    ALL=1; shift ;;
-        --source) SOURCE_ONLY=1; shift ;;
+        --all)     ALL=1; shift ;;
+        --source)  SOURCE_ONLY=1; shift ;;
         --preview) PREVIEW=1; shift; break ;;   # remaining args = type target
         *) shift ;;
     esac
 done
 
+# ── helper: resolve a workspace's cwd via its first pane ────────────────────
+ws_cwd() {
+    local ws="$1" pane
+    pane=$(herdr pane list --workspace "$ws" 2>/dev/null | python3 -c "
+import json, sys
+try:
+    d = json.load(sys.stdin)['result']
+    ps = d.get('panes') or d.get('pane_list') or []
+    print(ps[0]['pane_id'] if ps else '')
+except Exception:
+    pass
+" 2>/dev/null || true)
+    [ -n "$pane" ] || return 0
+    herdr pane get "$pane" 2>/dev/null | python3 -c "
+import json, sys
+try: print(json.load(sys.stdin)['result']['pane']['cwd'])
+except Exception: pass
+" 2>/dev/null || true
+}
+
+# ── helper: print git-status + commits + recent files for a dir ─────────────
+dir_preview() {
+    local dir="$1"
+    [ -d "$dir" ] || return 0
+    if git -C "$dir" rev-parse --git-dir >/dev/null 2>&1; then
+        local st
+        st=$(git -C "$dir" -c safe.directory='*' status -sb --color=always 2>/dev/null | head -8)
+        [ -n "$st" ] && { echo '▼ git status'; echo "$st"; echo; }
+        local log
+        log=$(git -C "$dir" -c safe.directory='*' log --oneline --color=always -12 2>/dev/null)
+        [ -n "$log" ] && { echo '▼ recent commits'; echo "$log"; echo; }
+    fi
+    local files
+    files=$(find "$dir" -maxdepth 2 -type f -mtime -14 \
+        -not -path '*/.git/*' -not -path '*/node_modules/*' -not -path '*/__pycache__/*' \
+        -printf '%TY-%Tm-%Td %TH:%TM  %p\n' 2>/dev/null | sort -rn | head -15 | sed "s|$dir/||")
+    [ -n "$files" ] && { echo '▼ recent files (14d)'; echo "$files"; }
+}
+
 # ── preview mode ────────────────────────────────────────────────────────────
 if [ "$PREVIEW" = 1 ]; then
-    ptype="${1:-}"; ptarget="${2:-}"
     set +e +o pipefail   # display only — tolerate SIGPIPE from `head`
-    if [ "$ptype" = "zo" ] && [ -d "$ptarget" ]; then
-        dir="$ptarget"
-        if git -C "$dir" rev-parse --git-dir >/dev/null 2>&1; then
-            echo "▼ git status"
-            git -C "$dir" status -sb --color=always 2>/dev/null | head -8
-            echo
-            echo "▼ recent commits"
-            git -C "$dir" log --oneline --color=always -12 2>/dev/null
-            echo
-        fi
-        echo "▼ recent files (14d)"
-        find "$dir" -maxdepth 2 -type f -mtime -14 \
-            -not -path '*/.git/*' -not -path '*/node_modules/*' -not -path '*/__pycache__/*' \
-            -printf '%TY-%Tm-%Td %TH:%TM  %p\n' 2>/dev/null \
-            | sort -rn | head -15 | sed "s|$dir/||"
-    elif [ "$ptype" = "ws" ] && [ -n "$ptarget" ]; then
-        herdr workspace get "$ptarget" 2>/dev/null | python3 -c "
+    ptype="${1:-}"; ptarget="${2:-}"
+    case "$ptype" in
+        zo)
+            [ -d "$ptarget" ] && dir_preview "$ptarget"
+            ;;
+        ws)
+            # Workspace header line, then the same dir preview resolved from cwd
+            herdr workspace get "$ptarget" 2>/dev/null | python3 -c "
 import json, sys
 try:
     w = json.load(sys.stdin)['result']['workspace']
-    print(f\"workspace {w['workspace_id']}: {w['label']}\")
-    print(f\"agent: {w.get('agent_status','-')}\")
-    print(f\"tabs: {w['tab_count']}   panes: {w['pane_count']}   focused: {w['focused']}\")
+    print(f\"workspace {w['workspace_id']}: {w['label']}   agent: {w.get('agent_status','-')}   tabs: {w['tab_count']} panes: {w['pane_count']}\")
 except Exception:
-    print('(workspace details unavailable)')
-"
-    fi
+    pass
+" 2>/dev/null
+            echo
+            dir="$(ws_cwd "$ptarget")"
+            if [ -n "$dir" ] && [ -d "$dir" ]; then
+                dir_preview "$dir"
+            else
+                echo "(no cwd resolved for this workspace)"
+            fi
+            ;;
+    esac
     exit 0
 fi
 
