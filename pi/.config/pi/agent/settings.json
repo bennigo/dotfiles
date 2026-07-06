@@ -15,8 +15,8 @@
     "npm:@eko24ive/pi-ask"
   ],
   "lastChangelogVersion": "0.80.3",
-  "defaultProvider": "zai",
-  "defaultModel": "glm-5.2",
+  "defaultProvider": "deepseek",
+  "defaultModel": "deepseek-v4-pro",
   "defaultThinkingLevel": "high",
   "theme": "dark"
 }
