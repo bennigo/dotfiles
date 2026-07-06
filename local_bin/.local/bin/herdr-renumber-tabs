@@ -17,12 +17,14 @@ set -euo pipefail
 python3 -c "
 import json, subprocess, re, sys
 
-def run(cmd):
-    r = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+def run(args):
+    '''Run a command via subprocess with argv list (no shell — prevents
+    command injection from attacker-controlled tab labels).'''
+    r = subprocess.run(args, capture_output=True, text=True)
     return json.loads(r.stdout) if r.stdout else {}
 
 # Find focused workspace
-ws_data = run('herdr workspace list')
+ws_data = run(['herdr', 'workspace', 'list'])
 focused = None
 for w in ws_data.get('result',{}).get('workspaces',[]):
     if w.get('focused'):
@@ -33,7 +35,7 @@ if not focused:
     sys.exit(1)
 
 # List tabs in focused workspace
-tab_data = run(f'herdr tab list --workspace {focused}')
+tab_data = run(['herdr', 'tab', 'list', '--workspace', focused])
 tabs = tab_data.get('result',{}).get('tabs',[])
 count = 0
 for t in tabs:
@@ -51,7 +53,8 @@ for t in tabs:
     # Strip wrong prefix, then prepend correct one
     clean = re.sub(r'^[0-9]+\. ', '', label)
     new = f'{num}. {clean}'
-    run(f'herdr tab rename {tid} {new!r}')
+    # argv list — new (from label) is passed as a literal, never interpreted by a shell
+    run(['herdr', 'tab', 'rename', tid, new])
     count += 1
 
 print(f'renumbered {count} tab(s) in workspace {focused}')
