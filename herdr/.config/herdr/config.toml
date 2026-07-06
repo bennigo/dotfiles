@@ -38,6 +38,6 @@ name = "catppuccin"
 [[keys.command]]
 # ctrl+a Alt+n — prepend "N. " to tab labels so they match the number keys
 key = "prefix+alt+n"
-type = "shell"
+type = "pane"
 command = "~/.local/bin/herdr-renumber-tabs"
 description = "renumber tabs in focused workspace"
