@@ -122,7 +122,7 @@ for w in wl:
     print(f'ws\t{w[\"workspace_id\"]}\t{mark} {label}  {cwd_s}{agent_s}{tp}')
 "
     if [ "$ALL" = 1 ]; then
-        zoxide query -l 2>/dev/null | head -30 | while IFS= read -r dir; do
+        zoxide query -l 2>/dev/null | while IFS= read -r dir; do
             [ -d "$dir" ] && printf 'zo\t%s\t  %s\n' "$dir" "$dir"
         done
     fi
@@ -173,7 +173,7 @@ elif [ -n "$query" ]; then
     if [ -d "$query" ]; then
         herdr workspace create --cwd "$query" --focus
     else
-        echo "not a directory: $query" >&2
+        echo "not a directory: $query" >&2; sleep 1.5
         exit 1
     fi
 fi
