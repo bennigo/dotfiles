@@ -1,73 +1,111 @@
 #!/bin/bash
 ## Herdr // sessionx-style workspace picker (fzf + zoxide) // 🦉 ##
 #
-# Bound to prefix+o in herdr config.
+# Bound to prefix+o in herdr config. Self-contained: one script, four modes.
 #
-# Default view: EXISTING workspaces only (clean). Press:
-#   ctrl-r  reveal recent dirs (zoxide) — open as new workspace
-#   ctrl-w  back to workspaces-only view
-#   ctrl-p  toggle preview pane on/off (off by default)
-#   ENTER   open  ·  ESC cancel
+#   herdr-sessionx                              run picker (workspaces only, clean)
+#   herdr-sessionx --all                        run picker (workspaces + zoxide dirs)
+#   herdr-sessionx --source                     print source lines (clean)   ← fzf reload
+#   herdr-sessionx --source --all               print source lines (all)     ← fzf reload
+#   herdr-sessionx --preview <type> <target>    print preview pane content
 #
-# Lines are "type<TAB>target<TAB>display"; fzf shows only the display column.
+# Picker keys:  ctrl-r recent dirs · ctrl-w workspaces only · ctrl-p preview · ENTER open
 
 set -euo pipefail
 
-ALL=0
-[ "${1:-}" = "--all" ] && ALL=1
+ALL=0; SOURCE_ONLY=0; PREVIEW=0
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --all)    ALL=1; shift ;;
+        --source) SOURCE_ONLY=1; shift ;;
+        --preview) PREVIEW=1; shift; break ;;   # remaining args = type target
+        *) shift ;;
+    esac
+done
 
-# --- source builder ---------------------------------------------------------
+# ── preview mode ────────────────────────────────────────────────────────────
+if [ "$PREVIEW" = 1 ]; then
+    ptype="${1:-}"; ptarget="${2:-}"
+    set +e +o pipefail   # display only — tolerate SIGPIPE from `head`
+    if [ "$ptype" = "zo" ] && [ -d "$ptarget" ]; then
+        dir="$ptarget"
+        if git -C "$dir" rev-parse --git-dir >/dev/null 2>&1; then
+            echo "▼ git status"
+            git -C "$dir" status -sb --color=always 2>/dev/null | head -8
+            echo
+            echo "▼ recent commits"
+            git -C "$dir" log --oneline --color=always -12 2>/dev/null
+            echo
+        fi
+        echo "▼ recent files (14d)"
+        find "$dir" -maxdepth 2 -type f -mtime -14 \
+            -not -path '*/.git/*' -not -path '*/node_modules/*' -not -path '*/__pycache__/*' \
+            -printf '%TY-%Tm-%Td %TH:%TM  %p\n' 2>/dev/null \
+            | sort -rn | head -15 | sed "s|$dir/||"
+    elif [ "$ptype" = "ws" ] && [ -n "$ptarget" ]; then
+        herdr workspace get "$ptarget" 2>/dev/null | python3 -c "
+import json, sys
+try:
+    w = json.load(sys.stdin)['result']['workspace']
+    print(f\"workspace {w['workspace_id']}: {w['label']}\")
+    print(f\"agent: {w.get('agent_status','-')}\")
+    print(f\"tabs: {w['tab_count']}   panes: {w['pane_count']}   focused: {w['focused']}\")
+except Exception:
+    print('(workspace details unavailable)')
+"
+    fi
+    exit 0
+fi
+
+# ── source builder ──────────────────────────────────────────────────────────
 build_source() {
-    # Existing workspaces — always shown. Clean line: focused-marker, wsN, label, agent state.
     herdr workspace list 2>/dev/null | python3 -c "
 import json, sys
 try:
-    d = json.load(sys.stdin)
-    for w in d['result']['workspaces']:
+    for w in json.load(sys.stdin)['result']['workspaces']:
         mark = '*' if w['focused'] else ' '
         agent = w.get('agent_status','') or ''
-        agent_str = f'  <{agent}>' if agent else ''
-        print(f'ws\t{w[\"workspace_id\"]}\t{mark} ws{w[\"number\"]}: {w[\"label\"]}{agent_str}')
+        a = f'  <{agent}>' if agent else ''
+        print(f'ws\t{w[\"workspace_id\"]}\t{mark} ws{w[\"number\"]}: {w[\"label\"]}{a}')
 except Exception:
     pass
 "
-    # Zoxide recent dirs — only in --all mode
     if [ "$ALL" = 1 ]; then
-        zoxide query -l 2>/dev/null | while IFS= read -r dir; do
+        zoxide query -l 2>/dev/null | head -30 | while IFS= read -r dir; do
             [ -d "$dir" ] && printf 'zo\t%s\t  %s\n' "$dir" "$dir"
         done
     fi
 }
 
-# --- header -----------------------------------------------------------------
+# ── source-only mode (used by fzf reload bindings — no nested fzf) ──────────
+if [ "$SOURCE_ONLY" = 1 ]; then
+    build_source
+    exit 0
+fi
+
+# ── picker ──────────────────────────────────────────────────────────────────
 if [ "$ALL" = 1 ]; then
-    header="workspaces + recent dirs  ·  ctrl-w workspaces only  ·  ctrl-p preview  ·  ENTER open · ESC cancel"
+    header="workspaces + recent dirs  ·  ctrl-w clean  ·  ctrl-p preview  ·  ENTER open · ESC cancel"
 else
     header="workspaces  ·  ctrl-r recent dirs  ·  ctrl-p preview  ·  ENTER open · ESC cancel"
 fi
 
-# --- preview (only relevant when toggled on) --------------------------------
-preview_cmd='line={}; t=$(printf "%s" "$line" | cut -f1); p=$(printf "%s" "$line" | cut -f2); if [ "$t" = zo ]; then ls -la --color=always "$p" 2>/dev/null | head -40; else herdr workspace get "$p" 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); w=d[\"result\"][\"workspace\"]; print(f\"workspace {w[\"workspace_id\"]}: {w[\"label\"]}\\nagent: {w.get(\"agent_status\",\"-\")}\\ntabs: {w[\"tab_count\"]}  panes: {w[\"pane_count\"]}\")" 2>/dev/null; fi'
-
-# --- run picker -------------------------------------------------------------
 pick=$( build_source | fzf --ansi \
        --delimiter='\t' \
        --with-nth=3 \
        --no-sort \
        --header="$header" \
-       --preview="$preview_cmd" \
-       --preview-window='hidden:right:50%:wrap' \
-       --bind 'ctrl-r:reload(~/.local/bin/herdr-sessionx --all)' \
-       --bind 'ctrl-w:reload(~/.local/bin/herdr-sessionx)' \
+       --preview='~/.local/bin/herdr-sessionx --preview {1} {2}' \
+       --preview-window='hidden:right:60%:wrap' \
+       --bind 'ctrl-r:reload(~/.local/bin/herdr-sessionx --source --all)' \
+       --bind 'ctrl-w:reload(~/.local/bin/herdr-sessionx --source)' \
        --bind 'ctrl-p:toggle-preview' \
        --prompt='workspace> ' || true )
 
-# ESC or empty selection
 [ -z "${pick:-}" ] && exit 0
 
 type=$(printf '%s' "$pick" | cut -f1)
 target=$(printf '%s' "$pick" | cut -f2)
-
 case "$type" in
     ws)  herdr workspace focus "$target" ;;
     zo)  herdr workspace create --cwd "$target" --focus ;;
