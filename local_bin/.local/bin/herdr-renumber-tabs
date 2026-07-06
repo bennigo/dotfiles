@@ -1,0 +1,58 @@
+#!/bin/bash
+## Herdr // renumber tabs in focused workspace // 🔢 ##
+#
+# Prepends "{number}. " to each tab label in the focused workspace
+# so tabs show as "1. main", "2. claude", "3. pi" — matching the
+# ctrl+a 1..9 navigation keys.
+#
+# Idempotent: tabs with the correct "N. " prefix are skipped.
+# Tabs with default number-only labels are skipped (name them first
+# with ctrl+a Shift+T, then renumber).
+#
+# Bind: prefix+alt+n  (ctrl+a Alt+n)
+# Run:  herdr-renumber-tabs
+
+set -euo pipefail
+
+python3 -c "
+import json, subprocess, re, sys
+
+def run(cmd):
+    r = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    return json.loads(r.stdout) if r.stdout else {}
+
+# Find focused workspace
+ws_data = run('herdr workspace list')
+focused = None
+for w in ws_data.get('result',{}).get('workspaces',[]):
+    if w.get('focused'):
+        focused = w['workspace_id']
+        break
+if not focused:
+    print('no focused workspace')
+    sys.exit(1)
+
+# List tabs in focused workspace
+tab_data = run(f'herdr tab list --workspace {focused}')
+tabs = tab_data.get('result',{}).get('tabs',[])
+count = 0
+for t in tabs:
+    tid = t.get('tab_id','')
+    num = t.get('number',0)
+    label = t.get('label','')
+
+    # Already correctly numbered? Skip
+    if re.match(rf'^{num}\. ', label):
+        continue
+    # Bare default number? Skip (needs a name first)
+    if label == str(num):
+        continue
+
+    # Strip wrong prefix, then prepend correct one
+    clean = re.sub(r'^[0-9]+\. ', '', label)
+    new = f'{num}. {clean}'
+    run(f'herdr tab rename {tid} {new!r}')
+    count += 1
+
+print(f'renumbered {count} tab(s) in workspace {focused}')
+"
