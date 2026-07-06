@@ -1,0 +1,38 @@
+#!/bin/bash
+## Herdr // refresh env in all shell panes // 🔄 ##
+#
+# Bound to prefix+R in herdr config. After editing ~/.zshenv (new exports,
+# API keys, etc.), this re-sources it in every SHELL pane so existing
+# sessions pick up the change without a restart.
+#
+# Agent panes (pi, claude, codex, etc.) are skipped — they inherited env at
+# launch and re-sourcing would inject text into their TUI input. Restart
+# those individually if they need new env.
+
+set -euo pipefail
+
+mapfile -t PANES < <(herdr pane list 2>/dev/null | python3 -c "
+import json, sys
+try:
+    d = json.load(sys.stdin)['result']
+    panes = d.get('panes') or d.get('pane_list') or []
+    for p in panes:
+        agent = (p.get('agent') or '-').strip()
+        if agent in ('-', '', 'unknown', None):   # shell panes only
+            print(p['pane_id'])
+except Exception:
+    pass
+")
+
+count=0
+for pane in "${PANES[@]:-}"; do
+    [ -z "$pane" ] && continue
+    if herdr pane send-text "$pane" $'source ~/.zshenv\n' 2>/dev/null; then
+        count=$((count + 1))
+    fi
+done
+
+# Brief confirmation (shows in the temp pane if run via type=pane binding)
+echo "refreshed ~/.zshenv in $count shell pane(s)"
+echo "(agent panes skipped — restart those individually if needed)"
+sleep 1.2

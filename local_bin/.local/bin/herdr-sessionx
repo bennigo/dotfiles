@@ -1,16 +1,11 @@
 #!/bin/bash
 ## Herdr // sessionx-style workspace picker (fzf + zoxide) // 🦉 ##
 #
-# Bound to prefix+o in herdr config. Self-contained: one script, four modes.
+# Bound to prefix+o in herdr config. Self-contained: four modes (see case below).
 #
-#   herdr-sessionx                              run picker (workspaces only, clean)
-#   herdr-sessionx --all                        run picker (workspaces + zoxide dirs)
-#   herdr-sessionx --source                     print source lines (clean)   ← fzf reload
-#   herdr-sessionx --source --all               print source lines (all)     ← fzf reload
-#   herdr-sessionx --preview <type> <target>    print preview pane content
-#
-# Preview shows git status + recent commits + recent files for BOTH workspaces
-# (resolving cwd via the pane API) and zoxide dirs. Empty sections are suppressed.
+# Display is label-centric (project name + full cwd path disambiguates same-named
+# projects; agent state shown only when known; tabs/panes counts).
+# Type any path + Enter to open it as a new workspace even if not in zoxide.
 #
 # Picker keys:  ctrl-r recent dirs · ctrl-w workspaces only · ctrl-p preview · ENTER open
 
@@ -21,15 +16,14 @@ while [ $# -gt 0 ]; do
     case "$1" in
         --all)     ALL=1; shift ;;
         --source)  SOURCE_ONLY=1; shift ;;
-        --preview) PREVIEW=1; shift; break ;;   # remaining args = type target
+        --preview) PREVIEW=1; shift; break ;;
         *) shift ;;
     esac
 done
 
 # ── helper: resolve a workspace's cwd via its first pane ────────────────────
 ws_cwd() {
-    local ws="$1" pane
-    pane=$(herdr pane list --workspace "$ws" 2>/dev/null | python3 -c "
+    herdr pane list --workspace "$1" 2>/dev/null | python3 -c "
 import json, sys
 try:
     d = json.load(sys.stdin)['result']
@@ -37,16 +31,18 @@ try:
     print(ps[0]['pane_id'] if ps else '')
 except Exception:
     pass
-" 2>/dev/null || true)
-    [ -n "$pane" ] || return 0
-    herdr pane get "$pane" 2>/dev/null | python3 -c "
+" 2>/dev/null | while IFS= read -r pane; do
+        [ -n "$pane" ] || continue
+        herdr pane get "$pane" 2>/dev/null | python3 -c "
 import json, sys
 try: print(json.load(sys.stdin)['result']['pane']['cwd'])
 except Exception: pass
-" 2>/dev/null || true
+" 2>/dev/null
+        break
+    done
 }
 
-# ── helper: print git-status + commits + recent files for a dir ─────────────
+# ── helper: print git status + commits + recent files for a dir ─────────────
 dir_preview() {
     local dir="$1"
     [ -d "$dir" ] || return 0
@@ -67,19 +63,19 @@ dir_preview() {
 
 # ── preview mode ────────────────────────────────────────────────────────────
 if [ "$PREVIEW" = 1 ]; then
-    set +e +o pipefail   # display only — tolerate SIGPIPE from `head`
+    set +e +o pipefail
     ptype="${1:-}"; ptarget="${2:-}"
     case "$ptype" in
         zo)
             [ -d "$ptarget" ] && dir_preview "$ptarget"
             ;;
         ws)
-            # Workspace header line, then the same dir preview resolved from cwd
+            # Header by LABEL (not raw id) + dir preview resolved from cwd
             herdr workspace get "$ptarget" 2>/dev/null | python3 -c "
 import json, sys
 try:
     w = json.load(sys.stdin)['result']['workspace']
-    print(f\"workspace {w['workspace_id']}: {w['label']}   agent: {w.get('agent_status','-')}   tabs: {w['tab_count']} panes: {w['pane_count']}\")
+    print(f\"{w['label']}   <{w.get('agent_status','-')}>   [{w['tab_count']}t/{w['pane_count']}p]\")
 except Exception:
     pass
 " 2>/dev/null
@@ -88,7 +84,7 @@ except Exception:
             if [ -n "$dir" ] && [ -d "$dir" ]; then
                 dir_preview "$dir"
             else
-                echo "(no cwd resolved for this workspace)"
+                echo "(no cwd resolved)"
             fi
             ;;
     esac
@@ -97,16 +93,33 @@ fi
 
 # ── source builder ──────────────────────────────────────────────────────────
 build_source() {
-    herdr workspace list 2>/dev/null | python3 -c "
-import json, sys
-try:
-    for w in json.load(sys.stdin)['result']['workspaces']:
-        mark = '*' if w['focused'] else ' '
-        agent = w.get('agent_status','') or ''
-        a = f'  <{agent}>' if agent else ''
-        print(f'ws\t{w[\"workspace_id\"]}\t{mark} ws{w[\"number\"]}: {w[\"label\"]}{a}')
-except Exception:
-    pass
+    # Merge workspace list with pane cwds in one pass (single pane-list call)
+    python3 -c "
+import json, subprocess, os
+def run(cmd):
+    try:
+        r = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        return json.loads(r.stdout) if r.stdout else {}
+    except Exception:
+        return {}
+wl = run('herdr workspace list').get('result', {}).get('workspaces', [])
+panes = run('herdr pane list').get('result', {})
+panes = panes.get('panes') or panes.get('pane_list') or []
+cwd_by_ws = {}
+for p in panes:
+    ws = p.get('workspace_id')
+    if ws and ws not in cwd_by_ws and p.get('cwd'):
+        cwd_by_ws[ws] = p['cwd']
+home = os.path.expanduser('~')
+for w in wl:
+    mark = '*' if w.get('focused') else ' '
+    label = w.get('label', '?')
+    cwd = cwd_by_ws.get(w['workspace_id'], '')
+    cwd_s = ('~' + cwd[len(home):]) if cwd and cwd.startswith(home) else (cwd or '')
+    agent = (w.get('agent_status') or '').strip()
+    agent_s = f'  <{agent}>' if agent and agent != 'unknown' else ''
+    tp = f'  [{w.get(\"tab_count\",0)}t/{w.get(\"pane_count\",0)}p]'
+    print(f'ws\t{w[\"workspace_id\"]}\t{mark} {label}  {cwd_s}{agent_s}{tp}')
 "
     if [ "$ALL" = 1 ]; then
         zoxide query -l 2>/dev/null | head -30 | while IFS= read -r dir; do
@@ -115,7 +128,7 @@ except Exception:
     fi
 }
 
-# ── source-only mode (used by fzf reload bindings — no nested fzf) ──────────
+# ── source-only mode (fzf reload) ───────────────────────────────────────────
 if [ "$SOURCE_ONLY" = 1 ]; then
     build_source
     exit 0
@@ -123,15 +136,17 @@ fi
 
 # ── picker ──────────────────────────────────────────────────────────────────
 if [ "$ALL" = 1 ]; then
-    header="workspaces + recent dirs  ·  ctrl-w clean  ·  ctrl-p preview  ·  ENTER open · ESC cancel"
+    header="workspaces + recent dirs  ·  ctrl-w clean  ·  ctrl-p preview  ·  type a path to open it · ENTER · ESC"
 else
-    header="workspaces  ·  ctrl-r recent dirs  ·  ctrl-p preview  ·  ENTER open · ESC cancel"
+    header="workspaces  ·  ctrl-r recent dirs  ·  ctrl-p preview  ·  type a path to open it · ENTER · ESC"
 fi
 
-pick=$( build_source | fzf --ansi \
+# --print-query: line 1 = query, line 2 = selection (empty if user typed a non-matching path)
+output=$( build_source | fzf --ansi \
        --delimiter='\t' \
        --with-nth=3 \
        --no-sort \
+       --print-query \
        --header="$header" \
        --preview='~/.local/bin/herdr-sessionx --preview {1} {2}' \
        --preview-window='hidden:right:60%:wrap' \
@@ -140,11 +155,25 @@ pick=$( build_source | fzf --ansi \
        --bind 'ctrl-p:toggle-preview' \
        --prompt='workspace> ' || true )
 
-[ -z "${pick:-}" ] && exit 0
+query=$(printf '%s\n' "$output" | head -1)
+pick=$(printf '%s\n' "$output" | sed -n '2p')
 
-type=$(printf '%s' "$pick" | cut -f1)
-target=$(printf '%s' "$pick" | cut -f2)
-case "$type" in
-    ws)  herdr workspace focus "$target" ;;
-    zo)  herdr workspace create --cwd "$target" --focus ;;
-esac
+if [ -n "$pick" ]; then
+    type=$(printf '%s' "$pick" | cut -f1)
+    target=$(printf '%s' "$pick" | cut -f2)
+    case "$type" in
+        ws)  herdr workspace focus "$target" ;;
+        zo)  herdr workspace create --cwd "$target" --focus ;;
+    esac
+elif [ -n "$query" ]; then
+    # Typed a path not in the list → expand ~ and open as new workspace
+    case "$query" in
+        '~'*) query="$HOME${query#~}" ;;
+    esac
+    if [ -d "$query" ]; then
+        herdr workspace create --cwd "$query" --focus
+    else
+        echo "not a directory: $query" >&2
+        exit 1
+    fi
+fi

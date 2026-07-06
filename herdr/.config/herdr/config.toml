@@ -24,6 +24,13 @@ type = "pane"
 command = "~/.local/bin/herdr-sessionx"
 description = "workspace picker (fzf + zoxide)"
 
+[[keys.command]]
+# ctrl+a R — re-source ~/.zshenv in all shell panes (after env changes)
+key = "prefix+shift+r"
+type = "pane"
+command = "~/.local/bin/herdr-refresh-env"
+description = "refresh env in all shell panes"
+
 [theme]
 # Match omerxx/catppuccin-tmux
 name = "catppuccin"
