@@ -96,14 +96,14 @@ build_source() {
     # Merge workspace list with pane cwds in one pass (single pane-list call)
     python3 -c "
 import json, subprocess, os
-def run(cmd):
+def run(args):
     try:
-        r = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        r = subprocess.run(args, capture_output=True, text=True)
         return json.loads(r.stdout) if r.stdout else {}
     except Exception:
         return {}
-wl = run('herdr workspace list').get('result', {}).get('workspaces', [])
-panes = run('herdr pane list').get('result', {})
+wl = run(['herdr', 'workspace', 'list']).get('result', {}).get('workspaces', [])
+panes = run(['herdr', 'pane', 'list']).get('result', {})
 panes = panes.get('panes') or panes.get('pane_list') or []
 cwd_by_ws = {}
 for p in panes:
