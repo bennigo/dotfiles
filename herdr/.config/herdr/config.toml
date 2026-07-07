@@ -41,3 +41,10 @@ key = "prefix+alt+n"
 type = "pane"
 command = "~/.local/bin/herdr-renumber-tabs"
 description = "renumber tabs in focused workspace"
+
+[[keys.command]]
+# ctrl+a H — create a thin header status bar at top of current tab
+key = "prefix+shift+h"
+type = "shell"
+command = "~/.local/bin/herdr-header-init"
+description = "toggle header status bar (cwd, clock, gps, power, network)"
