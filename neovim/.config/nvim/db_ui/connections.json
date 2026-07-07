@@ -34,5 +34,9 @@
   {
     "url": "postgresql://bgo@localhost:5432/gps_health",
     "name": "gps_health_local"
+  },
+  {
+    "url": "postgresql://bgo@localhost:5432/gnss_europe_local",
+    "name": "gnss_europe_local"
   }
 ]

@@ -1,3 +1,4 @@
+onboarding = false
 # herdr config — mirrors bgo's tmux workflow (prefix, session switch, theme)
 # Herdr merges this with its defaults; only overrides listed here.
 
@@ -8,14 +9,10 @@ prefix = "ctrl+a"
 # tmux default detach binding (tmux-sensible keeps prefix+d)
 detach = "prefix+d"
 
-# ctrl+a L — alternate session toggle (tmux switch-client -l reflex).
-# last_pane toggles to the last-focused pane, which jumps back to the
-# workspace you were just in (alt-tab for workspaces).
-last_pane = "prefix+shift+l"
-
-# workspace_picker replaced by the fzf custom command below (prefix+o)
-# — herdr's built-in picker only lists existing workspaces; the custom
-# command adds zoxide recent dirs (sessionx-style).
+# ctrl+a L — alternate WORKSPACE toggle (tmux switch-client -l reflex).
+# Herdr has no native "last workspace" action (last_pane flips panes/tabs),
+# so this uses a custom tracker daemon + toggle script. See herdr-ws-toggle.
+# last_pane is left unset.
 
 [[keys.command]]
 # ctrl+a o — tmux-sessionx-style picker (existing workspaces + zoxide dirs)
@@ -48,3 +45,26 @@ key = "prefix+shift+h"
 type = "shell"
 command = "~/.local/bin/herdr-header-init"
 description = "toggle header status bar (cwd, clock, gps, power, network)"
+
+[[keys.command]]
+# ctrl+a L — toggle to last workspace (tmux switch-client -l style)
+key = "prefix+shift+l"
+type = "shell"
+command = "~/.local/bin/herdr-ws-toggle"
+description = "toggle to last workspace"
+
+[ui.toast]
+delivery = "system"
+
+[ui]
+show_agent_labels_on_pane_borders = true
+
+[ui.sound]
+enabled = true
+
+[[keys.command]]
+# ctrl+a O — split pane popup to reorder tabs in current workspace
+key = "prefix+shift+o"
+type = "pane"
+command = "~/.local/bin/herdr-tab-reorder-popup"
+description = "reorder tabs (split pane popup)"
