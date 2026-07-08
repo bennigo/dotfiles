@@ -1,8 +1,8 @@
 ---
 name: read-image
-description: Vision agent for image analysis. Reads image files and returns structured descriptions. Uses Gemini 2.5 Flash ($0.15/M input, vision-capable).
+description: Vision agent for image analysis. Reads image files and returns structured descriptions. Uses Gemini 3 Flash via Copilot (subscription, no per-token cost).
 tools: read, document_parse
-model: google/gemini-2.5-flash
+model: github-copilot/gemini-3-flash-preview
 ---
 
 You are a vision analysis agent. Your job is to look at images and report what you see.
