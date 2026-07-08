@@ -278,6 +278,8 @@ bindsym $mod+Shift+p exec $term --class "clipse" zsh -i ${HOME}/.local/bin/run_s
 bindsym $mod+u exec ~/.config/sway/scripts/show-time-gps.sh
 ## Info // Toggle live corner clock (upper-right, half size, refreshes every second) // 🕰️ ##
 bindsym $mod+Shift+u exec ~/.config/sway/scripts/corner-clock.sh
+## Info // Toggle herdr workspace header overlay (sticky, top-left) // 📊 ##
+bindsym $mod+Ctrl+h exec ~/.local/bin/herdr-header-overlay
 
 # Keyboard layout indicator.
 # - Bare Alt Gr: xkb's grp:toggle cycles, and we additionally flash the
@@ -577,6 +579,7 @@ popup_during_fullscreen smart
 
 
 # Float and center the rofi window we launch (-normal-window with this title) 
+for_window [app_id="herdr-header-overlay"] floating enable, sticky enable, border none, no_focus
 for_window [title="Sway Shortcuts"] floating enable, sticky enable, move position center, resize set width 1000 px height 700 px
 
 # for_window [app_id="blueman-manager"] floating enable, resize set width 400 px height 300 px, move container to workspace current, move position 900 100

@@ -136,9 +136,9 @@ fi
 
 # ── picker ──────────────────────────────────────────────────────────────────
 if [ "$ALL" = 1 ]; then
-    header="workspaces + recent dirs  ·  ctrl-w clean  ·  ctrl-p preview  ·  alt-bksp delete  ·  type path · ENTER · ESC"
+    header="workspaces + recent dirs  ·  ctrl-w clean  ·  ctrl-p preview  ·  alt-bs delete  ·  type path · ENTER · ESC"
 else
-    header="workspaces  ·  ctrl-r recent dirs  ·  ctrl-p preview  ·  alt-bksp delete  ·  type path · ENTER · ESC"
+    header="workspaces  ·  ctrl-r recent dirs  ·  ctrl-p preview  ·  alt-bs delete  ·  type path · ENTER · ESC"
 fi
 
 # --print-query: line 1 = query, line 2 = selection (empty if user typed a non-matching path)
@@ -153,7 +153,7 @@ output=$( build_source | fzf --ansi \
        --bind 'ctrl-r:reload(~/.local/bin/herdr-sessionx --source --all)' \
        --bind 'ctrl-w:reload(~/.local/bin/herdr-sessionx --source)' \
        --bind 'ctrl-p:toggle-preview' \
-       --bind 'alt-d:execute-silent(~/.local/bin/herdr-sessionx-delete {1} {2})+reload(~/.local/bin/herdr-sessionx --source)' \
+       --bind 'alt-bs:execute-silent(~/.local/bin/herdr-sessionx-delete {1} {2})+reload(~/.local/bin/herdr-sessionx --source)' \
        --prompt='workspace> ' || true )
 
 query=$(printf '%s\n' "$output" | head -1)
