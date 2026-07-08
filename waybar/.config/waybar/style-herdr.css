@@ -1,0 +1,23 @@
+* {
+    border: none;
+    border-radius: 0;
+    font-family: "Ubuntu Nerd Font";
+    font-size: 13px;
+    min-height: 0;
+    color: #cdd6f4;
+}
+
+/* Floating: transparent window, rounded inner box */
+window#waybar {
+    background-color: transparent;
+}
+window#waybar > box {
+    background-color: rgba(30, 30, 46, 0.9);
+    border-radius: 14px;
+    padding: 4px 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+}
+
+#custom-herdr {
+    padding: 2px 4px;
+}

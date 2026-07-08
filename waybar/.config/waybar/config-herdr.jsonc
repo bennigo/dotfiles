@@ -1,0 +1,19 @@
+{
+    "layer": "top",
+    "position": "top",
+    "height": 90,
+    "margin-top": 4,
+    "margin-left": 8,
+    "margin-right": 8,
+    "modules-left": ["custom/herdr"],
+    "modules-center": [],
+    "modules-right": [],
+    "custom/herdr": {
+        "exec": "~/.local/bin/herdr-waybar-status",
+        "return-type": "json",
+        "interval": 3,
+        "exec-on-event": false,
+        "tooltip": false,
+        "format": "{}"
+    }
+}

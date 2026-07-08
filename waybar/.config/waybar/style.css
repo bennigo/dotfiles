@@ -1,77 +1,30 @@
 * {
-    border: none;
-    border-radius: 0;
-    font-family: "Ubuntu Nerd Font";
-    font-size: 13px;
-    min-height: 0;
-    color: #cdd6f4;  /* catppuccin text */
+    border: none; border-radius: 0;
+    font-family: "Ubuntu Nerd Font"; font-size: 13px;
+    min-height: 0; color: #cdd6f4;
 }
 
-/* ── Floating bar: transparent window, rounded inner box ─── */
-/* window fills the reserved layer region (transparent so the gap
-   shows wallpaper); the inner box is the visible rounded bar.   */
-window#waybar {
-    background-color: transparent;
-}
-
+/* Floating rounded */
+window#waybar { background-color: transparent; }
 window#waybar > box {
-    background-color: rgba(30, 30, 46, 0.9);   /* catppuccin base */
-    border-radius: 14px;
-    margin: 8px 8px 0 8px;                      /* gap top + sides, none bottom (reserved) */
-    padding: 6px 10px;
+    background-color: rgba(30, 30, 46, 0.9);
+    border-radius: 14px; margin: 6px 8px 0 8px; padding: 4px 10px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
 }
 
-tooltip {
-    background: rgba(30, 30, 46, 0.96);
-    border: 1px solid rgba(108, 112, 134, 0.5);
-    border-radius: 8px;
-    padding: 6px 10px;
-}
-tooltip label { color: #cdd6f4; }
-
-/* ── Workspaces ──────────────────────────────────────────── */
-#workspaces {
-    margin: 0 6px 0 0;
-}
+/* Workspaces */
+#workspaces { margin: 0 4px 0 0; }
 #workspaces button {
-    padding: 0 6px;
-    background: transparent;
-    color: #9399b2;
-    border-top: 2px solid transparent;
-    border-radius: 6px;
-    margin: 0 1px;
+    padding: 0 6px; background: transparent; color: #9399b2;
+    border-top: 2px solid transparent; border-radius: 6px; margin: 0 1px;
 }
-#workspaces button.focused {
-    color: #cdd6f4;
-    background: rgba(137, 180, 250, 0.18);
-    border-top: 2px solid #89b4fa;
-}
+#workspaces button.focused { color: #cdd6f4; background: rgba(137,180,250,0.18); border-top-color: #89b4fa; }
 #workspaces button.urgent { color: #f38ba8; }
 
-/* ── herdr status (multiline) ────────────────────────────── */
-#custom-herdr {
-    padding: 0 8px;
-    margin-left: 6px;
-}
+/* Herdr */
+#custom-herdr { padding: 0 6px; margin-left: 4px; }
 
-/* ── Right-side toggles ──────────────────────────────────── */
-#language, #idle_inhibitor, #custom-dnd, #custom-menu {
-    padding: 0 8px;
-    margin: 0 2px;
-    border-radius: 6px;
-}
-#idle_inhibitor.activated {
-    background: rgba(249, 226, 175, 0.18);
-    color: #f9e2af;
-}
-#custom-dnd.dnd {
-    background: rgba(243, 139, 168, 0.18);
-    color: #f38ba8;
-}
-
-#mode {
-    background: #6c7086;
-    border-bottom: 3px solid #cdd6f4;
-    padding: 0 5px;
-}
+/* Right toggles */
+#language, #idle_inhibitor, #custom-dnd { padding: 0 8px; margin: 0 2px; }
+#idle_inhibitor.activated { color: #f9e2af; }
+#custom-dnd.dnd { color: #f38ba8; }
