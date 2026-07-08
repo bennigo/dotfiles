@@ -153,7 +153,7 @@ output=$( build_source | fzf --ansi \
        --bind 'ctrl-r:reload(~/.local/bin/herdr-sessionx --source --all)' \
        --bind 'ctrl-w:reload(~/.local/bin/herdr-sessionx --source)' \
        --bind 'ctrl-p:toggle-preview' \
-       --bind 'alt-d:execute-silent([ "{1}" = ws ] && herdr workspace close "{2}" 2>/dev/null)+reload(~/.local/bin/herdr-sessionx --source)' \
+       --bind 'alt-d:execute-silent(~/.local/bin/herdr-sessionx-delete {1} {2})+reload(~/.local/bin/herdr-sessionx --source)' \
        --prompt='workspace> ' || true )
 
 query=$(printf '%s\n' "$output" | head -1)
