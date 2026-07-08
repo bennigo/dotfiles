@@ -1,307 +1,63 @@
 {
-    "layer": "bottom",
+    "layer": "top",
     "position": "top",
-    "height": 20,
+    "height": 116,
+    "spacing": 6,
     "modules-left": [
         "custom/menu",
         "sway/workspaces",
-        "sway/window"
+        "custom/herdr"
     ],
-    "modules-center": [
-        "custom/wf-recorder",
-        "sway/mode"
-    ],
+    "modules-center": [],
     "modules-right": [
-        "custom/calendar",
-        "custom/weather",
-        "custom/wlsunset",
-        "custom/playerctl",
-        "custom/help",
-        "idle_inhibitor",
-        "custom/dnd",
         "sway/language",
-        "custom/clipboard",
-        "custom/git-sync",
-        "cpu",
-        "memory",
-        "battery",
-        "network",
-        "backlight",
-        "bluetooth",
-        "pulseaudio",
-        "clock",
-        "custom/power",
-        "tray"
+        "idle_inhibitor",
+        "custom/dnd"
     ],
     "sway/workspaces": {
         "disable-scroll": true,
         "all-outputs": true
     },
     "sway/language": {
-        "format": " {}",
+        "format": " {}",
         "min-length": 5,
         "tooltip": false,
         "on-click": "swaymsg input $(swaymsg -t get_inputs --raw | jq '[.[] | select(.type == \"keyboard\")][0] | .identifier') xkb_switch_layout next"
     },
-    "custom/clipboard": {
-        "format": "",
-        "interval": "once",
-        "return-type": "json",
-        "on-click": "swaymsg -q exec '$clipboard'; pkill -RTMIN+9 waybar",
-        "on-click-right": "swaymsg -q exec '$clipboard-del'; pkill -RTMIN+9 waybar",
-        "on-click-middle": "rm -f ~/.cache/cliphist/db; pkill -RTMIN+9 waybar",
-        "exec": "printf '{\"tooltip\":\"%s\"}' $(cliphist list | wc -l)' item(s) in the clipboard\r(Mid click to clear)'",
-        "exec-if": "[ -x \"$(command -v cliphist)\" ] && [ $(cliphist list | wc -l) -gt 0 ]",
-        "signal": 9
-    },
     "custom/menu": {
-        "format": "",
+        "format": "",
         "on-click": "exec nwg-drawer",
         "tooltip": false
     },
-    "sway/mode": {
-        "format": "<span style=\"italic\">{}</span>",
-        "tooltip": false
-    },
-    "sway/window": {
-        "format": "{}",
-        "max-length": 50,
-        "tooltip": true
-    },
-    "backlight#icon": {
-        "format": "{icon}",
-        "format-icons": [
-            ""
-        ],
-        "on-scroll-down": "brightnessctl -c backlight set 5%",
-        "on-scroll-up": "brightnessctl -c backlight set +5%-"
-    },
-    "backlight#value": {
-        "format": "{percent}%",
-        "on-scroll-down": "brightnessctl -c backlight set 5%",
-        "on-scroll-up": "brightnessctl -c backlight set +5%"
+    "custom/herdr": {
+        "exec": "~/.local/bin/herdr-waybar-status",
+        "return-type": "json",
+        "interval": 3,
+        "exec-on-event": false,
+        "tooltip": false,
+        "format": "{}"
     },
     "idle_inhibitor": {
         "format": "{icon}",
         "format-icons": {
-            "activated": "",
-            "deactivated": ""
+            "activated": "",
+            "deactivated": ""
         },
         "start-activated": false,
         "tooltip": true,
         "tooltip-format-activated": "power-saving disabled",
         "tooltip-format-deactivated": "power-saving enabled"
     },
-    "pulseaudio": {
-        "format": "{icon}  {volume}% {format_source}",
-        "format-bluetooth": "{icon} {volume}%",
-        "format-muted": " {format_source}",
-        "format-source": "  {volume}%",
-        "format-source-muted": "",
-        "format-icons": {
-            "headphone": "",
-            "headset": "",
-            "default": [
-                "",
-                "",
-                ""
-            ]
-        },
-        "tooltip-format": "{icon}  {volume}% {format_source}",
-        "on-click": "swaymsg exec \\$pulseaudio",
-        "on-click-middle": "swaymsg exec \\$volume_mute",
-        "on-click-right": "swaymsg exec pavucontrol",
-        "on-scroll-up": "swaymsg exec \\$volume_up",
-        "on-scroll-down": "swaymsg exec \\$volume_down"
-    },
-    "battery": {
-        "format": "{icon} {capacity}%",
-        "format-icons": [
-            "",
-            "",
-            "",
-            "",
-            ""
-        ]
-    },
-    "network": {
-        "format-wifi": "{essid} ({signalStrength}%) ",
-        "format-ethernet": "{essid} ({signalStrength}%) ",
-        // "format-ethernet": "{ifname} ",
-        "format-disconnected": "",
-        "tooltip-format": "{icon} {ifname}: {ipaddr}",
-        "tooltip-format-ethernet": "{icon} {ifname}: {ipaddr}",
-        "tooltip-format-wifi": "{icon} {ifname} ({essid}): {ipaddr}",
-        "tooltip-format-disconnected": "{icon} disconnected",
-        "tooltip-format-disabled": "{icon} disabled",
-        "on-click": "bash ~/.config/waybar/scripts/network-menu.sh",
-        // "on-click-middle": "nm-applet --indicator",
-        // "on-click-right": "nmtui"
-    },
-    // },
-    // "bluetooth": {
-    //   "format": "",
-    //   "format-icons": {
-    //     "enabled": "",
-    //     "disabled": "\udb80\udcb2"
-    //   },
-    //   "on-click": "blueman-manager"
-    // }
-    "bluetooth": {
-        "format": "",
-        "format-disabled": "\udb80\udcb2",
-        "format-no-controller": "!",
-        "on-click": "bash ~/.config/waybar/scripts/blueman-manager-toggle.sh",
-        "on-click-right": "rfkill toggle bluetooth",
-        "tooltip-format": "{}"
-    },
-    "clock": {
-        "format": "{:%e %b %H:%M}",
-        "tooltip": true,
-        "tooltip-format": "{:%d.%m.%Y %H:%M}",
-        "interval": 5,
-        "on-click": "swaymsg exec \\$calendar"
-    },
-    "cpu": {
-        "interval": 5,
-        "format": " {usage}%",
-        "states": {
-            "warning": 70,
-            "critical": 90
-        },
-        "on-click": "swaymsg exec \\$term_float htop"
-    },
-    "memory": {
-        "interval": 30,
-        "format": " {}%",
-        "states": {
-            "warning": 70,
-            "critical": 90
-        },
-        "on-click": "swaymsg exec \\$term_float htop"
-    },
-    "custom/wf-recorder": {
-        "interval": "once",
-        "return-type": "json",
-        "format": "{}",
-        "tooltip-format": "{tooltip}",
-        "exec": "echo '{\"class\": \"recording\",\"text\":\"\",\"tooltip\":\"press $mod+Esc to stop recording\"}'",
-        "exec-if": "pgrep wf-recorder",
-        "on-click": "killall -s SIGINT wf-recorder",
-        "signal": 8
-    },
-    // "custom/spotify": {
-    //     "exec": "/usr/bin/python3 ~/.local/bin/mediaplayer.py --player spotify",
-    //     "format": "{}  ",
-    //     "return-type": "json",
-    //     "on-click": "playerctl play-pause",
-    //     "on-scroll-up": "playerctl next",
-    //     "on-scroll-down": "playerctl previous"
-    // },
-    "custom/playerctl": {
-        "interval": "once",
-        "tooltip": true,
-        "return-type": "json",
-        "format": "{icon}",
-        "format-icons": {
-            "Playing": "",
-            "Paused": ""
-        },
-        "exec": "playerctl metadata --format '{\"alt\": \"{{status}}\", \"tooltip\": \"{{playerName}}:  {{markup_escape(title)}} - {{markup_escape(artist)}}\" }'",
-        "on-click": "playerctl play-pause; pkill -RTMIN+5 waybar",
-        "on-click-right": "playerctl next; pkill -RTMIN+5 waybar",
-        "on-scroll-up": "playerctl position 10+; pkill -RTMIN+5 waybar",
-        "on-scroll-down": "playerctl position 10-; pkill -RTMIN+5 waybar",
-        "signal": 5
-    },
-    "custom/power": {
-        "format": "",
-        "on-click": "nwg-bar -x"
-    },
     "custom/dnd": {
         "interval": "once",
         "return-type": "json",
         "format": "{}{icon}",
         "format-icons": {
-            "default": "",
-            "dnd": ""
+            "default": "",
+            "dnd": ""
         },
         "on-click": "makoctl mode | grep 'do-not-disturb' && makoctl mode -r do-not-disturb || makoctl mode -a do-not-disturb; pkill -RTMIN+11 waybar",
-        "exec": "printf '{\"alt\":\"%s\",\"tooltip\":\"Notification mode: %s\"}' $(makoctl mode | grep -q 'do-not-disturb' && echo dnd || echo default) $(makoctl mode | tail -1)",
+        "exec": "if makoctl mode | grep -q 'do-not-disturb'; then printf '{\"text\":\"\",\"class\":\"dnd\",\"tooltip\":\"Do Not Disturb on\"}'; else printf '{\"text\":\"\",\"class\":\"default\",\"tooltip\":\"Notifications on\"}'; fi",
         "signal": 11
-    },
-    "custom/weather": {
-        "icon-size": 42,
-        "format": "{icon} {}",
-        "tooltip": true,
-        "interval": 3600,
-        "exec": "~/.config/waybar/scripts/weather.py",
-        "return-type": "json",
-        "format-icons": {
-            "Unknown": "✨",
-            "Cloudy": "",
-            "Fog": "🌫",
-            "HeavyRain": "🌧",
-            "HeavyShowers": "🌧",
-            "HeavySnow": "❄️",
-            "HeavySnowShowers": "❄️",
-            "LightRain": "🌦",
-            "LightShowers": "🌦",
-            "LightSleet": "🌧",
-            "LightSleetShowers": "🌧",
-            "LightSnow": "🌨",
-            "LightSnowShowers": "🌨",
-            "PartlyCloudy": "⛅️",
-            "Sunny": "☀️",
-            "ThunderyHeavyRain": "🌩",
-            "ThunderyShowers": "⛈",
-            "ThunderySnowShowers": "⛈",
-            "VeryCloudy": ""
-        }
-    },
-    "custom/wlsunset": {
-        "interval": "once",
-        "tooltip": true,
-        "tooltip-format": "{tooltip}",
-        "return-type": "json",
-        "format": "{icon}",
-        "format-icons": {
-            "on": "",
-            "off": ""
-        },
-        "exec": "fallback_latitude=50.1 fallback_longitude=8.7 latitude= longitude= /usr/share/sway/scripts/sunset.sh",
-        "on-click": "~/.config/waybar/scripts/sunset.sh toggle; pkill -RTMIN+6 waybar",
-        "exec-if": "~/.config/waybar/scripts/sunset.sh check",
-        "signal": 6
-    },
-    "custom/help": {
-        "format": "",
-        "on-click": "/usr/share/sway/scripts/help.sh --toggle",
-        "tooltip": "false"
-    },
-    "custom/calendar": {
-        "exec": "~/.config/waybar/scripts/nextmeeting-waybar",
-        "return-type": "json",
-        "interval": 60,
-        "exec-on-event": false,
-        "tooltip": true,
-        "format": " {}",
-        "min-length": 5,
-        "on-click": "nextmeeting --open-meet-url 2>/dev/null; XDG_DATA_HOME=$HOME/.local/share/gcalcli-ki nextmeeting --open-meet-url 2>/dev/null",
-        "on-click-right": "bash ~/.config/waybar/scripts/calendar-agenda &"
-    },
-    "custom/git-sync": {
-        "exec": "/home/bgo/.config/waybar/scripts/git-sync-status",
-        "return-type": "json",
-        "interval": 60,
-        "exec-on-event": false,
-        "on-click": "/home/bgo/.config/waybar/scripts/git-sync-run",
-        "on-click-right": "/home/bgo/.config/waybar/scripts/git-sync-status-window",
-        "tooltip": true,
-        "format": " {}"
-    },
-    "tray": {
-        "icon-size": 21,
-        "spacing": 10
     }
 }
