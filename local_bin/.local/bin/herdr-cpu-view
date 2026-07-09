@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """herdr-cpu-view — live per-core CPU dashboard (runs inside a floating term).
 
-Compact grid layout: per-core usage bars arranged in columns (default 4) to
-keep the window short so it can sit at the top of the screen alongside a
-terminal. Below the grid: overall top processes + load/mem. Refreshes ~1s.
+Compact grid layout: per-core usage bars arranged in columns (default 4),
+each cell also showing the busiest process on that core + its memory, placed
+to the right. This keeps the window short (5 rows for 20 cores) so it can sit
+at the top of the screen alongside a terminal. Below: load/mem. Refreshes ~1s.
 q / Ctrl-C to quit (window is normally toggled with Win+Ctrl+t).
 Set HERDR_CPU_COLS to change the column count.
 """
@@ -17,7 +18,7 @@ GRN=fg("a6e3a1"); YEL=fg("f9e2af"); RED=fg("f38ba8"); BLU=fg("89b4fa")
 TEAL=fg("94e2d5"); PCH=fg("fab387"); LAV=fg("b4befe"); SUB=fg("6c7086"); TXT=fg("cdd6f4")
 BLOCKS=" ▏▎▍▌▋▊▉█"
 COLS=max(1,int(os.environ.get("HERDR_CPU_COLS","4")))
-BARW=10
+BARW=8
 
 def cpu_model():
     try:
@@ -41,18 +42,18 @@ def bar(pct,width=BARW):
     pad=width-full-(1 if frac else 0)
     return col+("█"*full)+frac+SUB+("░"*max(0,pad))+RST
 
-def top_procs(n=6):
-    out=[]
+def top_proc_per_core():
+    out={}
     try:
-        r=subprocess.run(['ps','-eo','pcpu,rss,comm','--sort=-pcpu','--no-headers'],
+        r=subprocess.run(['ps','-eo','psr,pcpu,rss,comm','--no-headers'],
                          capture_output=True,text=True,timeout=2)
         for line in r.stdout.splitlines():
-            f=line.split(None,2)
-            if len(f)<3: continue
-            try: pc=float(f[0]); rss=int(f[1])
+            f=line.split(None,3)
+            if len(f)<4: continue
+            try: psr=int(f[0]); pc=float(f[1]); rss=int(f[2])
             except ValueError: continue
-            out.append((f[2],pc,rss))
-            if len(out)>=n: break
+            if pc<=0: continue
+            if psr not in out or pc>out[psr][1]: out[psr]=(f[3],pc,rss)
     except Exception: pass
     return out
 
@@ -87,31 +88,32 @@ def main():
             for _ in range(10):
                 time.sleep(0.1)
                 if key_pressed(): return
-            cur=read_stat()
+            cur=read_stat(); procs=top_proc_per_core()
             out=[HOME]
-            out.append(f"{BLU}{BOLD}  {model}{RST}   {SUB}({ncores} logical cores){RST}\n\n")
-            # per-core usage cells, arranged in COLS columns (row-major)
+            out.append(f"{BLU}{BOLD}  {model}{RST}   {SUB}({ncores} logical cores){RST}\n")
+            # per-core cells: core | bar | pct | busiest proc | its mem
             ids=sorted(cur); cells=[]
             for n in ids:
                 t0,i0=prev.get(n,cur[n]); t1,i1=cur[n]
                 dt=t1-t0; di=i1-i0
                 pct=0 if dt<=0 else max(0,min(100,round(100*(dt-di)/dt)))
                 pcol=RED if pct>=80 else (YEL if pct>=50 else TXT)
-                cells.append(f"{TEAL}{n:>2}{SUB}│{RST}{bar(pct)} {pcol}{pct:>3}%{RST}")
+                ent=procs.get(n)
+                if ent:
+                    comm,pc,rss=ent; mb=rss//1024
+                    mem_s=f"{rss/1048576:.1f}G" if mb>=1024 else f"{mb}M"
+                    proc_s=f"{LAV}{comm[:14]:<14}{RST} {TEAL}{mem_s:>5}{RST}"
+                else:
+                    proc_s=f"{SUB}{'idle':<14}{RST}      "
+                cells.append(f"{TEAL}{n:>2}{SUB}│{RST}{bar(pct)} {pcol}{pct:>3}%{RST} {proc_s}")
             rows=(len(cells)+COLS-1)//COLS
             for r in range(rows):
                 line="  "
                 for c in range(COLS):
                     idx=r*COLS+c
-                    if idx<len(cells): line+=cells[idx]+"   "
+                    if idx<len(cells): line+=cells[idx]+"      "
                 out.append(line.rstrip()+"\n")
-            # overall top processes
-            out.append(f"\n{SUB}  top   process              cpu      mem{RST}\n")
-            for comm,pc,rss in top_procs(6):
-                mb=rss//1024
-                mem_s=f"{rss/1048576:.1f}G" if mb>=1024 else f"{mb}M"
-                out.append(f"        {LAV}{comm[:18]:<18}{RST} {PCH}{pc:>4.0f}%{RST}  {TEAL}{mem_s:>6}{RST}\n")
-            out.append(f"\n  {sysline()}    {SUB}⟳ 1s   Win+Ctrl+t / q to close{RST}\n")
+            out.append(f"  {sysline()}    {SUB}⟳ 1s   Win+Ctrl+t / q to close{RST}\n")
             sys.stdout.write("".join(out)); sys.stdout.flush()
             prev=cur
     except KeyboardInterrupt:

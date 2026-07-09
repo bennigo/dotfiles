@@ -6,7 +6,6 @@
 set -eu
 
 APPID=herdr-cpu
-WIN_W=1000          # keep in sync with the sway `resize set width` rule
 MARGIN=8            # gap below the top bar
 
 # Toggle: if it's already open, close it (focus stays on the terminal).
@@ -15,19 +14,23 @@ if swaymsg -t get_tree | grep -q "\"app_id\": \"$APPID\""; then
     exit 0
 fi
 
-# Launch in the background so we can reposition it once it maps.
-~/.local/bin/kitty --class "$APPID" -o font_size=12 \
+# Launch in the background so we can reposition it once it maps. Size/floating/
+# sticky are handled by the sway rule (resize set …); this only toggles and
+# centers the window at the top of the focused output.
+~/.local/bin/kitty --class "$APPID" -o font_size=11 \
     -e ~/.local/bin/herdr-cpu-view &
 
-# Compute top-center X/Y on the currently focused output.
+# Focused output geometry (for centering).
 read -r ox oy ow < <(swaymsg -t get_outputs \
     | jq -r '.[]|select(.focused)|"\(.rect.x) \(.rect.y) \(.rect.width)"')
-x=$(( ox + (ow - WIN_W) / 2 )); [ "$x" -lt "$ox" ] && x=$ox
 y=$(( oy + MARGIN ))
 
-# Wait for the window to appear, then move it (move does not steal focus).
+# Wait for the window, read its actual width, then center it at the top.
 for _ in $(seq 1 60); do
-    if swaymsg -t get_tree | grep -q "\"app_id\": \"$APPID\""; then
+    winw=$(swaymsg -t get_tree \
+        | jq -r ".. | objects | select(.app_id==\"$APPID\") | .rect.width" | head -1)
+    if [ -n "${winw:-}" ]; then
+        x=$(( ox + (ow - winw) / 2 )); [ "$x" -lt "$ox" ] && x=$ox
         swaymsg "[app_id=\"$APPID\"] move position $x $y" >/dev/null 2>&1 || true
         break
     fi
