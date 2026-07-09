@@ -116,6 +116,14 @@ sudo systemctl daemon-reload
 sudo systemctl start suspend-failed-notify.service   # test the popup
 ```
 
+**Prevention (fail-fast NFS)**: the `/mnt_data/*` NFS mounts in `etc/fstab` (and the
+Ansible `base` blockinfile) carry `soft,timeo=50,retrans=2`. A stalled NFS op now
+returns `EIO` after ~15s (under the 20s freezer window) instead of parking a task in
+D-state, so suspend can complete. Trade-off: GPS jobs may see read/write errors during
+a genuine network stall (accepted; the mounts are read-dominated, `rawgpsdata` is `ro`).
+Note: `soft`/`hard` can't be toggled by remount — already-mounted shares keep their old
+behavior until they idle-unmount (automount) or a reboot.
+
 ### Thunderbolt 4 Resume Fix
 **File**: `usr/lib/systemd/system-sleep/thunderbolt-fix`
 
