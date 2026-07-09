@@ -84,4 +84,36 @@ battery)
     [ -z "$bat_s" ]&&bat_s="$(sp "$dim" "🔋 —")"
     emit "$bat_s" "metric-battery" "Click: power menu"
     ;;
+bluetooth)
+    bt=""; names=""
+    if command -v bluetoothctl >/dev/null 2>&1; then
+        while read -r _ mac rest; do
+            [ -z "$mac" ]&&continue
+            ico=$(bluetoothctl info "$mac" 2>/dev/null|sed 's/\x1b\[[0-9;]*m//g'|awk -F': ' '/Icon:/{print $2;exit}')
+            case "$ico" in
+                audio-headset|audio-headphones) gi="󰋋" ;;
+                audio-card|audio-speakers)      gi="󰓃" ;;
+                earbuds)                        gi="󱚇" ;;
+                input-keyboard)                 gi="󰌌" ;;
+                input-mouse|input-tablet)       gi="󰍽" ;;
+                input-gaming)                   gi="󰮓" ;;
+                phone)                          gi="󰏲" ;;
+                watch|wearable)                 gi="󰥔" ;;
+                *)                              gi="󰂱" ;;
+            esac
+            bt="${bt}${bt:+ }$(sp "$b" "$gi")"
+            names="${names}${names:+, }${rest}"
+        done < <(bluetoothctl devices Connected 2>/dev/null|sed 's/\x1b\[[0-9;]*m//g')
+    fi
+    if [ -n "$bt" ]; then
+        emit "$(sp "$b" "󰂱") $bt" "metric-bt" "Connected: $names — click: bluetooth manager"
+    else
+        pw=$(bluetoothctl show 2>/dev/null|sed 's/\x1b\[[0-9;]*m//g'|awk -F': ' '/Powered:/{print $2;exit}')
+        if [ "$pw" = "yes" ]; then
+            emit "$(sp "$dim" "󰂯")" "metric-bt" "Bluetooth on, no devices — click: manager"
+        else
+            emit "$(sp "$dim" "󰂲")" "metric-bt" "Bluetooth off — click: manager"
+        fi
+    fi
+    ;;
 esac
