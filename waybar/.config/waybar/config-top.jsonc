@@ -7,7 +7,8 @@
     "margin-right": 10,
     "spacing": 4,
     "modules-left": [
-        "sway/workspaces"
+        "sway/workspaces",
+        "custom/git-sync"
     ],
     "modules-center": [],
     "modules-right": [
@@ -56,6 +57,14 @@
         "on-click": "makoctl mode | grep -qx 'do-not-disturb' && makoctl mode -r do-not-disturb || makoctl mode -a do-not-disturb; pkill -RTMIN+11 waybar",
         "exec": "if makoctl mode | grep -qx 'do-not-disturb'; then printf '{\"text\":\"\ud83d\udd15\",\"tooltip\":\"Do Not Disturb ON\"}'; else printf '{\"text\":\"\ud83d\udd14\",\"tooltip\":\"Notifications on\"}'; fi",
         "signal": 11
+    },
+    "custom/git-sync": {
+        "exec": "~/.local/bin/herdr-waybar-gitsync",
+        "return-type": "json", "interval": 90, "format": "{}", "signal": 17,
+        "on-click": "~/.config/waybar/scripts/git-sync-run",
+        "on-click-right": "~/.local/bin/kitty --app-id=git_sync_float -e bash -lc 'dotfiles-sync --status; echo; read -n1 -s -p \"press any key…\"'",
+        "on-click-middle": "pkill -RTMIN+17 waybar",
+        "tooltip": true
     },
     "custom/bluetooth": {
         "exec": "~/.local/bin/herdr-waybar-metrics bluetooth",
