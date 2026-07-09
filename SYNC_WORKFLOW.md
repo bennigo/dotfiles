@@ -92,8 +92,16 @@ Add to your Waybar config (`~/.config/waybar/config`):
 ### 4. Automatic Periodic Sync (Optional)
 
 **Location**: `~/.config/systemd/user/password-store-sync.{service,timer}`
+              `~/.config/systemd/user/bgovault-sync.{service,timer}`
 
-**Schedule**:
+Two timers, split by risk profile:
+
+| Timer | Runs | Interval | Why |
+|-------|------|----------|-----|
+| `password-store-sync.timer` | `dotfiles-sync` (dotfiles + claude + pass + vault) | **4h** + 9/13/17/21 | Full sync does `git add .` and auto-commits the *entire* dotfiles working tree with a generated message. A short interval would commit mid-edit WIP with junk messages, so keep it conservative. |
+| `bgovault-sync.timer` | `dotfiles-sync --vault-only` | **hourly** + top-of-hour | Vault sync is **push-only** (pull --rebase --autostash + push), never auto-commits, so it is safe to run often. Obsidian Git commits the vault but its GUI process lacks the ssh-agent and can't push — this closes that gap. |
+
+**Schedule** (`password-store-sync.timer`):
 - Every 4 hours while system is running
 - Daily at 9am, 1pm, 5pm, 9pm
 - 10 minutes after boot
@@ -342,7 +350,8 @@ killall waybar; waybar &
 
 ### Change Sync Frequency
 
-Edit `~/.config/systemd/user/password-store-sync.timer`:
+**Full sync** (auto-commits dotfiles — keep conservative) — edit
+`~/.config/systemd/user/password-store-sync.timer`:
 ```ini
 # Current: every 4 hours
 OnUnitActiveSec=4h
@@ -354,11 +363,8 @@ OnUnitActiveSec=2h
 OnUnitActiveSec=12h
 ```
 
-Then reload:
-```bash
-systemctl --user daemon-reload
-systemctl --user restart password-store-sync.timer
-```
+**Vault push** (push-only — safe to run often) — edit
+`~/.config/systemd/user/bgovault-sync.timer` (currently `OnUnitActiveSec=1h`).
 
 ### Disable Automatic Sync
 
