@@ -35,14 +35,14 @@ network)
 localip)
     lip=$(ip -o -4 addr show dev "$(wifi_dev)" 2>/dev/null|awk '{print $4}'|cut -d/ -f1|head -1)
     [ -z "$lip" ]&&lip="—"
-    emit "$(sp "$o" "🌐") $(sp "$dim" "$lip")" "metric-ip" "Click: copy local IP ($lip)"
+    emit "$(sp "$o" "🌐") $(sb "$t" "$lip")" "metric-ip" "Click: copy local IP ($lip)"
     ;;
 pubip)
     PUB="$XDG_RUNTIME_DIR/herdr-pubip"; pub=""
     [ -f "$PUB" ]&&{ read -r ts pub2 < "$PUB"; [ $(($(date +%s)-ts)) -lt 300 ]&&pub="$pub2";}
     [ -z "$pub" ]&&{ pub=$(dig +short myip.opendns.com @resolver1.opendns.com 2>/dev/null|head -1); [ -n "$pub" ]&&printf '%s %s\n' "$(date +%s)" "$pub" > "$PUB";}
     [ -z "$pub" ]&&pub="…"
-    emit "$(sp "$o" "🌍") $(sp "$dim" "$pub")" "metric-ip" "Click: copy public IP ($pub)"
+    emit "$(sp "$o" "🌍") $(sb "$t" "$pub")" "metric-ip" "Click: copy public IP ($pub)"
     ;;
 vpn)
     vif=$(ip -o link show up 2>/dev/null|awk -F': ' '{print $2}'|cut -d'@' -f1|grep -iE '^(tun|tap|wg|cscotun)'|head -1)
