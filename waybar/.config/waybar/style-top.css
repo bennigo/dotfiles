@@ -2,13 +2,14 @@
     border: none; border-radius: 0; min-height: 0;
     font-family: "Ubuntu Nerd Font"; font-size: 13px; color: #cdd6f4;
 }
-window#waybar { background: rgba(30, 30, 46, 0.4); border: 1px solid rgba(249, 226, 175, 0.25); }
+window#waybar { background: rgba(24, 24, 37, 0.3); border: 1px solid rgba(114, 135, 253, 0.22); border-radius: 12px; }
 #workspaces { margin: 0 4px 0 0; }
 #workspaces button {
-    padding: 0 6px; margin: 0 1px; background: transparent; color: #9399b2;
-    border-top: 2px solid transparent; border-radius: 6px;
+    padding: 0 7px; margin: 0 1px; background: transparent; color: #b4befe;
+    font-weight: bold; border-top: 2px solid transparent; border-radius: 6px;
 }
-#workspaces button.focused { color: #cdd6f4; background: rgba(137,180,250,0.18); border-top-color: #89b4fa; }
+#workspaces button.focused { color: #1e1e2e; font-weight: bold; background: #89b4fa; border-top-color: #89b4fa; }
+#workspaces button:hover { background: rgba(137,180,250,0.25); color: #cdd6f4; }
 #custom-bluetooth, #language, #idle_inhibitor, #custom-dnd, #custom-power {
     padding: 0 6px; margin: 0 1px; border-radius: 4px;
 }
