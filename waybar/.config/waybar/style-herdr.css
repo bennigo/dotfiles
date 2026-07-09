@@ -4,10 +4,13 @@
     font-size: 17px; color: #cdd6f4;
 }
 window#waybar { background-color: transparent; }
-window#waybar > box {
+window#waybar > box { background-color: transparent; }
+/* The visible "bar" is the module widget itself: content-sized and centered
+   by modules-center, so it grows symmetrically instead of to one side. */
+#custom-herdr {
     background-color: rgba(30, 30, 46, 0.6);
-    border-radius: 14px; padding: 6px 14px;
+    border-radius: 14px;
+    padding: 6px 16px;
     box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
     border: 1px solid rgba(249, 226, 175, 0.35);
 }
-#custom-herdr { padding: 0 6px; }

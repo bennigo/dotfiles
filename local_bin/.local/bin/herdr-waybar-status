@@ -74,22 +74,32 @@ def get_context():
                     cwd = panes[foc].get('cwd', cwd); break
     except Exception: pass
     branch, dirty = "", 0
+    ahead = behind = 0
     if cwd and os.path.isdir(cwd):
         br = run(['git','-C',cwd,'rev-parse','--abbrev-ref','HEAD'])
         if br and br.returncode == 0:
             branch = br.stdout.strip()
             st = run(['git','-C',cwd,'status','--porcelain'])
             if st: dirty = len([x for x in st.stdout.splitlines() if x.strip()])
+            # ahead/behind vs upstream: output "behind<TAB>ahead"
+            ab = run(['git','-C',cwd,'rev-list','--left-right','--count','@{u}...HEAD'])
+            if ab and ab.returncode == 0:
+                try:
+                    behind, ahead = (int(x) for x in ab.stdout.split())
+                except Exception:
+                    ahead = behind = 0
     home = os.path.expanduser('~')
     disp = cwd or '?'
     if cwd and cwd.startswith(home): disp = '~' + cwd[len(home):]
 
     out = f'{sp(P,"\uf0e8")} {sb(P,"w"+str(num))}{sep()}{sp(B,"\uf07b")} {sb(B,disp)}'
     if branch:
-        if dirty > 0:
-            out += f'{sep()}{sp(Y,"\ue0a0")} {sb(Y,branch)}{sp(R," \uf111 "+str(dirty))}'
-        else:
-            out += f'{sep()}{sp(G,"\ue0a0")} {sb(G,branch)}{sp(G," \uf00c")}'
+        out += f'{sep()}{sp(Y,"\ue0a0")} {sb(Y,branch)}'
+        if ahead:   out += sp(G, f' \uf062{ahead}')    # arrow-up: commits to push
+        if behind:  out += sp(R, f' \uf063{behind}')   # arrow-down: commits to pull
+        if dirty:   out += sp(R, f' \uf111{dirty}')     # dot: uncommitted changes
+        if not (ahead or behind or dirty):
+            out += sp(G, ' \uf00c')                     # check: clean & in sync
     return out
 
 # ── dates / GPS ──────────────────────────────────────────
