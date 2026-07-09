@@ -1,0 +1,18 @@
+#!/bin/bash
+# herdr-waybar-lang — show the active keyboard layout as a short code (US/IS/…).
+# waybar's sway/language {short} renders "..." on some builds; this is reliable.
+set -eu
+name=$(swaymsg -t get_inputs --raw 2>/dev/null \
+    | python3 -c "import json,sys; d=json.load(sys.stdin); print(next((k.get('xkb_active_layout_name','') for k in d if k.get('type')=='keyboard'),''))" 2>/dev/null)
+case "$name" in
+    *"(US)"*|"English"*) code="US" ;;
+    *Iceland*)            code="IS" ;;
+    *German*)             code="DE" ;;
+    *French*)             code="FR" ;;
+    *Spanish*)            code="ES" ;;
+    *Arabic*)             code="AR" ;;
+    *Chinese*)            code="ZH" ;;
+    "")                   code="--" ;;
+    *)                    code=$(printf '%s' "$name" | tr -cd '[:alpha:]' | cut -c1-2 | tr '[:lower:]' '[:upper:]') ;;
+esac
+printf '{"text":"\udb80\udf0c %s","tooltip":"%s — click: switch layout"}\n' "$code" "$name"
