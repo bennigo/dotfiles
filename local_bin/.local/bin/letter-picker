@@ -9,7 +9,7 @@ DATA=/usr/lib/python3/dist-packages/picker/data
 CACHE="${XDG_RUNTIME_DIR:-/tmp}/letter-picker.cache"
 
 # language keyword -> rofimoji data files (space separated)
-declare -A GROUPS=(
+declare -A SCRIPTS=(
     [russian]="cyrillic cyrillic_supplement"
     [greek]="greek_and_coptic greek_extended"
     [arabic]="arabic arabic_supplement"
@@ -20,7 +20,7 @@ declare -A GROUPS=(
 
 build() {
     for lang in russian greek arabic japanese chinese symbol; do
-        for f in ${GROUPS[$lang]}; do
+        for f in ${SCRIPTS[$lang]}; do
             [ -f "$DATA/$f.csv" ] || continue
             # "<char> <description>"  ->  "<char>\t<lang> <description>"
             awk -v L="$lang" '{c=$1; $1=""; sub(/^[ \t]+/,""); printf "%s\t%s %s\n", c, L, $0}' "$DATA/$f.csv"
