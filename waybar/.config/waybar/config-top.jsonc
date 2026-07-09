@@ -58,10 +58,11 @@
         "signal": 11
     },
     "custom/bluetooth": {
-        "format": "󰂯",
+        "exec": "~/.local/bin/herdr-waybar-metrics bluetooth",
+        "return-type": "json", "interval": 10, "format": "{}", "signal": 16,
         "on-click": "blueman-manager",
-        "on-click-right": "rfkill toggle bluetooth",
-        "tooltip": false
+        "on-click-right": "rfkill toggle bluetooth; sleep 1; pkill -RTMIN+16 waybar",
+        "tooltip": true
     },
     "custom/power": {
         "format": "⏻",
