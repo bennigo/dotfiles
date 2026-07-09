@@ -1,9 +1,11 @@
 #!/bin/bash
-# herdr-powermenu — rofi power menu (suspend · reboot · shutdown)
+# herdr-powermenu — rofi power menu (lock · suspend · reboot · shutdown)
 set -euo pipefail
-choice=$(printf '⏾  Suspend\n🔄  Restart Sway\n↻  Reboot\n⏻  Shutdown' | \
+wallpaper="${XDG_CONFIG_HOME:-$HOME/.config}/sway/wallpapers/mahdi-khomsaz-asset.jpg"
+choice=$(printf '\U000f033e  Lock\n⏾  Suspend\n🔄  Restart Sway\n↻  Reboot\n⏻  Shutdown' | \
     rofi -dmenu -p 'Power' -theme-str 'window {width: 200px;}' 2>/dev/null)
 case "$choice" in
+    *Lock*)      swaylock -f -c 000000 -i "$wallpaper" ;;
     *Suspend*)   systemctl suspend ;;
     *Restart*)   swaymsg reload ;;
     *Reboot*)    systemctl reboot ;;
