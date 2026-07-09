@@ -57,7 +57,8 @@ def sysline():
     nc=os.cpu_count() or 1
     try:
         mm=subprocess.run(['free','-h'],capture_output=True,text=True).stdout
-        mem=[x for x in mm.splitlines() if x.startswith('Mem:')][0].split()[2]
+        mmp=[x for x in mm.splitlines() if x.startswith('Mem:')][0].split()
+        mem=f"{mmp[2]}/{mmp[1]}"
     except Exception: mem='?'
     return f"{PCH}{BOLD}load {ld}{RST}{SUB}/{nc}{RST}    {TEAL}{BOLD}mem {mem}{RST}"
 
