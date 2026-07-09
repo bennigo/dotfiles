@@ -4,3 +4,9 @@
     name: tlp
     state: restarted
     enabled: yes
+
+- name: restart bluetooth
+  systemd:
+    name: bluetooth
+    state: restarted
+    enabled: yes
