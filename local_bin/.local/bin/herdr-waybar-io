@@ -1,0 +1,37 @@
+#!/bin/bash
+# herdr-waybar-io — waybar modules for volume / microphone / brightness.
+# Arg: volume | mic | brightness   (each its own module in the top bar)
+set -eu
+b=#89b4fa; g=#a6e3a1; y=#f9e2af; r=#f38ba8; t=#94e2d5; p=#fab387; l=#b4befe
+o=#939ab7; dim="#6c7086cc"
+sp(){ printf '<span color="%s">%s</span>' "$1" "$2"; }
+sb(){ printf '<span color="%s" font_weight="bold">%s</span>' "$1" "$2"; }
+emit(){ python3 -c "import json,sys;print(json.dumps({'text':sys.argv[1],'tooltip':sys.argv[2]}))" "$1" "${2:-}"; }
+
+case "${1:-}" in
+volume)
+    raw=$(wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null || echo "Volume: 0")
+    vol=$(echo "$raw"|awk '{printf "%d", $2*100}')
+    if echo "$raw"|grep -q MUTED; then
+        emit "$(sp "$r" "󰖁") $(sb "$dim" "${vol}%")" "Volume ${vol}% (muted) — click: unmute, scroll: adjust"
+    else
+        [ "$vol" -ge 66 ]&&ic="󰕾"||{ [ "$vol" -ge 33 ]&&ic="󰖀"||ic="󰕿"; }
+        emit "$(sp "$l" "$ic") $(sb "$l" "${vol}%")" "Volume ${vol}% — click: mute, scroll: adjust"
+    fi
+    ;;
+mic)
+    raw=$(wpctl get-volume @DEFAULT_AUDIO_SOURCE@ 2>/dev/null || echo "Volume: 0")
+    vol=$(echo "$raw"|awk '{printf "%d", $2*100}')
+    if echo "$raw"|grep -q MUTED; then
+        emit "$(sp "$r" "󰍭") $(sb "$dim" "${vol}%")" "Mic muted (gain ${vol}%) — click: unmute, scroll: sensitivity"
+    else
+        emit "$(sp "$t" "󰍬") $(sb "$t" "${vol}%")" "Mic ${vol}% — click: mute, scroll: sensitivity"
+    fi
+    ;;
+brightness)
+    line=$(brightnessctl -m 2>/dev/null|head -1)
+    pct=$(echo "$line"|cut -d, -f4|tr -d '%')
+    [ -z "$pct" ]&&pct="?"
+    emit "$(sp "$y" "󰃟") $(sb "$y" "${pct}%")" "Brightness ${pct}% — scroll: adjust"
+    ;;
+esac

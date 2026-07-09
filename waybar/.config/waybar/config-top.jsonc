@@ -18,6 +18,9 @@
         "custom/sysmon",
         "custom/cpu",
         "custom/battery",
+        "custom/brightness",
+        "custom/volume",
+        "custom/mic",
         "custom/bluetooth",
         "clock",
         "sway/language",
@@ -105,5 +108,25 @@
         "exec": "~/.local/bin/herdr-waybar-metrics battery",
         "return-type": "json", "interval": 10, "format": "{}",
         "on-click": "~/.local/bin/herdr-powermenu"
+    },
+    "custom/brightness": {
+        "exec": "~/.local/bin/herdr-waybar-io brightness",
+        "return-type": "json", "interval": 5, "format": "{}", "signal": 14,
+        "on-scroll-up": "brightnessctl set 5%+; pkill -RTMIN+14 waybar",
+        "on-scroll-down": "brightnessctl set 5%-; pkill -RTMIN+14 waybar"
+    },
+    "custom/volume": {
+        "exec": "~/.local/bin/herdr-waybar-io volume",
+        "return-type": "json", "interval": 5, "format": "{}", "signal": 12,
+        "on-click": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle; pkill -RTMIN+12 waybar",
+        "on-scroll-up": "wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%+; pkill -RTMIN+12 waybar",
+        "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-; pkill -RTMIN+12 waybar"
+    },
+    "custom/mic": {
+        "exec": "~/.local/bin/herdr-waybar-io mic",
+        "return-type": "json", "interval": 5, "format": "{}", "signal": 13,
+        "on-click": "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle; pkill -RTMIN+13 waybar",
+        "on-scroll-up": "wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SOURCE@ 5%+; pkill -RTMIN+13 waybar",
+        "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 5%-; pkill -RTMIN+13 waybar"
     }
 }
