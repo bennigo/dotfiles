@@ -1,0 +1,24 @@
+[Unit]
+Description=Push bgovault (Obsidian vault) to remote
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+# --vault-only is PUSH-ONLY (pull --rebase --autostash + push). It never
+# auto-commits, so it is safe to run frequently (hourly). Commits stay
+# Obsidian Git's job; this just gets them off the box (Obsidian's GUI process
+# lacks the ssh-agent, so its own push silently fails).
+ExecStart=%h/.local/bin/dotfiles-sync --vault-only
+StandardOutput=journal
+StandardError=journal
+
+# Environment
+Environment="PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin"
+
+# Security hardening
+# NOTE: PrivateTmp=true is intentionally NOT set. It creates a new user namespace
+# (not just a mount namespace), and Linux 6.17 blocks write() on TCP sockets from
+# unprivileged user namespaces — which breaks OpenSSH (uses write() not sendto()).
+# NoNewPrivileges=true is safe; confirmed not to affect network access.
+NoNewPrivileges=true
