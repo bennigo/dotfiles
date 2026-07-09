@@ -49,3 +49,27 @@
     mode: '0440'
   tags: ["laptop", "brightness", "sudo"]
   when: hardware_roles.laptop.enabled
+
+- name: Enable BlueZ Experimental / LE Audio (needed for LE-Audio earbuds e.g. JBL)
+  # LE-Audio (LC3) earbuds pair over BLE and expose no classic A2DP profile
+  # unless BlueZ experimental features are on. Without this there is no audio
+  # sink and no sound. Both flags live under [General] in main.conf.
+  block:
+    - name: Enable Experimental in bluetooth main.conf
+      lineinfile:
+        path: /etc/bluetooth/main.conf
+        regexp: '^#?\s*Experimental\s*='
+        line: 'Experimental = true'
+        insertafter: '^\[General\]'
+        backup: yes
+
+    - name: Enable KernelExperimental in bluetooth main.conf
+      lineinfile:
+        path: /etc/bluetooth/main.conf
+        regexp: '^#?\s*KernelExperimental\s*='
+        line: 'KernelExperimental = true'
+        insertafter: '^\[General\]'
+        backup: yes
+  notify: restart bluetooth
+  tags: ["laptop", "bluetooth", "audio"]
+  when: hardware_roles.laptop.enabled

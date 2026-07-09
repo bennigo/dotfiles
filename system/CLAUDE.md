@@ -118,6 +118,51 @@ sudo cp etc/udev/rules.d/99-tb4-xhci-pm.rules /etc/udev/rules.d/
 sudo udevadm control --reload-rules
 ```
 
+### Bluetooth LE Audio (LC3 earbuds — e.g. JBL Tour Pro 3)
+**Config**: `/etc/bluetooth/main.conf` — `Experimental = true` + `KernelExperimental = true`
+**Ansible**: `roles/hardware/laptop` (tag `bluetooth`)
+
+LE-Audio earbuds pair over BLE (Google Fast Pair) and expose **no classic A2DP
+profile** unless BlueZ experimental features are enabled — so PipeWire has no audio
+sink and there is no sound. Enabling the two flags (and restarting `bluetooth`)
+lets the device negotiate audio.
+
+If a bud was previously bonded LE-only you may see `br-connection-key-missing` on
+connect — the classic link key is broken. Fix by re-pairing fresh:
+```bash
+bluetoothctl remove <MAC>           # drop the stale LE-only bond
+# put earbuds in pairing mode (hold case button until LED blinks),
+# disconnect them from any phone (multipoint steals the classic link)
+bluetoothctl --timeout 30 scan on &
+bluetoothctl pair <MAC>; bluetoothctl trust <MAC>; bluetoothctl connect <MAC>
+wpctl status | grep -i bluez        # expect Active Profile: a2dp-sink
+```
+
+### Login / Boot Performance (SSSD removal + NFS automount)
+**Ansible**: `roles/base` (tags `sssd`, `auth`, `filesystem`)
+
+Two latent issues on fresh Ubuntu installs, both fixed in Ansible:
+
+1. **SSSD lockout / slow prompt** — Ubuntu ships `sssd` + `libpam-sss` + `libnss-sss`
+   pre-installed, wiring `sss` into NSS (`nsswitch.conf`) and PAM (`common-auth`).
+   With no `/etc/sssd/sssd.conf` (not domain-joined) every login/lookup hits the
+   dead SSSD socket and **times out ~30s** → `swaylock` can't unlock (forced reboot)
+   and the shell prompt is delayed after boot. Fix: purge the sss packages
+   (auto-cleans PAM via pam-auth-update) and strip `sss` from `nsswitch.conf`.
+   Local `files` users don't need it.
+2. **NFS mounts block boot** — the vedur.is `/mnt_data/*` NFS shares must use
+   `nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10` (NOT `nfs
+   defaults`). Otherwise each blocks boot ~25s when off the network/VPN. Automount
+   mounts them on first access instead.
+
+Manual re-apply (if a reinstall restores defaults):
+```bash
+sudo apt purge -y 'sssd*' libpam-sss libnss-sss
+sudo sed -i -E 's/[[:space:]]+sss\b//g' /etc/nsswitch.conf
+# ensure /mnt_data/* fstab lines use nofail,_netdev,x-systemd.automount,...
+sudo systemctl daemon-reload
+```
+
 ### Cisco VPN Local Route Fix
 **File**: `etc/NetworkManager/dispatcher.d/99-fix-vpn-local-routes`
 
