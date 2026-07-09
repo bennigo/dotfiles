@@ -1,25 +1,27 @@
 {
     "layer": "top",
     "position": "top",
-    "height": 80,
-    "spacing": 6,
+    "height": 72,
+    "spacing": 4,
     "modules-left": [
-        "sway/workspaces",
-        "custom/herdr"
+        "sway/workspaces"
     ],
     "modules-center": [],
     "modules-right": [
+        "custom/herdr",
+        "custom/bluetooth",
         "sway/language",
         "idle_inhibitor",
-        "custom/dnd"
+        "custom/dnd",
+        "custom/power"
     ],
     "sway/workspaces": {
         "disable-scroll": true,
         "all-outputs": true
     },
     "sway/language": {
-        "format": " {}",
-        "min-length": 5,
+        "format": "󰌌 {}",
+        "min-length": 3,
         "tooltip": false,
         "on-click": "swaymsg input $(swaymsg -t get_inputs --raw | jq '[.[] | select(.type == \"keyboard\")][0] | .identifier') xkb_switch_layout next"
     },
@@ -50,8 +52,19 @@
             "default": "🔔",
             "dnd": "🔕"
         },
-        "on-click": "makoctl mode | grep 'do-not-disturb' && makoctl mode -r do-not-disturb || makoctl mode -a do-not-disturb; pkill -RTMIN+11 waybar",
+        "on-click": "makoctl mode | grep -q 'do-not-disturb' && makoctl mode -r do-not-disturb || makoctl mode -a do-not-disturb; pkill -SIGRTMIN+11 waybar",
         "exec": "if makoctl mode | grep -q 'do-not-disturb'; then printf '{\"text\":\"\",\"class\":\"dnd\",\"tooltip\":\"Do Not Disturb on\"}'; else printf '{\"text\":\"\",\"class\":\"default\",\"tooltip\":\"Notifications on\"}'; fi",
         "signal": 11
+    },
+    "custom/bluetooth": {
+        "format": "",
+        "on-click": "blueman-manager",
+        "on-click-right": "rfkill toggle bluetooth",
+        "tooltip": false
+    },
+    "custom/power": {
+        "format": "⏻",
+        "on-click": "~/.local/bin/herdr-powermenu",
+        "tooltip": false
     }
 }
