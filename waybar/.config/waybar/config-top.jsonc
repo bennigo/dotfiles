@@ -23,7 +23,7 @@
         "custom/mic",
         "custom/bluetooth",
         "clock",
-        "sway/language",
+        "custom/language",
         "idle_inhibitor",
         "custom/dnd",
         "custom/power"
@@ -32,11 +32,11 @@
         "disable-scroll": true,
         "all-outputs": true
     },
-    "sway/language": {
-        "format": "󰌌 {short}",
+    "custom/language": {
+        "exec": "~/.local/bin/herdr-waybar-lang",
+        "return-type": "json", "interval": 2, "format": "{}", "signal": 15,
         "min-length": 3,
-        "tooltip": false,
-        "on-click": "swaymsg input $(swaymsg -t get_inputs --raw | jq '[.[] | select(.type == \"keyboard\")][0] | .identifier') xkb_switch_layout next"
+        "on-click": "swaymsg input $(swaymsg -t get_inputs --raw | jq '[.[] | select(.type == \"keyboard\")][0] | .identifier') xkb_switch_layout next; pkill -RTMIN+15 waybar"
     },
     "idle_inhibitor": {
         "format": "{icon}",
@@ -58,7 +58,7 @@
         "signal": 11
     },
     "custom/bluetooth": {
-        "format": "",
+        "format": "󰂯",
         "on-click": "blueman-manager",
         "on-click-right": "rfkill toggle bluetooth",
         "tooltip": false
