@@ -276,9 +276,9 @@ bindsym $mod+u exec ~/.config/sway/scripts/show-time-gps.sh
 ## Info // Toggle live corner clock (upper-right, half size, refreshes every second) // 🕰️ ##
 bindsym $mod+Shift+u exec ~/.config/sway/scripts/corner-clock.sh
 ## Info // Toggle herdr status bar (GPS/processes) // 📊 ##
-bindsym $mod+F10 swaymsg bar bar-0 hidden_state toggle
+bindsym $mod+Ctrl+s exec swaymsg bar bar-0 hidden_state toggle
 ## Info // Toggle metrics bar (network/load/mem/cpu/controls) // 📈 ##
-bindsym $mod+F11 swaymsg bar bar-1 hidden_state toggle
+bindsym $mod+Ctrl+i exec swaymsg bar bar-1 hidden_state toggle
 
 # Keyboard layout indicator.
 # - Bare Alt Gr: xkb's grp:toggle cycles, and we additionally flash the
