@@ -24,10 +24,21 @@ marked_wired_connections=$(echo "$wired_connections" | awk -v active="$active_co
 
 # Combine Wi-Fi networks, wired connections, and active connection
 # options=$(echo -e "$marked_wifi_networks\n$marked_wired_connections\nDisconnect Active Connection: $active_connection")
-options=$(echo -e "Wi-Fi Networks:\n$marked_wifi_networks\n\nWired Connections:\n$marked_wired_connections\n\nDisconnect Active Connection: $active_connection")
+config_actions="⚙  Advanced settings (editor)\n🖥  nmtui (terminal)\n🔄  Rescan Wi-Fi"
+options=$(echo -e "$config_actions\n\nWi-Fi Networks:\n$marked_wifi_networks\n\nWired Connections:\n$marked_wired_connections\n\nDisconnect Active Connection: $active_connection")
 
 # Use rofi to display the list and capture the selected network or interface
 selected=$(echo "$options" | rofi -dmenu -p "Select Network/Interface")
+
+# Handle config actions first
+case "$selected" in
+  "⚙  Advanced settings (editor)")
+    exec nm-connection-editor ;;
+  "🖥  nmtui (terminal)")
+    exec ~/.local/bin/kitty --class nmtui -e nmtui ;;
+  "🔄  Rescan Wi-Fi")
+    nmcli d wifi rescan; notify-send "Wi-Fi" "Rescanning networks…"; exec "$0" ;;
+esac
 
 # Check if a network or interface was selected
 if [ -n "$selected" ]; then
