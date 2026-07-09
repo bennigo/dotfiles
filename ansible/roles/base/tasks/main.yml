@@ -131,18 +131,25 @@
           # the vedur.is network/VPN, delaying login and the shell prompt.
           # x-systemd.automount = mount on first access; nofail = never fail boot.
           #
-          granit.vedur.is:/mnt/sdc1/sk2 /mnt_data/sildata nfs nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10 0 0
-          granit.vedur.is:/mnt/sdd1/sil/trem /mnt_data/tremdata nfs nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10 0 0
-          ananas.vedur.is:/gps/gpsdata /mnt_data/rawgpsdata nfs mountvers=3,auto,nofail,nolock,tcp,ro,_netdev,x-systemd.automount,x-systemd.mount-timeout=10 0 0
-          frumgogn02.vedur.is:/home/vmfrum/vmgogn01/frumgogn /mnt_data/hytrodata nfs nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10 0 0
+          # soft,timeo=50,retrans=2 = fail a stalled NFS op with EIO after ~15s
+          # instead of hanging a task in uninterruptible D-state. D-state I/O
+          # cannot be frozen, which otherwise makes system suspend abort
+          # ("Device or resource busy") and leaves the laptop awake. ~15s stays
+          # under the 20s kernel freezer window. Trade-off: GPS jobs may see
+          # read/write EIO during a real network stall (acceptable; mostly reads).
+          #
+          granit.vedur.is:/mnt/sdc1/sk2 /mnt_data/sildata nfs soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10 0 0
+          granit.vedur.is:/mnt/sdd1/sil/trem /mnt_data/tremdata nfs soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10 0 0
+          ananas.vedur.is:/gps/gpsdata /mnt_data/rawgpsdata nfs mountvers=3,auto,soft,timeo=50,retrans=2,nofail,nolock,tcp,ro,_netdev,x-systemd.automount,x-systemd.mount-timeout=10 0 0
+          frumgogn02.vedur.is:/home/vmfrum/vmgogn01/frumgogn /mnt_data/hytrodata nfs soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10 0 0
           # #gpsplot.vedur.is:/home/gpsops/rtklib-run/data /mnt_data/rtgpsdata nfs defaults 0 0
-          rtk.vedur.is:/home/gpsops/rtklib-run/data /mnt_data/rtgpsdata nfs nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10 0 0
+          rtk.vedur.is:/home/gpsops/rtklib-run/data /mnt_data/rtgpsdata nfs soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10 0 0
           #
           # gpsplot.vedur.is:/exports/gpstimes /mnt_data/gpsdata nfs defaults 0 0
-          okada.vedur.is:/D/GMT/TOT/ /mnt_data/gpsdata nfs nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10 0 0
-          gpsplot.vedur.is:/exports/share /mnt_data/datashare nfs nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10 0 0
-          gpsplot.vedur.is:/home/gpsops/gamit-times /mnt_data/gps nfs nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10 0 0
-          gpsplot.vedur.is:/home/gpsops/.gpsconfig /mnt_data/gpsconfig nfs nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10 0 0
+          okada.vedur.is:/D/GMT/TOT/ /mnt_data/gpsdata nfs soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10 0 0
+          gpsplot.vedur.is:/exports/share /mnt_data/datashare nfs soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10 0 0
+          gpsplot.vedur.is:/home/gpsops/gamit-times /mnt_data/gps nfs soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10 0 0
+          gpsplot.vedur.is:/home/gpsops/.gpsconfig /mnt_data/gpsconfig nfs soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10 0 0
 
           #nas
           #//nas.vedur.is/export/joklar /mnt/joklar cifs credentials=/root/.smbcredentials,iocharset=utf8,sec=ntlm,_netdev,domain=vi 0 0
