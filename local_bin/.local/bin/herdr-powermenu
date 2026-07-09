@@ -1,0 +1,11 @@
+#!/bin/bash
+# herdr-powermenu — rofi power menu (suspend · reboot · shutdown)
+set -euo pipefail
+choice=$(printf '⏾  Suspend\n🔄  Restart Sway\n↻  Reboot\n⏻  Shutdown' | \
+    rofi -dmenu -p 'Power' -theme-str 'window {width: 200px;}' 2>/dev/null)
+case "$choice" in
+    *Suspend*)   systemctl suspend ;;
+    *Restart*)   swaymsg reload ;;
+    *Reboot*)    systemctl reboot ;;
+    *Shutdown*)  systemctl poweroff ;;
+esac

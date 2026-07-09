@@ -1,0 +1,152 @@
+#!/usr/bin/env python3
+"""herdr-waybar-status — herdr floating-bar renderer (2 lines).
+
+Line 1:  <ws#>  <cwd>  <git>            .......pad.......   <clock  sod  GPSW  DOY  Wk  yyyy.ffff@12z>
+Line 2:  🔥 <top 7 processes>
+
+Left side (context) is left-aligned; the date/GPS block is right-aligned via
+computed space padding (requires a monospace font — set in style-herdr.css).
+Reads herdr session for the focused workspace / pane cwd. Refresh every 3s.
+"""
+import json, os, subprocess, sys, datetime
+
+# Catppuccin mocha
+B="#89b4fa"; G="#a6e3a1"; Y="#f9e2af"; R="#f38ba8"; T="#94e2d5"
+L="#b4befe"; P="#fab387"; O="#939ab7"; S="#6c7086"; TX="#cdd6f4"
+DIM="#6c7086cc"
+
+# Target columns for the box width (must roughly match CSS min-width / char width).
+TARGET_COLS = 147
+
+def sp(c, s):  return f'<span color="{c}">{s}</span>'
+def sb(c, s):  return f'<span color="{c}" font_weight="bold">{s}</span>'
+def sep():     return sp(S, "  │  ")
+
+def run(cmd, timeout=2):
+    try:
+        return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+    except Exception:
+        return None
+
+# ── visible-width of a string with Pango markup stripped ──
+def char_w(ch):
+    o = ord(ch)
+    if 0x0300 <= o <= 0x036F: return 0                      # combining
+    if 0xFE00 <= o <= 0xFE0F: return 0                      # variation selectors
+    if 0xE000 <= o <= 0xF8FF: return 1                      # nerd PUA
+    if 0xF0000 <= o <= 0x10FFFF: return 1                   # nerd PUA plane 15/16
+    if (0x1F300 <= o <= 0x1FAFF or 0x2600 <= o <= 0x27BF
+            or 0x1F000 <= o <= 0x1F0FF or o in (0x231A,0x231B,0x23F0,0x23F3)):
+        return 2                                            # emoji
+    if 0x1100 <= o <= 0x115F or 0x2E80 <= o <= 0xA4CF or 0xAC00 <= o <= 0xD7A3:
+        return 2                                            # CJK wide
+    return 1
+
+def vis_len(markup):
+    out = []; i = 0; intag = False
+    for ch in markup:
+        if ch == '<': intag = True; continue
+        if ch == '>': intag = False; continue
+        if not intag: out.append(ch)
+    # decode common entities
+    txt = ''.join(out).replace('&amp;','&').replace('&lt;','<').replace('&gt;','>')
+    return sum(char_w(c) for c in txt)
+
+# ── context: focused ws# + cwd + git ─────────────────────
+def get_context():
+    num, wid = "?", None
+    r = run(['herdr','workspace','list'])
+    if r and r.returncode == 0:
+        try:
+            wl = json.loads(r.stdout)
+            fw = next((w for w in wl['result']['workspaces'] if w.get('focused')), None)
+            if fw: num, wid = fw['number'], fw['workspace_id']
+        except Exception: pass
+    cwd = None
+    try:
+        sess = json.load(open(os.path.expanduser('~/.config/herdr/session.json')))
+        ws = next((w for w in sess['workspaces'] if w['id']==wid), None) if wid else None
+        if ws:
+            cwd = ws.get('identity_cwd')
+            for tab in ws.get('tabs', []):
+                foc = str(tab.get('focused')); panes = tab.get('panes', {})
+                if foc in panes:
+                    cwd = panes[foc].get('cwd', cwd); break
+    except Exception: pass
+    branch, dirty = "", 0
+    if cwd and os.path.isdir(cwd):
+        br = run(['git','-C',cwd,'rev-parse','--abbrev-ref','HEAD'])
+        if br and br.returncode == 0:
+            branch = br.stdout.strip()
+            st = run(['git','-C',cwd,'status','--porcelain'])
+            if st: dirty = len([x for x in st.stdout.splitlines() if x.strip()])
+    home = os.path.expanduser('~')
+    disp = cwd or '?'
+    if cwd and cwd.startswith(home): disp = '~' + cwd[len(home):]
+
+    out = f'{sp(P,"\uf0e8")} {sb(P,"w"+str(num))}{sep()}{sp(B,"\uf07b")} {sb(B,disp)}'
+    if branch:
+        if dirty > 0:
+            out += f'{sep()}{sp(Y,"\ue0a0")} {sb(Y,branch)}{sp(R," \uf111 "+str(dirty))}'
+        else:
+            out += f'{sep()}{sp(G,"\ue0a0")} {sb(G,branch)}{sp(G," \uf00c")}'
+    return out
+
+# ── dates / GPS ──────────────────────────────────────────
+def get_time():
+    gpsw = doy = yf = ""
+    utcnow = datetime.datetime.now(datetime.timezone.utc)
+    if subprocess.run(['bash','-lc','command -v timecalc'],capture_output=True).returncode == 0:
+        now = utcnow.strftime('%Y-%m-%d 12:00:00')
+        w = run(['timecalc','-w']);  gpsw = ''.join(filter(str.isdigit, w.stdout)) if w else ""
+        j = run(['timecalc','-j']);  doy  = ''.join(filter(str.isdigit, j.stdout)) if j else ""
+        f = run(['timecalc','-yf','-d',now,'-f','%Y-%m-%d %H:%M:%S'])
+        if f and f.stdout.strip():
+            try: yf = f"{float(f.stdout.strip()):.4f}"   # day precision + 1 digit
+            except ValueError: yf = ""
+    wk  = utcnow.strftime('%V')
+    clk = utcnow.strftime('%Y-%m-%d %H:%M:%S')
+    sod = str(int(utcnow.timestamp()))
+    out = f'{sb(T,"🕐 "+clk)}{sp(DIM," UTC")}{sep()}{sp(T,"sod ")}{sb(T,sod)}'
+    if gpsw: out += f'{sep()}{sb(T,"GPSW "+gpsw)}'
+    if doy:  out += f'{sep()}{sb(T,"DOY "+doy)}'
+    if wk:   out += f'{sep()}{sb(T,"Wk "+wk)}'
+    if yf:   out += f'{sep()}{sb(T,yf)}{sp(DIM,"@12z")}'
+    return out
+
+# ── top 7 processes ──────────────────────────────────────
+SKIP = {"ps","awk","grep","cut","tr","bc","sed","cat","date","timecalc","nmcli",
+        "free","acpi","nproc","sort","head","wc","uniq","printf","echo","swaymsg",
+        "dig","python3","git","herdr"}
+def get_proc():
+    r = run(['ps','-eo','pcpu,rss,comm','--sort=-pcpu','--no-headers'])
+    parts = []; n = 0
+    if r:
+        for line in r.stdout.splitlines():
+            f = line.split(None, 2)
+            if len(f) < 3: continue
+            pcpu, rss, comm = f
+            if comm in SKIP: continue
+            try: rm = int(rss)//1024
+            except ValueError: continue
+            mp = f"{rm/1024:.1f}G" if rm >= 1024 else (f"{rm}M" if rm >= 1 else "0M")
+            try: pi = round(float(pcpu))
+            except ValueError: pi = 0
+            cc = R if pi >= 20 else (Y if pi >= 5 else O)
+            parts.append(f'{sp(L,comm[:12])} {sb(cc,str(pi)+"%")} {sp(T,mp)}')
+            n += 1
+            if n >= 7: break
+    return f'{sb(R,"🔥")} ' + sep().join(parts)
+
+def main():
+    left  = get_context()
+    right = get_time()
+    pad_n = TARGET_COLS - vis_len(left) - vis_len(right)
+    if pad_n < 3: pad_n = 3
+    line1 = left + (" " * pad_n) + right
+    line2 = get_proc()
+    text = line1 + "\n" + line2
+    print(json.dumps({"text": text, "class": "herdr-status"}))
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,17 @@
+#!/bin/bash
+# herdr-sessionx-delete — close workspace, then re-focus current
+# Args from fzf binding: {1} = type (ws|zo), {2} = workspace_id
+TYPE="${1:-}"
+WS="${2:-}"
+[ "$TYPE" = "ws" ] || exit 0
+[ -n "$WS" ] || exit 0
+
+# Remember which workspace WE are in (the picker's workspace)
+MY_WS="${HERDR_WORKSPACE_ID:-}"
+
+herdr workspace close "$WS" >/dev/null 2>&1
+
+# If focus jumped away, pull it back
+if [ -n "$MY_WS" ]; then
+    herdr workspace focus "$MY_WS" >/dev/null 2>&1
+fi
