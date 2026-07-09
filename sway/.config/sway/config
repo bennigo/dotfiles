@@ -209,6 +209,8 @@ bindsym $mod+period exec ~/.local/bin/emoji-picker
 bindsym $mod+comma exec ~/.local/bin/nf-picker
 ## Apps // Unicode symbol picker (arrows, math, box-drawing, dingbats) // ✦ ##
 bindsym $mod+Ctrl+comma exec ~/.local/bin/sym-picker
+## Apps // Letter picker (Cyrillic/Russian, Greek, Arabic) // Я ##
+bindsym $mod+Shift+comma exec ~/.local/bin/letter-picker
 
 #
 # Basics:
