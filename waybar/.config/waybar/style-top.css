@@ -2,7 +2,7 @@
     border: none; border-radius: 0; min-height: 0;
     font-family: "Ubuntu Nerd Font"; font-size: 13px; color: #cdd6f4;
 }
-window#waybar { background: rgba(30, 30, 46, 0.9); border: 1px solid rgba(249, 226, 175, 0.25); }
+window#waybar { background: rgba(30, 30, 46, 0.4); border: 1px solid rgba(249, 226, 175, 0.25); }
 #workspaces { margin: 0 4px 0 0; }
 #workspaces button {
     padding: 0 6px; margin: 0 1px; background: transparent; color: #9399b2;

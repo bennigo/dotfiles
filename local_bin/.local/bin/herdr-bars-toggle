@@ -1,0 +1,11 @@
+#!/bin/bash
+# herdr-bars-toggle — toggle waybar visibility via SIGUSR1.
+# Waybars are layer-shell clients; Sway's hidden_state does NOT affect them.
+# SIGUSR1 toggles a waybar's visibility. Target each by its config file.
+# Usage: herdr-bars-toggle [herdr|top|both]
+case "${1:-both}" in
+    herdr) pkill -SIGUSR1 -f 'config-herdr.jsonc' ;;
+    top)   pkill -SIGUSR1 -f 'config-top.jsonc' ;;
+    both)  pkill -SIGUSR1 -f 'config-herdr.jsonc'
+           pkill -SIGUSR1 -f 'config-top.jsonc' ;;
+esac

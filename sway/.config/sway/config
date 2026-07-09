@@ -275,10 +275,10 @@ bindsym $mod+Shift+p exec $term --class "clipse" zsh -i ${HOME}/.local/bin/run_s
 bindsym $mod+u exec ~/.config/sway/scripts/show-time-gps.sh
 ## Info // Toggle live corner clock (upper-right, half size, refreshes every second) // 🕰️ ##
 bindsym $mod+Shift+u exec ~/.config/sway/scripts/corner-clock.sh
-## Info // Toggle herdr status bar (GPS/processes) // 📊 ##
-bindsym $mod+Ctrl+s exec swaymsg bar bar-0 hidden_state toggle
-## Info // Toggle metrics bar (network/load/mem/cpu/controls) // 📈 ##
-bindsym $mod+Ctrl+i exec swaymsg bar bar-1 hidden_state toggle
+## Info // Toggle metrics (thin top) bar // 📈 ##
+bindsym $mod+Shift+q exec ~/.local/bin/herdr-bars-toggle top
+## Info // Toggle herdr floating bar (GPS/processes) // 📊 ##
+bindsym $mod+Ctrl+q exec ~/.local/bin/herdr-bars-toggle herdr
 
 # Keyboard layout indicator.
 # - Bare Alt Gr: xkb's grp:toggle cycles, and we additionally flash the
@@ -568,11 +568,11 @@ bindsym $mod+Shift+r mode "resize"
 # Read `man 5 sway-bar` for more information about this section.
 bar {
     position top
-    swaybar_command /home/bgo/.dotfiles/waybar/.config/waybar/launch-herdr.sh
+    swaybar_command /home/bgo/.dotfiles/waybar/.config/waybar/launch-top.sh
 }
 bar {
     position top
-    swaybar_command /home/bgo/.dotfiles/waybar/.config/waybar/launch-top.sh
+    swaybar_command /home/bgo/.dotfiles/waybar/.config/waybar/launch-herdr.sh
 }
 
 popup_during_fullscreen smart

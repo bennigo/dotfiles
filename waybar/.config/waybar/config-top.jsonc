@@ -40,10 +40,9 @@
     "custom/dnd": {
         "interval": "once",
         "return-type": "json",
-        "format": "{}{icon}",
-        "format-icons": { "default": "🔔", "dnd": "🔕" },
-        "on-click": "makoctl mode | grep -q 'do-not-disturb' && makoctl mode -r do-not-disturb || makoctl mode -a do-not-disturb; pkill -SIGRTMIN+11 waybar",
-        "exec": "if makoctl mode | grep -q 'do-not-disturb'; then printf '{\"text\":\"\",\"class\":\"dnd\",\"tooltip\":\"Do Not Disturb on\"}'; else printf '{\"text\":\"\",\"class\":\"default\",\"tooltip\":\"Notifications on\"}'; fi",
+        "format": "{}",
+        "on-click": "makoctl mode | grep -qx 'do-not-disturb' && makoctl mode -r do-not-disturb || makoctl mode -a do-not-disturb; pkill -RTMIN+11 waybar",
+        "exec": "if makoctl mode | grep -qx 'do-not-disturb'; then printf '{\"text\":\"\ud83d\udd15\",\"tooltip\":\"Do Not Disturb ON\"}'; else printf '{\"text\":\"\ud83d\udd14\",\"tooltip\":\"Notifications on\"}'; fi",
         "signal": 11
     },
     "custom/bluetooth": {

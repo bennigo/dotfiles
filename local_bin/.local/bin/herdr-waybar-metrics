@@ -1,0 +1,71 @@
+#!/bin/bash
+# herdr-waybar-metrics — single-line waybar module: network/IPs/load/mem/cpu/battery
+# Used in the thin top bar alongside workspaces and clickable toggles.
+set -eu
+b=#89b4fa; g=#a6e3a1; y=#f9e2af; r=#f38ba8; t=#94e2d5; p=#fab387
+o=#939ab7; s=#6c7086; tx=#cdd6f4; dim="#6c7086cc"
+sp(){ printf '<span color="%s">%s</span>' "$1" "$2"; }
+sb(){ printf '<span color="%s" font_weight="bold">%s</span>' "$1" "$2"; }
+se(){ printf '<span color="%s">  │  </span>' "$s"; }
+
+# net
+wifi_dev=$(nmcli -t -f DEVICE,TYPE,STATE device status 2>/dev/null|grep ':wifi:connected'|head -1|cut -d: -f1)
+if [ -n "$wifi_dev" ]; then
+    wi=$(nmcli -t -f ACTIVE,SSID,SIGNAL dev wifi 2>/dev/null|grep '^yes'|head -1)
+    ssid=$(echo "$wi"|cut -d: -f2); sig=$(echo "$wi"|cut -d: -f3)
+    [ -n "$sig" ]&&{ [ "$sig" -ge 60 ] 2>/dev/null&&sc="$g"||{ [ "$sig" -ge 30 ] 2>/dev/null&&sc="$y"||sc="$r";};}
+    net="$(sp "$g" "📶") $(sb "$sc" "${ssid:-wifi}") $(sb "$sc" "${sig:-?}%")"
+else
+    eth=$(nmcli -t -f DEVICE,TYPE,STATE device status 2>/dev/null|grep ':ethernet:connected'|head -1|cut -d: -f1)
+    [ -n "$eth" ]&&net="$(sp "$g" "🔗 eth")"||net="$(sp "$r" "❌ offline")"
+fi
+
+# local ip
+lip=$(ip -o -4 addr show dev "${wifi_dev:-}" 2>/dev/null|awk '{print $4}'|cut -d/ -f1|head -1)
+[ -z "$lip" ]&&lip="—"
+lip_s="$(sp "$o" "🌐") $(sp "$dim" "$lip")"
+
+# vpn
+vpn_if=$(ip -o link show up 2>/dev/null|awk -F': ' '{print $2}'|cut -d'@' -f1|grep -iE '^(tun|tap|wg|cscotun)'|head -1)
+if [ -n "$vpn_if" ]; then
+    vpn_ip=$(ip -o -4 addr show dev "$vpn_if" 2>/dev/null|awk '{print $4}'|cut -d/ -f1|head -1)
+    vpn_s="$(sp "$g" "🔒") $(sp "$dim" "${vpn_ip:---}")"
+else vpn_s="$(sp "$dim" "🔓 —")"; fi
+
+# public ip (cached 5 min)
+PUB="$XDG_RUNTIME_DIR/herdr-pubip"; pub=""
+[ -f "$PUB" ]&&{ read -r ts pub2 < "$PUB"; [ $(($(date +%s)-ts)) -lt 300 ]&&pub="$pub2";}
+[ -z "$pub" ]&&{ pub=$(dig +short myip.opendns.com @resolver1.opendns.com 2>/dev/null|head -1); [ -n "$pub" ]&&printf '%s %s\n' "$(date +%s)" "$pub" > "$PUB";}
+[ -z "$pub" ]&&pub="…"
+pub_s="$(sp "$o" "🌍") $(sp "$dim" "$pub")"
+
+# load / mem
+ld=$(cut -d' ' -f1 /proc/loadavg 2>/dev/null); nc=$(nproc 2>/dev/null)
+mm=$(free -h 2>/dev/null|awk '/^Mem:/{print $3}')
+ld_s="$(sb "$p" "load ${ld}")$(sp "$dim" "/${nc}")"
+mem_s="$(sb "$t" "mem ${mm}")"
+
+# cpu
+cpu_s=""; read -r u ns si id io irq siq st <<< "$(awk '/^cpu /{print $2,$3,$4,$5,$6,$7,$8,$9;exit}' /proc/stat 2>/dev/null)"
+ct=$(( ${u:-0}+${ns:-0}+${si:-0}+${id:-0}+${io:-0}+${irq:-0}+${siq:-0}+${st:-0} ))
+CF="$XDG_RUNTIME_DIR/herdr-cpu-prev"
+[ -f "$CF" ]&&{ read -r pt pi2 < "$CF"; [ "$ct" -gt "$pt" ]&&{
+    dt=$((ct-pt)); di=$(( (${id:-0}+${io:-0}) - pi2 )); pc=$((100*(dt-di)/dt))
+    fl=$((pc/10)); [ "$fl" -gt 8 ]&&fl=8; [ "$fl" -lt 0 ]&&fl=0
+    em=$((8-fl)); bar=""; i=0
+    while [ $i -lt $fl ]; do bar="${bar}■"; i=$((i+1)); done
+    i=0; while [ $i -lt $em ]; do bar="${bar}□"; i=$((i+1)); done
+    [ "$pc" -ge 80 ]&&cc="$r"||{ [ "$pc" -ge 50 ]&&cc="$y"||cc="$g";}
+    cpu_s="$(sp "$p" "cpu ")$(sb "$cc" "$bar") $(sb "$tx" "${pc}%")"
+};}
+[ -z "$cpu_s" ]&&cpu_s="$(sp "$p" "cpu ")$(sp "$dim" "…")"
+printf '%s %s\n' "$ct" "$((${id:-0}+${io:-0}))" > "$CF"
+
+# battery
+bat_s=""; [ -d /sys/class/power_supply/BAT0 ]&&{ pct=$(cat /sys/class/power_supply/BAT0/capacity 2>/dev/null)
+    [ -n "$pct" ]&&{ [ "$pct" -ge 50 ] 2>/dev/null&&bc="$g"||{ [ "$pct" -ge 20 ] 2>/dev/null&&bc="$y"||bc="$r";}
+    bat_s="$(sb "$bc" "🔋 ${pct}%")";};}
+
+# assemble
+line="${net}$(se)${lip_s}$(se)${vpn_s}$(se)${pub_s}$(se)${ld_s}$(se)${mem_s}$(se)${cpu_s}$(se)${bat_s}"
+python3 -c "import json,sys;print(json.dumps({'text':sys.stdin.read().strip(),'class':'metrics'}))" <<< "$line"
