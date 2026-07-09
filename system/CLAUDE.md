@@ -86,6 +86,36 @@ sudo udevadm control --reload-rules
 echo disabled | sudo tee /sys/bus/i2c/devices/i2c-ELAN0686:00/power/wakeup
 ```
 
+### Suspend-Failure Desktop Notifier (NFS/receivers blocks the freezer)
+
+**Files**: `usr/local/bin/suspend-failed-notify`,
+`etc/systemd/system/suspend-failed-notify.service`,
+`etc/systemd/system/systemd-suspend.service.d/onfailure.conf`
+
+Suspend can silently fail and leave the laptop **awake in the bag**. Root cause seen
+2026-07-09: `receivers` (GPS processing) had threads in uninterruptible `D` state on
+an NFS read (`ananas`/`granit` under `/mnt_data/*`) — `io_schedule -> filemap_read`.
+The kernel freezer cannot stop D-state I/O, so after a 20s timeout suspend aborts with
+*"Failed to put system to sleep. System resumed again: Device or resource busy"* and
+`systemd-suspend.service` exits `1/FAILURE`. Diagnose:
+`journalctl -k -b | grep -i 'refusing to freeze'`.
+
+Rather than force sleep (risking GPS read errors), a drop-in wires
+`OnFailure=suspend-failed-notify.service` onto `systemd-suspend.service`. On failure it
+fires a **critical Mako notification** ("⚠ Suspend FAILED — laptop is still AWAKE") into
+each active user session via `runuser … env DBUS_SESSION_BUS_ADDRESS=/run/user/<uid>/bus
+notify-send`. So a failed suspend is now loud instead of silent.
+
+Deployed by Ansible `system_files` role (tags: `suspend`,`notify`). Manual deploy:
+```bash
+sudo install -m0755 system/usr/local/bin/suspend-failed-notify /usr/local/bin/
+sudo install -m0644 system/etc/systemd/system/suspend-failed-notify.service /etc/systemd/system/
+sudo install -d /etc/systemd/system/systemd-suspend.service.d
+sudo install -m0644 system/etc/systemd/system/systemd-suspend.service.d/onfailure.conf /etc/systemd/system/systemd-suspend.service.d/
+sudo systemctl daemon-reload
+sudo systemctl start suspend-failed-notify.service   # test the popup
+```
+
 ### Thunderbolt 4 Resume Fix
 **File**: `usr/lib/systemd/system-sleep/thunderbolt-fix`
 

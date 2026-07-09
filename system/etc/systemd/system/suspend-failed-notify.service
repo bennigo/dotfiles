@@ -1,0 +1,8 @@
+[Unit]
+Description=Notify the desktop that system suspend failed (laptop still awake)
+After=systemd-suspend.service
+# Only meaningful with a graphical user session present.
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/suspend-failed-notify

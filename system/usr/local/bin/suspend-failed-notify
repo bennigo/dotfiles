@@ -1,0 +1,32 @@
+#!/bin/bash
+# suspend-failed-notify — alert the graphical desktop that a suspend attempt
+# failed and the machine is still awake. Wired as OnFailure= of
+# systemd-suspend.service via a drop-in.
+#
+# Most common cause on this laptop (eldey, ThinkPad P1): a `receivers`/GPS job
+# with threads stuck in uninterruptible D-state on an NFS read
+# (ananas/granit /mnt_data/*). The kernel freezer can't stop D-state I/O, so
+# suspend times out after ~20s with "Device or resource busy".
+#   Diagnose: journalctl -k -b | grep -i 'refusing to freeze'
+set -eu
+
+SUM="⚠ Suspend FAILED — laptop is still AWAKE"
+BODY="A process blocked the freezer (often a receivers/NFS job in D-state). Do NOT bag the laptop yet. Check: journalctl -k -b | grep -i 'refusing to freeze'"
+
+sent=0
+# Iterate over active user runtime dirs; each has a session D-Bus socket.
+for busdir in /run/user/*; do
+    uid=${busdir##*/}
+    bus="$busdir/bus"
+    [ -S "$bus" ] || continue
+    user=$(id -nu "$uid" 2>/dev/null) || continue
+    if runuser -u "$user" -- env DBUS_SESSION_BUS_ADDRESS="unix:path=${bus}" \
+            notify-send -u critical -i dialog-error -a power \
+            -h string:x-canonical-private-synchronous:suspend-fail \
+            "$SUM" "$BODY" 2>/dev/null; then
+        sent=1
+    fi
+done
+
+logger -t suspend-failed-notify "systemd-suspend.service failed; desktop notified=${sent}"
+exit 0
