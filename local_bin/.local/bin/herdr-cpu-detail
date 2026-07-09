@@ -1,11 +1,35 @@
 #!/bin/bash
-# herdr-cpu-detail — open the live per-core CPU dashboard in a floating kitty.
-# Toggles: if already open, focus/close is handled by Sway; we just launch one.
+# herdr-cpu-detail — toggle the live per-core CPU dashboard as a top-centered,
+# non-focus-stealing floating terminal. Bound to Win+Ctrl+t and the top-bar
+# CPU click. Sizing/floating/no-focus are set by sway rules; this script only
+# toggles and positions the window at the top-center of the focused output.
 set -eu
-if pgrep -f 'herdr-cpu-view' >/dev/null 2>&1; then
-    # already running — bring its window to focus
-    swaymsg '[app_id="herdr-cpu"] focus' 2>/dev/null || true
+
+APPID=herdr-cpu
+WIN_W=1000          # keep in sync with the sway `resize set width` rule
+MARGIN=8            # gap below the top bar
+
+# Toggle: if it's already open, close it (focus stays on the terminal).
+if swaymsg -t get_tree | grep -q "\"app_id\": \"$APPID\""; then
+    swaymsg "[app_id=\"$APPID\"] kill" >/dev/null 2>&1 || true
     exit 0
 fi
-exec ~/.local/bin/kitty --class herdr-cpu -o font_size=12 \
-    -e ~/.local/bin/herdr-cpu-view
+
+# Launch in the background so we can reposition it once it maps.
+~/.local/bin/kitty --class "$APPID" -o font_size=12 \
+    -e ~/.local/bin/herdr-cpu-view &
+
+# Compute top-center X/Y on the currently focused output.
+read -r ox oy ow < <(swaymsg -t get_outputs \
+    | jq -r '.[]|select(.focused)|"\(.rect.x) \(.rect.y) \(.rect.width)"')
+x=$(( ox + (ow - WIN_W) / 2 )); [ "$x" -lt "$ox" ] && x=$ox
+y=$(( oy + MARGIN ))
+
+# Wait for the window to appear, then move it (move does not steal focus).
+for _ in $(seq 1 60); do
+    if swaymsg -t get_tree | grep -q "\"app_id\": \"$APPID\""; then
+        swaymsg "[app_id=\"$APPID\"] move position $x $y" >/dev/null 2>&1 || true
+        break
+    fi
+    sleep 0.05
+done
