@@ -1,0 +1,11 @@
+#!/bin/bash
+# herdr-cpu-detail — open the live per-core CPU dashboard in a floating kitty.
+# Toggles: if already open, focus/close is handled by Sway; we just launch one.
+set -eu
+if pgrep -f 'herdr-cpu-view' >/dev/null 2>&1; then
+    # already running — bring its window to focus
+    swaymsg '[app_id="herdr-cpu"] focus' 2>/dev/null || true
+    exit 0
+fi
+exec ~/.local/bin/kitty --class herdr-cpu -o font_size=12 \
+    -e ~/.local/bin/herdr-cpu-view

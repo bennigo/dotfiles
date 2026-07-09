@@ -1,0 +1,20 @@
+#!/bin/bash
+# herdr-copy-ip — copy local or public IP to clipboard + notify.
+# Usage: herdr-copy-ip local|public
+set -eu
+kind="${1:-public}"
+wifi_dev(){ nmcli -t -f DEVICE,TYPE,STATE device status 2>/dev/null|grep ':wifi:connected'|head -1|cut -d: -f1; }
+case "$kind" in
+local)
+    ip=$(ip -o -4 addr show dev "$(wifi_dev)" 2>/dev/null|awk '{print $4}'|cut -d/ -f1|head -1)
+    label="local IP" ;;
+public)
+    PUB="$XDG_RUNTIME_DIR/herdr-pubip"; ip=""
+    [ -f "$PUB" ]&&{ read -r ts p2 < "$PUB"; ip="$p2"; }
+    [ -z "$ip" ]&&ip=$(dig +short myip.opendns.com @resolver1.opendns.com 2>/dev/null|head -1)
+    label="public IP" ;;
+*) exit 1 ;;
+esac
+[ -z "$ip" ]&&{ notify-send "IP copy" "No $label found" 2>/dev/null; exit 1; }
+printf '%s' "$ip" | wl-copy
+notify-send "📋 Copied $label" "$ip" 2>/dev/null || true

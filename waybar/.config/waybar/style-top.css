@@ -12,6 +12,15 @@ window#waybar { background: rgba(30, 30, 46, 0.4); border: 1px solid rgba(249, 2
 #custom-bluetooth, #language, #idle_inhibitor, #custom-dnd, #custom-power {
     padding: 0 6px; margin: 0 1px; border-radius: 4px;
 }
+#custom-network, #custom-localip, #custom-pubip, #custom-vpn,
+#custom-sysmon, #custom-cpu, #custom-battery {
+    padding: 0 5px; margin: 0; border-radius: 4px;
+}
+#custom-network:hover, #custom-localip:hover, #custom-pubip:hover,
+#custom-vpn:hover, #custom-sysmon:hover, #custom-cpu:hover,
+#custom-battery:hover {
+    background: rgba(137, 180, 250, 0.18);
+}
 #idle_inhibitor.activated { color: #f9e2af; }
 #custom-dnd.dnd { color: #f38ba8; }
 #custom-power { color: #f38ba8; }

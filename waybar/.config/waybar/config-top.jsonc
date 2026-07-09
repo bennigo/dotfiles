@@ -8,7 +8,13 @@
     ],
     "modules-center": [],
     "modules-right": [
-        "custom/metrics",
+        "custom/network",
+        "custom/localip",
+        "custom/pubip",
+        "custom/vpn",
+        "custom/sysmon",
+        "custom/cpu",
+        "custom/battery",
         "custom/bluetooth",
         "clock",
         "sway/language",
@@ -62,12 +68,39 @@
         "tooltip-format": "<tt><small>{calendar}</small></tt>",
         "timezone": "UTC"
     },
-    "custom/metrics": {
-        "exec": "~/.local/bin/herdr-waybar-metrics",
-        "return-type": "json",
-        "interval": 3,
-        "exec-on-event": false,
-        "tooltip": false,
-        "format": "{}"
+    "custom/network": {
+        "exec": "~/.local/bin/herdr-waybar-metrics network",
+        "return-type": "json", "interval": 5, "format": "{}",
+        "on-click": "~/.config/waybar/scripts/network-menu.sh"
+    },
+    "custom/localip": {
+        "exec": "~/.local/bin/herdr-waybar-metrics localip",
+        "return-type": "json", "interval": 10, "format": "{}",
+        "on-click": "~/.local/bin/herdr-copy-ip local"
+    },
+    "custom/pubip": {
+        "exec": "~/.local/bin/herdr-waybar-metrics pubip",
+        "return-type": "json", "interval": 30, "format": "{}",
+        "on-click": "~/.local/bin/herdr-copy-ip public"
+    },
+    "custom/vpn": {
+        "exec": "~/.local/bin/herdr-waybar-metrics vpn",
+        "return-type": "json", "interval": 5, "format": "{}",
+        "on-click": "~/.local/bin/vpn-public-menu"
+    },
+    "custom/sysmon": {
+        "exec": "~/.local/bin/herdr-waybar-metrics sysmon",
+        "return-type": "json", "interval": 3, "format": "{}",
+        "on-click": "~/.local/bin/kitty --class htop htop"
+    },
+    "custom/cpu": {
+        "exec": "~/.local/bin/herdr-waybar-metrics cpu",
+        "return-type": "json", "interval": 3, "format": "{}",
+        "on-click": "~/.local/bin/herdr-cpu-detail"
+    },
+    "custom/battery": {
+        "exec": "~/.local/bin/herdr-waybar-metrics battery",
+        "return-type": "json", "interval": 10, "format": "{}",
+        "on-click": "~/.local/bin/herdr-powermenu"
     }
 }
