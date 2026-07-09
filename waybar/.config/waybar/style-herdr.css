@@ -8,7 +8,7 @@ window#waybar > box { background-color: transparent; }
 /* The visible "bar" is the module widget itself: content-sized and centered
    by modules-center, so it grows symmetrically instead of to one side. */
 #custom-herdr {
-    background-color: rgba(30, 30, 46, 0.6);
+    background-color: rgba(245, 237, 216, 0.8);
     border-radius: 14px;
     padding: 6px 16px;
     box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);

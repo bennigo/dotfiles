@@ -10,10 +10,10 @@ Reads herdr session for the focused workspace / pane cwd. Refresh every 3s.
 """
 import json, os, subprocess, sys, datetime
 
-# Catppuccin mocha
-B="#89b4fa"; G="#a6e3a1"; Y="#f9e2af"; R="#f38ba8"; T="#94e2d5"
-L="#b4befe"; P="#fab387"; O="#939ab7"; S="#6c7086"; TX="#cdd6f4"
-DIM="#6c7086cc"
+# Catppuccin latte (dark ink for the light/paper herdr background)
+B="#1e66f5"; G="#40a02b"; Y="#df8e1d"; R="#d20f39"; T="#179299"
+L="#8839ef"; P="#fe640b"; O="#6c6f85"; S="#9ca0b0"; TX="#4c4f69"
+DIM="#8c8fa1cc"
 
 # Target columns for the box width (must roughly match CSS min-width / char width).
 TARGET_COLS = 147
