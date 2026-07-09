@@ -1,0 +1,59 @@
+#!/bin/bash
+# herdr-waybar-gitsync — top-bar module: git sync status of dotfiles + bgovault.
+# Read-only (status only). Left-click runs the sync; see config-top.jsonc.
+# Palette + emit() mirror herdr-waybar-metrics for a consistent top bar.
+set -eu
+b=#89b4fa; g=#a6e3a1; y=#f9e2af; r=#f38ba8; t=#94e2d5; p=#fab387
+o=#939ab7; dim="#6c7086cc"
+sp(){ printf '<span color="%s">%s</span>' "$1" "$2"; }
+sb(){ printf '<span color="%s" font_weight="bold">%s</span>' "$1" "$2"; }
+emit(){ python3 -c "import json,sys;print(json.dumps({'text':sys.argv[1],'class':sys.argv[2],'tooltip':sys.argv[3]}))" "$1" "$2" "${3:-}"; }
+
+# repos: label<TAB>glyph<TAB>path   (glyph: 󱪦 folder-git, 󰠮 notebook)
+repos=$(printf '%s\n' \
+  "dotfiles	󱪦	$HOME/.dotfiles" \
+  "bgovault	󰠮	$HOME/notes/bgovault")
+
+# returns: "<state> <glyph> <colorvar>" via echo; state in synced/dirty/ahead/behind/diverged/error
+repo_state(){
+    local dir="$1"
+    [ -d "$dir/.git" ] || [ -f "$dir/.git" ] || { echo "error"; return; }
+    git -C "$dir" rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo "error"; return; }
+    local dirty=0 ahead=0 behind=0
+    git -C "$dir" diff --quiet 2>/dev/null && git -C "$dir" diff --cached --quiet 2>/dev/null || dirty=1
+    # untracked files also count as dirty
+    [ -n "$(git -C "$dir" ls-files --others --exclude-standard 2>/dev/null | head -1)" ] && dirty=1
+    ahead=$(git -C "$dir" rev-list --count '@{u}..HEAD' 2>/dev/null || echo 0)
+    behind=$(git -C "$dir" rev-list --count 'HEAD..@{u}' 2>/dev/null || echo 0)
+    if   [ "$dirty" -eq 1 ];  then echo "dirty $ahead $behind"
+    elif [ "$ahead" -gt 0 ] && [ "$behind" -gt 0 ]; then echo "diverged $ahead $behind"
+    elif [ "$ahead" -gt 0 ];  then echo "ahead $ahead $behind"
+    elif [ "$behind" -gt 0 ]; then echo "behind $ahead $behind"
+    else echo "synced 0 0"; fi
+}
+
+out=""; ttip=""; worst=0
+while IFS=$'\t' read -r label glyph dir; do
+    [ -z "$label" ] && continue
+    read -r st ah bh <<< "$(repo_state "$dir")"
+    case "$st" in
+        synced)   ico="✓"; c="$g"; note="clean, synced";           lvl=0 ;;
+        ahead)    ico="↑"; c="$p"; note="↑$ah to push";            lvl=1 ;;
+        behind)   ico="↓"; c="$b"; note="↓$bh to pull";            lvl=1 ;;
+        diverged) ico="⇅"; c="$y"; note="↑$ah ↓$bh diverged";      lvl=2 ;;
+        dirty)    ico="⚠"; c="$y"; note="uncommitted changes";     lvl=2 ;;
+        *)        ico="✗"; c="$r"; note="not a git repo / error";  lvl=3 ;;
+    esac
+    [ "$lvl" -gt "$worst" ] && worst="$lvl"
+    out="${out}${out:+ }$(sp "$dim" "$glyph")$(sb "$c" "$ico")"
+    ttip="${ttip}${ttip:+\n}${label}: ${note}"
+done <<< "$repos"
+
+case "$worst" in
+    0) cls="gitsync-ok" ;;
+    1) cls="gitsync-pending" ;;
+    2) cls="gitsync-dirty" ;;
+    *) cls="gitsync-error" ;;
+esac
+ttip="${ttip}\n\nClick: sync dotfiles · Right-click: status"
+emit "$(sp "$o" "")  $out" "$cls" "$ttip"

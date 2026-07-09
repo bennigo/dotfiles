@@ -13,6 +13,12 @@ window#waybar { background: rgba(24, 24, 37, 0.3); border: 1px solid rgba(114, 1
 #custom-bluetooth, #language, #custom-language, #idle_inhibitor, #custom-dnd, #custom-power {
     padding: 0 6px; margin: 0 1px; border-radius: 4px;
 }
+#custom-git-sync {
+    padding: 0 8px; margin: 0 4px 0 2px; border-radius: 4px;
+}
+#custom-git-sync:hover { background: rgba(137, 180, 250, 0.18); }
+#custom-git-sync.gitsync-dirty { background: rgba(249, 226, 175, 0.10); }
+#custom-git-sync.gitsync-error { background: rgba(243, 139, 168, 0.14); }
 #custom-network, #custom-localip, #custom-pubip, #custom-vpn,
 #custom-sysmon, #custom-cpu, #custom-battery,
 #custom-brightness, #custom-volume, #custom-mic {
