@@ -211,6 +211,7 @@ bindsym $mod+comma exec ~/.local/bin/nf-picker
 bindsym $mod+Ctrl+comma exec ~/.local/bin/sym-picker
 ## Apps // Letter picker (Cyrillic/Russian, Greek, Arabic, CJK) // Я ##
 bindsym $mod+Ctrl+period exec ~/.local/bin/letter-picker
+bindsym $mod+Ctrl+t exec ~/.local/bin/herdr-cpu-detail
 
 #
 # Basics:
@@ -590,7 +591,8 @@ for_window [app_id="(?i)(?:snap-store|xdg-desktop-portal-gtk)"] floating enable,
 for_window [app_id="(?i)(?:nvim_floating|clipse)"] floating enable, resize set width 1400 px height 1000 px, move container to workspace current, move container center, focus
 for_window [app_id="me.jtheoof.swappy"] floating enable, move position center, focus
 for_window [app_id="(?i)(?:htop)"] floating enable, resize set width 1900 px height 1100 px, move container to workspace current, move container center
-for_window [app_id="herdr-cpu"] floating enable, resize set width 640 px height 600 px, move container to workspace current, move position center
+for_window [app_id="herdr-cpu"] floating enable, resize set width 1000 px height 340 px
+no_focus [app_id="herdr-cpu"]
 for_window [app_id="nmtui"] floating enable, resize set width 900 px height 700 px, move container to workspace current, move position center
 
 for_window [app_id="Cisco Secure Client"] floating enable, sticky enable
