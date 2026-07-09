@@ -15,4 +15,4 @@ case "$name" in
     "")                   code="--" ;;
     *)                    code=$(printf '%s' "$name" | tr -cd '[:alpha:]' | cut -c1-2 | tr '[:lower:]' '[:upper:]') ;;
 esac
-printf '{"text":"\udb80\udf0c %s","tooltip":"%s — click: switch layout"}\n' "$code" "$name"
+printf '{"text":"󰌌 %s","tooltip":"%s — click: switch layout / toast"}\n' "$code" "$name"
