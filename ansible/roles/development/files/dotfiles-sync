@@ -1,12 +1,14 @@
 #!/bin/bash
 set -euo pipefail
 
-# Dotfiles and Claude Private Configuration Sync Script
-# Intelligently syncs both main dotfiles and claude-private submodule
+# Enhanced Dotfiles Sync Script with Password Store Support
+# Syncs: dotfiles + claude-private + password-store + bgovault (Obsidian vault)
 # Generates meaningful commit messages based on actual changes
 
 DOTFILES_DIR="$HOME/.dotfiles"
 CLAUDE_PRIVATE_DIR="$DOTFILES_DIR/claude-private"
+PASSWORD_STORE_DIR="${PASSWORD_STORE_DIR:-$HOME/.password-store}"
+BGOVAULT_DIR="${BGOVAULT_DIR:-$HOME/notes/bgovault}"
 
 # Colors for output
 RED='\033[0;31m'
@@ -80,6 +82,9 @@ generate_commit_message() {
         if echo "$modified_files" | grep -q "\.credentials"; then
             details+=("credentials")
         fi
+        if echo "$modified_files" | grep -q "\.pi-sessions/"; then
+            details+=("pi sessions")
+        fi
     fi
 
     # Analyze changes for main dotfiles
@@ -136,6 +141,199 @@ generate_commit_message() {
     echo "$message"
 }
 
+# Generate intelligent commit message for password-store
+generate_pass_commit_message() {
+    local repo_dir="$1"
+    cd "$repo_dir"
+
+    local modified_files=$(git diff --cached --name-only)
+    local new_files=$(git diff --cached --name-only --diff-filter=A)
+    local deleted_files=$(git diff --cached --name-only --diff-filter=D)
+
+    if [ -z "$modified_files" ]; then
+        echo "Update password store"
+        return
+    fi
+
+    local details=()
+
+    # Analyze which credential categories changed
+    if echo "$modified_files" | grep -q "^database/"; then
+        details+=("database credentials")
+    fi
+    if echo "$modified_files" | grep -q "^ansible/"; then
+        details+=("ansible vault")
+    fi
+    if echo "$modified_files" | grep -q "^accounts/"; then
+        details+=("account credentials")
+    fi
+    if echo "$modified_files" | grep -q "^tokens/"; then
+        details+=("API tokens")
+    fi
+
+    # Count operations
+    local new_count=$(echo "$new_files" | grep -c . || echo 0)
+    local del_count=$(echo "$deleted_files" | grep -c . || echo 0)
+    local mod_count=$(($(echo "$modified_files" | wc -l) - new_count - del_count))
+
+    # Build message
+    local message=""
+    if [ ${#details[@]} -eq 0 ]; then
+        if [ "$new_count" -gt 0 ]; then
+            message="Add $new_count new credential(s)"
+        elif [ "$del_count" -gt 0 ]; then
+            message="Remove $del_count credential(s)"
+        else
+            message="Update password store credentials"
+        fi
+    else
+        case ${#details[@]} in
+            1)
+                message="Update ${details[0]}"
+                ;;
+            2)
+                message="Update ${details[0]} and ${details[1]}"
+                ;;
+            *)
+                message="Update $(IFS=', '; echo "${details[*]:0:$((${#details[@]}-1))}") and ${details[-1]}"
+                ;;
+        esac
+    fi
+
+    # Add operation counts if significant
+    if [ "$new_count" -gt 0 ] || [ "$del_count" -gt 0 ]; then
+        local ops=""
+        [ "$new_count" -gt 0 ] && ops="$new_count added"
+        [ "$del_count" -gt 0 ] && ops="${ops:+$ops, }$del_count removed"
+        [ "$mod_count" -gt 0 ] && ops="${ops:+$ops, }$mod_count modified"
+        message="$message ($ops)"
+    fi
+
+    echo "$message"
+}
+
+# Sync password-store repository
+sync_password_store() {
+    if [[ ! -d "$PASSWORD_STORE_DIR" ]]; then
+        log_warning "Password store directory not found: $PASSWORD_STORE_DIR"
+        return 0
+    fi
+
+    if ! is_git_repo "$PASSWORD_STORE_DIR"; then
+        log_warning "Password store is not a git repository"
+        return 0
+    fi
+
+    log_info "Checking password-store for changes..."
+    cd "$PASSWORD_STORE_DIR"
+
+    # Pull latest changes first
+    log_info "Pulling latest password-store changes..."
+    if ! git pull --rebase --autostash 2>&1 | grep -v "Already up to date"; then
+        log_warning "Pull had minor issues (likely up to date)"
+    fi
+
+    # Check if there are any local changes
+    if git diff --quiet && git diff --cached --quiet; then
+        # No new changes, but check if we're ahead
+        local ahead=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo "0")
+        if [ "$ahead" -gt 0 ]; then
+            log_info "Password-store has $ahead commit(s) to push (no new changes)"
+            if git push; then
+                log_success "Password-store pushed $ahead existing commit(s)"
+            else
+                log_error "Failed to push password-store"
+                return 1
+            fi
+        else
+            log_info "No changes in password-store"
+        fi
+        return 0
+    fi
+
+    # Stage all changes
+    git add .
+
+    # Check if there are staged changes
+    if git diff --cached --quiet; then
+        log_info "No staged changes in password-store"
+        return 0
+    fi
+
+    # Generate and apply commit message
+    local commit_msg=$(generate_pass_commit_message "$PASSWORD_STORE_DIR")
+
+    log_info "Committing password-store changes: $commit_msg"
+    git commit -m "$commit_msg"
+
+    # Push changes
+    log_info "Pushing password-store changes..."
+    if git push; then
+        log_success "Password-store changes pushed successfully"
+    else
+        log_error "Failed to push password-store changes"
+        return 1
+    fi
+}
+
+# Reverse sync: copy live Claude files back to the repository
+# Solves the "stow direction problem" - Stow deploys repo→live (symlinks),
+# but Claude Code creates NEW files directly in ~/.claude/ (live).
+# This function copies those new files into the repo before git add.
+sync_claude_live_to_repo() {
+    local live_dir="$HOME/.claude"
+    local repo_dir="$CLAUDE_PRIVATE_DIR/.claude"
+
+    if [ ! -d "$live_dir" ]; then
+        log_info "No live Claude directory found, skipping reverse sync"
+        return 0
+    fi
+
+    log_info "Reverse-syncing live Claude files to repository..."
+
+    # Directories containing important backup data (encrypted via git-crypt)
+    # --max-size=90M + --exclude=tool-results/: conversation JSONL files up to 90M are kept;
+    # tool-results/ dirs (ephemeral bash output captures, often 60MB+) are excluded entirely.
+    local sync_dirs=("projects" "shell-snapshots" "plans")
+
+    for dir in "${sync_dirs[@]}"; do
+        if [ -d "$live_dir/$dir" ] && [ "$(ls -A "$live_dir/$dir" 2>/dev/null)" ]; then
+            # Guard against stow symlinks: if live resolves to the same path as repo,
+            # rsync would copy a directory into itself, creating nested duplicates.
+            local real_src real_dst
+            real_src=$(realpath "$live_dir/$dir" 2>/dev/null)
+            real_dst=$(realpath "$repo_dir/$dir" 2>/dev/null)
+            if [ "$real_src" = "$real_dst" ]; then
+                log_info "Skipping $dir: source is symlinked to destination (already in repo)"
+                continue
+            fi
+            mkdir -p "$repo_dir/$dir"
+            # Exclude tool-results/: ephemeral bash output captures that can be 65MB+ each.
+            rsync -a --max-size=90M --exclude='tool-results/' "$live_dir/$dir/" "$repo_dir/$dir/"
+        fi
+    done
+
+    # Individual files (only if they exist and aren't symlinks back to repo)
+    # Use command to bypass any cp alias (-i), and -f to overwrite git-crypt's 600 perms
+    for file in "history.jsonl" ".credentials.json"; do
+        if [ -f "$live_dir/$file" ] && [ ! -L "$live_dir/$file" ]; then
+            command cp -fp "$live_dir/$file" "$repo_dir/$file"
+        fi
+    done
+
+    # Pi sessions — same concept as Claude Code's history.jsonl, stored as JSONL.
+    # Sync from ~/.local/share/pi/sessions/ into claude-private/.pi-sessions/ (git-crypt encrypted).
+    local pi_sessions_live="${XDG_DATA_HOME:-$HOME/.local/share}/pi/sessions"
+    local pi_sessions_repo="$CLAUDE_PRIVATE_DIR/.pi-sessions"
+    if [ -d "$pi_sessions_live" ] && [ "$(ls -A "$pi_sessions_live" 2>/dev/null)" ]; then
+        mkdir -p "$pi_sessions_repo"
+        # Pi sessions are capped at ~550KB; 90M max-size is generous.
+        rsync -a --max-size=90M "$pi_sessions_live/" "$pi_sessions_repo/"
+    fi
+
+    log_success "Live Claude files synced to repository"
+}
+
 # Sync claude-private repository
 sync_claude_private() {
     if ! is_git_repo "$CLAUDE_PRIVATE_DIR"; then
@@ -146,10 +344,84 @@ sync_claude_private() {
     log_info "Checking claude-private for changes..."
     cd "$CLAUDE_PRIVATE_DIR"
 
-    # Check if there are any changes
-    if git diff --quiet && git diff --cached --quiet; then
-        log_info "No changes in claude-private"
+    # Ensure git-crypt is unlocked before touching any staged content.
+    # When locked, git-crypt's clean filter silently passes plaintext — never commit without this guard.
+    # Skip the unlock call if already unlocked (keys dir exists after a successful unlock).
+    # Use git rev-parse --git-dir to resolve the real gitdir — claude-private is a submodule so .git
+    # is a file (pointer), not a directory; the actual gitdir is in ../.git/modules/claude-private/.
+    local _gitdir
+    _gitdir=$(git rev-parse --git-dir 2>/dev/null)
+    if [ ! -d "$_gitdir/git-crypt/keys" ]; then
+        # git-crypt unlock requires a clean working directory before it contacts the GPG agent.
+        # Stash everything (including untracked) so the unlock can proceed. Drop afterward — never
+        # pop, because sync_claude_live_to_repo will immediately restore the current live state.
+        local _stashed=false
+        if [ -n "$(git status --porcelain 2>/dev/null | head -1)" ]; then
+            if git stash push --quiet -m "dotfiles-sync pre-unlock" 2>/dev/null; then
+                _stashed=true
+            fi
+        fi
+
+        local _unlock_err
+        _unlock_err=$(git-crypt unlock 2>&1)
+        local _unlock_exit=$?
+
+        if [ $_unlock_exit -ne 0 ]; then
+            $_stashed && git stash pop --quiet 2>/dev/null || true
+            log_error "git-crypt could not be unlocked — skipping claude-private sync to prevent plaintext commit"
+            log_error "Reason: $_unlock_err"
+            return 1
+        fi
+
+        # Drop (not pop) — the live sync below restores current state; stashed versions are stale.
+        $_stashed && git stash drop --quiet 2>/dev/null || true
+        log_info "git-crypt unlocked"
+    else
+        log_info "git-crypt already unlocked"
+    fi
+
+    # Reverse sync: pull new files from live ~/.claude/ into repo
+    sync_claude_live_to_repo
+
+    # Check if there are any changes (tracked modifications OR new untracked files)
+    local has_untracked=$(git ls-files --others --exclude-standard | head -1)
+    if git diff --quiet && git diff --cached --quiet && [ -z "$has_untracked" ]; then
+        # No new changes, but check if we're ahead
+        local ahead=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo "0")
+        if [ "$ahead" -gt 0 ]; then
+            log_info "Claude-private has $ahead commit(s) to push (no new changes)"
+            if git push; then
+                log_success "Claude-private pushed $ahead existing commit(s)"
+            else
+                log_error "Failed to push claude-private"
+                return 1
+            fi
+        else
+            log_info "No changes in claude-private"
+        fi
         return 0
+    fi
+
+    # Warn about untracked files in key config directories (skills, agents, etc.)
+    # These are "source of truth" dirs that live only in the repo — easy to forget to add.
+    local untracked_files
+    untracked_files=$(git ls-files --others --exclude-standard)
+    if [ -n "$untracked_files" ]; then
+        echo ""
+        echo -e "${YELLOW}━━━ Untracked files in claude-private ━━━${NC}"
+        echo "$untracked_files" | while IFS= read -r f; do
+            echo -e "  ${YELLOW}?${NC} $f"
+        done
+        echo ""
+        # Only prompt if running interactively (terminal attached)
+        if [ -t 0 ]; then
+            echo -n -e "${YELLOW}Add these untracked files? [Y/n] ${NC}"
+            read -r add_untracked
+            if [ "$add_untracked" = "n" ] || [ "$add_untracked" = "N" ]; then
+                log_warning "Skipping untracked files — run 'git add' manually in $CLAUDE_PRIVATE_DIR"
+                return 0
+            fi
+        fi
     fi
 
     # Stage all changes
@@ -193,7 +465,19 @@ sync_dotfiles() {
         if git submodule status | grep -q '^+'; then
             log_info "Submodule updates detected"
         else
-            log_info "No changes in main dotfiles"
+            # No new changes, but check if we're ahead
+            local ahead=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo "0")
+            if [ "$ahead" -gt 0 ]; then
+                log_info "Dotfiles has $ahead commit(s) to push (no new changes)"
+                if git push; then
+                    log_success "Dotfiles pushed $ahead existing commit(s)"
+                else
+                    log_error "Failed to push dotfiles"
+                    return 1
+                fi
+            else
+                log_info "No changes in main dotfiles"
+            fi
             return 0
         fi
     fi
@@ -223,12 +507,125 @@ sync_dotfiles() {
     fi
 }
 
+# Show status of all repositories
+show_status() {
+    log_info "Checking repository status..."
+    echo
+
+    # Password Store
+    echo -e "${BLUE}Password Store:${NC} $PASSWORD_STORE_DIR"
+    if [[ -d "$PASSWORD_STORE_DIR" ]] && is_git_repo "$PASSWORD_STORE_DIR"; then
+        cd "$PASSWORD_STORE_DIR"
+        if git diff --quiet && git diff --cached --quiet; then
+            echo -e "  ${GREEN}✓${NC} No uncommitted changes"
+        else
+            echo -e "  ${YELLOW}⚠${NC} Uncommitted changes present"
+        fi
+
+        local ahead=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo "0")
+        local behind=$(git rev-list --count HEAD..@{u} 2>/dev/null || echo "0")
+
+        if [ "$ahead" -gt 0 ]; then
+            echo -e "  ${YELLOW}↑${NC} $ahead commit(s) ahead of remote"
+        fi
+        if [ "$behind" -gt 0 ]; then
+            echo -e "  ${YELLOW}↓${NC} $behind commit(s) behind remote"
+        fi
+        if [ "$ahead" -eq 0 ] && [ "$behind" -eq 0 ]; then
+            echo -e "  ${GREEN}✓${NC} Synced with remote"
+        fi
+    else
+        echo -e "  ${RED}✗${NC} Not a git repository"
+    fi
+    echo
+
+    # Claude Private
+    echo -e "${BLUE}Claude Private:${NC} $CLAUDE_PRIVATE_DIR"
+    if [[ -d "$CLAUDE_PRIVATE_DIR" ]] && is_git_repo "$CLAUDE_PRIVATE_DIR"; then
+        cd "$CLAUDE_PRIVATE_DIR"
+        if git diff --quiet && git diff --cached --quiet; then
+            echo -e "  ${GREEN}✓${NC} No uncommitted changes"
+        else
+            echo -e "  ${YELLOW}⚠${NC} Uncommitted changes present"
+        fi
+
+        local ahead=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo "0")
+        local behind=$(git rev-list --count HEAD..@{u} 2>/dev/null || echo "0")
+
+        if [ "$ahead" -gt 0 ]; then
+            echo -e "  ${YELLOW}↑${NC} $ahead commit(s) ahead of remote"
+        fi
+        if [ "$behind" -gt 0 ]; then
+            echo -e "  ${YELLOW}↓${NC} $behind commit(s) behind remote"
+        fi
+        if [ "$ahead" -eq 0 ] && [ "$behind" -eq 0 ]; then
+            echo -e "  ${GREEN}✓${NC} Synced with remote"
+        fi
+    else
+        echo -e "  ${YELLOW}⚠${NC} Not a git repository"
+    fi
+    echo
+
+    # Main Dotfiles
+    echo -e "${BLUE}Main Dotfiles:${NC} $DOTFILES_DIR"
+    if [[ -d "$DOTFILES_DIR" ]] && is_git_repo "$DOTFILES_DIR"; then
+        cd "$DOTFILES_DIR"
+        if git diff --quiet && git diff --cached --quiet; then
+            echo -e "  ${GREEN}✓${NC} No uncommitted changes"
+        else
+            echo -e "  ${YELLOW}⚠${NC} Uncommitted changes present"
+        fi
+
+        local ahead=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo "0")
+        local behind=$(git rev-list --count HEAD..@{u} 2>/dev/null || echo "0")
+
+        if [ "$ahead" -gt 0 ]; then
+            echo -e "  ${YELLOW}↑${NC} $ahead commit(s) ahead of remote"
+        fi
+        if [ "$behind" -gt 0 ]; then
+            echo -e "  ${YELLOW}↓${NC} $behind commit(s) behind remote"
+        fi
+        if [ "$ahead" -eq 0 ] && [ "$behind" -eq 0 ]; then
+            echo -e "  ${GREEN}✓${NC} Synced with remote"
+        fi
+    else
+        echo -e "  ${RED}✗${NC} Not a git repository"
+    fi
+    echo
+
+    # bgovault (Obsidian)
+    echo -e "${BLUE}bgovault (Obsidian):${NC} $BGOVAULT_DIR"
+    if [[ -d "$BGOVAULT_DIR" ]] && is_git_repo "$BGOVAULT_DIR"; then
+        cd "$BGOVAULT_DIR"
+        if git diff --quiet && git diff --cached --quiet; then
+            echo -e "  ${GREEN}✓${NC} No uncommitted changes"
+        else
+            echo -e "  ${YELLOW}⚠${NC} Uncommitted changes present (Obsidian Git commits these)"
+        fi
+
+        local ahead=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo "0")
+        local behind=$(git rev-list --count HEAD..@{u} 2>/dev/null || echo "0")
+
+        if [ "$ahead" -gt 0 ]; then
+            echo -e "  ${YELLOW}↑${NC} $ahead commit(s) ahead of remote"
+        fi
+        if [ "$behind" -gt 0 ]; then
+            echo -e "  ${YELLOW}↓${NC} $behind commit(s) behind remote"
+        fi
+        if [ "$ahead" -eq 0 ] && [ "$behind" -eq 0 ]; then
+            echo -e "  ${GREEN}✓${NC} Synced with remote"
+        fi
+    else
+        echo -e "  ${RED}✗${NC} Not a git repository"
+    fi
+}
+
 # Show usage
 show_usage() {
     cat << EOF
 Usage: dotfiles-sync [OPTIONS]
 
-Intelligently sync dotfiles and claude-private repositories with smart commit messages.
+Intelligently sync dotfiles, claude-private, and password-store repositories.
 
 OPTIONS:
     -h, --help          Show this help message
@@ -236,11 +633,22 @@ OPTIONS:
     -n, --dry-run       Show what would be done without making changes
     -c, --claude-only   Sync only claude-private repository
     -d, --dotfiles-only Sync only main dotfiles repository
+    -p, --pass-only     Sync only password-store repository
+    -b, --vault-only    Sync only bgovault (Obsidian) repository
+    -a, --all           Sync all repositories (default)
+    -s, --status        Show status of all repositories
 
 EXAMPLES:
-    dotfiles-sync                    # Sync both repositories
-    dotfiles-sync --claude-only      # Sync only claude-private
-    dotfiles-sync --dry-run          # Preview changes without committing
+    dotfiles-sync                    # Sync all repositories
+    dotfiles-sync --pass-only        # Sync only password-store
+    dotfiles-sync --status           # Check status without syncing
+    dotfiles-sync --dry-run          # Preview changes
+
+REPOSITORIES MANAGED:
+    - Main dotfiles:     $DOTFILES_DIR
+    - Claude private:    $CLAUDE_PRIVATE_DIR
+    - Password store:    $PASSWORD_STORE_DIR
+    - bgovault (vault):  $BGOVAULT_DIR
 
 EOF
 }
@@ -250,6 +658,9 @@ DRY_RUN=false
 VERBOSE=false
 CLAUDE_ONLY=false
 DOTFILES_ONLY=false
+PASS_ONLY=false
+VAULT_ONLY=false
+SHOW_STATUS=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -273,6 +684,22 @@ while [[ $# -gt 0 ]]; do
             DOTFILES_ONLY=true
             shift
             ;;
+        -p|--pass-only)
+            PASS_ONLY=true
+            shift
+            ;;
+        -b|--vault-only)
+            VAULT_ONLY=true
+            shift
+            ;;
+        -a|--all)
+            # Default behavior, do nothing
+            shift
+            ;;
+        -s|--status)
+            SHOW_STATUS=true
+            shift
+            ;;
         *)
             log_error "Unknown option: $1"
             show_usage
@@ -281,13 +708,51 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Validate conflicting options
-if [[ "$CLAUDE_ONLY" == true && "$DOTFILES_ONLY" == true ]]; then
-    log_error "Cannot specify both --claude-only and --dotfiles-only"
-    exit 1
+# Handle status check
+if [[ "$SHOW_STATUS" == true ]]; then
+    show_status
+    exit 0
 fi
 
 # Main execution
+# Sync bgovault (Obsidian vault) — PUSH-focused.
+# Obsidian Git owns the *commits* (auto-backup); this makes sure those commits
+# actually reach the remote. Obsidian's GUI process usually lacks the ssh-agent,
+# so its own push silently fails and unpushed commits pile up. Running from the
+# shell env (timer/click) has working SSH, so the push succeeds here.
+# We do NOT commit working files — that stays Obsidian's job.
+sync_bgovault() {
+    log_info "Syncing bgovault (Obsidian vault)..."
+
+    if ! is_git_repo "$BGOVAULT_DIR"; then
+        log_warning "bgovault not found at $BGOVAULT_DIR - skipping"
+        return 0
+    fi
+
+    cd "$BGOVAULT_DIR"
+
+    # Integrate remote changes first; --autostash protects live Obsidian edits
+    if ! git pull --rebase --autostash; then
+        log_error "bgovault pull/rebase failed (resolve manually)"
+        return 1
+    fi
+
+    local ahead
+    ahead=$(git rev-list --count '@{u}..HEAD' 2>/dev/null || echo 0)
+    if [[ "$ahead" -gt 0 ]]; then
+        log_info "Pushing $ahead bgovault commit(s)..."
+        if git push; then
+            log_success "bgovault pushed ($ahead commit(s))"
+        else
+            log_error "Failed to push bgovault"
+            return 1
+        fi
+    else
+        log_info "bgovault already up to date (nothing to push)"
+    fi
+    return 0
+}
+
 main() {
     log_info "Starting dotfiles synchronization..."
 
@@ -304,7 +769,17 @@ main() {
     # Sync repositories
     local exit_code=0
 
-    if [[ "$DOTFILES_ONLY" != true ]]; then
+    # Sync password-store first (credentials may be needed)
+    if [[ "$DOTFILES_ONLY" != true && "$CLAUDE_ONLY" != true && "$VAULT_ONLY" != true ]]; then
+        if [[ "$DRY_RUN" == true ]]; then
+            log_info "[DRY RUN] Would sync password-store repository"
+        else
+            sync_password_store || exit_code=$?
+        fi
+    fi
+
+    # Sync claude-private
+    if [[ "$DOTFILES_ONLY" != true && "$PASS_ONLY" != true && "$VAULT_ONLY" != true ]]; then
         if [[ "$DRY_RUN" == true ]]; then
             log_info "[DRY RUN] Would sync claude-private repository"
         else
@@ -312,11 +787,21 @@ main() {
         fi
     fi
 
-    if [[ "$CLAUDE_ONLY" != true ]]; then
+    # Sync main dotfiles
+    if [[ "$CLAUDE_ONLY" != true && "$PASS_ONLY" != true && "$VAULT_ONLY" != true ]]; then
         if [[ "$DRY_RUN" == true ]]; then
             log_info "[DRY RUN] Would sync main dotfiles repository"
         else
             sync_dotfiles || exit_code=$?
+        fi
+    fi
+
+    # Sync bgovault (Obsidian vault) — push any committed-but-unpushed work
+    if [[ "$DOTFILES_ONLY" != true && "$CLAUDE_ONLY" != true && "$PASS_ONLY" != true ]]; then
+        if [[ "$DRY_RUN" == true ]]; then
+            log_info "[DRY RUN] Would sync bgovault repository"
+        else
+            sync_bgovault || exit_code=$?
         fi
     fi
 

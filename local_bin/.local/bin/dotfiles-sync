@@ -2,12 +2,13 @@
 set -euo pipefail
 
 # Enhanced Dotfiles Sync Script with Password Store Support
-# Syncs: dotfiles + claude-private + password-store
+# Syncs: dotfiles + claude-private + password-store + bgovault (Obsidian vault)
 # Generates meaningful commit messages based on actual changes
 
 DOTFILES_DIR="$HOME/.dotfiles"
 CLAUDE_PRIVATE_DIR="$DOTFILES_DIR/claude-private"
 PASSWORD_STORE_DIR="${PASSWORD_STORE_DIR:-$HOME/.password-store}"
+BGOVAULT_DIR="${BGOVAULT_DIR:-$HOME/notes/bgovault}"
 
 # Colors for output
 RED='\033[0;31m'
@@ -590,6 +591,33 @@ show_status() {
     else
         echo -e "  ${RED}✗${NC} Not a git repository"
     fi
+    echo
+
+    # bgovault (Obsidian)
+    echo -e "${BLUE}bgovault (Obsidian):${NC} $BGOVAULT_DIR"
+    if [[ -d "$BGOVAULT_DIR" ]] && is_git_repo "$BGOVAULT_DIR"; then
+        cd "$BGOVAULT_DIR"
+        if git diff --quiet && git diff --cached --quiet; then
+            echo -e "  ${GREEN}✓${NC} No uncommitted changes"
+        else
+            echo -e "  ${YELLOW}⚠${NC} Uncommitted changes present (Obsidian Git commits these)"
+        fi
+
+        local ahead=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo "0")
+        local behind=$(git rev-list --count HEAD..@{u} 2>/dev/null || echo "0")
+
+        if [ "$ahead" -gt 0 ]; then
+            echo -e "  ${YELLOW}↑${NC} $ahead commit(s) ahead of remote"
+        fi
+        if [ "$behind" -gt 0 ]; then
+            echo -e "  ${YELLOW}↓${NC} $behind commit(s) behind remote"
+        fi
+        if [ "$ahead" -eq 0 ] && [ "$behind" -eq 0 ]; then
+            echo -e "  ${GREEN}✓${NC} Synced with remote"
+        fi
+    else
+        echo -e "  ${RED}✗${NC} Not a git repository"
+    fi
 }
 
 # Show usage
@@ -606,6 +634,7 @@ OPTIONS:
     -c, --claude-only   Sync only claude-private repository
     -d, --dotfiles-only Sync only main dotfiles repository
     -p, --pass-only     Sync only password-store repository
+    -b, --vault-only    Sync only bgovault (Obsidian) repository
     -a, --all           Sync all repositories (default)
     -s, --status        Show status of all repositories
 
@@ -619,6 +648,7 @@ REPOSITORIES MANAGED:
     - Main dotfiles:     $DOTFILES_DIR
     - Claude private:    $CLAUDE_PRIVATE_DIR
     - Password store:    $PASSWORD_STORE_DIR
+    - bgovault (vault):  $BGOVAULT_DIR
 
 EOF
 }
@@ -629,6 +659,7 @@ VERBOSE=false
 CLAUDE_ONLY=false
 DOTFILES_ONLY=false
 PASS_ONLY=false
+VAULT_ONLY=false
 SHOW_STATUS=false
 
 while [[ $# -gt 0 ]]; do
@@ -657,6 +688,10 @@ while [[ $# -gt 0 ]]; do
             PASS_ONLY=true
             shift
             ;;
+        -b|--vault-only)
+            VAULT_ONLY=true
+            shift
+            ;;
         -a|--all)
             # Default behavior, do nothing
             shift
@@ -680,6 +715,44 @@ if [[ "$SHOW_STATUS" == true ]]; then
 fi
 
 # Main execution
+# Sync bgovault (Obsidian vault) — PUSH-focused.
+# Obsidian Git owns the *commits* (auto-backup); this makes sure those commits
+# actually reach the remote. Obsidian's GUI process usually lacks the ssh-agent,
+# so its own push silently fails and unpushed commits pile up. Running from the
+# shell env (timer/click) has working SSH, so the push succeeds here.
+# We do NOT commit working files — that stays Obsidian's job.
+sync_bgovault() {
+    log_info "Syncing bgovault (Obsidian vault)..."
+
+    if ! is_git_repo "$BGOVAULT_DIR"; then
+        log_warning "bgovault not found at $BGOVAULT_DIR - skipping"
+        return 0
+    fi
+
+    cd "$BGOVAULT_DIR"
+
+    # Integrate remote changes first; --autostash protects live Obsidian edits
+    if ! git pull --rebase --autostash; then
+        log_error "bgovault pull/rebase failed (resolve manually)"
+        return 1
+    fi
+
+    local ahead
+    ahead=$(git rev-list --count '@{u}..HEAD' 2>/dev/null || echo 0)
+    if [[ "$ahead" -gt 0 ]]; then
+        log_info "Pushing $ahead bgovault commit(s)..."
+        if git push; then
+            log_success "bgovault pushed ($ahead commit(s))"
+        else
+            log_error "Failed to push bgovault"
+            return 1
+        fi
+    else
+        log_info "bgovault already up to date (nothing to push)"
+    fi
+    return 0
+}
+
 main() {
     log_info "Starting dotfiles synchronization..."
 
@@ -697,7 +770,7 @@ main() {
     local exit_code=0
 
     # Sync password-store first (credentials may be needed)
-    if [[ "$DOTFILES_ONLY" != true && "$CLAUDE_ONLY" != true ]]; then
+    if [[ "$DOTFILES_ONLY" != true && "$CLAUDE_ONLY" != true && "$VAULT_ONLY" != true ]]; then
         if [[ "$DRY_RUN" == true ]]; then
             log_info "[DRY RUN] Would sync password-store repository"
         else
@@ -706,7 +779,7 @@ main() {
     fi
 
     # Sync claude-private
-    if [[ "$DOTFILES_ONLY" != true && "$PASS_ONLY" != true ]]; then
+    if [[ "$DOTFILES_ONLY" != true && "$PASS_ONLY" != true && "$VAULT_ONLY" != true ]]; then
         if [[ "$DRY_RUN" == true ]]; then
             log_info "[DRY RUN] Would sync claude-private repository"
         else
@@ -715,11 +788,20 @@ main() {
     fi
 
     # Sync main dotfiles
-    if [[ "$CLAUDE_ONLY" != true && "$PASS_ONLY" != true ]]; then
+    if [[ "$CLAUDE_ONLY" != true && "$PASS_ONLY" != true && "$VAULT_ONLY" != true ]]; then
         if [[ "$DRY_RUN" == true ]]; then
             log_info "[DRY RUN] Would sync main dotfiles repository"
         else
             sync_dotfiles || exit_code=$?
+        fi
+    fi
+
+    # Sync bgovault (Obsidian vault) — push any committed-but-unpushed work
+    if [[ "$DOTFILES_ONLY" != true && "$CLAUDE_ONLY" != true && "$PASS_ONLY" != true ]]; then
+        if [[ "$DRY_RUN" == true ]]; then
+            log_info "[DRY RUN] Would sync bgovault repository"
+        else
+            sync_bgovault || exit_code=$?
         fi
     fi
 
