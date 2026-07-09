@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Foreign-script letter picker — Cyrillic (Russian), Greek, Arabic.
+# Types the chosen character at the cursor. Keyboard toggle stays us/is.
+exec rofimoji \
+    --files cyrillic cyrillic_supplement greek_and_coptic arabic \
+    --action type \
+    --prompt "abc> " \
+    --selector-args="-font 'HackNerdFont 14'"
