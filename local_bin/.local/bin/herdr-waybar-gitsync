@@ -9,9 +9,10 @@ sp(){ printf '<span color="%s">%s</span>' "$1" "$2"; }
 sb(){ printf '<span color="%s" font_weight="bold">%s</span>' "$1" "$2"; }
 emit(){ python3 -c "import json,sys;print(json.dumps({'text':sys.argv[1],'class':sys.argv[2],'tooltip':sys.argv[3]}))" "$1" "$2" "${3:-}"; }
 
-# repos: label<TAB>glyph<TAB>path   (glyph: 󱪦 folder-git, 󰠮 notebook)
+# repos: label<TAB>glyph<TAB>path   (glyphs: 󱪦 folder-git, 󰦝 shield-lock, 󰠮 notebook)
 repos=$(printf '%s\n' \
   "dotfiles	󱪦	$HOME/.dotfiles" \
+  "claude-private	󰦝	$HOME/.dotfiles/claude-private" \
   "bgovault	󰠮	$HOME/notes/bgovault")
 
 # returns: "<state> <glyph> <colorvar>" via echo; state in synced/dirty/ahead/behind/diverged/error
@@ -45,7 +46,7 @@ while IFS=$'\t' read -r label glyph dir; do
         *)        ico="✗"; c="$r"; note="not a git repo / error";  lvl=3 ;;
     esac
     [ "$lvl" -gt "$worst" ] && worst="$lvl"
-    out="${out}${out:+ }$(sp "$dim" "$glyph")$(sb "$c" "$ico")"
+    out="${out}${out:+ }$(sb "$c" "${glyph}${ico}")"
     ttip="${ttip}${ttip:+\n}${label}: ${note}"
 done <<< "$repos"
 
@@ -56,4 +57,4 @@ case "$worst" in
     *) cls="gitsync-error" ;;
 esac
 ttip="${ttip}\n\nClick: sync dotfiles · Right-click: status"
-emit "$(sp "$o" "")  $out" "$cls" "$ttip"
+emit "$(sb "$b" "") $out" "$cls" "$ttip"
