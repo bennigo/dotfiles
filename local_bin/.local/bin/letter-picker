@@ -1,10 +1,44 @@
 #!/usr/bin/env bash
-# Foreign-script letter picker — Cyrillic (Russian), Greek, Arabic,
-# Japanese kana, and Chinese/Japanese ideographs (searchable by pinyin/name).
-# Types the chosen character at the cursor. Keyboard toggle stays us/is.
-exec rofimoji \
-    --files cyrillic cyrillic_supplement greek_and_coptic arabic \
-            hiragana katakana cjk_symbols_and_punctuation cjk_mandarin \
-    --action type \
-    --prompt "字> " \
-    --selector-args="-font 'HackNerdFont 14'"
+# Foreign-script letter/character picker with searchable English language tags.
+# Type "russian", "greek", "arabic", "japanese", "chinese", or "symbol" to
+# filter by script — or type a pinyin/name fragment. Selected char is typed
+# at the cursor (wtype). Keyboard toggle stays us/is.
+set -euo pipefail
+
+DATA=/usr/lib/python3/dist-packages/picker/data
+CACHE="${XDG_RUNTIME_DIR:-/tmp}/letter-picker.cache"
+
+# language keyword -> rofimoji data files (space separated)
+declare -A GROUPS=(
+    [russian]="cyrillic cyrillic_supplement"
+    [greek]="greek_and_coptic greek_extended"
+    [arabic]="arabic arabic_supplement"
+    [japanese]="hiragana katakana"
+    [chinese]="cjk_mandarin"
+    [symbol]="cjk_symbols_and_punctuation"
+)
+
+build() {
+    for lang in russian greek arabic japanese chinese symbol; do
+        for f in ${GROUPS[$lang]}; do
+            [ -f "$DATA/$f.csv" ] || continue
+            # "<char> <description>"  ->  "<char>\t<lang> <description>"
+            awk -v L="$lang" '{c=$1; $1=""; sub(/^[ \t]+/,""); printf "%s\t%s %s\n", c, L, $0}' "$DATA/$f.csv"
+        done
+    done
+}
+
+# (re)build cache if missing or older than the data dir
+if [ ! -s "$CACHE" ] || [ "$DATA" -nt "$CACHE" ]; then
+    build > "$CACHE"
+fi
+
+sel=$(rofi -dmenu -i -p "字> " \
+        -font "Noto Sans 14" \
+        -no-custom -matching normal \
+        < "$CACHE") || exit 0
+
+[ -n "$sel" ] || exit 0
+char=$(printf '%s' "$sel" | cut -f1)
+[ -n "$char" ] || exit 0
+command -v wtype >/dev/null && wtype -- "$char" || { printf '%s' "$char" | wl-copy; notify-send "Copied" "$char"; }
