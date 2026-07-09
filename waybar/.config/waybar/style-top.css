@@ -1,34 +1,19 @@
 * {
-    border: none;
-    border-radius: 0;
-    font-family: "Ubuntu Nerd Font";
-    font-size: 13px;
-    min-height: 0;
-    color: #cdd6f4;
+    border: none; border-radius: 0; min-height: 0;
+    font-family: "Ubuntu Nerd Font"; font-size: 13px; color: #cdd6f4;
 }
-
-window#waybar {
-    background: rgba(30, 30, 46, 0.75);
-}
-
+window#waybar { background: rgba(30, 30, 46, 0.9); border: 1px solid rgba(249, 226, 175, 0.25); }
+#workspaces { margin: 0 4px 0 0; }
 #workspaces button {
-    padding: 0 6px;
-    background: transparent;
-    color: #9399b2;
-    border-top: 2px solid transparent;
-    border-radius: 6px;
-    margin: 0 1px;
+    padding: 0 6px; margin: 0 1px; background: transparent; color: #9399b2;
+    border-top: 2px solid transparent; border-radius: 6px;
 }
-#workspaces button.focused {
-    color: #cdd6f4;
-    background: rgba(137, 180, 250, 0.18);
-    border-top: 2px solid #89b4fa;
-}
-#workspaces button.urgent { color: #f38ba8; }
-
-#language, #idle_inhibitor, #custom-dnd, #custom-menu {
-    padding: 0 8px;
-    margin: 0 2px;
+#workspaces button.focused { color: #cdd6f4; background: rgba(137,180,250,0.18); border-top-color: #89b4fa; }
+#custom-bluetooth, #language, #idle_inhibitor, #custom-dnd, #custom-power {
+    padding: 0 6px; margin: 0 1px; border-radius: 4px;
 }
 #idle_inhibitor.activated { color: #f9e2af; }
 #custom-dnd.dnd { color: #f38ba8; }
+#custom-power { color: #f38ba8; }
+#custom-power:hover { background: rgba(243, 139, 168, 0.2); }
+#custom-bluetooth { color: #89b4fa; }

@@ -4,27 +4,38 @@
     min-height: 0; color: #cdd6f4;
 }
 
-/* Floating rounded */
+/* Floating rounded with soft yellow outline */
 window#waybar { background-color: transparent; }
 window#waybar > box {
     background-color: rgba(30, 30, 46, 0.9);
-    border-radius: 14px; margin: 6px 8px 0 8px; padding: 4px 10px;
+    border-radius: 12px;
+    margin: 6px 8px 0 8px; padding: 4px 10px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(249, 226, 175, 0.25);
 }
 
-/* Workspaces */
-#workspaces { margin: 0 4px 0 0; }
+/* Workspaces — pin to top of the tall bar */
+#workspaces {
+    margin: 0 4px 0 0;
+    padding-top: 0;
+}
 #workspaces button {
-    padding: 0 6px; background: transparent; color: #9399b2;
-    border-top: 2px solid transparent; border-radius: 6px; margin: 0 1px;
+    padding: 0 6px; margin: 0 1px;
+    background: transparent; color: #9399b2;
+    border-top: 2px solid transparent; border-radius: 6px;
 }
 #workspaces button.focused { color: #cdd6f4; background: rgba(137,180,250,0.18); border-top-color: #89b4fa; }
 #workspaces button.urgent { color: #f38ba8; }
 
-/* Herdr */
-#custom-herdr { padding: 0 6px; margin-left: 4px; }
+/* Herdr — multiline, right side of bar */
+#custom-herdr { padding: 0 8px; }
 
-/* Right toggles */
-#language, #idle_inhibitor, #custom-dnd { padding: 0 8px; margin: 0 2px; }
+/* Right-side toggles */
+#custom-bluetooth, #language, #idle_inhibitor, #custom-dnd, #custom-power {
+    padding: 0 6px; margin: 0 1px; border-radius: 4px;
+}
 #idle_inhibitor.activated { color: #f9e2af; }
 #custom-dnd.dnd { color: #f38ba8; }
+#custom-power { color: #f38ba8; }
+#custom-power:hover { background: rgba(243, 139, 168, 0.2); }
+#custom-bluetooth { color: #89b4fa; }

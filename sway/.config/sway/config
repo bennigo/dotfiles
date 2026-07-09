@@ -236,9 +236,6 @@ bindsym $mod+Return exec $term
 # Kill focused window
 ## Windows // Kill focused window // ❌ ##
 bindsym $mod+q kill
-## UI // Reload Waybar (USR1) // 🔁 ##
-bindsym $mod+Shift+Q exec pkill -USR1 waybar
-
 # Start your launcher
 ## Apps // Open application launcher (rofi combi) // 🚀 ##
 bindsym $mod+d exec $menu
@@ -278,6 +275,10 @@ bindsym $mod+Shift+p exec $term --class "clipse" zsh -i ${HOME}/.local/bin/run_s
 bindsym $mod+u exec ~/.config/sway/scripts/show-time-gps.sh
 ## Info // Toggle live corner clock (upper-right, half size, refreshes every second) // 🕰️ ##
 bindsym $mod+Shift+u exec ~/.config/sway/scripts/corner-clock.sh
+## Info // Toggle herdr status bar (GPS/processes) // 📊 ##
+bindsym $mod+F10 swaymsg bar bar-0 hidden_state toggle
+## Info // Toggle metrics bar (network/load/mem/cpu/controls) // 📈 ##
+bindsym $mod+F11 swaymsg bar bar-1 hidden_state toggle
 
 # Keyboard layout indicator.
 # - Bare Alt Gr: xkb's grp:toggle cycles, and we additionally flash the
@@ -567,7 +568,11 @@ bindsym $mod+Shift+r mode "resize"
 # Read `man 5 sway-bar` for more information about this section.
 bar {
     position top
-    swaybar_command waybar
+    swaybar_command /home/bgo/.dotfiles/waybar/.config/waybar/launch-herdr.sh
+}
+bar {
+    position top
+    swaybar_command /home/bgo/.dotfiles/waybar/.config/waybar/launch-top.sh
 }
 
 popup_during_fullscreen smart
