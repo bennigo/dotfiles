@@ -55,7 +55,7 @@ vpn)
     ;;
 sysmon)
     ld=$(cut -d' ' -f1 /proc/loadavg 2>/dev/null); nc=$(nproc 2>/dev/null)
-    mm=$(free -h 2>/dev/null|awk '/^Mem:/{print $3}')
+    mm=$(free -h 2>/dev/null|awk '/^Mem:/{print $3"/"$2}')
     emit "$(sb "$p" "load ${ld}")$(sp "$dim" "/${nc}")$(se)$(sb "$t" "mem ${mm}")" "metric-sys" "Click: htop"
     ;;
 cpu)
