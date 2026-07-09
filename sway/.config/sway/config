@@ -210,7 +210,7 @@ bindsym $mod+comma exec ~/.local/bin/nf-picker
 ## Apps // Unicode symbol picker (arrows, math, box-drawing, dingbats) // ✦ ##
 bindsym $mod+Ctrl+comma exec ~/.local/bin/sym-picker
 ## Apps // Letter picker (Cyrillic/Russian, Greek, Arabic, CJK) // Я ##
-bindsym $mod+u exec ~/.local/bin/letter-picker
+bindsym $mod+apostrophe exec ~/.local/bin/letter-picker
 
 #
 # Basics:
