@@ -43,7 +43,48 @@ Adding a new model: edit `models.json` (live-reloads via `/model`), then optiona
 - `/context-model` — analyze current project and recommend optimal default model
 - On startup, detects project complexity and notifies if a cheaper model would suffice
 
-## Agent Roster (13 agents)
+## Model Modes & Auto-Routing (mode-router extension)
+
+The `mode-router.ts` extension automatically routes the **main interactive model** across three modes:
+
+| Mode | Trigger | Behavior |
+|------|---------|----------|
+| **online** | default (cloud reachable) | Your normal model choice stands; full cloud roster available |
+| **offline** | cloud unreachable (auto-probed, 30s cache) | Silently switches main model to local `llama3.1:8b` + one-line notice; restores your cloud model when connectivity returns |
+| **private** | `/private` command | Forces local-only even when online — nothing leaves the machine; `/private off` releases |
+
+Commands: `/private` (toggle on-device mode), `/online` (force cloud + restore), `/mode` (show mode, connectivity, active model). Manual `/model` picks are respected — the router stops fighting you once you choose.
+
+**Task-based distribution** is handled by the `orchestrator` agent (stable main model, no jarring mid-chat swaps), which decomposes work and dispatches each subtask to the cheapest capable specialist.
+
+## Local Model Reality (benchmarked on RTX 2000 Ada, 8GB)
+
+Tool-calling was benchmarked against Ollama's OpenAI endpoint (what Pi uses). **Only tool-capable models can drive Pi's agent loop:**
+
+| Local model | Tool calls? | Speed | Role |
+|-------------|-------------|-------|------|
+| `llama3.1:8b` | ✅ yes | ~8s ★ fastest | Primary local agent (offline/private/fallback) |
+| `hermes3:8b` | ✅ yes | ~10s | Secondary — function-calling finetune, good for richer tool schemas |
+| `qwen3.5:latest` | ✅ yes | ~11s | Tertiary local agent |
+| `qwen3:8b` | ✅ yes | ~21s slow | Backup |
+| `granite3.3:8b` | ⚠️ unreliable | ~3s | Fast but drops/empties tool args — chat only, NOT agent loop |
+| `qwen2.5-coder:7b` | ❌ emits raw JSON | — | Chat/completion only — NOT for agent loop |
+| `ornith-16k` (capped) | ❌ no tool template | — | Chat/reasoning only |
+| `deepseek-coder-v2:16b` | ❌ no tool template | — | Chat only + too big (spills VRAM) |
+
+Ornith was capped to 16K context (`ornith-16k`) to fit 8GB VRAM. Never route agents to the ❌ models.
+
+## Token-Cost Policy (non-subscription optimization)
+
+Spend order for every task: **local ($0, private) → subscription ($0 marginal) → cheap-paid (DeepSeek) → premium-paid (Kimi/OpenRouter)**.
+
+- Subscription Copilot is free at the margin → prefer it over cheap-paid DeepSeek for any non-trivial single task.
+- Reserve **cheap-paid** for high-volume/parallel scouting where many Copilot calls would be slow/rate-limited.
+- Reserve **local** for trivial or privacy-bound work (and all offline/private work).
+- Reserve **premium-paid** for cases explicitly needing it.
+- The `orchestrator` agent enforces this automatically.
+
+## Agent Roster (15 agents)
 
 ### Exploration & Analysis
 
@@ -67,7 +108,13 @@ Adding a new model: edit `models.json` (live-reloads via `/model`), then optiona
 |-------|-------|---------|---------|
 | **worker** | Claude Sonnet 4.6 (Copilot) | 1M | Complex implementation, multi-step refactors — known quantity |
 | **quick-worker** | DeepSeek V4 Pro | 1M | Boilerplate, simple changes — #1 coding, cheap |
-| **fallback-worker** | Qwen 3.5 (local) | 32K | Backup when cloud models rate-limited |
+| **fallback-worker** | Llama 3.1 8B (local) | 32K | Offline / private / rate-limited work — fastest confirmed local tool-caller (~8s) |
+
+### Orchestration
+
+| Agent | Model | Context | Use for |
+|-------|-------|---------|---------|
+| **orchestrator** | Claude Sonnet 4.6 (Copilot) | 1M | Decompose multi-part tasks and dispatch each subtask to the optimal specialist/model; mode- & cost-aware |
 
 ### Quality
 
