@@ -16,8 +16,8 @@
     "npm:@eko24ive/pi-ask"
   ],
   "lastChangelogVersion": "0.80.3",
-  "defaultProvider": "github-copilot",
-  "defaultModel": "claude-opus-4.8",
+  "defaultProvider": "ollama",
+  "defaultModel": "llama3.1:8b",
   "defaultThinkingLevel": "high",
   "theme": "dark",
   "hideThinkingBlock": true
