@@ -19,7 +19,7 @@ fi
 # centers the window at the top of the focused output.
 # Cream bg + 0.85 opacity to match the herdr bar; latte-dark text for contrast.
 ~/.local/bin/kitty --class "$APPID" -o font_size=11 \
-    -o background="#e9e7e3" -o background_opacity=0.85 \
+    -o background="#e9e7e3" -o background_opacity=0.9 \
     -o foreground="#4c4f69" -o cursor="#4c4f69" \
     -e ~/.local/bin/herdr-cpu-view &
 
