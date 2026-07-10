@@ -108,7 +108,7 @@ def main():
                 cells.append(f"{TEAL}{n:>2}{SUB}│{RST}{bar(pct)} {pcol}{pct:>3}%{RST} {proc_s}")
             rows=(len(cells)+COLS-1)//COLS
             CELLW=37  # visible width of one cell (keep in sync with cell format)
-            SEP=f"  {LAV}│{RST}  "  # colored vertical separator between columns
+            SEP=f"  {BLU}│{RST}  "  # colored vertical separator between columns
             for r in range(rows):
                 parts=[]
                 for c in range(COLS):
