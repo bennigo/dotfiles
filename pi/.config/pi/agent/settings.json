@@ -2,7 +2,8 @@
   "extensions": [
     "./extensions/bgo-toolkit",
     "./extensions/context-model.ts",
-    "./extensions/model-discovery.ts"
+    "./extensions/model-discovery.ts",
+    "./extensions/mode-router.ts"
   ],
   "skills": [
     "~/.claude/skills"
