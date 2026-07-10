@@ -1,0 +1,10 @@
+[Unit]
+Description=Watch /etc/resolv.conf and re-assert a public DNS fallback on change
+
+[Path]
+# Fires whenever resolv.conf is rewritten (e.g. by Cisco AnyConnect on
+# connect/disconnect). The triggered service is idempotent so this never loops.
+PathModified=/etc/resolv.conf
+
+[Install]
+WantedBy=paths.target

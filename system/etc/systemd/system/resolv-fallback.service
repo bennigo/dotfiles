@@ -1,0 +1,7 @@
+[Unit]
+Description=Ensure a public DNS fallback in /etc/resolv.conf (VPN death-spiral guard)
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/resolv-fallback
