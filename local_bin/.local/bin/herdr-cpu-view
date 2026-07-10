@@ -14,8 +14,9 @@ def fg(h):
     r=int(h[0:2],16); g=int(h[2:4],16); b=int(h[4:6],16)
     return f"\x1b[38;2;{r};{g};{b}m"
 RST="\x1b[0m"; BOLD="\x1b[1m"; HOME="\x1b[H\x1b[J"; HIDE="\x1b[?25l"; SHOW="\x1b[?25h"
-GRN=fg("a6e3a1"); YEL=fg("f9e2af"); RED=fg("f38ba8"); BLU=fg("89b4fa")
-TEAL=fg("94e2d5"); PCH=fg("fab387"); LAV=fg("b4befe"); SUB=fg("6c7086"); TXT=fg("cdd6f4")
+# Catppuccin Latte palette (dark-on-light) — the popup runs on a cream bg
+GRN=fg("40a02b"); YEL=fg("df8e1d"); RED=fg("d20f39"); BLU=fg("1e66f5")
+TEAL=fg("179299"); PCH=fg("fe640b"); LAV=fg("7287fd"); SUB=fg("8c8fa1"); TXT=fg("4c4f69")
 BLOCKS=" ▏▎▍▌▋▊▉█"
 COLS=max(1,int(os.environ.get("HERDR_CPU_COLS","4")))
 BARW=8
