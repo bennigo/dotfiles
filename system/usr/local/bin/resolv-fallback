@@ -1,0 +1,37 @@
+#!/bin/bash
+# resolv-fallback — heal the "DNS death-spiral" left by a dead Cisco AnyConnect
+# tunnel. AnyConnect writes /etc/resolv.conf with ONLY the VPN-internal DNS
+# (10.170.255.x) and, on an ungraceful death, never restores it — so every
+# lookup stalls against unreachable servers.
+#
+# Strategy: do NOTHING while the tunnel is up (AnyConnect owns the file and its
+# DNS works; fighting vpnagentd just causes churn). When the tunnel is DOWN,
+# make a reachable public resolver the FIRST nameserver so lookups succeed
+# immediately regardless of any stale VPN entries left behind.
+#
+# Driven by BOTH resolv-fallback.path (instant reaction when the file is
+# rewritten) and resolv-fallback.timer (catch-all if the tunnel dies without
+# touching the file). Idempotent, so neither trigger loops.
+set -eu
+
+RC=/etc/resolv.conf
+FB=1.1.1.1
+
+[ -L "$RC" ] && exit 0     # resolved-managed symlink: not our job
+[ -f "$RC" ] || exit 0
+
+# Tunnel up? (tun carrier present) -> leave resolv.conf to AnyConnect.
+if ip -o link show cscotun0 2>/dev/null | grep -q 'LOWER_UP'; then
+    exit 0
+fi
+
+# Tunnel DOWN: ensure the public fallback is the first nameserver (idempotent).
+first_ns=$(awk '/^nameserver[ \t]/{print $2; exit}' "$RC")
+[ "$first_ns" = "$FB" ] && exit 0
+
+desired=$(
+    printf 'nameserver %s\n' "$FB"
+    awk -v fb="$FB" '/^nameserver[ \t]/ && $2==fb {next} {print}' "$RC"
+)
+printf '%s\n' "$desired" > "$RC"
+logger -t resolv-fallback "VPN down: prepended $FB to $RC (death-spiral guard)"

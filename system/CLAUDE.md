@@ -208,6 +208,38 @@ Bypasses Cisco AnyConnect VPN hijacking of local subnet routes. Uses policy rout
 + iptables RETURN rules with device whitelist (router, printer, etc.). Auto-retries to survive
 vpnagentd chain rebuilds.
 
+### Cisco VPN DNS Death-Spiral Fix
+
+**Files**: `usr/local/bin/resolv-fallback`,
+`etc/systemd/system/resolv-fallback.{service,path,timer}`
+
+Cisco AnyConnect writes `/etc/resolv.conf` directly with **only** the VPN-internal DNS
+(`10.170.255.230/240`) and, on an ungraceful death (crash, sleep/wake, network drop),
+never restores it — leaving unreachable nameservers and no fallback, so every lookup
+stalls ("DNS death-spiral"). systemd-resolved's split-DNS model can't help because
+AnyConnect bypasses it (writes the file directly, never registers `vedur.is` DNS).
+
+`resolv-fallback` heals it: while the tunnel is **up** it does nothing (AnyConnect owns
+the file and its DNS works — fighting `vpnagentd`, which re-asserts the file within a
+second, only causes churn). When the tunnel is **down** (no `cscotun0` carrier) it makes
+`1.1.1.1` the **first** nameserver so lookups succeed immediately regardless of stale VPN
+entries. Idempotent. Driven by **both**:
+- `resolv-fallback.path` — `PathModified=/etc/resolv.conf`, instant reaction when the file
+  is rewritten (e.g. NM rewrites it on the drop).
+- `resolv-fallback.timer` — every 30s, the catch-all for a *silent* tunnel death where
+  nothing rewrites the file (heals within 30s).
+
+Deployed by Ansible `system_files` role (tags: `vpn`,`dns`). Manual deploy:
+```bash
+sudo install -m0755 system/usr/local/bin/resolv-fallback /usr/local/bin/
+sudo install -m0644 system/etc/systemd/system/resolv-fallback.{service,path,timer} /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now resolv-fallback.path resolv-fallback.timer
+```
+Note: `systemd-resolved`'s occasional boot crash-loop ("start operation timed out") is a
+separate, transient race — `systemctl start systemd-resolved` recovers it; it is not part
+of this fix.
+
 ## GPU / Nvidia Configuration
 
 - **Modprobe**: `nvidia-drm.conf` enables DRM kernel mode setting (early KMS for Wayland)

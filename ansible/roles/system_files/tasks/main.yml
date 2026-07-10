@@ -101,6 +101,41 @@
     - reload systemd
   tags: ["system", "suspend", "notify"]
 
+- name: Deploy VPN DNS death-spiral guard script
+  copy:
+    src: "{{ playbook_dir }}/../system/usr/local/bin/resolv-fallback"
+    dest: /usr/local/bin/resolv-fallback
+    owner: root
+    group: root
+    mode: '0755'
+  tags: ["system", "vpn", "dns"]
+
+- name: Deploy VPN DNS death-spiral guard units
+  copy:
+    src: "{{ playbook_dir }}/../system/etc/systemd/system/{{ item }}"
+    dest: "/etc/systemd/system/{{ item }}"
+    owner: root
+    group: root
+    mode: '0644'
+  loop:
+    - resolv-fallback.service
+    - resolv-fallback.path
+    - resolv-fallback.timer
+  notify:
+    - reload systemd
+  tags: ["system", "vpn", "dns"]
+
+- name: Enable VPN DNS death-spiral guard (path + timer)
+  systemd:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+    daemon_reload: true
+  loop:
+    - resolv-fallback.path
+    - resolv-fallback.timer
+  tags: ["system", "vpn", "dns"]
+
 - name: Deploy system files (fstab, hosts) with validation
   block:
     - name: Backup original fstab
