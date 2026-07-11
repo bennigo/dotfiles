@@ -7,6 +7,13 @@
 # projects; agent state shown only when known; tabs/panes counts).
 # Type any path + Enter to open it as a new workspace even if not in zoxide.
 #
+# Search is name-priority via field ORDER, not a hidden key: fzf couples the
+# search domain to the displayed field (--with-nth also scopes --nth), so we
+# search the visible field (field 3) directly. Because the name is printed
+# first and the path second, name matches rank above path matches (score +
+# --tiebreak=index). Recent dirs put the basename first, full path after.
+# Fields: type <tab> target <tab> display.
+#
 # Picker keys:  ctrl-r recent dirs · ctrl-w workspaces only · ctrl-p preview · ENTER open
 
 set -euo pipefail
@@ -119,11 +126,14 @@ for w in wl:
     agent = (w.get('agent_status') or '').strip()
     agent_s = f'  <{agent}>' if agent and agent != 'unknown' else ''
     tp = f'  [{w.get(\"tab_count\",0)}t/{w.get(\"pane_count\",0)}p]'
+    # field 3 = display AND search domain (fzf couples them); name printed
+    # first so name matches outrank path matches via --tiebreak=index.
     print(f'ws\t{w[\"workspace_id\"]}\t{mark} {label}  {cwd_s}{agent_s}{tp}')
 "
     if [ "$ALL" = 1 ]; then
         zoxide query -l 2>/dev/null | while IFS= read -r dir; do
-            [ -d "$dir" ] && printf 'zo\t%s\t  %s\n' "$dir" "$dir"
+            # basename first (priority) then full path for context + fallback
+            [ -d "$dir" ] && printf 'zo\t%s\t%s  %s\n' "$dir" "$(basename "$dir")" "$dir"
         done
     fi
 }
@@ -145,7 +155,7 @@ fi
 output=$( build_source | fzf --ansi \
        --delimiter='\t' \
        --with-nth=3 \
-       --no-sort \
+       --tiebreak=index \
        --print-query \
        --header="$header" \
        --preview='~/.local/bin/herdr-sessionx --preview {1} {2}' \
