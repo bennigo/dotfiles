@@ -15,10 +15,14 @@
     "npm:pi-conventions",
     "npm:@eko24ive/pi-ask"
   ],
-  "lastChangelogVersion": "0.80.3",
-  "defaultProvider": "ollama",
-  "defaultModel": "llama3.1:8b",
+  "lastChangelogVersion": "0.80.6",
+  "defaultProvider": "github-copilot",
+  "defaultModel": "claude-opus-4.8",
   "defaultThinkingLevel": "high",
   "theme": "dark",
-  "hideThinkingBlock": true
+  "hideThinkingBlock": true,
+  "editorPaddingX": 0,
+  "terminal": {
+    "showTerminalProgress": true
+  }
 }
