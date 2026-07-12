@@ -14,6 +14,35 @@
 
 Session files are JSONL and can be exported/shared. A leaked credential becomes permanent.
 
+### ⛔ NEVER run these (they dump secrets into the session)
+
+These are hard-banned. There is no acceptable reason to run any of them:
+
+- `env`, `printenv`, `export -p`, `set` — dump the whole environment (this leaked 6 API keys once via `env | grep "PI_"`, because `PI_` matches `*_API_KEY`).
+- `env | grep ...` / `printenv | grep ...` — grep patterns match secret var names by accident. **Never grep the environment for anything.**
+- `echo $ANY_API_KEY`, `echo $TOKEN`, `echo $*_KEY`, `cat` on files that hold secrets.
+- `pass show <path>` **without** piping through redaction, or with its output printed to the terminal.
+- Reading/`cat`ing `auth.json`, `.env`, `~/.pgpass`, `credentials*`, `*.vault`, private keys, or session `.jsonl` files and echoing their contents.
+- Any `grep`/`sed`/`rg` over config or history that prints matched lines **without** a redaction filter (`.zsh_history`, `models.json`, `.mcp.json`, dotfiles).
+
+### ✅ Safe patterns when you must touch a secret
+
+- **Check a var is set without printing it:** `[ -n "$FOO_API_KEY" ] && echo set || echo unset`, or print only length/prefix: `echo "len ${#FOO} prefix ${FOO:0:4}…"`.
+- **Use a key from `pass` for a live test:** load into a local var, use it, then `unset` it — never echo it:
+  ```bash
+  KEY=$(pass show tokens/foo_api_key | head -1)
+  curl -s -o /dev/null -w '%{http_code}\n' https://api.example.com -H "Authorization: Bearer $KEY"
+  unset KEY
+  ```
+- **Always pipe any command that might surface a secret through a redactor:** `... | sed -E 's/(sk-|BSA|fc-|glm-|[A-Za-z0-9_-]{24,})/<REDACTED>/g'`.
+- **When searching configs/history**, redact values: `grep ... | sed -E 's/(=|: |show )("?)[A-Za-z0-9_.-]{16,}/\1\2<REDACTED>/g'`.
+- **Discovering where a key lives:** grep for the *variable name* and *`pass` path* only — never the value.
+- **Rotating keys:** verify with a live API call using the load-var-then-unset pattern; report only the HTTP status / error type, never the key.
+
+### Rule of thumb
+
+If a command's output could contain a secret, either don't run it, or pipe it through a redactor first. When unsure, assume it will leak and add the redactor. Treat every value that looks like a token (`sk-…`, `BSA…`, `fc-…`, long random strings) as radioactive.
+
 ## Available Tools
 
 Custom tools from `bgo-toolkit` package:
