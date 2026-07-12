@@ -85,6 +85,7 @@ alias conda="mamba"
 # Additional custom aliases
 [ -f "$HOME/.config/zsh/aliases-sync.zsh" ] && source "$HOME/.config/zsh/aliases-sync.zsh"
 [ -f "$HOME/.config/zsh/aliases-claude.zsh" ] && source "$HOME/.config/zsh/aliases-claude.zsh"
+[ -f "$HOME/.config/zsh/aliases-pi.zsh" ] && source "$HOME/.config/zsh/aliases-pi.zsh"
 # >>> mamba initialize >>>
 # !! Contents within this block are managed by 'mamba shell init' !!
 export MAMBA_EXE='/home/bgo/.miniforge/bin/mamba';

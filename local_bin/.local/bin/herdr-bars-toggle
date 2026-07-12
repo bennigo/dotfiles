@@ -3,9 +3,24 @@
 # Waybars are layer-shell clients; Sway's hidden_state does NOT affect them.
 # SIGUSR1 toggles a waybar's visibility. Target each by its config file.
 # Usage: herdr-bars-toggle [herdr|top|both]
+#
+# The "top" toggle also drives a minimal floating corner bar (config-mini):
+# it is spawned while the top bar is hidden and killed when the top bar
+# returns, so battery / keyboard / power-saving stay reachable.
+MINI_CFG="$HOME/.config/waybar/config-mini.jsonc"
+MINI_STYLE="$HOME/.config/waybar/style-mini.css"
+
+toggle_mini() {
+    if pgrep -f 'config-mini.jsonc' >/dev/null 2>&1; then
+        pkill -f 'config-mini.jsonc'
+    else
+        waybar -c "$MINI_CFG" -s "$MINI_STYLE" >/dev/null 2>&1 &
+    fi
+}
+
 case "${1:-both}" in
     herdr) pkill -SIGUSR1 -f 'config-herdr.jsonc' ;;
-    top)   pkill -SIGUSR1 -f 'config-top.jsonc' ;;
+    top)   pkill -SIGUSR1 -f 'config-top.jsonc'; toggle_mini ;;
     both)  pkill -SIGUSR1 -f 'config-herdr.jsonc'
-           pkill -SIGUSR1 -f 'config-top.jsonc' ;;
+           pkill -SIGUSR1 -f 'config-top.jsonc'; toggle_mini ;;
 esac

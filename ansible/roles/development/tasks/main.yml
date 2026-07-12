@@ -142,6 +142,11 @@
       ignore_errors: yes
   tags: ["development", "nodejs"]
 
+- name: Set up GMT (Generic Mapping Tools) from source + coastal data + pygmt
+  import_tasks: gmt.yml
+  when: features.install_development_tools | default(true)
+  tags: ["development", "gmt"]
+
 - name: Configure Claude Code API key
   block:
     - name: Extract Claude API key from vault

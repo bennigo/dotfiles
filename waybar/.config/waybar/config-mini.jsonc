@@ -1,0 +1,41 @@
+{
+    // Minimal floating corner bar shown ONLY while the top bar is hidden
+    // (toggled together by herdr-bars-toggle top / win+shift+q).
+    // exclusive:false => overlays content, reserves no screen space.
+    "layer": "top",
+    "position": "top",
+    "exclusive": false,
+    "height": 24,
+    "margin-top": 4,
+    "margin-right": 10,
+    "spacing": 4,
+    "modules-left": [],
+    "modules-center": [],
+    "modules-right": [
+        "custom/battery",
+        "custom/language",
+        "idle_inhibitor"
+    ],
+    "custom/battery": {
+        "exec": "~/.local/bin/herdr-waybar-metrics battery",
+        "return-type": "json", "interval": 10, "format": "{}",
+        "on-click": "~/.local/bin/herdr-powermenu"
+    },
+    "custom/language": {
+        "exec": "~/.local/bin/herdr-waybar-lang",
+        "return-type": "json", "interval": 2, "format": "{}", "signal": 15,
+        "min-length": 3,
+        "on-click": "swaymsg input $(swaymsg -t get_inputs --raw | jq '[.[] | select(.type == \"keyboard\")][0] | .identifier') xkb_switch_layout next; pkill -RTMIN+15 waybar; ~/.config/sway/scripts/show-layout.sh --show-only"
+    },
+    "idle_inhibitor": {
+        "format": "{icon}",
+        "format-icons": {
+            "activated": "👁",
+            "deactivated": "🔇"
+        },
+        "start-activated": false,
+        "tooltip": true,
+        "tooltip-format-activated": "power-saving disabled",
+        "tooltip-format-deactivated": "power-saving enabled"
+    }
+}

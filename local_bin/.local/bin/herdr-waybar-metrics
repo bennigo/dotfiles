@@ -76,12 +76,23 @@ cpu)
     emit "$cpu_s" "metric-cpu" "Click: per-core CPU detail"
     ;;
 battery)
-    bat_s=""; [ -d /sys/class/power_supply/BAT0 ]&&{ pct=$(cat /sys/class/power_supply/BAT0/capacity 2>/dev/null)
+    bat_s=""
+    if [ -d /sys/class/power_supply/BAT0 ]; then
+        pct=$(cat /sys/class/power_supply/BAT0/capacity 2>/dev/null)
         stat=$(cat /sys/class/power_supply/BAT0/status 2>/dev/null)
-        ico="🔋"; [ "$stat" = "Charging" ]&&ico="🔌"
-        [ -n "$pct" ]&&{ [ "$pct" -ge 50 ] 2>/dev/null&&bc="$g"||{ [ "$pct" -ge 20 ] 2>/dev/null&&bc="$y"||bc="$r";}
-        bat_s="$(sb "$bc" "${ico} ${pct}%")";};}
-    [ -z "$bat_s" ]&&bat_s="$(sp "$dim" "🔋 —")"
+        if [ -n "$pct" ]; then
+            lvl=$((pct/10)); [ "$lvl" -gt 10 ]&&lvl=10; [ "$lvl" -lt 0 ]&&lvl=0
+            # Nerd Font (Material Design) battery ramp, index 0..10 = 0%,10%,…,100%
+            dis=(f008e f007a f007b f007c f007d f007e f007f f0080 f0081 f0082 f0079)
+            chg=(f089f f089c f0086 f0087 f0088 f089d f0089 f089e f008a f008b f0085)
+            case "$stat" in Charging|Full) cp=${chg[$lvl]};; *) cp=${dis[$lvl]};; esac
+            ico=$(printf "\\U000${cp}")
+            if [ "$pct" -ge 50 ]; then bc="$g"; elif [ "$pct" -ge 20 ]; then bc="$y"; else bc="$r"; fi
+            [ "$stat" = "Charging" ]&&bc="$t"   # teal while charging (distinct from level colours)
+            bat_s="$(sb "$bc" "${ico} ${pct}%")"
+        fi
+    fi
+    [ -z "$bat_s" ]&&bat_s="$(sp "$dim" "$(printf '\U000f008e') —")"
     emit "$bat_s" "metric-battery" "Click: power menu"
     ;;
 bluetooth)

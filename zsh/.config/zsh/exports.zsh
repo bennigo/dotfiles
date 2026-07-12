@@ -21,6 +21,12 @@ export PATH="$HOME/.cargo/bin":$PATH
 export PATH="/usr/local/go/bin":$PATH
 export PATH="/usr/local/rxtools/bin":$PATH
 export PATH="/home/bgo/.PRIDE_PPPAR_BIN":$PATH
+# GMT (Generic Mapping Tools) — built from source in ~/git/gmt (deployed by the
+# ansible `development` role, tag: gmt). GSHHG/DCW coastal data and the GIS libs
+# (GDAL/GEOS/PROJ/netCDF/FFTW) are installed under the prefix's share/ and lib/.
+# GMT_LIBRARY_PATH is how pygmt (editable in ~/git/pygmt) locates libgmt.so.
+export PATH="$HOME/git/gmt/install/bin:$PATH"
+export GMT_LIBRARY_PATH="$HOME/git/gmt/install/lib"
 export XDG_CURRENT_DESKTOP="Wayland"
 export NVM_DIR="$HOME/.config//nvm"
 export ZDOTDIR="${HOME}/.config/zsh"

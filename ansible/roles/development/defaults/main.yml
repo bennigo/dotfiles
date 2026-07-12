@@ -1,0 +1,11 @@
+---
+# Defaults for the development role.
+
+# --- GMT (Generic Mapping Tools) from-source build (see tasks/gmt.yml) ---
+git_dir: "{{ target_home }}/git"
+gmt_version: "6.6.0"                       # GMT release tag to build
+gmt_src: "{{ git_dir }}/gmt"              # source checkout
+gmt_prefix: "{{ gmt_src }}/install"       # install prefix (leaf, not system-wide)
+gshhg_version: "2.3.7"                     # GSHHG coastline data release
+dcw_version: "2.2.0"                       # DCW political-boundary data release
+pygmt_version: "v0.19.0"                   # pygmt release tag (Python wrapper)

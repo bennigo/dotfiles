@@ -138,6 +138,33 @@ for w in wl:
     fi
 }
 
+# ── smart label: shortest leaf-outward path segment that is unique ──────────
+# basename(cwd); if that label already exists, prepend parent segments until
+# unique (fjarmal -> KI/fjarmal -> klifur/KI/fjarmal). Avoids herdr's default
+# git-root-basename labelling that makes every dir in a repo share a name.
+smart_label() {
+    herdr workspace list 2>/dev/null | HERDR_CWD="$1" python3 -c "
+import json, sys, os
+cwd = os.environ.get('HERDR_CWD', '').rstrip('/')
+try:
+    labels = {w.get('label', '') for w in json.load(sys.stdin)['result']['workspaces']}
+except Exception:
+    labels = set()
+parts = [p for p in cwd.split('/') if p]
+if not parts:
+    print('/'); raise SystemExit
+cand = parts[-1]
+for n in range(1, len(parts) + 1):
+    cand = '/'.join(parts[-n:])
+    if cand not in labels:
+        print(cand); raise SystemExit
+i = 2
+while f'{cand}-{i}' in labels:
+    i += 1
+print(f'{cand}-{i}')
+"
+}
+
 # ── source-only mode (fzf reload) ───────────────────────────────────────────
 if [ "$SOURCE_ONLY" = 1 ]; then
     build_source
@@ -174,7 +201,7 @@ if [ -n "$pick" ]; then
     target=$(printf '%s' "$pick" | cut -f2)
     case "$type" in
         ws)  herdr workspace focus "$target" ;;
-        zo)  herdr workspace create --cwd "$target" --focus ;;
+        zo)  herdr workspace create --cwd "$target" --label "$(smart_label "$target")" --focus ;;
     esac
 elif [ -n "$query" ]; then
     # Typed a path not in the list → expand ~ and open as new workspace
@@ -182,7 +209,7 @@ elif [ -n "$query" ]; then
         '~'*) query="$HOME${query#~}" ;;
     esac
     if [ -d "$query" ]; then
-        herdr workspace create --cwd "$query" --focus
+        herdr workspace create --cwd "$query" --label "$(smart_label "$query")" --focus
     else
         echo "not a directory: $query" >&2; sleep 1.5
         exit 1
