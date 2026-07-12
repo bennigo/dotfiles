@@ -1,0 +1,72 @@
+#!/bin/bash
+# herdr-tab-toggle — switch to the most-recently-focused OTHER tab in the
+# CURRENT workspace (tmux "prefix+l" last-window reflex).
+# Self-bootstraps the herdr-tab-track daemon on first run.
+
+HERDR="${HERDR_BIN_PATH:-herdr}"
+CACHE_DIR="$HOME/.cache/herdr"
+HIST_FILE="$CACHE_DIR/tab-history"
+TRACKER_PID_FILE="$CACHE_DIR/tab-track.pid"
+TRACKER="$HOME/.local/bin/herdr-tab-track"
+
+mkdir -p "$CACHE_DIR"
+
+# Start tracker if not alive (PID-file check, fast)
+if [ ! -f "$TRACKER_PID_FILE" ] || ! kill -0 "$(cat "$TRACKER_PID_FILE")" 2>/dev/null; then
+    nohup "$TRACKER" >/dev/null 2>&1 &
+    echo $! > "$TRACKER_PID_FILE"
+    for _ in 1 2 3; do
+        [ -s "$HIST_FILE" ] && break
+        sleep 0.15
+    done
+fi
+
+TAB_JSON=$("$HERDR" tab list 2>/dev/null)
+# `herdr tab list` occasionally returns empty transiently; retry a couple times
+# so the keypress never silently no-ops.
+for _ in 1 2 3; do
+    [ -n "$TAB_JSON" ] && break
+    sleep 0.2
+    TAB_JSON=$("$HERDR" tab list 2>/dev/null)
+done
+[ -z "$TAB_JSON" ] && exit 0
+target=$(python3 - "$HIST_FILE" "$TAB_JSON" <<'PYEOF'
+import json, sys
+hist_path = sys.argv[1]
+tab_json  = sys.argv[2]
+data = json.loads(tab_json)
+tabs = data['result']['tabs']
+
+# Current focused tab and its workspace
+cur = next((t for t in tabs if t.get('focused')), None)
+current_tab = cur['tab_id'] if cur else ''
+current_ws  = cur['workspace_id'] if cur else ''
+
+# If nothing reported focused, fall back to the workspace with the lowest tab
+# number's ws (best effort). Candidates are tabs in the current workspace only.
+if not current_ws and tabs:
+    current_ws = tabs[0]['workspace_id']
+
+ws_tabs = [t['tab_id'] for t in tabs if t['workspace_id'] == current_ws]
+ws_set = set(ws_tabs)
+
+try:
+    hist = open(hist_path).read().split()
+except FileNotFoundError:
+    hist = []
+
+target = ''
+# Most-recent tab in this workspace that isn't the current one
+for h in hist:
+    if h != current_tab and h in ws_set:
+        target = h; break
+# Fallback: any other tab in this workspace (by number order)
+if not target:
+    for tid in ws_tabs:
+        if tid != current_tab:
+            target = tid; break
+print(target)
+PYEOF
+)
+
+[ -n "$target" ] && "$HERDR" tab focus "$target" >/dev/null 2>&1
