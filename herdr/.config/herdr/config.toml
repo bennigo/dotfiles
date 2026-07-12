@@ -65,6 +65,10 @@ delivery = "system"
 
 [ui]
 show_agent_labels_on_pane_borders = true
+# Accent color for highlights, borders, and navigation UI — drives the
+# ACTIVE workspace row (sidebar) and the ACTIVE agent row highlight.
+# catppuccin blue for strong contrast against the dimmed inactive rows.
+accent = "#89b4fa"
 
 [ui.sound]
 enabled = true
