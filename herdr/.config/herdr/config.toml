@@ -36,6 +36,12 @@ description = "refresh env in all shell panes"
 # Match omerxx/catppuccin-tmux
 name = "catppuccin"
 
+# Override theme palette tokens. The ACTIVE sidebar workspace/agent row is
+# drawn with the theme accent, so recolor it to blue here (separate from
+# [ui] accent, which only affects nav UI like the menu dot / cursor).
+[theme.custom]
+accent = "#89b4fa"
+
 [[keys.command]]
 # ctrl+a Alt+n — prepend "N. " to tab labels so they match the number keys
 key = "prefix+alt+n"
