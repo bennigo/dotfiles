@@ -1,0 +1,174 @@
+---
+# GMT (Generic Mapping Tools) from source + GSHHG/DCW coastal data + pygmt.
+#
+# Built as a self-contained leaf under ~/git/gmt/install (NOT system-wide), so
+# the GPS/GNSS scientific stack (gps_plot maps) gets a current, controlled GMT
+# with all GIS libraries (GDAL/GEOS/PROJ/netCDF/FFTW) compiled in and the full
+# GSHHG/DCW coastline+border data staged for offline use.
+#
+# Ubuntu 26.04 ships a hardened ghostscript AppArmor profile that denies `gs`
+# read access to GMT's half-baked "gmt_<n>.ps-" scratch files (the trailing
+# dash falls outside the @{gs_file_ext} whitelist), breaking psconvert with
+# "error 79". A minimal local override (/etc/apparmor.d/local/gs) restores it.
+#
+# Runtime env (PATH + GMT_LIBRARY_PATH) is set by the dotfiles zsh exports.
+# Tags: gmt (whole block), gmt-data (coastline data), pygmt, apparmor.
+
+- name: GMT | Install build dependencies (GIS libraries + toolchain)
+  apt:
+    name:
+      - cmake
+      - ninja-build
+      - build-essential
+      - ghostscript
+      - libcurl4-openssl-dev   # remote data + downloads
+      - libnetcdf-dev          # grids (required)
+      - libgdal-dev            # raster/vector I/O (GDAL 3.x)
+      - libgeos-dev            # geometry operations
+      - libfftw3-dev           # fast spectral transforms
+      - libglib2.0-dev         # movie/threads support
+      - libpcre2-dev           # regex support
+      - liblapack-dev          # linear algebra
+      - libblas-dev
+    state: present
+    update_cache: yes
+  become: yes
+  tags: ["development", "gmt", "packages"]
+
+- name: GMT | Ensure ~/git exists
+  file:
+    path: "{{ git_dir }}"
+    state: directory
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: "0755"
+  become: no
+  tags: ["development", "gmt"]
+
+- name: GMT | Clone GMT source ({{ gmt_version }})
+  git:
+    repo: https://github.com/GenericMappingTools/gmt.git
+    dest: "{{ gmt_src }}"
+    version: "{{ gmt_version }}"
+    depth: 1
+  become: no
+  tags: ["development", "gmt"]
+
+- name: GMT | Configure build (cmake → {{ gmt_prefix }})
+  command:
+    cmd: >-
+      cmake -B build -G Ninja
+      -DCMAKE_INSTALL_PREFIX={{ gmt_prefix }}
+      -DCMAKE_BUILD_TYPE=Release
+      -DGMT_ENABLE_OPENMP=TRUE
+    chdir: "{{ gmt_src }}"
+    creates: "{{ gmt_src }}/build/build.ninja"
+  become: no
+  tags: ["development", "gmt"]
+
+- name: GMT | Build and install (ninja)
+  command:
+    cmd: ninja -C build install
+    chdir: "{{ gmt_src }}"
+    creates: "{{ gmt_prefix }}/bin/gmt"
+  become: no
+  tags: ["development", "gmt"]
+
+# --- GSHHG (coastlines/rivers/borders) + DCW (country/state polygons) ---
+- name: GMT | Ensure data + download dirs exist
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: "0755"
+  loop:
+    - "{{ gmt_src }}/downloads"
+    - "{{ gmt_prefix }}/share/coast"
+    - "{{ gmt_prefix }}/share/dcw"
+  become: no
+  tags: ["development", "gmt", "gmt-data"]
+
+- name: GMT | Download GSHHG coastline data ({{ gshhg_version }})
+  get_url:
+    url: "https://github.com/GenericMappingTools/gshhg-gmt/releases/download/{{ gshhg_version }}/gshhg-gmt-{{ gshhg_version }}.tar.gz"
+    dest: "{{ gmt_src }}/downloads/gshhg-gmt-{{ gshhg_version }}.tar.gz"
+    mode: "0644"
+  become: no
+  tags: ["development", "gmt", "gmt-data"]
+
+- name: GMT | Download DCW political-boundary data ({{ dcw_version }})
+  get_url:
+    url: "https://github.com/GenericMappingTools/dcw-gmt/releases/download/{{ dcw_version }}/dcw-gmt-{{ dcw_version }}.tar.gz"
+    dest: "{{ gmt_src }}/downloads/dcw-gmt-{{ dcw_version }}.tar.gz"
+    mode: "0644"
+  become: no
+  tags: ["development", "gmt", "gmt-data"]
+
+- name: GMT | Install GSHHG into share/coast
+  unarchive:
+    src: "{{ gmt_src }}/downloads/gshhg-gmt-{{ gshhg_version }}.tar.gz"
+    dest: "{{ gmt_prefix }}/share/coast"
+    extra_opts: ["--strip-components=1"]
+    creates: "{{ gmt_prefix }}/share/coast/binned_GSHHS_f.nc"
+    remote_src: yes
+  become: no
+  tags: ["development", "gmt", "gmt-data"]
+
+- name: GMT | Install DCW into share/dcw
+  unarchive:
+    src: "{{ gmt_src }}/downloads/dcw-gmt-{{ dcw_version }}.tar.gz"
+    dest: "{{ gmt_prefix }}/share/dcw"
+    extra_opts: ["--strip-components=1"]
+    creates: "{{ gmt_prefix }}/share/dcw/dcw-gmt.nc"
+    remote_src: yes
+  become: no
+  tags: ["development", "gmt", "gmt-data"]
+
+# --- Ghostscript AppArmor override (Ubuntu 26.04+) ---
+- name: GMT | AppArmor local override so gs can read GMT's .ps- scratch files
+  copy:
+    dest: /etc/apparmor.d/local/gs
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      # Local override for the Ghostscript AppArmor profile (Ubuntu 26.04+).
+      #
+      # GMT writes a half-baked PostScript file named gmt_<n>.ps- (TRAILING
+      # DASH) under ~/.gmt/sessions/ and calls `gs` on it during psconvert.
+      # ".ps-" is not in @{gs_file_ext}, so the default profile denies gs read
+      # access and psconvert fails ("error 79" / "/undefinedfilename ...
+      # Permission denied"). Grant gs access to GMT's own session/cache tree.
+      owner @{HOME}/.gmt/** rwk,
+  become: yes
+  register: gs_apparmor_override
+  tags: ["development", "gmt", "apparmor"]
+
+- name: GMT | Reload ghostscript AppArmor profile
+  command: apparmor_parser -r /etc/apparmor.d/gs
+  become: yes
+  when: gs_apparmor_override is changed
+  changed_when: true
+  tags: ["development", "gmt", "apparmor"]
+
+# --- pygmt (Python wrapper) from its git repo ---
+- name: GMT | Clone pygmt ({{ pygmt_version }})
+  git:
+    repo: https://github.com/GenericMappingTools/pygmt.git
+    dest: "{{ git_dir }}/pygmt"
+    version: "{{ pygmt_version }}"
+  become: no
+  tags: ["development", "gmt", "pygmt"]
+
+# pygmt is installed editable into the consuming project's uv env (gps_plot's
+# `maps` extra) as a documented dev step — it is NOT installed system-wide here
+# because the target venv depends on the gpslibrary checkout, which this role
+# does not manage. See roles/development/README.md (GMT section).
+- name: GMT | Note the pygmt editable-install step
+  debug:
+    msg: >-
+      GMT + data + pygmt repo are in place. To use pygmt from a project:
+      `cd <project> && uv sync --extra maps && uv pip install -e {{ git_dir }}/pygmt`.
+      libgmt is found via GMT_LIBRARY_PATH (set in the zsh exports).
+  tags: ["development", "gmt", "pygmt"]

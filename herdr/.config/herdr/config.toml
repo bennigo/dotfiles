@@ -9,6 +9,10 @@ prefix = "ctrl+a"
 # tmux default detach binding (tmux-sensible keeps prefix+d)
 detach = "prefix+d"
 
+# ctrl+a t — rename current WORKSPACE (label only; cwd is never touched).
+# Mnemonic pair with rename_tab (prefix+shift+t). Native herdr action.
+rename_workspace = "prefix+t"
+
 # ctrl+a L — alternate WORKSPACE toggle (tmux switch-client -l reflex).
 # Herdr has no native "last workspace" action (last_pane flips panes/tabs),
 # so this uses a custom tracker daemon + toggle script. See herdr-ws-toggle.
