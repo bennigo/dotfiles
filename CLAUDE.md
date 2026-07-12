@@ -16,6 +16,32 @@ credentials in tool arguments, bash commands, file writes, or session output.
 
 Pi extension at `pg.ts` enforces this automatically for postgres.
 
+### ⛔ NEVER run these (they dump secrets into the session)
+
+Hard-banned — no acceptable reason to run any of them:
+
+- `env`, `printenv`, `export -p`, `set` — dump the whole environment. (An `env | grep "PI_"` once leaked 6 API keys, because `PI_` matches `*_API_KEY`.)
+- **Any** `env | grep …` / `printenv | grep …` — grep patterns match secret var names by accident. Never grep the environment.
+- `echo $ANY_API_KEY` / `echo $TOKEN` / `echo $*_KEY`.
+- `pass show <path>` without piping through redaction, or printed to the terminal.
+- `cat`/reading + echoing `auth.json`, `.env`, `~/.pgpass`, `credentials*`, `*.vault`, private keys, or session `.jsonl` files.
+- `grep`/`sed`/`rg` over configs or shell history that prints matched lines without a redaction filter (`.zsh_history`, `models.json`, `.mcp.json`, dotfiles).
+
+### ✅ Safe patterns when you must touch a secret
+
+- **Check a var without printing it:** `[ -n "$FOO_API_KEY" ] && echo set || echo unset`, or print only length/prefix: `echo "len ${#FOO} prefix ${FOO:0:4}…"`.
+- **Use a `pass` key for a live test** — load, use, `unset`, never echo:
+  ```bash
+  KEY=$(pass show tokens/foo_api_key | head -1)
+  curl -s -o /dev/null -w '%{http_code}\n' https://api.example.com -H "Authorization: Bearer $KEY"
+  unset KEY
+  ```
+- **Pipe anything that might surface a secret through a redactor:** `… | sed -E 's/(sk-|BSA|fc-|glm-|[A-Za-z0-9_-]{24,})/<REDACTED>/g'`.
+- **Searching configs/history:** redact values — `grep … | sed -E 's/(=|: |show )("?)[A-Za-z0-9_.-]{16,}/\1\2<REDACTED>/g'`.
+- **Finding where a key lives:** grep the *variable name* / *`pass` path* only — never the value.
+
+**Rule of thumb:** if a command's output could contain a secret, either don't run it or pipe it through a redactor. When unsure, assume it will leak. Treat any `sk-…`, `BSA…`, `fc-…`, or long random string as radioactive.
+
 ## Documentation Architecture
 
 This repo uses hierarchical CLAUDE.md organization — detailed context lives in subdirectory
