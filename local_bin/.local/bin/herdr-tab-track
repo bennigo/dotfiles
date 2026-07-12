@@ -1,0 +1,73 @@
+#!/bin/bash
+# herdr-tab-track — background tracker for focused-tab history.
+# Polls `herdr tab list` and records tab focus changes to a history file
+# (most-recent-first, deduped, capped). Started on-demand by herdr-tab-toggle.
+#
+# Tab IDs are globally unique (e.g. "w6:t2") and carry their workspace_id,
+# so a single global history works; herdr-tab-toggle filters by current
+# workspace to give tmux-style "last window" behaviour.
+#
+# Single-instance via flock. Lightweight: one local socket call per second.
+
+HERDR="${HERDR_BIN_PATH:-herdr}"
+CACHE_DIR="$HOME/.cache/herdr"
+HIST_FILE="$CACHE_DIR/tab-history"
+LOCK_FILE="$CACHE_DIR/tab-track.lock"
+INTERVAL=1   # seconds between polls
+
+mkdir -p "$CACHE_DIR"
+
+# Ensure only one tracker runs
+exec 9>"$LOCK_FILE"
+flock -n 9 || exit 0
+
+echo $$ > "$CACHE_DIR/tab-track.pid"
+
+# Seed history on first run with the focused workspace's tabs (by number),
+# so the toggle always has candidates before any real focus change.
+if [ ! -f "$HIST_FILE" ]; then
+    "$HERDR" tab list 2>/dev/null | python3 -c "
+import json, sys
+path = sys.argv[1]
+try:
+    d = json.load(sys.stdin)
+    tabs = d['result']['tabs']
+    foc = next((t for t in tabs if t.get('focused')), None)
+    ws = foc['workspace_id'] if foc else (tabs[0]['workspace_id'] if tabs else None)
+    seed = sorted((t for t in tabs if t['workspace_id'] == ws), key=lambda t: t.get('number', 0))
+    open(path, 'w').write('\n'.join(t['tab_id'] for t in seed) + ('\n' if seed else ''))
+except Exception:
+    open(path, 'w').close()
+" "$HIST_FILE"
+fi
+
+last_focused=""
+
+while true; do
+    focused=$("$HERDR" tab list 2>/dev/null | python3 -c "
+import json, sys
+try:
+    d = json.load(sys.stdin)
+    for t in d['result']['tabs']:
+        if t.get('focused'):
+            print(t['tab_id']); break
+except Exception:
+    pass
+")
+
+    if [ -n "$focused" ] && [ "$focused" != "$last_focused" ]; then
+        last_focused="$focused"
+        # Prepend to history, dedupe, cap at 30
+        python3 -c "
+import sys
+path, new = sys.argv[1], sys.argv[2]
+try:
+    hist = open(path).read().split()
+except FileNotFoundError:
+    hist = []
+hist = [new] + [h for h in hist if h != new]
+open(path, 'w').write('\n'.join(hist[:30]) + '\n')
+" "$HIST_FILE" "$focused"
+    fi
+    sleep "$INTERVAL"
+done

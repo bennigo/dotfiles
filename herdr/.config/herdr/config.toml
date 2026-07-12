@@ -50,6 +50,16 @@ type = "shell"
 command = "~/.local/bin/herdr-ws-toggle"
 description = "toggle to last workspace"
 
+[[keys.command]]
+# ctrl+a l — toggle to last TAB in current workspace (tmux prefix+l last-window).
+# Herdr has no native "last tab" MRU action (previous_tab/next_tab are
+# sequential), so this uses a custom tracker daemon + toggle script,
+# mirroring the workspace toggle. See herdr-tab-toggle / herdr-tab-track.
+key = "prefix+l"
+type = "shell"
+command = "~/.local/bin/herdr-tab-toggle"
+description = "toggle to last tab (current workspace)"
+
 [ui.toast]
 delivery = "system"
 
