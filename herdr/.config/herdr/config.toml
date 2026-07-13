@@ -46,6 +46,9 @@ accent = "#89b4fa"
 # catppuccin's surface_dim ~= panel_bg, so the highlight is invisible. Override
 # it to navy so the active session/agent row gets a clear blue background.
 surface_dim = "#242633"
+# Active workspace/agent NAME is drawn with fg(p.text) (sidebar.rs 868 & 1075).
+# text is the global UI foreground, so this also tints dialog/menu/status text.
+text = "#89b4fa"
 
 [[keys.command]]
 # ctrl+a Alt+n — prepend "N. " to tab labels so they match the number keys
