@@ -41,6 +41,11 @@ name = "catppuccin"
 # [ui] accent, which only affects nav UI like the menu dot / cursor).
 [theme.custom]
 accent = "#89b4fa"
+# The ACTIVE workspace row AND active agent row are drawn with bg(surface_dim)
+# (herdr src/ui/sidebar.rs lines 676 & 1069); normal rows get no background.
+# catppuccin's surface_dim ~= panel_bg, so the highlight is invisible. Override
+# it to navy so the active session/agent row gets a clear blue background.
+surface_dim = "#242633"
 
 [[keys.command]]
 # ctrl+a Alt+n — prepend "N. " to tab labels so they match the number keys
