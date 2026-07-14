@@ -221,7 +221,9 @@ bindsym $mod+x exec swaylock -f -c 000000 -i $wallpaper
 # bindsym $mod+Shift+x exec swaymsg "output * power off"
 # bindsym $mod+Shift+z exec swaymsg "output * power on"
 ## Power // Suspend system // 😴 ##
-bindsym $mod+Shift+x exec 'sudo systemctl suspend'
+# Power off outputs first so the NVIDIA modeset engine is idle when the GPU
+# enters its suspend path — avoids the "waiting for GPU progress" resume hang.
+bindsym $mod+Shift+x exec 'swaymsg "output * power off"; sleep 0.3; sudo systemctl suspend'
 ## Power // Restore laptop panel power and brightness // 💡 ##
 bindsym $mod+Shift+z exec 'swaymsg output $laptop power on; brightnessctl -r'
 

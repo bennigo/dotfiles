@@ -250,9 +250,34 @@ journalctl -b -k | grep -i nvidia
 | Shortcut | Action | Description |
 |----------|--------|-------------|
 | `$mod+x` | Lock screen | Immediate lock with wallpaper |
-| `$mod+Shift+x` | Suspend | Manual system suspend |
+| `$mod+Shift+x` | Suspend | Powers outputs off, then `sudo systemctl suspend` (see NVIDIA suspend note) |
 | `$mod+Ctrl+b` | Emergency display on | Force panel on + 50% brightness |
 | `$mod+Shift+z` | Restore display | Power on + restore brightness |
+
+#### NVIDIA suspend hang workaround
+
+On this ThinkPad P1 Gen 6 (RTX 2000 Ada, open kernel module 595.x), suspending
+while the NVIDIA modeset engine is active hangs the GPU: the console loops
+`nvidia-modeset: ERROR: GPU:0: Error while waiting for GPU progress` on a black
+screen and requires a hard power-off (reproduced 2026-07-14 via `$mod+Shift+x`).
+The stock mitigations (`nvidia-suspend/resume/hibernate` services,
+`NVreg_PreserveVideoMemoryAllocations=1`, `NVreg_TemporaryFilePath=/var`) were
+all already in place and did **not** prevent it. 595-open is already the
+`ubuntu-drivers`-recommended/newest branch, so there is no driver fix to pull.
+
+The reliable fix is to **DPMS-off all outputs before suspend** so the compositor
+releases the GPU. Implemented in three layers:
+
+1. **`$mod+Shift+x` keybind** — `swaymsg "output * power off"; sleep 0.3; sudo systemctl suspend`
+2. **`swayidle` `before-sleep`** (`scripts/swayidle-power-aware.sh`) — locks, then
+   `swaymsg 'output * power off'` (previously powered the display *on*, which
+   kept the GPU busy going into suspend).
+3. **Root sleep hook** `/usr/lib/systemd/system-sleep/nvidia-dpms-off` (deployed
+   from `~/.dotfiles/system/...`) — powers outputs off in `pre`, on in `post`;
+   belt-and-suspenders that fires even if swayidle isn't running.
+
+Verify a clean cycle: `journalctl -t nvidia-dpms-off -b` (expect power off/on)
+and `journalctl -b -k | grep -c "waiting for GPU progress"` (expect 0).
 
 ### Scratchpad Windows
 
