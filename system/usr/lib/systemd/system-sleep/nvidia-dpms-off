@@ -1,0 +1,44 @@
+#!/bin/bash
+# nvidia-dpms-off — power off Wayland outputs before suspend so the NVIDIA
+# modeset engine is idle when the GPU enters its suspend path.
+#
+# Prevents the "nvidia-modeset: ERROR: GPU:0: Error while waiting for GPU
+# progress" hang on ThinkPad P1 Gen 6 (RTX 2000 Ada, open kernel module 595.x)
+# that leaves the console spamming errors on a black screen and forces a hard
+# power-off. Reproduced 2026-07-14 via $mod+Shift+x manual suspend.
+#
+# Belt-and-suspenders to the compositor-level DPMS-off (swayidle before-sleep +
+# the $mod+Shift+x keybind): this root hook still fires if swayidle has
+# crashed or isn't running.
+#
+# Called by systemd-suspend.service with: $1 = pre|post, $2 = suspend|hibernate|...
+# Deployed from: ~/.dotfiles/system/usr/lib/systemd/system-sleep/nvidia-dpms-off
+set -u
+
+sway_output() {
+    # $1 = "off" | "on"  — apply to every active sway session on the machine
+    local state="$1" sock uid user
+    for sock in /run/user/*/sway-ipc.*.sock; do
+        [ -S "$sock" ] || continue
+        uid=$(basename "$(dirname "$sock")")
+        user=$(id -nu "$uid" 2>/dev/null) || continue
+        if runuser -u "$user" -- env SWAYSOCK="$sock" \
+                swaymsg "output * power ${state}" >/dev/null 2>&1; then
+            logger -t nvidia-dpms-off "outputs power ${state} (user=${user})"
+        else
+            logger -t nvidia-dpms-off "swaymsg power ${state} failed (user=${user} sock=${sock})"
+        fi
+    done
+}
+
+case "$1" in
+    pre)
+        sway_output off
+        # brief settle so the compositor releases the GPU before the freeze
+        sleep 0.3
+        ;;
+    post)
+        sway_output on
+        ;;
+esac
+exit 0
