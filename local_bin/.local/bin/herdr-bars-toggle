@@ -1,26 +1,41 @@
 #!/bin/bash
-# herdr-bars-toggle — toggle waybar visibility via SIGUSR1.
-# Waybars are layer-shell clients; Sway's hidden_state does NOT affect them.
-# SIGUSR1 toggles a waybar's visibility. Target each by its config file.
-# Usage: herdr-bars-toggle [herdr|top|both]
+# herdr-bars-toggle — toggle waybar visibility.
 #
-# The "top" toggle also drives a minimal floating corner bar (config-mini):
-# it is spawned while the top bar is hidden and killed when the top bar
-# returns, so battery / keyboard / power-saving stay reachable.
+# Top bar (config-top) is hidden/shown via SIGUSR1 (waybar's visibility toggle).
+# The mini corner bar (config-mini) must be the INVERSE of the top bar: shown
+# while the top bar is hidden, killed when the top bar returns.
+#
+# SIGUSR1 is only a *relative* flip and the mini is a separate process, so a
+# naive "flip both" toggle drifts out of phase — you end up with both bars
+# showing or both hidden (both toggling together). To keep them locked inverse,
+# we track the top bar's intended state in a runtime state file and always set
+# the mini to match that state, rather than blindly flipping it.
+#
+# Usage: herdr-bars-toggle [top|herdr|both]
 MINI_CFG="$HOME/.config/waybar/config-mini.jsonc"
 MINI_STYLE="$HOME/.config/waybar/style-mini.css"
+STATE="${XDG_RUNTIME_DIR:-/tmp}/herdr-bars-top.state"   # holds: visible | hidden
 
-toggle_mini() {
-    if pgrep -f 'config-mini.jsonc' >/dev/null 2>&1; then
-        pkill -f 'config-mini.jsonc'
+mini_off() { pkill -f 'config-mini.jsonc' 2>/dev/null; }
+mini_on() {
+    pgrep -f 'config-mini.jsonc' >/dev/null 2>&1 && return   # already up
+    waybar -c "$MINI_CFG" -s "$MINI_STYLE" >/dev/null 2>&1 &
+}
+
+# Flip the top bar and drive the mini to the inverse, tracking intended state.
+toggle_top() {
+    local cur
+    cur=$(cat "$STATE" 2>/dev/null || echo visible)
+    pkill -SIGUSR1 -f 'config-top.jsonc'          # flip top bar visibility
+    if [ "$cur" = visible ]; then
+        mini_on;  echo hidden  > "$STATE"         # top now hidden  -> mini on
     else
-        waybar -c "$MINI_CFG" -s "$MINI_STYLE" >/dev/null 2>&1 &
+        mini_off; echo visible > "$STATE"         # top now visible -> mini off
     fi
 }
 
 case "${1:-both}" in
     herdr) pkill -SIGUSR1 -f 'config-herdr.jsonc' ;;
-    top)   pkill -SIGUSR1 -f 'config-top.jsonc'; toggle_mini ;;
-    both)  pkill -SIGUSR1 -f 'config-herdr.jsonc'
-           pkill -SIGUSR1 -f 'config-top.jsonc'; toggle_mini ;;
+    top)   toggle_top ;;
+    both)  pkill -SIGUSR1 -f 'config-herdr.jsonc'; toggle_top ;;
 esac
