@@ -13,6 +13,20 @@ detach = "prefix+d"
 # Mnemonic pair with rename_tab (prefix+shift+t). Native herdr action.
 rename_workspace = "prefix+t"
 
+# ctrl+a shift+<N> — jump straight to WORKSPACE N (repo-per-workspace).
+# The workspace list is the repo list (receivers=1, tostools=2, ...), and with
+# 14 of them the only native alternatives were sequential (next/previous_workspace)
+# or the fzf picker (prefix+o). Native indexed action — no script needed.
+# Note: switch_tab = "prefix+1..9" is already ON by default; only the workspace
+# level was missing.
+switch_workspace = "prefix+shift+1..9"
+
+# ctrl+a alt+<N> — focus AGENT N in the current workspace.
+# Herdr detects agent panes natively (claude/pi/codex/...) and tracks their
+# status, so this is SEMANTIC, not positional: it keeps working when tabs are
+# reordered, unlike a "tab 3 = claude, tab 4 = pi" convention.
+focus_agent = "prefix+alt+1..9"
+
 # ctrl+a L — alternate WORKSPACE toggle (tmux switch-client -l reflex).
 # Herdr has no native "last workspace" action (last_pane flips panes/tabs),
 # so this uses a custom tracker daemon + toggle script. See herdr-ws-toggle.
@@ -93,3 +107,71 @@ key = "prefix+shift+o"
 type = "pane"
 command = "~/.local/bin/herdr-tab-reorder-popup"
 description = "reorder tabs (split pane popup)"
+
+# ── Harpoon: 4 curated workspace slots ────────────────────────────────────────
+# ctrl+a alt+[hjkl] — jump to pinned workspace
+# ctrl+a ctrl+[hjkl] — pin CURRENT tab to that slot
+#
+# Why alongside switch_workspace: the native indexed binding follows workspace
+# CREATION order and only reaches 1..9, which drifts from real use — gps_parser
+# was 4th most-used but sat at slot 14, unreachable. These 4 slots follow intent.
+# Pins target a TAB (not a workspace) so the destination never drifts to
+# whatever tab was last active there. Seeded from the herdr-ws-track MRU
+# history; re-pin any time. Edit the list with prefix+alt+e. See herdr-harpoon.
+
+[[keys.command]]
+key = "prefix+alt+h"
+type = "shell"
+command = "~/.local/bin/herdr-harpoon jump h"
+description = "harpoon: jump to slot h"
+
+[[keys.command]]
+key = "prefix+alt+j"
+type = "shell"
+command = "~/.local/bin/herdr-harpoon jump j"
+description = "harpoon: jump to slot j"
+
+[[keys.command]]
+key = "prefix+alt+k"
+type = "shell"
+command = "~/.local/bin/herdr-harpoon jump k"
+description = "harpoon: jump to slot k"
+
+[[keys.command]]
+key = "prefix+alt+l"
+type = "shell"
+command = "~/.local/bin/herdr-harpoon jump l"
+description = "harpoon: jump to slot l"
+
+[[keys.command]]
+key = "prefix+ctrl+h"
+type = "shell"
+command = "~/.local/bin/herdr-harpoon pin h"
+description = "harpoon: pin current tab to slot h"
+
+[[keys.command]]
+key = "prefix+ctrl+j"
+type = "shell"
+command = "~/.local/bin/herdr-harpoon pin j"
+description = "harpoon: pin current tab to slot j"
+
+[[keys.command]]
+key = "prefix+ctrl+k"
+type = "shell"
+command = "~/.local/bin/herdr-harpoon pin k"
+description = "harpoon: pin current tab to slot k"
+
+[[keys.command]]
+key = "prefix+ctrl+l"
+type = "shell"
+command = "~/.local/bin/herdr-harpoon pin l"
+description = "harpoon: pin current tab to slot l"
+
+[[keys.command]]
+# ctrl+a alt+e — harpoon quick menu: edit the pin list in nvim.
+# type = "pane" opens a temporary pane and closes it when nvim exits, so the
+# list is edited with real nvim keys (dd, :m, visual) instead of a bespoke UI.
+key = "prefix+alt+e"
+type = "pane"
+command = "~/.local/bin/herdr-harpoon edit"
+description = "harpoon: edit pin list (nvim)"

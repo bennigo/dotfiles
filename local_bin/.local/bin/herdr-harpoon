@@ -1,0 +1,365 @@
+#!/bin/bash
+# herdr-harpoon — harpoon-style TAB pins on prefix+alt+[hjkl].
+#
+# Why this exists: herdr's native switch_workspace is a FIXED index
+# (prefix+shift+1..9) tied to workspace creation order, which drifts from actual
+# use — gps_parser sat at slot 14 (unreachable) while being 4th most-used.
+# focus_agent is global and order-unstable. This gives 4 curated slots that
+# follow intent. Coexists with both; replaces neither.
+#
+# Pins target a TAB, not a workspace: `workspace focus` resumes whatever tab was
+# last active there, which makes the destination drift. `tab focus <ws:tab>`
+# crosses the workspace boundary AND lands on the exact tab in one call.
+#
+#   herdr-harpoon jump <h|j|k|l>   focus the pinned tab
+#   herdr-harpoon pin  <h|j|k|l>   pin the CURRENT tab to that slot
+#   herdr-harpoon list             show current pins
+#   herdr-harpoon clear <h|j|k|l>  unpin a slot
+#   herdr-harpoon edit             edit the whole list in $EDITOR (nvim)
+#
+# Pins seed from ~/.cache/herdr/ws-history (the herdr-ws-track daemon's MRU
+# list) on first use, so the slots work before any manual curation.
+#
+# State lives in ~/.local/state (XDG_STATE_HOME), not ~/.cache: pins are curated
+# user intent and must survive a cache wipe. ws-history stays in cache — it is
+# derived data the daemon rebuilds on its own.
+#
+# Resolution is layered so a pin degrades instead of dying:
+#   tab_id -> (ws_label + tab_label) -> ws_label's active tab -> error
+#
+# Structure: python computes and prints a verb, bash performs it. `edit` is
+# three phases (prep -> editor -> commit) because the editor must run from bash
+# with a real TTY; launched from inside a python call its stdout would be the
+# command-substitution pipe and it would render nothing.
+
+set -uo pipefail
+
+HERDR="${HERDR_BIN_PATH:-herdr}"
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/herdr"
+PIN_FILE="$STATE_DIR/harpoon.json"
+HIST_FILE="$HOME/.cache/herdr/ws-history"
+
+mkdir -p "$STATE_DIR"
+
+usage() {
+    cat >&2 <<'EOF'
+usage: herdr-harpoon {jump|pin|clear} <h|j|k|l>
+       herdr-harpoon list
+       herdr-harpoon edit
+EOF
+    exit 2
+}
+
+[ $# -ge 1 ] || usage
+ACTION="$1"
+SLOT="${2:-}"
+
+case "$ACTION" in
+    jump|pin|clear)
+        case "$SLOT" in h|j|k|l) ;; *) usage ;; esac ;;
+    list|edit) ;;
+    *) usage ;;
+esac
+
+# ── One snapshot of the world: workspaces + every tab in each ─────────────────
+# `tab list` is per-workspace, so this is N+1 socket calls; ~instant locally.
+WORLD="$("$HERDR" workspace list 2>/dev/null | HERDR_BIN_PATH="$HERDR" python3 -c '
+import json, subprocess, sys, os
+herdr = os.environ.get("HERDR_BIN_PATH", "herdr")
+try:
+    ws = json.load(sys.stdin)["result"]["workspaces"]
+except Exception:
+    sys.exit(1)
+out = []
+for w in ws:
+    try:
+        raw = subprocess.run([herdr, "tab", "list", "--workspace", w["workspace_id"]],
+                             capture_output=True, text=True, timeout=5).stdout
+        tabs = json.loads(raw)["result"]["tabs"]
+    except Exception:
+        tabs = []
+    out.append({
+        "id": w["workspace_id"], "label": w["label"],
+        "focused": bool(w.get("focused")), "active_tab_id": w.get("active_tab_id"),
+        "tabs": [{"id": t["tab_id"], "label": t["label"]} for t in tabs],
+    })
+json.dump(out, sys.stdout)
+')"
+
+if [ -z "$WORLD" ]; then
+    echo "herdr-harpoon: no response from herdr (is the server running?)" >&2
+    exit 1
+fi
+
+# ── The brain: defined ONCE, called by bash with different verbs ──────────────
+read -r -d '' PYPROG <<'PYEOF'
+import json, os, sys, tempfile
+
+action, slot, pin_path, hist_path, world_json = sys.argv[1:6]
+SLOTS = ["h", "j", "k", "l"]
+
+world = json.loads(world_json)
+ws_by_id = {w["id"]: w for w in world}
+tab_by_id = {t["id"]: (w, t) for w in world for t in w["tabs"]}
+focused_ws = next((w for w in world if w["focused"]), None)
+
+
+def load():
+    try:
+        with open(pin_path) as fh:
+            data = json.load(fh)
+        return data if isinstance(data, dict) else {}
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+
+def save(pins):
+    tmp = pin_path + ".tmp"
+    with open(tmp, "w") as fh:
+        json.dump(pins, fh, indent=2)
+        fh.write("\n")
+    os.replace(tmp, pin_path)   # atomic: never leave a half-written pin file
+
+
+def entry_for_tab(ws, tab):
+    return {"tab_id": tab["id"], "tab_label": tab["label"],
+            "ws_id": ws["id"], "ws_label": ws["label"]}
+
+
+def resolve(entry):
+    """Pin -> (tab_id | None, healed_entry | None).
+
+    Layered so a pin degrades instead of dying:
+      1. tab_id             — the fast path
+      2. ws_label+tab_label — workspace closed+recreated (new ids, same names)
+      3. ws_label's active tab — the tab is gone but the repo is open
+    """
+    if not entry:
+        return None, None
+    tid = entry.get("tab_id")
+    if tid in tab_by_id:
+        return tid, None
+    ws_label, tab_label = entry.get("ws_label"), entry.get("tab_label")
+    for w in world:
+        if w["label"] != ws_label:
+            continue
+        for t in w["tabs"]:
+            if t["label"] == tab_label:
+                return t["id"], entry_for_tab(w, t)
+        fallback = w.get("active_tab_id")
+        if fallback in tab_by_id:
+            fw, ft = tab_by_id[fallback]
+            return fallback, entry_for_tab(fw, ft)
+    return None, None
+
+
+def render(entry):
+    if not entry:
+        return "(empty)"
+    return f"{entry.get('ws_label','?')} / {entry.get('tab_label','?')}"
+
+
+def parse_buffer(text):
+    """Editor buffer -> pins. Line order IS slot order; a trailing '# <tab_id>'
+    is authoritative so reordering can never mis-target."""
+    new = {}
+    idx = 0
+    for raw in text.splitlines():
+        line = raw.strip()
+        if line.startswith("#"):
+            continue                       # comment / the reference list
+        if idx >= len(SLOTS):
+            break
+        s = SLOTS[idx]
+        idx += 1
+        if not line or line == "-":
+            continue                       # deliberately empty slot
+        tid = None
+        if "#" in line:
+            body, _, tail = line.partition("#")
+            tid = tail.strip() or None
+        else:
+            body = line
+        if tid and tid in tab_by_id:       # id wins — survives renames
+            w, t = tab_by_id[tid]
+            new[s] = entry_for_tab(w, t)
+            continue
+        if "/" not in body:                # unparseable: drop rather than guess
+            continue
+        ws_label, _, tab_label = body.partition("/")
+        ws_label, tab_label = ws_label.strip(), tab_label.strip()
+        for w in world:                    # resolve a hand-typed line by name
+            if w["label"] != ws_label:
+                continue
+            for t in w["tabs"]:
+                if t["label"] == tab_label:
+                    new[s] = entry_for_tab(w, t)
+                    break
+            break
+    return new
+
+
+pins = load()
+
+# Seed from the ws-track MRU history on first use. Only valid, still-open
+# workspaces count — history keeps ids of closed ones (e.g. wX).
+if not pins and action != "edit-commit":
+    try:
+        hist = open(hist_path).read().split()
+    except FileNotFoundError:
+        hist = []
+    seed = [h for h in hist if h in ws_by_id][:4]
+    for s, wid in zip(SLOTS, seed):
+        w = ws_by_id[wid]
+        atid = w.get("active_tab_id")
+        if atid in tab_by_id:
+            pins[s] = entry_for_tab(w, tab_by_id[atid][1])
+    if pins:
+        save(pins)
+
+if action == "list":
+    for s in SLOTS:
+        e = pins.get(s)
+        if not e:
+            print(f"OUT:  alt+{s}   (empty)")
+            continue
+        tid, _ = resolve(e)
+        mark = "" if tid else "   [stale — gone]"
+        here = "  <- current" if focused_ws and tid == focused_ws.get("active_tab_id") else ""
+        print(f"OUT:  alt+{s}   {render(e)}{mark}{here}")
+    sys.exit(0)
+
+if action == "pin":
+    if not focused_ws:
+        print("ERR:no focused workspace")
+        sys.exit(1)
+    atid = focused_ws.get("active_tab_id")
+    if atid not in tab_by_id:
+        print("ERR:no active tab to pin")
+        sys.exit(1)
+    w, t = tab_by_id[atid]
+    pins[slot] = entry_for_tab(w, t)
+    save(pins)
+    print(f"PIN:{w['label']} / {t['label']}")
+    sys.exit(0)
+
+if action == "clear":
+    if pins.pop(slot, None) is None:
+        print(f"ERR:slot alt+{slot} was already empty")
+        sys.exit(1)
+    save(pins)
+    print(f"CLEARED:{slot}")
+    sys.exit(0)
+
+if action == "jump":
+    entry = pins.get(slot)
+    if not entry:
+        print(f"ERR:slot alt+{slot} is empty — pin one with prefix+ctrl+{slot}")
+        sys.exit(1)
+    tid, healed = resolve(entry)
+    if not tid:
+        print(f"ERR:{render(entry)} is gone — re-pin with prefix+ctrl+{slot}")
+        sys.exit(1)
+    if healed:                      # ids moved under us: rewrite the pin in place
+        pins[slot] = healed
+        save(pins)
+    if focused_ws and tid == focused_ws.get("active_tab_id"):
+        print(f"NOOP:{render(entry)}")   # already here — beats a pointless refocus
+        sys.exit(0)
+    print(f"FOCUS:{tid}")
+    sys.exit(0)
+
+if action == "edit-prep":
+    lines = [
+        "# herdr harpoon — line 1 = alt+h, 2 = alt+j, 3 = alt+k, 4 = alt+l",
+        "# Reorder with :m or dd/p . Blank line or '-' empties that slot.",
+        "# Format:  <workspace> / <tab>      (the trailing # id wins if present)",
+        "# Save and quit (:wq) to apply, or :q! to cancel.",
+        "#",
+    ]
+    for s in SLOTS:
+        e = pins.get(s)
+        lines.append("-" if not e
+                     else f"{e['ws_label']} / {e['tab_label']}    # {e.get('tab_id','')}")
+    lines.append("")
+    lines.append("# Open tabs you can pin (copy a line up into a slot):")
+    for w in world:
+        for t in w["tabs"]:
+            lines.append(f"#   {w['label']} / {t['label']}    # {t['id']}")
+
+    with tempfile.NamedTemporaryFile("w", suffix=".harpoon", delete=False) as fh:
+        fh.write("\n".join(lines) + "\n")
+        print(f"PREP:{fh.name}")
+    sys.exit(0)
+
+if action == "edit-commit":
+    # `slot` carries the buffer path bash just handed the editor.
+    try:
+        text = open(slot).read()
+    except OSError:
+        print("ERR:edit buffer vanished")
+        sys.exit(1)
+    new = parse_buffer(text)
+    save(new)
+    filled = sum(1 for s in SLOTS if s in new)
+    print(f"EDITED:{filled} slot(s) set")
+    sys.exit(0)
+
+print(f"ERR:unknown action {action}")
+sys.exit(2)
+PYEOF
+
+py() { python3 -c "$PYPROG" "$@" "$PIN_FILE" "$HIST_FILE" "$WORLD"; }
+
+notify() {
+    "$HERDR" notification show "$1" --body "${2:-}" \
+        --position bottom-right --sound none >/dev/null 2>&1
+}
+
+# ── edit: prep -> editor (real TTY, no pipes) -> commit ───────────────────────
+if [ "$ACTION" = "edit" ]; then
+    PREP="$(py edit-prep "")"
+    case "$PREP" in
+        PREP:*) BUF="${PREP#PREP:}" ;;
+        *) echo "herdr-harpoon: could not prepare the edit buffer${PREP:+ (${PREP#ERR:})}" >&2
+           exit 1 ;;
+    esac
+
+    EDITOR_BIN="${EDITOR:-nvim}"
+    if ! command -v "${EDITOR_BIN%% *}" >/dev/null 2>&1; then
+        echo "herdr-harpoon: editor '${EDITOR_BIN%% *}' not found" >&2
+        rm -f "$BUF"; exit 1
+    fi
+
+    SUM_BEFORE="$(md5sum < "$BUF")"
+    "$EDITOR_BIN" "$BUF" || { rm -f "$BUF"; exit 1; }
+    SUM_AFTER="$(md5sum < "$BUF")"
+
+    if [ "$SUM_BEFORE" = "$SUM_AFTER" ]; then   # :q! or saved unchanged
+        rm -f "$BUF"
+        exit 0
+    fi
+
+    RESULT="$(py edit-commit "$BUF")"
+    rm -f "$BUF"
+    case "$RESULT" in
+        EDITED:*) notify "harpoon" "${RESULT#EDITED:}" ;;
+        ERR:*)    echo "herdr-harpoon: ${RESULT#ERR:}" >&2; exit 1 ;;
+    esac
+    exit 0
+fi
+
+# ── everything else: python decides, bash acts ────────────────────────────────
+RESULT="$(py "$ACTION" "$SLOT")"
+STATUS=$?
+
+case "$RESULT" in
+    FOCUS:*)   "$HERDR" tab focus "${RESULT#FOCUS:}" >/dev/null 2>&1 ;;
+    PIN:*)     notify "pinned alt+$SLOT" "${RESULT#PIN:}" ;;
+    CLEARED:*) notify "cleared alt+$SLOT" ;;
+    ERR:*)     notify "harpoon" "${RESULT#ERR:}"; exit 1 ;;
+    NOOP:*)    ;;
+    OUT:*|*)   printf '%s\n' "$RESULT" | sed 's/^OUT://' ;;   # `list`, for a human
+esac
+
+exit $STATUS
