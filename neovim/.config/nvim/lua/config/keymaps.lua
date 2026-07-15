@@ -25,7 +25,7 @@ keymap("t", "<c-\\>", "<c-\\><c-n>")
 
 -- find file keybindings
 keymap("n", "<leader>fL", function()
-  Snacks.picker.files({ dirs = { "~/work/projects/gps/gpslibrary_new/" }, hidden = false })
+  Snacks.picker.files({ dirs = { "~/work/projects/gpslibrary/" }, hidden = false })
 end, { desc = "Find GPS library files" })
 
 keymap("n", "<leader>fd", function()
@@ -39,7 +39,7 @@ end, { desc = "find work files" })
 
 -- search string keybindings
 keymap("n", "<leader>sL", function()
-  Snacks.picker.grep({ dirs = { "~/work/projects/gps/gpslibrary_new/" }, hidden = false })
+  Snacks.picker.grep({ dirs = { "~/work/projects/gpslibrary/" }, hidden = false })
 end, { desc = "grep GPS library files" })
 
 keymap("n", "<leader>so", function()
