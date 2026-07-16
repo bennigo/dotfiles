@@ -136,8 +136,8 @@ exec_always --no-startup-id ~/.config/sway/scripts/swayidle-power-aware.sh
 # - On Battery: Close lid → Lock + Suspend (save power)
 #
 # Note: Requires systemd-logind to ignore lid events (see /etc/systemd/logind.conf.d/90-sway-lid.conf)
-bindswitch --reload lid:on exec ~/.config/sway/scripts/lid-handler.sh close
-bindswitch --reload lid:off exec ~/.config/sway/scripts/lid-handler.sh open 
+bindswitch lid:on exec ~/.config/sway/scripts/lid-handler.sh close
+bindswitch lid:off exec ~/.config/sway/scripts/lid-handler.sh open 
 
 # Optional: a panic key if you ever land on a black screen
 # Press $mod+Ctrl+b to force panel on and set 50% brightness
