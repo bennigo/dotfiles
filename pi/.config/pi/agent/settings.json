@@ -16,8 +16,8 @@
     "npm:@eko24ive/pi-ask"
   ],
   "lastChangelogVersion": "0.80.10",
-  "defaultProvider": "deepseek",
-  "defaultModel": "deepseek-v4-pro",
+  "defaultProvider": "ollama",
+  "defaultModel": "llama3.1:8b",
   "defaultThinkingLevel": "high",
   "theme": "dark",
   "hideThinkingBlock": true,
