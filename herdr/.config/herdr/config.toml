@@ -175,3 +175,14 @@ key = "prefix+alt+e"
 type = "pane"
 command = "~/.local/bin/herdr-harpoon edit"
 description = "harpoon: edit pin list (nvim)"
+
+[experimental]
+# Render Kitty graphics locally for attached clients, so image previews work
+# INSIDE a herdr pane (ranger figure browsing for gps_plot). The outer terminal
+# must speak the Kitty graphics protocol — it does: sway launches $term =
+# ~/.local/bin/kitty. Without this, herdr swallows the APC image escapes and
+# ranger falls back to a text dump.
+# Consumers must also be told to try: herdr reports TERM=xterm-256color, and
+# ranger refuses its kitty backend unless TERM contains "kitty" (see the
+# `figview` wrapper / TERM=xterm-kitty override).
+kitty_graphics = true
