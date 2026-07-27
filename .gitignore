@@ -35,3 +35,8 @@ systemd/.config/systemd/user/*.wants/
 # Application log files (Excalidraw MCP, etc.)
 excalidraw.log
 **/*.log
+
+# Python bytecode — ranger regenerates plugins/__pycache__ on every run, so
+# tracking it means the repo is permanently "modified"
+__pycache__/
+*.pyc
