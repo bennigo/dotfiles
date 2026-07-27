@@ -1,0 +1,155 @@
+#!/usr/bin/env bash
+# sway-ranger — ranger file browser as a sway popup or a scratchpad
+#
+#   sway-ranger popup    fresh floating ranger in the FOCUSED window's directory
+#   sway-ranger toggle   show/hide one persistent ranger (sway scratchpad)
+#   sway-ranger cwd      print the resolved directory (for debugging)
+#
+# Resolving "the focused window's directory" is the interesting part. Under
+# herdr the shells are children of the herdr SERVER, not of the focused kitty
+# window, so /proc/<window pid>/cwd yields kitty's own cwd rather than the pane
+# you are looking at. herdr does track this, so ask it for `focused_pane_id` and
+# that pane's `foreground_cwd`, and only fall back to walking /proc for plain
+# terminals.
+#
+# Always launched in kitty, never $TERMINAL (which is foot here): ranger's image
+# previews need the Kitty graphics protocol. Inside a real kitty window ranger's
+# own autodetection works, so none of the herdr-specific plugin env is set.
+
+set -euo pipefail
+
+POPUP_ID="ranger_popup"
+SCRATCH_ID="ranger_scratch"
+KITTY="${HOME}/.local/bin/kitty"
+[[ -x "${KITTY}" ]] || KITTY="$(command -v kitty || true)"
+
+die() { printf 'sway-ranger: %s\n' "$1" >&2; exit 1; }
+
+# --- directory resolution -------------------------------------------------
+
+# Every descendant pid of $1, depth-first.
+descendants() {
+    local pid="$1" kid
+    for kid in $(pgrep -P "${pid}" 2>/dev/null || true); do
+        printf '%s\n' "${kid}"
+        descendants "${kid}"
+    done
+}
+
+# Deepest descendant with a readable cwd — the process actually sitting in the
+# directory, rather than the terminal that spawned it.
+proc_cwd() {
+    local pid="$1" found="" candidate here
+    for candidate in "${pid}" $(descendants "${pid}"); do
+        here="$(readlink -e "/proc/${candidate}/cwd" 2>/dev/null || true)"
+        [[ -n "${here}" ]] && found="${here}"
+    done
+    printf '%s' "${found}"
+}
+
+herdr_focused_cwd() {
+    command -v herdr >/dev/null 2>&1 || return 1
+    herdr api snapshot 2>/dev/null | python3 -c '
+import json, sys
+try:
+    snap = json.load(sys.stdin)["result"]["snapshot"]
+except Exception:
+    sys.exit(1)
+target = snap.get("focused_pane_id")
+for pane in snap.get("panes", []):
+    if pane.get("pane_id") == target:
+        path = pane.get("foreground_cwd") or pane.get("cwd")
+        if path:
+            print(path)
+            sys.exit(0)
+sys.exit(1)
+'
+}
+
+has_herdr_child() {
+    local kid
+    for kid in $(descendants "$1"); do
+        [[ "$(cat "/proc/${kid}/comm" 2>/dev/null || true)" == "herdr" ]] && return 0
+    done
+    return 1
+}
+
+focused_cwd() {
+    local tree pid resolved
+    tree="$(swaymsg -t get_tree 2>/dev/null || true)"
+    pid="$(printf '%s' "${tree}" | jq -r 'recurse(.nodes[]?,.floating_nodes[]?)
+        | select(.focused==true) | .pid // empty' 2>/dev/null | head -1)"
+
+    # A herdr client under the focused window means the visible directory
+    # belongs to a herdr pane, which /proc cannot see.
+    if [[ -n "${pid}" ]] && has_herdr_child "${pid}"; then
+        if resolved="$(herdr_focused_cwd)" && [[ -d "${resolved}" ]]; then
+            printf '%s' "${resolved}"
+            return
+        fi
+    fi
+
+    if [[ -n "${pid}" ]]; then
+        resolved="$(proc_cwd "${pid}")"
+        [[ -d "${resolved}" ]] && { printf '%s' "${resolved}"; return; }
+    fi
+
+    printf '%s' "${HOME}"
+}
+
+# --- actions --------------------------------------------------------------
+
+popup() {
+    local dir; dir="$(focused_cwd)"
+    [[ -n "${KITTY}" ]] || die "kitty not found; image previews need it"
+    exec "${KITTY}" --class "${POPUP_ID}" --directory "${dir}" ranger "${dir}"
+}
+
+toggle() {
+    local tree exists in_scratchpad dir
+    tree="$(swaymsg -t get_tree)"
+    exists="$(printf '%s' "${tree}" \
+        | jq -r ".. | select(.app_id? == \"${SCRATCH_ID}\") | .id" 2>/dev/null | head -1)"
+
+    if [[ -z "${exists}" ]]; then
+        # First use: start it in the focused directory, then park it in the
+        # scratchpad and show it. Later toggles keep whatever directory the
+        # session has navigated to — that is the point of a scratchpad.
+        dir="$(focused_cwd)"
+        [[ -n "${KITTY}" ]] || die "kitty not found; image previews need it"
+        "${KITTY}" --class "${SCRATCH_ID}" --directory "${dir}" ranger "${dir}" &
+        for _ in $(seq 40); do
+            sleep 0.1
+            if swaymsg -t get_tree | jq -e \
+                ".. | select(.app_id? == \"${SCRATCH_ID}\")" >/dev/null 2>&1; then
+                break
+            fi
+        done
+        swaymsg "[app_id=\"${SCRATCH_ID}\"] move scratchpad" >/dev/null
+        swaymsg "[app_id=\"${SCRATCH_ID}\"] scratchpad show, move position center" \
+            >/dev/null
+        return
+    fi
+
+    in_scratchpad="$(printf '%s' "${tree}" | jq -r "
+        recurse(.nodes[]?, .floating_nodes[]?) |
+        select(.name? == \"__i3_scratch\") |
+        recurse(.nodes[]?, .floating_nodes[]?) |
+        select(.app_id? == \"${SCRATCH_ID}\") | .id" 2>/dev/null | head -1)"
+
+    if [[ -n "${in_scratchpad}" ]]; then
+        # `scratchpad show` on an already-visible window hides it, so this one
+        # command is the whole toggle.
+        swaymsg "[app_id=\"${SCRATCH_ID}\"] scratchpad show, move position center" \
+            >/dev/null
+    else
+        swaymsg "[app_id=\"${SCRATCH_ID}\"] move scratchpad" >/dev/null
+    fi
+}
+
+case "${1:-popup}" in
+    popup)  popup ;;
+    toggle) toggle ;;
+    cwd)    focused_cwd; echo ;;
+    *)      die "usage: sway-ranger [popup|toggle|cwd]" ;;
+esac
