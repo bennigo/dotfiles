@@ -9,6 +9,9 @@ zsh/.config/zsh/
 ├── .zshrc            # Main config: Zap plugins, keybinds, tool integrations
 ├── aliases.zsh       # Command aliases (SSH hosts, safety wrappers, navigation)
 ├── exports.zsh       # Environment variables, PATH, credentials, Wayland fix
+├── aliases-claude.zsh # Claude Code launch tiers (cc/cca/ccf/ccp/ccl)
+├── aliases-ai.zsh    # Claude Code w/ alt backends: cc-kimi/cck, cc-deepseek/ccd
+├── aliases-pi.zsh    # Pi coding agent aliases
 ├── aliases-sync.zsh  # Sync-related aliases (dotfiles-sync, sync-status)
 ├── hooks-sync.zsh    # Sync-related shell hooks
 └── .zshenv           # Minimal env init (has stow conflict — use stow -R --ignore='\.zshenv' zsh)

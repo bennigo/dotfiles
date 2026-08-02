@@ -112,6 +112,7 @@ refresh-wayland-env() {
 # any zsh config change. Add new alias/export files to the source list below.
 refresh-shell-env() {
     [ -f ~/.config/zsh/aliases-claude.zsh ] && source ~/.config/zsh/aliases-claude.zsh
+    [ -f ~/.config/zsh/aliases-ai.zsh ] && source ~/.config/zsh/aliases-ai.zsh
     refresh-wayland-env
 }
 
