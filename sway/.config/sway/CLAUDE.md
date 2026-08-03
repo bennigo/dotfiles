@@ -293,6 +293,15 @@ This avoids the mark-stealing problem: Sway marks are unique, so when Electron a
 | `$mod+c` | `com.cisco.secureclient.gui` | Show Cisco client |
 | `$mod+Shift+Return` | `terminal_floating` | Show floating terminal |
 | `$mod+Shift+d` | `^libreoffice` | Toggle LibreOffice (script-based) |
+| `$mod+Ctrl+d` | `gps-detrend-picker` | Toggle the GNSS detrend picker (Qt) |
+
+**`gps-detrend-picker` is the one scratchpad app that takes an argument.** It
+is launched per station (`gps-detrend-picker-qt NYLA --max-gap-years 3.0`),
+so unlike Obsidian/Zotero/ranger there is no sensible launch-on-demand
+script — the binding only toggles visibility, like `$mod+z` for Zathura. Its
+`app_id` is pinned inside the application (`setDesktopFileName`) rather than
+derived from `argv[0]`, so the binding cannot break depending on how the
+program was invoked.
 
 ### Neovim Obsidian Windows
 
