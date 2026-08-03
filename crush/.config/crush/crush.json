@@ -38,16 +38,16 @@
       "api_key": "$DEEPSEEK_API_KEY",
       "models": [
         {
-          "id": "deepseek-chat",
-          "name": "DeepSeek V3",
-          "context_window": 64000,
-          "default_max_tokens": 8192
+          "id": "deepseek-v4-pro",
+          "name": "DeepSeek V4 Pro",
+          "context_window": 1000000,
+          "default_max_tokens": 32768
         },
         {
-          "id": "deepseek-reasoner",
-          "name": "DeepSeek R1",
-          "context_window": 64000,
-          "default_max_tokens": 8192
+          "id": "deepseek-v4-flash",
+          "name": "DeepSeek V4 Flash",
+          "context_window": 1000000,
+          "default_max_tokens": 32768
         }
       ]
     },
