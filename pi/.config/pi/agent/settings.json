@@ -16,8 +16,8 @@
     "npm:@eko24ive/pi-ask"
   ],
   "lastChangelogVersion": "0.83.0",
-  "defaultProvider": "kimi-coding",
-  "defaultModel": "k3",
+  "defaultProvider": "zai",
+  "defaultModel": "glm-5.2",
   "defaultThinkingLevel": "high",
   "theme": "dark",
   "hideThinkingBlock": true,
