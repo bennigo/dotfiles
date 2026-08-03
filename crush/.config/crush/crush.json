@@ -12,21 +12,21 @@
   },
   "providers": {
     "kimi": {
-      "name": "Kimi (Moonshot AI)",
+      "name": "Kimi Code (subscription)",
       "type": "openai-compat",
-      "base_url": "https://api.moonshot.cn/v1/",
-      "api_key": "$KIMI_API_KEY",
+      "base_url": "https://api.kimi.com/coding/v1/",
+      "api_key": "$KIMI_CODE_API_KEY",
       "models": [
         {
-          "id": "kimi-k2.5",
-          "name": "Kimi K2.5",
+          "id": "k3-256k",
+          "name": "Kimi K3 (256K, Moderato)",
           "context_window": 256000,
           "default_max_tokens": 16384
         },
         {
-          "id": "kimi-k2-turbo-preview",
-          "name": "Kimi K2 Turbo",
-          "context_window": 256000,
+          "id": "k3",
+          "name": "Kimi K3 (1M, ~2x quota)",
+          "context_window": 1000000,
           "default_max_tokens": 16384
         }
       ]

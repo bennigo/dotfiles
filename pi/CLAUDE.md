@@ -50,7 +50,7 @@ Pi resolves keys from `auth.json` before falling back to environment variables.
 |----------|------|-------------|
 | **Anthropic (Claude Pro/Max)** | OAuth via `/login` | token stored by pi in auth.json |
 | **DeepSeek** | API key | `!pass show tokens/deepseek_api_key` in auth.json |
-| **Kimi (Moonshot)** | API key | `!pass show tokens/kimi_api_key` in auth.json |
+| **Kimi Code (subscription, default)** | API key | `!pass show tokens/kimi_code_api_key` in auth.json (provider `kimi-coding`). Needs `compat.supportsDeveloperRole:false` or Kimi 400s on the `developer` role. |
 | **GitHub Copilot** | OAuth via `/login` | token stored by pi in auth.json |
 | Anthropic API | API key | `ANTHROPIC_API_KEY` (env or auth.json) |
 | OpenAI | API key | `OPENAI_API_KEY` |
@@ -135,7 +135,7 @@ Alt+Enter                       # Send follow-up (waits for agent)
 | File | Managed by | Purpose |
 |------|-----------|---------|
 | `settings.json` | stow | Default provider/model, skills, thinking level |
-| `models.json` | stow | Custom provider definitions (kimi-cn) |
+| `models.json` | stow | Custom provider definitions (kimi-coding subscription = default, kimi-cn PAYG, deepseek, ollama, google, openrouter) |
 | `auth.json` | **runtime** (gitignored) | API keys and OAuth tokens |
 | `sessions/` | **runtime** (gitignored) | Session JSONL files |
 
