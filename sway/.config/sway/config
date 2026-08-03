@@ -343,7 +343,9 @@ bindsym $mod+Shift+Return [app_id="terminal_floating"] scratchpad show
 ## Scratchpad // Toggle persistent ranger scratchpad // 📂 ##
 bindsym $mod+Ctrl+f exec ~/.local/bin/sway-ranger toggle
 ## Scratchpad // Toggle GNSS detrend picker // 📈 ##
-bindsym $mod+Ctrl+d [app_id="gps-detrend-picker"] scratchpad show, move position center
+bindsym $mod+Ctrl+d exec ~/.local/bin/sway-detrend-picker toggle
+## Scratchpad // GNSS detrend picker: change station / run params // 📈⚙️ ##
+bindsym $mod+Ctrl+Shift+d exec ~/.local/bin/sway-detrend-picker menu
 ## Scratchpad // Toggle default Firefox scratchpad // 🦊 ##
 bindsym $mod+b exec ~/.local/bin/toggle-firefox-scratchpad
 ## Scratchpad // Show Chrome from scratchpad // 🌐 ##

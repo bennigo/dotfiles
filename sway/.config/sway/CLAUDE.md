@@ -293,14 +293,25 @@ This avoids the mark-stealing problem: Sway marks are unique, so when Electron a
 | `$mod+c` | `com.cisco.secureclient.gui` | Show Cisco client |
 | `$mod+Shift+Return` | `terminal_floating` | Show floating terminal |
 | `$mod+Shift+d` | `^libreoffice` | Toggle LibreOffice (script-based) |
-| `$mod+Ctrl+d` | `gps-detrend-picker` | Toggle the GNSS detrend picker (Qt) |
+| `$mod+Ctrl+d` | `gps-detrend-picker` | Toggle the GNSS detrend picker (script-based) |
+| `$mod+Ctrl+Shift+d` | `gps-detrend-picker` | Detrend picker: change station / run params |
 
-**`gps-detrend-picker` is the one scratchpad app that takes an argument.** It
-is launched per station (`gps-detrend-picker-qt NYLA --max-gap-years 3.0`),
-so unlike Obsidian/Zotero/ranger there is no sensible launch-on-demand
-script — the binding only toggles visibility, like `$mod+z` for Zathura. Its
-`app_id` is pinned inside the application (`setDesktopFileName`) rather than
-derived from `argv[0]`, so the binding cannot break depending on how the
+**`gps-detrend-picker` is the one scratchpad app that takes an argument** (a
+station), so `~/.local/bin/sway-detrend-picker` supplies it via rofi:
+
+- `$mod+Ctrl+d` — window exists → show/hide it; **no window → open the menu**
+- `$mod+Ctrl+Shift+d` — always the menu, to change station or run params,
+  replacing any running picker (two windows sharing one `app_id` would make
+  the toggle ambiguous, so the script kills the old one)
+
+The menu offers station, `--uncert` and `--max-gap-years`, and remembers all
+three in `$XDG_STATE_HOME/gps-detrend-picker/`, so the common case is two
+keypresses. The station list is built from the **TOT data directory**, not
+`stations.cfg`: offering one of the 196 configured stations that has no data
+would only produce an error (194 have data).
+
+Its `app_id` is pinned inside the application (`setDesktopFileName`) rather
+than derived from `argv[0]`, so the binding cannot break depending on how the
 program was invoked.
 
 ### Neovim Obsidian Windows

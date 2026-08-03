@@ -1,0 +1,114 @@
+#!/bin/bash
+# Launch / toggle the GNSS detrend picker from a rofi menu.
+#
+# The picker is the one scratchpad app that takes an ARGUMENT (a station), so
+# unlike Obsidian/Zotero/ranger it cannot simply be launched on demand — this
+# script is what supplies the argument.
+#
+#   toggle  (default)  window exists -> show/hide it;  no window -> open the menu
+#   menu               always open the menu (change station or the run params),
+#                      replacing any running picker
+#
+# Station list comes from the TOT data directory rather than stations.cfg:
+# offering a station with no data would only produce an error dialog, and the
+# 196 configured stations are many more than the ones actually curatable here.
+#
+# Bound in sway: $mod+Ctrl+d (toggle), $mod+Ctrl+Shift+d (menu).
+
+set -euo pipefail
+
+APP_ID="gps-detrend-picker"
+PROJECT="$HOME/work/projects/gpslibrary/gps_plot"
+STATE="${XDG_STATE_HOME:-$HOME/.local/state}/gps-detrend-picker"
+ROFI_ARGS=(-dmenu -i -no-custom -lines 15)
+
+mkdir -p "$STATE"
+# Remembered between invocations, so the common case is two keypresses.
+STATION_F="$STATE/station"; UNCERT_F="$STATE/uncert"; GAP_F="$STATE/max_gap"
+[[ -f "$UNCERT_F" ]] || echo "10" > "$UNCERT_F"
+[[ -f "$GAP_F" ]]    || echo "1.5" > "$GAP_F"
+
+die() { command -v notify-send >/dev/null && notify-send "detrend picker" "$1" || echo "$1" >&2; exit 1; }
+
+window_exists() {
+    swaymsg -t get_tree | python3 -c "
+import json,sys
+def walk(n):
+    if n.get('app_id')=='$APP_ID': print('yes'); sys.exit(0)
+    for k in ('nodes','floating_nodes'):
+        for c in n.get(k,[]): walk(c)
+walk(json.load(sys.stdin))" 2>/dev/null | grep -q yes
+}
+
+totdir() {
+    python3 - <<'PY'
+import configparser, os
+c = configparser.ConfigParser()
+c.read(os.path.expanduser("~/.config/gpsconfig/postprocess.cfg"))
+for s in c.sections():
+    for k, v in c.items(s):
+        if k.lower() == "totdir":
+            print(os.path.expanduser(v.strip()));  raise SystemExit
+PY
+}
+
+stations() {
+    local d; d="$(totdir)"
+    [[ -d "$d" ]] || die "TOT directory not found: ${d:-<unset>}"
+    # mb_XXXX_TOT.dat1 -> XXXX
+    find "$d" -maxdepth 1 -name 'mb_*_TOT.dat*' -printf '%f\n' \
+        | sed -E 's/^mb_([A-Za-z0-9]+)_TOT\..*$/\1/' | sort -u
+}
+
+launch() {
+    local sta="$1" uncert="$2" gap="$3"
+    # Replace any running picker: two windows with one app_id would make the
+    # toggle ambiguous, and the second would steal the binding.
+    swaymsg "[app_id=\"$APP_ID\"] kill" >/dev/null 2>&1 || true
+    printf '%s' "$sta" > "$STATION_F"
+    printf '%s' "$uncert" > "$UNCERT_F"
+    printf '%s' "$gap" > "$GAP_F"
+    cd "$PROJECT" || die "project not found: $PROJECT"
+    exec uv run gps-detrend-picker-qt "$sta" --uncert "$uncert" --max-gap-years "$gap"
+}
+
+menu() {
+    local sta uncert gap sel
+    sta="$(cat "$STATION_F" 2>/dev/null || true)"
+    uncert="$(cat "$UNCERT_F")"
+    gap="$(cat "$GAP_F")"
+
+    while true; do
+        sel="$(printf '%s\n' \
+            "▶  open   ${sta:-<pick a station>}   uncert=$uncert  max-gap=$gap" \
+            "station   ${sta:-—}" \
+            "uncert    $uncert   (sigma screen at READ time, mm)" \
+            "max-gap   $gap   (yr; 1.5 for most, 3.0 for gappy stations)" \
+            "cancel" \
+            | rofi "${ROFI_ARGS[@]}" -p "detrend picker" || true)"
+        case "$sel" in
+            "▶  open"*)
+                [[ -n "$sta" ]] || { sta="$(stations | rofi "${ROFI_ARGS[@]}" -p station || true)"; continue; }
+                launch "$sta" "$uncert" "$gap" ;;
+            station*)
+                sta="$(stations | rofi "${ROFI_ARGS[@]}" -p station || echo "$sta")" ;;
+            uncert*)
+                uncert="$(printf '5\n10\n15\n20\n' | rofi -dmenu -i -lines 4 -p "uncert [mm]" || echo "$uncert")" ;;
+            max-gap*)
+                gap="$(printf '0.5\n1.0\n1.5\n2.0\n3.0\n5.0\n' | rofi -dmenu -i -lines 6 -p "max-gap [yr]" || echo "$gap")" ;;
+            *) exit 0 ;;
+        esac
+    done
+}
+
+case "${1:-toggle}" in
+    toggle)
+        if window_exists; then
+            swaymsg "[app_id=\"$APP_ID\"] scratchpad show, move position center" >/dev/null
+        else
+            menu
+        fi ;;
+    menu) menu ;;
+    stations) stations ;;   # for testing
+    *) echo "usage: $(basename "$0") [toggle|menu|stations]" >&2; exit 2 ;;
+esac
