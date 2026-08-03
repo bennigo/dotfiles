@@ -1,42 +1,75 @@
 #!/bin/bash
-# waybar-top-launcher — thin bar for workspaces + language + power toggles.
+# waybar-top-launcher — supervised top bar (workspaces + language + power).
 #
-# Retry loop: during `swaymsg reload` there is a window where sway has not
-# re-advertised the wlr-layer-shell global yet. A waybar starting in that
-# window exits instantly ("compositor does not support wlr-layer-shell",
-# exit 1 after ~80ms) and sway NEVER respawns a dead bar process — the bar
-# is gone until the next reload. So retry until waybar survives startup.
+# Sway runs this script as the bar-0 process. It CANNOT be relied on to keep
+# the bar alive: during `swaymsg reload` waybar may start before sway has
+# re-advertised the wlr-layer-shell global and die instantly ("compositor
+# does not support wlr-layer-shell"), and sway's handling of dead/half-dead
+# bar processes is erratic on this machine. So this script SUPERVISES:
+# every 5s, if no config-top waybar lives, start one (retrying past the
+# layer-shell race) and apply the intended visibility from the state file.
 #
-# Visibility: waybar comes up VISIBLE on restart; if herdr-bars-top.state
-# says hidden, hide it with exactly ONE SIGUSR1 (SIGUSR1 is a toggle — the
-# old "spam until it works" loop flickered the bar on/off for 15s) and
-# spawn the mini bar (the inverse of the top bar).
+# Notes:
+#  - SIGUSR1 is a TOGGLE — never spam it (the old retry loop flickered the
+#    bar on/off for 15s after every reload).
+#  - `kill -0` alone can't detect a dead child (zombies pass it) — check
+#    process state and require "Bar configured" in the startup log.
+#  - While the bar is alive the supervisor does nothing, so manual toggles
+#    (herdr-bars-toggle top, Win+Shift+q) are never fought.
 STATE="${XDG_RUNTIME_DIR:-/tmp}/herdr-bars-top.state"
 CFG=~/.dotfiles/waybar/.config/waybar/config-top.jsonc
 CSS=~/.dotfiles/waybar/.config/waybar/style-top.css
+MINI_CFG=~/.config/waybar/config-mini.jsonc
+MINI_CSS=~/.config/waybar/style-mini.css
 
-pkill -f 'config-mini.jsonc' 2>/dev/null
-
-LOG=$(mktemp /tmp/waybar-top.XXXXXX.log)
-wb=""
-for _ in $(seq 1 30); do               # ~60s of retries, then give up
-    : > "$LOG"
-    waybar -c "$CFG" -s "$CSS" >>"$LOG" 2>&1 &
-    wb=$!
-    sleep 1.5                           # the layer-shell race kills it in ~80ms
-    kill -0 "$wb" 2>/dev/null && break
-    wait "$wb" 2>/dev/null
-    sleep 1
+# Single instance: a sway reload may spawn a fresh supervisor without
+# reaping the previous one — kill older copies of ourselves (higher PID
+# wins, guards below prevent duplicate bars in the meantime).
+pgrep -f "$0" 2>/dev/null | while read -r p; do
+    [ "$p" != "$$" ] && [ "$p" -lt "$$" ] && kill "$p" 2>/dev/null
 done
-kill -0 "$wb" 2>/dev/null || { rm -f "$LOG"; exit 1; }
 
-st=$(cat "$STATE" 2>/dev/null)
-if [ "$st" = hidden ]; then
-    kill -SIGUSR1 "$wb" 2>/dev/null     # hide exactly once
-    pgrep -f 'config-mini.jsonc' >/dev/null 2>&1 || \
-        waybar -c ~/.config/waybar/config-mini.jsonc \
-               -s ~/.config/waybar/style-mini.css >/dev/null 2>&1 &
-fi
+proc_alive() {  # true if PID $1 is a live, non-zombie process
+    local st
+    st=$(ps -o stat= -p "$1" 2>/dev/null) || return 1
+    case "$st" in *Z*) return 1 ;; esac
+    [ -n "$st" ]
+}
 
-wait "$wb"
-rm -f "$LOG"
+bar_running() { pgrep -f "$CFG" >/dev/null 2>&1; }
+
+start_bar() {  # start waybar, retrying past the reload layer-shell race
+    local log wb
+    log=$(mktemp /tmp/waybar-top.XXXXXX.log)
+    for _ in $(seq 1 30); do               # ~60s of retries, then give up
+        : > "$log"
+        waybar -c "$CFG" -s "$CSS" >>"$log" 2>&1 &
+        wb=$!
+        sleep 1.5                           # the race kills waybar in ~80ms
+        if proc_alive "$wb" && grep -q "Bar configured" "$log"; then
+            rm -f "$log"
+            return 0
+        fi
+        wait "$wb" 2>/dev/null              # reap the dead attempt
+        sleep 1
+    done
+    rm -f "$log"
+    return 1
+}
+
+apply_state() {  # enforce hidden/visible + mini inverse after a (re)start
+    if [ "$(cat "$STATE" 2>/dev/null)" = hidden ]; then
+        pkill -SIGUSR1 -f "$CFG"            # hide exactly once
+        pgrep -f "$MINI_CFG" >/dev/null 2>&1 || \
+            waybar -c "$MINI_CFG" -s "$MINI_CSS" >/dev/null 2>&1 &
+    else
+        pkill -f "$MINI_CFG" 2>/dev/null    # top visible -> no mini
+    fi
+}
+
+while true; do
+    if ! bar_running; then
+        start_bar && apply_state
+    fi
+    sleep 5
+done
