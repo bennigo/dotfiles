@@ -17,7 +17,7 @@
   ],
   "lastChangelogVersion": "0.80.10",
   "defaultProvider": "kimi-coding",
-  "defaultModel": "k3",
+  "defaultModel": "k3-256k",
   "defaultThinkingLevel": "high",
   "theme": "dark",
   "hideThinkingBlock": true,

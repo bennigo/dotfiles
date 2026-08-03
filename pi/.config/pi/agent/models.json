@@ -44,6 +44,50 @@
         }
       ]
     },
+    "kimi-coding": {
+      "baseUrl": "https://api.kimi.com/coding/v1",
+      "api": "openai-completions",
+      "apiKey": "$KIMI_CODE_API_KEY",
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsUsageInStreaming": false
+      },
+      "models": [
+        {
+          "id": "k3-256k",
+          "name": "Kimi K3 (256K, Moderato subscription)",
+          "reasoning": true,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 256000,
+          "maxTokens": 16384,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          }
+        },
+        {
+          "id": "k3",
+          "name": "Kimi K3 (1M — needs Allegretto+; 429s on Moderato)",
+          "reasoning": true,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 1000000,
+          "maxTokens": 16384,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          }
+        }
+      ]
+    },
     "kimi-cn": {
       "baseUrl": "https://api.moonshot.ai/v1",
       "api": "openai-completions",
