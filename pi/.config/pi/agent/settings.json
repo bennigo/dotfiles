@@ -16,8 +16,8 @@
     "npm:@eko24ive/pi-ask"
   ],
   "lastChangelogVersion": "0.84.0",
-  "defaultProvider": "ollama",
-  "defaultModel": "llama3.1:8b",
+  "defaultProvider": "zai-coding-cn",
+  "defaultModel": "glm-5.2",
   "defaultThinkingLevel": "high",
   "theme": "dark",
   "hideThinkingBlock": true,
