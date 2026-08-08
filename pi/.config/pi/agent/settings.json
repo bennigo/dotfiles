@@ -15,9 +15,9 @@
     "npm:pi-conventions",
     "npm:@eko24ive/pi-ask"
   ],
-  "lastChangelogVersion": "0.83.0",
-  "defaultProvider": "zai",
-  "defaultModel": "glm-5.2",
+  "lastChangelogVersion": "0.84.0",
+  "defaultProvider": "ollama",
+  "defaultModel": "llama3.1:8b",
   "defaultThinkingLevel": "high",
   "theme": "dark",
   "hideThinkingBlock": true,
