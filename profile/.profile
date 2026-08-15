@@ -29,4 +29,9 @@ fi
 
 . "$HOME/.local/share//../bin/env"
 
+# Decrypt API keys from pass into the session env ONCE at login (gpg-agent
+# is up by now); every shell then inherits them instead of re-decrypting
+# ~3s on every prompt. See ~/.config/zsh/api-keys.sh.
+. "$HOME/.config/zsh/api-keys.sh"
+
 export SWAY_SCREENSHOT_DIR="$HOME/Pictures/Screenshots"

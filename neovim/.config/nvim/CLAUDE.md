@@ -4,7 +4,7 @@ This file provides context for Claude Code when working with this Neovim configu
 
 ## Overview
 
-**Editor**: Neovim v0.11.4 (built from source, RelWithDebInfo)
+**Editor**: Neovim nightly, built from source (RelWithDebInfo) — see Installation & Build
 **Foundation**: LazyVim with extensive customization
 **Multi-language**: Python, R, LaTeX, Lua, Markdown, C/C++
 **Key Integrations**: Claude Code, PostgreSQL Database UI, Obsidian, R Statistical Computing
@@ -669,7 +669,7 @@ return {
 **Method**: Built from source via Ansible
 **Role**: `development` (see `~/.dotfiles/ansible/roles/development/tasks/main.yml`)
 **Source Directory**: `~/Downloads/git/neovim`
-**Branch**: stable
+**Branch**: master (nightly; detached HEAD at build time)
 **Build Type**: RelWithDebInfo
 **Install Location**: `/usr/local/bin/nvim`
 
