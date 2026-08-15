@@ -14,7 +14,8 @@ zsh/.config/zsh/
 ├── aliases-pi.zsh    # Pi coding agent aliases
 ├── aliases-sync.zsh  # Sync-related aliases (dotfiles-sync, sync-status)
 ├── hooks-sync.zsh    # Sync-related shell hooks
-└── .zshenv           # Minimal env init (has stow conflict — use stow -R --ignore='\.zshenv' zsh)
+├── .zshenv           # Minimal env init (has stow conflict — use stow -R --ignore='\.zshenv' zsh)
+├── api-keys.sh       # Decrypts API keys from `pass` ONCE (sourced by ~/.profile at login; ~/.zshenv only fallback-sources it)
 ```
 
 ## Plugin Manager (Zap)
