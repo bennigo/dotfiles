@@ -40,15 +40,38 @@ def walk(n):
 walk(json.load(sys.stdin))" 2>/dev/null | grep -q yes
 }
 
+# Mirrors gps_parser.getPostProcessDir's precedence, and has to: this runs
+# under the system python3, which cannot import gps_parser (it lives in the
+# gpslibrary mamba env and the per-package uv venvs), so the resolution is
+# reimplemented rather than called.  Keep the two in step.
+#
+#   [PATHS] before [Configs]  -- [PATHS] is what the deployment templates fill
+#                                per host; [Configs] is the hardcoded legacy tail
+#   tot_dir before totDir/totPath -- canonical snake_case name first
+#   an unrendered {{placeholder}} counts as UNSET
+#
+# Getting this wrong is what broke the station list on 2026-08-20: the deployed
+# config gained [PATHS] tot_dir = ~/gps-data/TOT while [Configs] totDir went
+# back to the production /mnt/gpsdata/.  A scan for the literal key "totdir"
+# matched only the legacy one, and because /mnt/gpsdata EXISTS the directory
+# check passed -- so the picker offered an empty list instead of failing.
 totdir() {
     python3 - <<'PY'
-import configparser, os
+import configparser, os, re
 c = configparser.ConfigParser()
 c.read(os.path.expanduser("~/.config/gpsconfig/postprocess.cfg"))
-for s in c.sections():
-    for k, v in c.items(s):
-        if k.lower() == "totdir":
-            print(os.path.expanduser(v.strip()));  raise SystemExit
+PLACEHOLDER = re.compile(r"^\{\{\w+\}\}$")
+for section in ("PATHS", "Configs"):
+    if not c.has_section(section):
+        continue
+    for name in ("tot_dir", "totdir", "totpath"):
+        if not c.has_option(section, name):
+            continue
+        value = c.get(section, name).strip()
+        if not value or PLACEHOLDER.match(value):
+            continue
+        print(os.path.expanduser(value))
+        raise SystemExit
 PY
 }
 
@@ -56,8 +79,15 @@ stations() {
     local d; d="$(totdir)"
     [[ -d "$d" ]] || die "TOT directory not found: ${d:-<unset>}"
     # mb_XXXX_TOT.dat1 -> XXXX
-    find "$d" -maxdepth 1 -name 'mb_*_TOT.dat*' -printf '%f\n' \
-        | sed -E 's/^mb_([A-Za-z0-9]+)_TOT\..*$/\1/' | sort -u
+    local out
+    out="$(find "$d" -maxdepth 1 -name 'mb_*_TOT.dat*' -printf '%f\n' \
+        | sed -E 's/^mb_([A-Za-z0-9]+)_TOT\..*$/\1/' | sort -u)"
+    # An existing but EMPTY directory is the failure that hid: a wrong path
+    # that happens to exist passes the check above and then produces a picker
+    # with nothing in it, which reads as "no stations" rather than "wrong
+    # directory".  Say which directory was searched.
+    [[ -n "$out" ]] || die "no mb_*_TOT files in $d — is that the right totDir?"
+    printf '%s\n' "$out"
 }
 
 launch() {
