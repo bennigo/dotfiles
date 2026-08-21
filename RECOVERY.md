@@ -91,6 +91,35 @@ gpg --list-secret-keys            # is the GPG key imported?
 See [`system/emergency-recovery.md`](system/emergency-recovery.md) for USB backup
 and paperkey recovery procedures.
 
+### 2FA recovery codes
+
+**Convention:** 2FA/backup recovery codes are stored in `pass` under the
+`recovery/<service>` namespace, one multiline entry per service (e.g.
+`recovery/github`). They are GPG-encrypted with key `0FA08B1A9096B394` like every
+other `pass` secret, so the encrypted blob is safe to sync to the `bgo-pstore` remote.
+
+```bash
+# Store a fresh set WITHOUT displaying it (stdin redirect, no echo):
+pass insert -m recovery/github < ~/Downloads/<service>-recovery-codes.txt
+# then securely remove the plaintext download:
+shred -u ~/Downloads/<service>-recovery-codes.txt
+
+# Retrieve a code when a service prompts for 2FA recovery:
+pass show recovery/github
+```
+
+**Operational rules:**
+- **Codes are one-time-use.** After you spend one during a recovery, the service
+  invalidates it and your stored list goes *partially stale*. Regenerate the full set
+  on the service and re-store (`pass insert -m recovery/<service>` overwrites).
+- **The real recovery path is the offline GPG key, not the pstore remote.** The
+  `bgo-pstore` git remote is hosted on GitHub, so GitHub's own recovery codes
+  round-trip through GitHub. If you are ever locked out, recovery relies on the
+  **local** decrypted `pass` copy + the **tested offline GPG key backup** — never on
+  pulling `bgo-pstore` from GitHub.
+- After adding an entry, `pass` auto-commits locally; run `sync` to push the
+  (encrypted) update to other machines.
+
 ### SSH key not working after bootstrap
 
 ```bash
