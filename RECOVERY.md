@@ -93,10 +93,15 @@ and paperkey recovery procedures.
 
 ### 2FA recovery codes
 
+> ⚠️ **Recovery codes are ONE-TIME-USE.** A code you spend during a recovery is
+> immediately invalidated by the service, so a stored list is only ever *as fresh as
+> your last regenerate*. Assume any list may be partially spent — see operational rules.
+
 **Convention:** 2FA/backup recovery codes are stored in `pass` under the
 `recovery/<service>` namespace, one multiline entry per service (e.g.
-`recovery/github`). They are GPG-encrypted with key `0FA08B1A9096B394` like every
-other `pass` secret, so the encrypted blob is safe to sync to the `bgo-pstore` remote.
+`recovery/github`, `recovery/google`). They are GPG-encrypted with key
+`0FA08B1A9096B394` like every other `pass` secret, so the encrypted blob is safe to
+sync to the `bgo-pstore` remote.
 
 ```bash
 # Store a fresh set WITHOUT displaying it (stdin redirect, no echo):
