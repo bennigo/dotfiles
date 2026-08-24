@@ -1,23 +1,17 @@
 #!/usr/bin/env bash
-# Bypasses snap command.sh's "#!/bin/bash -e" by calling bash directly on the
-# init chain. Sets the SNAP env vars that desktop-common.sh needs for correct
-# XDG_CONFIG_HOME routing (~/snap/obsidian/<rev>/.config, not ~/.config).
-
-SNAP=/snap/obsidian/current
-SNAP_REVISION=$(readlink "$SNAP")
-SNAP_NAME=obsidian
-SNAP_INSTANCE_NAME=obsidian
-SNAP_USER_DATA="$HOME/snap/obsidian/$SNAP_REVISION"
-SNAP_USER_COMMON="$HOME/snap/obsidian/common"
-
-export SNAP SNAP_REVISION SNAP_NAME SNAP_INSTANCE_NAME SNAP_USER_DATA SNAP_USER_COMMON
-
-mkdir -p "$SNAP_USER_DATA/.config" "$SNAP_USER_COMMON/.cache"
-
-exec bash \
-    "$SNAP/desktop-common.sh" \
-    "$SNAP/desktop-gnome-specific.sh" \
-    "$SNAP/obsidian" \
+# Launch the Obsidian snap.
+#
+# The snap restructured in Aug 2026 (revision 67, base: core24, classic
+# confinement): it no longer ships desktop-common.sh / desktop-gnome-specific.sh.
+# Its command.sh is now just `exec "$SNAP/app/obsidian" "$@"`, and snapd sets the
+# snap env itself — so we route through /snap/bin/obsidian instead of hand-rolling
+# the SNAP_* environment.
+#
+# Flags preserved for this machine (Sway/Wayland + NVIDIA RTX 2000 Ada):
+#   --no-sandbox                chrome-sandbox is not setuid in the classic snap
+#   --ozone-platform=wayland    native Wayland on Sway (avoid XWayland)
+#   --disable-features=UseWebGPU  avoid GPU/WebGPU rendering crashes
+exec /snap/bin/obsidian \
     --no-sandbox \
     --ozone-platform=wayland \
     --disable-features=UseWebGPU \
