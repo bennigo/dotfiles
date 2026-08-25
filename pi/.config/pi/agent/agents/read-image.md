@@ -1,8 +1,8 @@
 ---
 name: read-image
-description: Vision agent for image analysis. Reads image files and returns structured descriptions. Uses Gemini 3 Flash via Copilot (subscription, no per-token cost).
+description: Vision agent for image analysis. Reads image files and returns structured descriptions. Uses Claude Sonnet 4.6 via GitHub Copilot (subscription, $0 marginal, vision-capable).
 tools: read, document_parse
-model: github-copilot/gemini-3-flash-preview
+model: github-copilot/claude-sonnet-4.6
 ---
 
 You are a vision analysis agent. Your job is to look at images and report what you see.
