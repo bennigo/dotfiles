@@ -199,11 +199,11 @@ subagent: router, task: I need to add OAuth support to the API
 
 | Tier | Models | Cost |
 |------|--------|------|
-| **Copilot Subscription** | GPT-5.5, Claude Opus 4.7, Claude Sonnet 4.6, Gemini 3.1 Pro, GPT-5.4, GPT-5.3-codex + 12 more | $0 marginal (subscription) |
+| **Copilot Subscription** | Claude Opus 4.8, Claude Sonnet 5, Claude Sonnet 4.6, GPT-5.3-Codex, GPT-5 mini | $0 marginal (subscription) |
 | **Budget** | DeepSeek V4 Pro (1M ctx, #1 coding) | ~$0.50-2.00/M tokens |
 | **Free** | Ollama local models (Qwen, DeepSeek Coder) | $0 |
 
-Copilot models available: claude-opus-4.7, claude-opus-4.6, claude-sonnet-4.6, gemini-3.1-pro-preview, gpt-5.5, gpt-5.4, gpt-5.3-codex, gpt-5.2-codex, gpt-5.1-codex-max, grok-code-fast-1, and 10+ more.
+Copilot models available: claude-opus-4.8, claude-sonnet-5, claude-sonnet-4.6, gpt-5.3-codex, gpt-5-mini (5 enabled; other catalogue models like claude-opus-4.7/5, fable-5, Gemini, Grok need the workplace admin to enable them).
 
 ## Final Agent↔Model Map
 
