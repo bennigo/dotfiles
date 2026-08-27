@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# deploy-config — deploy gps-config-data templates to a host config directory.
+#
+# Thin wrapper around ~/git/gps-config-data/deploy.py that (a) gives it a real
+# command name and (b) defaults --repo to the gps-config-data clone so it works
+# from any cwd, not just inside the repo.
+#
+# Repo resolution order (matches receivers.cfg [paths] gps_config_data_repo):
+#   $GPS_CONFIG_DATA_REPO  ->  ~/git/gps-config-data
+#
+# Usage:
+#   deploy-config --env laptop-bgo --target ~/.config/gpsconfig --sync
+#   deploy-config --env laptop-bgo --target /tmp/cfgtest --dry-run
+#
+# An explicit --repo in the args still wins (argparse takes the last one).
+
+set -euo pipefail
+
+REPO="${GPS_CONFIG_DATA_REPO:-$HOME/git/gps-config-data}"
+SCRIPT="$REPO/deploy.py"
+
+if [ ! -f "$SCRIPT" ]; then
+  echo "deploy-config: deploy.py not found at $SCRIPT" >&2
+  echo "  set GPS_CONFIG_DATA_REPO to the gps-config-data clone, or pass --repo" >&2
+  exit 1
+fi
+
+exec python3 "$SCRIPT" --repo "$REPO" "$@"
