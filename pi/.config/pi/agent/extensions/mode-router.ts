@@ -3,9 +3,9 @@
  *
  * Three modes:
  *   online   (default) — cloud models available; your normal model choice stands.
- *   offline  (auto)    — cloud unreachable; main model is silently switched to a
- *                        local Ollama model (+ a one-line notice). Restored when
- *                        connectivity returns.
+ *   offline  (auto)    — cloud unreachable; by default the cloud model is KEPT and
+ *                        a one-line notice is shown (auto-switch to a local Ollama
+ *                        model is opt-in via AUTO_SWITCH_ON_OFFLINE).
  *   private  (manual)  — `/private` forces everything on-device even when online.
  *                        Nothing leaves the machine. `/private off` releases it.
  *
@@ -39,8 +39,15 @@ const PROBE_URLS = [
 ];
 const OLLAMA_URL = "http://localhost:11434/api/tags";
 
-const PROBE_TIMEOUT_MS = 2000;
+const PROBE_TIMEOUT_MS = 5000;
 const CHECK_TTL_MS = 30_000; // re-probe connectivity at most every 30s
+
+// Auto-switch to a local Ollama model when connectivity drops?
+//   false (default) — stay on the cloud model and only notify; a single
+//                     transient VPN/DNS blip was silently swapping the model
+//                     mid-session, which is what this flag stops.
+//   true            — legacy behaviour: switch offline → local, restore online.
+const AUTO_SWITCH_ON_OFFLINE = false;
 
 // ---- State ---------------------------------------------------------------
 
@@ -53,9 +60,15 @@ let savedCloudModel: { provider: string; id: string } | null = null;
 let selfSwitching = false;
 // Whether the currently active model is a local one that WE forced.
 let forcedLocal = false;
+// True when the user manually picked a local model — we respect that and
+// won't auto-restore cloud over it.
+let manualLocal = false;
 
 let lastProbeAt = 0;
 let lastOnline = true;
+// Whether we've already notified the user about being offline this outage
+// (so we don't spam a notice before every prompt while offline).
+let offlineNotified = false;
 
 // ---- Helpers -------------------------------------------------------------
 
@@ -102,6 +115,22 @@ function findLocalModel(ctx: any) {
   return null;
 }
 
+// Cloud models to restore when online and stuck on a local one (first
+// registered wins). Mirrors settings.json's default (deepseek-v4-pro) with the
+// Copilot subscription as a fallback.
+const CLOUD_RESTORE = [
+  { provider: "deepseek", id: "deepseek-v4-pro" },
+  { provider: "copilot", id: "claude-sonnet-4-6" },
+];
+
+function findCloudModel(ctx: any) {
+  for (const m of CLOUD_RESTORE) {
+    const found = ctx.modelRegistry?.find?.(m.provider, m.id);
+    if (found) return found;
+  }
+  return null;
+}
+
 async function switchTo(pi: any, ctx: any, model: any): Promise<boolean> {
   selfSwitching = true;
   try {
@@ -127,6 +156,20 @@ async function reconcile(pi: any, ctx: any, opts: { announce?: boolean } = {}) {
 
   if (wantLocal) {
     if (isLocalModel(cur)) return; // already local, nothing to do
+
+    // Offline auto-switch is opt-in. When disabled, leave the cloud model
+    // active and only tell the user once per outage — no silent model swap.
+    if (!privateMode && !AUTO_SWITCH_ON_OFFLINE) {
+      if (opts.announce && !offlineNotified) {
+        offlineNotified = true;
+        ctx.ui.notify(
+          "⚠️ Offline detected — staying on the cloud model (auto-switch is off). Use /private to switch to a local model, or /online to re-check.",
+          "warn"
+        );
+      }
+      return;
+    }
+
     const local = findLocalModel(ctx);
     if (!local) {
       if (opts.announce) {
@@ -156,14 +199,20 @@ async function reconcile(pi: any, ctx: any, opts: { announce?: boolean } = {}) {
     return;
   }
 
-  // want cloud (online && not private): restore if we forced local earlier
-  if (forcedLocal && isLocalModel(cur) && savedCloudModel) {
-    const restore = ctx.modelRegistry?.find?.(savedCloudModel.provider, savedCloudModel.id);
+  // want cloud (online && not private): if we're on a local model, restore cloud.
+  offlineNotified = false;
+  if (isLocalModel(cur) && !manualLocal) {
+    // Prefer the model we saved when WE switched away; otherwise the configured
+    // default cloud model — so a session resumed on a local model (from a
+    // pre-fix auto-switch) also comes back to cloud automatically.
+    const restore =
+      (savedCloudModel && ctx.modelRegistry?.find?.(savedCloudModel.provider, savedCloudModel.id)) ||
+      findCloudModel(ctx);
     if (restore) {
       const ok = await switchTo(pi, ctx, restore);
       if (ok) {
         forcedLocal = false;
-        ctx.ui.notify(`🌐 back online: restored ${restore.id}.`, "info");
+        ctx.ui.notify(`🌐 online: restored ${restore.id}.`, "info");
         savedCloudModel = null;
       }
     }
@@ -192,11 +241,23 @@ export default function (pi: ExtensionAPI) {
   // If the user manually changes model, respect it: stop forcing/restoring.
   pi.on("model_select", async (event, _ctx) => {
     if (selfSwitching) return; // our own switch — ignore
+    // A session RESTORE is not a manual choice — it just replays the model the
+    // session happened to end on (which, for pre-fix sessions, was a local
+    // one). Treating it as manual would set manualLocal and permanently block
+    // the cloud restore below — exactly the "still switching / stuck on local"
+    // bug. So ignore restore; only genuine user picks (set/cycle) count.
+    if ((event as any).source === "restore") return;
     // A genuine manual selection: adopt it as the baseline.
     forcedLocal = false;
     const m = (event as any).model;
-    if (m && m.provider !== LOCAL_PROVIDER) {
-      savedCloudModel = { provider: m.provider, id: m.id };
+    if (m) {
+      if (m.provider === LOCAL_PROVIDER) {
+        manualLocal = true; // user chose local — respect it
+        savedCloudModel = null;
+      } else {
+        manualLocal = false;
+        savedCloudModel = { provider: m.provider, id: m.id };
+      }
     }
   });
 
@@ -244,6 +305,7 @@ export default function (pi: ExtensionAPI) {
         `  Ollama:       ${(await ollamaUp()) ? "running" : "not running"}`,
         `  Active model: ${cur ? `${cur.provider}/${cur.id}` : "unknown"}`,
         `  Forced local: ${forcedLocal ? "yes (by mode-router)" : "no"}`,
+        `  Auto-switch:  ${AUTO_SWITCH_ON_OFFLINE ? "on" : "off (stays on cloud)"}`,
         `  Saved cloud:  ${savedCloudModel ? `${savedCloudModel.provider}/${savedCloudModel.id}` : "none"}`,
         "",
         "  /private   toggle on-device mode",
