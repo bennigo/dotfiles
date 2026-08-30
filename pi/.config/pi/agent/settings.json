@@ -13,7 +13,8 @@
     "npm:pi-skillful",
     "npm:pi-docparser",
     "npm:pi-conventions",
-    "npm:@eko24ive/pi-ask"
+    "npm:@eko24ive/pi-ask",
+    "ssh://git@github.com/earendil-works/pi-transcribe"
   ],
   "lastChangelogVersion": "0.84.2",
   "defaultProvider": "zai",
