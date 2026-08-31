@@ -11,8 +11,15 @@ RESIZE_H=1190
 _log() { echo "[$(date '+%H:%M:%S')] $*" >> "$LOG"; }
 
 _show() {
-    swaymsg "[app_id=\"obsidian\"] scratchpad show, resize set width ${RESIZE_W} px height ${RESIZE_H} px, move position center" 2>/dev/null || true
-    swaymsg "[class=\"obsidian\"]  scratchpad show, resize set width ${RESIZE_W} px height ${RESIZE_H} px, move position center" 2>/dev/null || true
+    # Only the MAIN window lives in the scratchpad — dialogs (Settings, ...) are
+    # excluded by title so a toggle can't accidentally swallow/reveal them.
+    # The snap on native Wayland reports app_id "md.obsidian.Obsidian".
+    # NB: sway criteria are regex SEARCHES — patterns must be anchored (^...$),
+    # otherwise "obsidian" also matches "md.obsidian.Obsidian" and the
+    # `scratchpad show` commands would toggle the window on, then off again.
+    swaymsg "[app_id=\"^md.obsidian.Obsidian$\" title=\"^(?!Settings - )\"] scratchpad show, resize set width ${RESIZE_W} px height ${RESIZE_H} px, move position center" 2>/dev/null || true
+    swaymsg "[app_id=\"^obsidian$\" title=\"^(?!Settings - )\"] scratchpad show, resize set width ${RESIZE_W} px height ${RESIZE_H} px, move position center" 2>/dev/null || true
+    swaymsg "[class=\"^obsidian$\"  title=\"^(?!Settings - )\"] scratchpad show, resize set width ${RESIZE_W} px height ${RESIZE_H} px, move position center" 2>/dev/null || true
 }
 
 _has_window() {
@@ -21,10 +28,37 @@ _has_window() {
         | grep -qi 'obsidian'
 }
 
+# True if the MAIN window (not a dialog) is currently visible — i.e. this
+# invocation is about to HIDE it.
+_main_visible() {
+    swaymsg -t get_tree 2>/dev/null | jq -e '
+        .. | objects
+        | select(.app_id? == "md.obsidian.Obsidian" or .window_properties?.class? == "obsidian")
+        | select((.name // "") | (startswith("Settings - ") | not))
+        | select(.visible == true)
+    ' >/dev/null 2>&1
+}
+
+# Close any open Obsidian dialogs (Settings, ...) when the main window is about
+# to be hidden, so they don't linger on the workspace by themselves. Killing is
+# safe here — these dialogs hold no state that isn't already saved elsewhere —
+# and it avoids the alternative (hiding them into the scratchpad) piling up
+# zombie windows the way Zotero's Import/Close dialogs do.
+# Add more `title=` prefixes here if another dialog type starts lingering.
+_close_dialogs() {
+    swaymsg '[app_id="^md.obsidian.Obsidian$" title="^Settings - "] kill' 2>/dev/null || true
+    swaymsg '[class="^obsidian$" title="^Settings - "] kill' 2>/dev/null || true
+}
+
 _log "invoked"
 
 if _has_window; then
-    _log "window found — showing scratchpad"
+    if _main_visible; then
+        _log "main visible — closing dialogs, hiding"
+        _close_dialogs
+    else
+        _log "main hidden — showing"
+    fi
     _show
 else
     _log "no window — launching obsidian-launch"

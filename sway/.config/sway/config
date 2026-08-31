@@ -631,9 +631,18 @@ for_window [app_id="org.qlandkarte.qmapshack"] floating enable, resize set width
 for_window [class="(?i)qmapshack"] floating enable, resize set width 2500 px height 1600 px, move position center
 # Viking GPS — lighter alternative, also workspace 5, floating
 for_window [app_id="viking"] floating enable, resize set width 2500 px height 1600 px, move position center
-# Obsidian can launch as native Wayland (app_id) or XWayland (class) — match both
-for_window [app_id="obsidian"] floating enable, resize set width 2000 px height 1190 px, move position center, move scratchpad
-for_window [class="obsidian"] floating enable, resize set width 2000 px height 1190 px, move position center, move scratchpad
+# Obsidian can launch as native Wayland (app_id) or XWayland (class) — match all.
+# The snap on native Wayland reports app_id "md.obsidian.Obsidian" (Electron default).
+# Secondary windows (Settings, pop-outs) share the app_id, so the scratchpad rule
+# must exclude them by title — otherwise dialogs get swallowed into the scratchpad,
+# resized to main-window geometry, and z-fight the main window on every toggle.
+## Scratchpad // Obsidian main window → scratchpad // 🗒️ ##
+for_window [app_id="^md.obsidian.Obsidian$" title="^(?!Settings - )"] floating enable, resize set width 2000 px height 1190 px, move position center, move scratchpad
+for_window [app_id="^obsidian$" title="^(?!Settings - )"] floating enable, resize set width 2000 px height 1190 px, move position center, move scratchpad
+for_window [class="^obsidian$" title="^(?!Settings - )"] floating enable, resize set width 2000 px height 1190 px, move position center, move scratchpad
+## Obsidian // Settings dialog floats centered on current workspace // ⚙️ ##
+for_window [app_id="^md.obsidian.Obsidian$" title="^Settings - "] floating enable, resize set width 1600 px height 1050 px, move position center
+for_window [class="^obsidian$" title="^Settings - "] floating enable, resize set width 1600 px height 1050 px, move position center
 for_window [app_id="google-chrome"] move scratchpad, floating enable, resize set width 2000 px height 1190 px, move position center
 for_window [app_id="org.zotero.Zotero"] move scratchpad, floating enable, resize set width 1900 px height 1100 px, move position center
 for_window [app_id="^libreoffice"] floating enable, resize set width 3200 px height 2000 px, move scratchpad
