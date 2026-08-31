@@ -1,1 +1,50 @@
-/home/bgo/.local/bin/herdr-ws-toggle
+#!/bin/bash
+# herdr-ws-toggle — switch to the most-recently-focused OTHER workspace.
+# Self-bootstraps the herdr-ws-track daemon on first run.
+
+HERDR="${HERDR_BIN_PATH:-herdr}"
+CACHE_DIR="$HOME/.cache/herdr"
+HIST_FILE="$CACHE_DIR/ws-history"
+TRACKER_PID_FILE="$CACHE_DIR/ws-track.pid"
+TRACKER="$HOME/.local/bin/herdr-ws-track"
+
+mkdir -p "$CACHE_DIR"
+
+# Start tracker if not alive (PID-file check, fast)
+if [ ! -f "$TRACKER_PID_FILE" ] || ! kill -0 "$(cat "$TRACKER_PID_FILE")" 2>/dev/null; then
+    nohup "$TRACKER" >/dev/null 2>&1 &
+    echo $! > "$TRACKER_PID_FILE"
+    for _ in 1 2 3; do
+        [ -s "$HIST_FILE" ] && break
+        sleep 0.15
+    done
+fi
+
+# Single Python call: read workspace list from arg, history from file
+WS_JSON=$("$HERDR" workspace list 2>/dev/null)
+target=$(python3 - "$HIST_FILE" "$WS_JSON" <<'PYEOF'
+import json, sys
+hist_path = sys.argv[1]
+ws_json  = sys.argv[2]
+data = json.loads(ws_json)
+ws_list = data['result']['workspaces']
+current = next((w['workspace_id'] for w in ws_list if w.get('focused')), '')
+
+valid = {w['workspace_id'] for w in ws_list}
+try:
+    hist = open(hist_path).read().split()
+except FileNotFoundError:
+    hist = []
+target = ''
+for h in hist:
+    if h != current and h in valid:
+        target = h; break
+if not target:
+    for w in ws_list:
+        if not w.get('focused'):
+            target = w['workspace_id']; break
+print(target)
+PYEOF
+)
+
+[ -n "$target" ] && "$HERDR" workspace focus "$target" >/dev/null 2>&1

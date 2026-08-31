@@ -1,1 +1,328 @@
-/home/bgo/.local/bin/herdr-header
+#!/bin/bash
+# herdr-header — Multi-line status bar for herdr panes (left/right segmented)
+#
+# Fills the 6-row herdr pane with 3 lines, each having a LEFT and RIGHT block:
+#   1. 📁 cwd                              |  ⎇ git branch/status
+#   2. 🕐 UTC │ GPSW │ DOY │ Wk            |  yyyy.ffff@12z │ sod
+#   3. 🔌 power │ 📶 net+ip │ 🔒vpn │ load │ mem     |  🔥 top procs
+#
+# Right blocks are right-aligned to the pane width (visible-width aware:
+# ANSI codes stripped, emoji counted as 2 columns) so the empty right space
+# is used independently of the left content.
+#
+# Usage: herdr-header [main-pane-id]
+
+MAIN_PANE="${1:-}"
+# Auto-detect: find first pane of the currently focused herdr workspace
+if [ -z "$MAIN_PANE" ]; then
+    MAIN_PANE=$("$HERDR" workspace list 2>/dev/null | python3 -c "
+import json, sys, subprocess
+try:
+    d = json.load(sys.stdin)['result']['workspaces']
+    cur = next((w for w in d if w.get('focused')), None)
+    if cur:
+        r = subprocess.run(['$HERDR','pane','list','--workspace',cur['workspace_id']],
+                           capture_output=True, text=True)
+        pl = json.loads(r.stdout).get('result',{}).get('panes',[])
+        print(pl[0]['pane_id'] if pl else '')
+except: pass
+" 2>/dev/null)
+fi
+update_interval=3
+
+HERDR="${HERDR_BIN_PATH:-herdr}"
+
+# ── Catppuccin mocha palette ───────────────────────────────
+RESET="\033[0m"; BOLD="\033[1m"; DIM="\033[2m"
+BLUE="\033[38;2;137;180;250m";   GREEN="\033[38;2;166;227;161m"
+YELLOW="\033[38;2;249;226;175m"; RED="\033[38;2;243;139;168m"
+LAVENDER="\033[38;2;180;190;254m"; TEAL="\033[38;2;148;226;213m"
+PEACH="\033[38;2;250;203;135m";  PINK="\033[38;2;245;194;231m"
+OVERLAY="\033[38;2;147;154;183m"; SUBTEXT="\033[38;2;108;112;134m"
+SEP="${DIM}${SUBTEXT}  │  ${RESET}"
+
+# ── Visible-width + line rendering helpers ─────────────────
+# Returns the display column width of a block (ANSI stripped, emoji=2)
+vis_len() {
+    printf '%b' "$1" | python3 -c "
+import sys,re,unicodedata
+s=re.sub(r'\x1b\[[0-9;]*m','',sys.stdin.read())
+sys.stdout.write(str(sum(2 if unicodedata.east_asian_width(c) in ('W','F') else 1 for c in s)))
+" 2>/dev/null
+}
+
+# emit_line <left> <right>  — prints one line: clear, CR, left, pad, right
+emit_line() {
+    local left="$1" right="$2"
+    printf '\033[2K\r'
+    if [ -z "$right" ]; then
+        printf '%b' "$left"
+        return
+    fi
+    local lv rv pad
+    lv=$(vis_len "$left"); rv=$(vis_len "$right")
+    pad=$((cols - lv - rv - 2))
+    [ "$pad" -lt 1 ] && pad=1
+    printf '%b%*s%b' "$left" "$pad" "" "$right"
+}
+
+printf '\033[H'   # home cursor (overwrite, no clear for minimal flicker)
+
+prev_cpu_total=""
+prev_cpu_idle=""
+
+while true; do
+    # pane width (re-read each refresh so resizes are picked up)
+    cols=$(tput cols 2>/dev/null || stty size 2>/dev/null | awk '{print $2}')
+    [ -z "$cols" ] && cols=160
+
+    # ─── CPU usage (diff /proc/stat across refresh interval) ─
+    read -r u n s id io irq siq st <<< "$(awk '/^cpu /{print $2,$3,$4,$5,$6,$7,$8,$9; exit}' /proc/stat 2>/dev/null)"
+    cur_total=$(( ${u:-0}+${n:-0}+${s:-0}+${id:-0}+${io:-0}+${irq:-0}+${siq:-0}+${st:-0} ))
+    cur_idle=$(( ${id:-0}+${io:-0} ))
+    cpu_str=""
+    if [ -n "$prev_cpu_total" ] && [ "$cur_total" -gt "$prev_cpu_total" ]; then
+        d_t=$((cur_total - prev_cpu_total))
+        d_i=$((cur_idle - prev_cpu_idle))
+        if [ "$d_t" -gt 0 ]; then
+            cpu_pct=$((100 * (d_t - d_i) / d_t))
+            filled=$((cpu_pct / 10)); [ "$filled" -gt 8 ] && filled=8; [ "$filled" -lt 0 ] && filled=0
+            empty=$((8 - filled))
+            bar=""; i=0; while [ $i -lt $filled ]; do bar="${bar}▰"; i=$((i+1)); done
+            i=0; while [ $i -lt $empty ];  do bar="${bar}▱"; i=$((i+1)); done
+            if   [ "$cpu_pct" -ge 80 ]; then cpu_color="$RED"
+            elif [ "$cpu_pct" -ge 50 ]; then cpu_color="$YELLOW"
+            else                                cpu_color="$GREEN"; fi
+            cpu_str="${PEACH}cpu ${RESET}${cpu_color}${bar}${RESET} ${BOLD}${cpu_pct}%${RESET}"
+        fi
+    fi
+    [ -z "$cpu_str" ] && cpu_str="${PEACH}cpu ${RESET}${DIM}…${RESET}"
+    prev_cpu_total=$cur_total
+    prev_cpu_idle=$cur_idle
+
+    # ─── CWD ───────────────────────────────────────────────
+    if [ -n "$MAIN_PANE" ]; then
+        cwd=$("$HERDR" pane get "$MAIN_PANE" 2>/dev/null | \
+            python3 -c "import json,sys; d=json.load(sys.stdin); print(d['result']['pane'].get('foreground_cwd', d['result']['pane']['cwd']))" 2>/dev/null)
+        [ -z "$cwd" ] && cwd="${PWD}"
+    else
+        cwd="${PWD}"
+    fi
+    cwd_disp="${cwd/$HOME/~}"
+    max_cwd=42
+    if [ ${#cwd_disp} -gt $max_cwd ]; then
+        cwd_disp="…${cwd_disp: -$((max_cwd - 1))}"
+    fi
+
+    # ─── Git ───────────────────────────────────────────────
+    git_str=""
+    if [ -d "$cwd" ]; then
+        branch=$(git -C "$cwd" symbolic-ref --short HEAD 2>/dev/null || \
+                 git -C "$cwd" rev-parse --short HEAD 2>/dev/null)
+        if [ -n "$branch" ]; then
+            dirty=$(git -C "$cwd" status --porcelain 2>/dev/null | wc -l | tr -d ' ')
+            stash=$(git -C "$cwd" stash list 2>/dev/null | wc -l | tr -d ' ')
+            ahead=$(git -C "$cwd" rev-list --count '@{u}..HEAD' 2>/dev/null || echo 0)
+            behind=$(git -C "$cwd" rev-list --count 'HEAD..@{u}' 2>/dev/null || echo 0)
+            git_str="${PINK}⎇ ${BOLD}${branch}${RESET}"
+            [ "$dirty" -gt 0 ]  && git_str="${git_str} ${RED}✚${dirty}"
+            [ "$stash" -gt 0 ]  && git_str="${git_str} ${YELLOW}⚑${stash}"
+            [ "$ahead" -gt 0 ]  && git_str="${git_str} ${GREEN}↑${ahead}"
+            [ "$behind" -gt 0 ] && git_str="${git_str} ${YELLOW}↓${behind}"
+        fi
+    fi
+
+    # ─── Conda/mamba/venv env ─────────────────────────────
+    # Check foreground process of tracked pane first, then
+    # scan all user processes as fallback.
+    env_str=""
+    if [ -n "$MAIN_PANE" ]; then
+        read -r fg_pid shell_pid < <("$HERDR" pane process-info --pane "$MAIN_PANE" 2>/dev/null | python3 -c "
+import json,sys
+try:
+    pi=json.load(sys.stdin)['result']['process_info']
+    fg=pi.get('foreground_processes',[])
+    print((fg[0]['pid'] if fg else ''), pi.get('shell_pid',''))
+except: print('','')" 2>/dev/null)
+        for pid in "$fg_pid" "$shell_pid"; do
+            [ -n "$pid" ] && [ -r "/proc/$pid/environ" ] || continue
+            active_env=$( (tr '\0' '\n' < "/proc/$pid/environ" | grep '^CONDA_DEFAULT_ENV=' | cut -d= -f2-) 2>/dev/null )
+            if [ -z "$active_env" ]; then
+                venv=$( (tr '\0' '\n' < "/proc/$pid/environ" | grep '^VIRTUAL_ENV=' | cut -d= -f2-) 2>/dev/null )
+                [ -n "$venv" ] && active_env=$(basename "$venv")
+            fi
+            [ -n "$active_env" ] && { env_str="  ${GREEN}🐍 ${BOLD}${active_env}${RESET}"; break; }
+        done
+    fi
+    # Fallback: scan all user processes (catches envs in other panes/workspaces)
+    if [ -z "$env_str" ]; then
+        for pid in $(pgrep -u "$USER" 2>/dev/null | head -250); do
+            [ -r "/proc/$pid/environ" ] || continue
+            active_env=$( (tr '\0' '\n' < "/proc/$pid/environ" | grep '^CONDA_DEFAULT_ENV=' | cut -d= -f2- | head -1) 2>/dev/null )
+            if [ -z "$active_env" ]; then
+                venv=$( (tr '\0' '\n' < "/proc/$pid/environ" | grep '^VIRTUAL_ENV=' | cut -d= -f2-) 2>/dev/null )
+                [ -n "$venv" ] && active_env=$(basename "$venv")
+            fi
+            [ -n "$active_env" ] && { env_str="  ${GREEN}🐍 ${BOLD}${active_env}${RESET}"; break; }
+        done
+    fi
+
+    # ─── Time / GPS ────────────────────────────────────────
+    date_part=$(date -u '+%Y-%m-%d')
+    time_part=$(date -u '+%H:%M:%S')
+    today=$(date -u '+%Y-%m-%d')
+    gpsw=$(timecalc -w 2>/dev/null)
+    doy=$(timecalc -j 2>/dev/null)
+    wk=$(date -u '+%V' 2>/dev/null)
+    gps_sod=$(timecalc --GPST sod 2>/dev/null)
+    yyyy_ffff=$(printf '%.4f' "$(timecalc -yf -d "${today} 12:00:00" -f "%Y-%m-%d %H:%M:%S" 2>/dev/null)" 2>/dev/null)
+
+    # ─── Power ─────────────────────────────────────────────
+    power_raw=$(acpi -b 2>/dev/null | head -1)
+    if [ -n "$power_raw" ]; then
+        status=$(echo "$power_raw" | grep -oP '(?<=: )\w+')
+        pct=$(echo "$power_raw" | grep -oP '\d+%')
+        time_rem=$(echo "$power_raw" | grep -oP '\d+:\d+(:\d+)? remaining' | sed 's/ remaining//')
+        case "$status" in
+            Charging)    bat_icon="⚡"; bat_color="$YELLOW" ;;
+            Discharging) bat_icon="🔋"; bat_color="$GREEN" ;;
+            Full)        bat_icon="🔌"; bat_color="$GREEN" ;;
+            "Not"*)      bat_icon="🔌"; bat_color="$BLUE" ;;
+            *)           bat_icon="🔋"; bat_color="$OVERLAY" ;;
+        esac
+        power_str="${bat_color}${bat_icon} ${pct}${RESET}"
+        [ -n "$time_rem" ] && power_str="${power_str} ${DIM}(${time_rem})${RESET}"
+    else
+        power_str="${BLUE}🔌 AC${RESET}"
+    fi
+
+    # ─── Network + local IP (WiFi > wired) ───────────────
+    net_str=""
+    wifi_dev=$(nmcli -t -f DEVICE,TYPE,STATE device status 2>/dev/null | grep ':wifi:connected' | head -1 | cut -d: -f1)
+    if [ -n "$wifi_dev" ]; then
+        ip_addr=$(ip -o -4 addr show dev "$wifi_dev" 2>/dev/null | awk '{print $4}' | cut -d/ -f1 | head -1)
+        wifi_info=$(nmcli -t -f ACTIVE,SSID,SIGNAL dev wifi 2>/dev/null | grep '^yes' | head -1)
+        ssid=$(echo "$wifi_info" | cut -d: -f2)
+        signal=$(echo "$wifi_info" | cut -d: -f3)
+        if [ -n "$signal" ] && [ "$signal" -ge 60 ] 2>/dev/null; then sig_color="$GREEN"
+        elif [ -n "$signal" ] && [ "$signal" -ge 30 ] 2>/dev/null; then sig_color="$YELLOW"
+        else sig_color="$RED"; fi
+        net_str="${GREEN}📶${RESET} ${YELLOW}${ssid:-wifi}${RESET} ${sig_color}${signal:-?}%${RESET}"
+        [ -n "$ip_addr" ] && net_str="${net_str} ${DIM}${ip_addr}${RESET}"
+    else
+        eth_dev=$(nmcli -t -f DEVICE,TYPE,STATE device status 2>/dev/null | grep ':ethernet:connected' | head -1 | cut -d: -f1)
+        if [ -n "$eth_dev" ]; then
+            ip_addr=$(ip -o -4 addr show dev "$eth_dev" 2>/dev/null | awk '{print $4}' | cut -d/ -f1 | head -1)
+            net_str="${GREEN}🔗${RESET} ${GREEN}eth${RESET} ${DIM}${eth_dev}${RESET}"
+            [ -n "$ip_addr" ] && net_str="${net_str} ${DIM}${ip_addr}${RESET}"
+        else
+            case "$(nmcli -t -f STATE general 2>/dev/null)" in
+                connecting*) net_str="${YELLOW}⏳ connecting${RESET}" ;;
+                *)           net_str="${RED}❌ offline${RESET}" ;;
+            esac
+        fi
+    fi
+
+    # ─── VPN indicator ─────────────────────────────────────
+    # Detect VPN via interface name (including cscotun for Cisco) or
+    # NetworkManager connection type.
+    vpn_iface=$(ip -o link show up 2>/dev/null | awk -F': ' '{print $2}' | cut -d'@' -f1 \
+                | grep -iE '^(tun|tap|wg|ppp|ipsec|nordlynx|nordvpn|proton|tailscale|cscotun)[0-9a-z]*$' | head -1)
+    vpn_name=""
+    if [ -z "$vpn_iface" ]; then
+        vpn_line=$(nmcli -t -f TYPE,NAME,DEVICE con show --active 2>/dev/null \
+                   | grep -iE '^(vpn|wireguard|tun|tap):' | head -1)
+        [ -n "$vpn_line" ] && { vpn_name=$(echo "$vpn_line" | cut -d: -f2); vpn_iface=$(echo "$vpn_line" | cut -d: -f3); }
+    fi
+    if [ -n "$vpn_iface" ] || [ -n "$vpn_name" ]; then
+        vpn_ip=$(ip -o -4 addr show dev "${vpn_iface}" 2>/dev/null | awk '{print $4}' | cut -d/ -f1 | head -1)
+        vpn_str="${GREEN}🔒${RESET}"
+        [ -n "$vpn_name" ] && vpn_str="${vpn_str} ${GREEN}${vpn_name}${RESET}"
+        [ -n "$vpn_ip" ]    && vpn_str="${vpn_str} ${DIM}${vpn_ip}${RESET}"
+    else
+        vpn_str="${DIM}🔓${RESET}"
+    fi
+
+    # ─── Bluetooth devices ──────────────────────────────────
+    bt_str=""
+    if command -v bluetoothctl >/dev/null 2>&1; then
+        while IFS= read -r line; do
+            mac=$(echo "$line" | awk '{print $2}')
+            name=$(echo "$line" | cut -d' ' -f3-)
+            [ -z "$name" ] && continue
+            icon_raw=$(bluetoothctl info "$mac" 2>/dev/null | grep 'Icon:' | awk '{print $2}')
+            case "$icon_raw" in
+                audio-card|audio-headset|audio-headphones) bt_icon="🎧" ;;
+                input-keyboard) bt_icon="⌨" ;;
+                input-mouse)    bt_icon="🖱" ;;
+                input-gaming)   bt_icon="🎮" ;;
+                phone)          bt_icon="📱" ;;
+                *)              bt_icon="📡" ;;
+            esac
+            [ -n "$bt_str" ] && bt_str="${bt_str}${SEP}"
+            bt_str="${bt_str}${GREEN}${bt_icon}${RESET} ${DIM}${name}${RESET}"
+        done < <(bluetoothctl devices Connected 2>/dev/null)
+    fi
+
+    # ─── Load + Memory ─────────────────────────────────────
+    load=$(cut -d' ' -f1-3 /proc/loadavg 2>/dev/null)
+    ncpu=$(nproc 2>/dev/null)
+    mem=$(free -h 2>/dev/null | awk '/^Mem:/ {print $3 "/" $2}')
+
+    # ─── Top processes (by CPU) ────────────────────────────
+    proc_str=""
+    proc_count=0
+    while IFS=$' \t' read -r pcpu rss comm; do
+        [ -z "$comm" ] && continue
+        # skip ephemeral shell utilities the header itself spawns each refresh
+        case "$comm" in
+            ps|awk|grep|cut|tr|bc|sed|cat|date|timecalc|nmcli|free|acpi|nproc|sort|head|wc|uniq|printf|echo) continue ;;
+        esac
+        rss_mb=$((rss / 1024))
+        if [ "$rss_mb" -ge 1024 ]; then mem_p=$(awk "BEGIN{printf \"%.1fG\", ${rss_mb}/1024}")
+        elif [ "$rss_mb" -ge 1 ]; then mem_p="${rss_mb}M"
+        else mem_p="0M"; fi
+        pcpu_int=$(printf '%.0f' "$pcpu" 2>/dev/null)
+        case "$pcpu_int" in ''|*[!0-9]*) pcpu_int=0 ;; esac
+        if [ "$pcpu_int" -ge 20 ]; then cc="$RED"
+        elif [ "$pcpu_int" -ge 5 ]; then cc="$YELLOW"
+        else cc="$DIM"; fi
+        entry="${LAVENDER}${comm:0:12}${RESET} ${cc}${pcpu_int}%${RESET} ${TEAL}${mem_p}${RESET}"
+        if [ -n "$proc_str" ]; then proc_str="${proc_str}${SEP}"; fi
+        proc_str="${proc_str}${entry}"
+        proc_count=$((proc_count + 1))
+        [ "$proc_count" -ge 5 ] && break
+    done < <(ps -eo pcpu,rss,comm --sort=-pcpu --no-headers 2>/dev/null | head -12)
+    proc_str="${RED}🔥${RESET} ${proc_str}"
+
+    # ─── Assemble left/right blocks per line ───────────────
+    # Principle: static context LEFT, live/dynamic metrics RIGHT.
+
+    # Line 1 — location / identity (+ active env)
+    ws_id="${MAIN_PANE%%:*}"
+    [ -n "$ws_id" ] && ws_prefix="${BOLD}${PEACH}${ws_id}${RESET} " || ws_prefix=""
+    l1l="${ws_prefix}${BLUE}${BOLD}📁 ${cwd_disp}${RESET}${env_str}"
+    l1r="${git_str}"
+
+    # Line 2 — static GPS/date refs (left) | live clock (right)
+    l2l="${TEAL}GPSW ${BOLD}${gpsw}${RESET}${SEP}${TEAL}DOY ${BOLD}${doy}${RESET}${SEP}${TEAL}Wk ${BOLD}${wk}${RESET}${SEP}${TEAL}${BOLD}${yyyy_ffff}${RESET}${DIM}@12z${RESET}"
+    l2r="${LAVENDER}🕐 ${date_part} ${time_part}${RESET}${DIM} UTC${RESET}${SEP}${TEAL}sod ${BOLD}${gps_sod}${RESET}"
+
+    # Line 3 — connectivity/power (left) | live load + mem (right)
+    l3l="${power_str}${SEP}${net_str}${SEP}${vpn_str}"
+    [ -n "$bt_str" ] && l3l="${l3l}${SEP}${bt_str}"
+    l3r="${PEACH}load ${BOLD}${load}${RESET}${DIM}/${ncpu}${RESET}${SEP}${TEAL}mem ${BOLD}${mem}${RESET}"
+
+    # Line 4 — top resource processes (left) | CPU usage (right)
+    l4l="${proc_str}"
+    l4r="${cpu_str}"
+
+    # ─── Render (cursor home, then 4 cleared lines) ────────
+    printf '\033[H'
+    emit_line "$l1l" "$l1r"; printf '\n'
+    emit_line "$l2l" "$l2r"; printf '\n'
+    emit_line "$l3l" "$l3r"; printf '\n'
+    emit_line "$l4l" "$l4r"
+
+    sleep "$update_interval"
+done

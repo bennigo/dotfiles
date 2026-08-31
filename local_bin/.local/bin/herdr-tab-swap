@@ -1,1 +1,153 @@
-/home/bgo/.local/bin/herdr-tab-swap
+#!/bin/bash
+# herdr-tab-swap — reorder tabs in a herdr workspace
+#
+# Usage:
+#   herdr-tab-swap <workspace> <a> <b>                swap two tabs
+#   herdr-tab-swap <workspace> <pos1> <pos2> <pos3> … full reorder
+#
+# Examples:
+#   herdr-tab-swap w6 1 2          swap tab 1 and tab 2
+#   herdr-tab-swap w6 4 2 3 1      reorder: old-tab4 → pos1, tab2 → pos2, etc.
+#
+# Run from OUTSIDE herdr (plain terminal) for auto-reattach.
+
+set -euo pipefail
+
+SESSION="${HOME}/.config/herdr/session.json"
+
+usage() {
+    cat <<'EOF'
+Usage:
+  herdr-tab-swap <workspace> <a> <b>                swap two tabs
+  herdr-tab-swap <workspace> <pos1> <pos2> <pos3> … full reorder
+
+Examples:
+  herdr-tab-swap w6 1 2          swap tab 1 and tab 2
+  herdr-tab-swap w6 4 2 3 1      reorder: old-tab4 → pos1, tab2 → pos2, etc.
+
+Run from a plain terminal (outside herdr) for auto-reattach.
+EOF
+    exit 1
+}
+
+# ── Parse flags ──
+NO_REATTACH=0
+while [ $# -gt 0 ] && [ "${1:0:2}" = "--" ]; do
+    case "$1" in
+        --no-reattach) NO_REATTACH=1; shift ;;
+        *) echo "ERROR: unknown flag $1"; exit 1 ;;
+    esac
+done
+
+[ $# -ge 3 ] || usage
+[ -f "$SESSION" ] || { echo "ERROR: session.json not found at $SESSION"; exit 1; }
+
+WS="$1"; shift
+
+# Collect 1-based tab numbers → 0-based indices
+indices=()
+for n in "$@"; do
+    [[ "$n" =~ ^[0-9]+$ ]] || { echo "ERROR: invalid tab number '$n'"; exit 1; }
+    indices+=($((n - 1)))
+done
+
+MODE="swap"
+[ ${#indices[@]} -gt 2 ] && MODE="reorder"
+
+# ── Stop server ──
+printf 'Stopping herdr server … '
+if herdr server stop >/dev/null 2>&1; then
+    echo 'done.'
+else
+    echo '(not running)'
+fi
+sleep 0.3
+
+# ── Backup ──
+cp "$SESSION" "${SESSION}.bak"
+
+# ── Edit ──
+python3 - "$WS" "$MODE" "${indices[@]}" << 'PYEOF'
+import json, re, sys, os
+
+session_path = os.path.expanduser("~/.config/herdr/session.json")
+ws_id  = sys.argv[1]
+mode   = sys.argv[2]
+indices = [int(x) for x in sys.argv[3:]]
+
+with open(session_path) as f:
+    s = json.load(f)
+
+workspaces = s.get("workspaces", [])
+ws = next((w for w in workspaces if w["id"] == ws_id), None)
+if ws is None:
+    print(f"ERROR: workspace {ws_id} not found", file=sys.stderr)
+    sys.exit(1)
+
+tabs = ws.get("tabs", [])
+n = len(tabs)
+if n == 0:
+    print("ERROR: workspace has no tabs", file=sys.stderr)
+    sys.exit(1)
+
+# Validate indices
+for i in indices:
+    if not (0 <= i < n):
+        print(f"ERROR: tab {i+1} out of range (1–{n})", file=sys.stderr)
+        sys.exit(1)
+
+if mode == "reorder":
+    if len(indices) != n:
+        print(f"ERROR: reorder needs exactly {n} tab positions, got {len(indices)}", file=sys.stderr)
+        short = [f"{j+1}. {re.sub(r'^\d+[\.\)]\s*','',t.get('custom_name',''))}"
+                 for j, t in enumerate(tabs)]
+        print(f"  Current tabs: " + ", ".join(short), file=sys.stderr)
+        sys.exit(1)
+    if sorted(indices) != list(range(n)):
+        print(f"ERROR: must be a permutation of 1–{n} (each number exactly once)", file=sys.stderr)
+        sys.exit(1)
+
+    old_labels = [re.sub(r'^\d+[\.\)]\s*', '', t.get("custom_name", "")) for t in tabs]
+    permuted = [tabs[i] for i in indices]
+    ws["tabs"] = permuted
+
+    print("Reorder: " + " → ".join(
+        f"{i+1}. {old_labels[i]}" for i in indices))
+
+elif mode == "swap":
+    a, b = indices[0], indices[1]
+    if a == b:
+        print("ERROR: same tab position", file=sys.stderr)
+        sys.exit(1)
+
+    a_name = re.sub(r'^\d+[\.\)]\s*', '', tabs[a].get("custom_name", ""))
+    b_name = re.sub(r'^\d+[\.\)]\s*', '', tabs[b].get("custom_name", ""))
+    tabs[a], tabs[b] = tabs[b], tabs[a]
+
+    active = ws.get("active_tab")
+    if active == a:       ws["active_tab"] = b
+    elif active == b:     ws["active_tab"] = a
+
+    print(f"Swap  {a+1}. {a_name}  ⇄  {b+1}. {b_name}")
+
+# Regenerate tab labels from new positions
+for i, tab in enumerate(tabs):
+    label = tab.get("custom_name", "")
+    label = re.sub(r'^\d+[\.\)]\s*', '', label)
+    tab["custom_name"] = f"{i+1}. {label}"
+
+with open(session_path, "w") as f:
+    json.dump(s, f, indent=2)
+PYEOF
+
+# ── Reattach ──
+if [ "$NO_REATTACH" -eq 1 ]; then
+    echo "Done (--no-reattach)."
+elif [ -n "${HERDR_ENV:-}" ]; then
+    echo
+    echo "Run 'herdr' to reattach with the new tab order."
+else
+    echo
+    echo "Reattaching herdr …"
+    exec herdr
+fi

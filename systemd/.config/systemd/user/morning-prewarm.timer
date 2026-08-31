@@ -1,0 +1,11 @@
+[Unit]
+Description=Pre-warm daily note + market pulse (weekday mornings)
+Documentation=man:systemd.timer(5)
+
+[Timer]
+# Weekday mornings at 07:30 (Iceland is GMT year-round)
+OnCalendar=Mon..Fri 07:30:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
