@@ -6,7 +6,6 @@ return {
         "r",
         "latex",
         "css",
-        "norg",
         "scss",
         "svelte",
         "typst",

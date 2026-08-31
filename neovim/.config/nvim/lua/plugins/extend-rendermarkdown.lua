@@ -157,7 +157,13 @@ return {
     -- require('obsidian').setup({
     --     ui = { enable = false },
     -- })
-    require("obsidian").get_client().opts.ui.enable = false
+    -- Disable obsidian.nvim's own UI extmarks (render-markdown handles rendering).
+    -- require() triggers lazy.nvim's module auto-load, which runs obsidian.nvim's
+    -- setup() and sets the global Obsidian state. get_client().opts is deprecated.
+    require("obsidian")
+    if rawget(_G, "Obsidian") and Obsidian.opts then
+      Obsidian.opts.ui.enable = false
+    end
 
     -- Get the namespace ID properly
     local namespaces = vim.api.nvim_get_namespaces()

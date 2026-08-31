@@ -1,3 +1,17 @@
+--- Read the Obsidian Local REST API token from outside the repo.
+--- File: ~/.config/obsidian-rest/token (chmod 600) — create it from
+--- Obsidian → Settings → Local REST API → API Key.
+---@return string|?
+local function rest_api_token()
+  local f = io.open(vim.fn.expand("~/.config/obsidian-rest/token"), "r")
+  if not f then
+    return nil
+  end
+  local token = vim.trim(f:read("*a"))
+  f:close()
+  return token ~= "" and token or nil
+end
+
 local function setup()
   require("obsidian").setup({
     workspaces = {
@@ -9,12 +23,6 @@ local function setup()
         name = "bgovault",
         path = "~/notes/bgovault/",
       },
-    },
-    open = {
-      -- Optional, set to true if you use the Obsidian Advanced URI plugin.
-      -- https://github.com/Vinzent03/obsidian-advanced-uri
-      use_advanced_uri = false,
-      -- func = vim.ui.open,
     },
     -- Optional, if you keep notes in a specific subdirectory of your vault.
     notes_subdir = "0.Inbox",
@@ -38,11 +46,9 @@ local function setup()
       workdays_only = true,
     },
 
-    -- Optional, completion of wiki links, local markdown links, and tags using nvim-cmp.
+    -- Completion of wiki/markdown links and tags is provided by the built-in
+    -- obsidian-ls LSP server (blink.cmp picks it up as a normal LSP source).
     completion = {
-      -- Set to false to disable completion.
-      nvim_cmp = false,
-      blink = true, -- Set to false to disable blink.
       -- Trigger completion at 2 chars.
       min_chars = 2,
       -- Set to false to disable new note creation in the picker
@@ -89,23 +95,14 @@ local function setup()
       return path:with_suffix(".md")
     end,
 
-    -- Optional, customize how wiki links are formatted. You can set this to one of:
-    --  * "use_alias_only", e.g. '[[Foo Bar]]'
-    --  * "prepend_note_id", e.g. '[[foo-bar|Foo Bar]]'
-    --  * "prepend_note_path", e.g. '[[foo-bar.md|Foo Bar]]'
-    --  * "use_path_only", e.g. '[[foo-bar.md]]'
-    -- Or you can set it to a function that takes a table of options and returns a string, like this:
-    wiki_link_func = function(opts)
-      return require("obsidian.util").wiki_link_id_prefix(opts)
-    end,
-
-    -- Optional, customize how markdown links are formatted.
-    markdown_link_func = function(opts)
-      return require("obsidian.util").markdown_link(opts)
-    end,
-
-    -- Either 'wiki' or 'markdown'.
-    preferred_link_style = "wiki",
+    -- Link creation: wiki-style '[[note-id|Title]]' links with shortest
+    -- (basename) paths. Replaces the removed wiki_link_func / markdown_link_func
+    -- / preferred_link_style options (see `:Obsidian help Link`).
+    link = {
+      style = "wiki",
+      format = "shortest",
+      auto_update = false,
+    },
 
     -- Frontmatter configuration (replaces deprecated disable_frontmatter and note_frontmatter_func)
     frontmatter = {
@@ -260,23 +257,6 @@ local function setup()
       },
     },
 
-    -- Resolve image path in vault before opening (vim.ui.open passes bare filename)
-    follow_img_func = function(img)
-      local vault_root = vim.fn.expand("~/notes/bgovault")
-      local full = vault_root .. "/" .. img
-      if vim.fn.filereadable(full) == 1 then
-        vim.ui.open(full)
-      else
-        -- Search for the file anywhere in the vault
-        local found = vim.fn.globpath(vault_root, "**/" .. img, false, true)
-        if #found > 0 then
-          vim.ui.open(found[1])
-        else
-          vim.notify("Image not found: " .. img, vim.log.levels.WARN)
-        end
-      end
-    end,
-
     -- Use new command format (e.g., "Obsidian backlinks" instead of "ObsidianBacklinks")
     legacy_commands = false,
 
@@ -318,6 +298,8 @@ local function setup()
     -- Both xdg-open and gio open the note in a new pop-out window instead of reusing
     -- the existing one. The REST API's /open/ endpoint navigates within the existing window.
     open = {
+      -- Set to true if you use the Obsidian Advanced URI plugin.
+      use_advanced_uri = false,
       func = function(uri)
         -- Extract vault-relative file path from obsidian:// URI
         local file = uri:match("file=([^&]+)")
@@ -326,11 +308,12 @@ local function setup()
         end
 
         local is_running = vim.fn.system("pgrep -x obsidian"):match("%d+") ~= nil
-        if is_running and file then
+        local token = rest_api_token()
+        if is_running and file and token then
           -- Use REST API to open file in existing window (no new window)
           vim.fn.jobstart({
             "curl", "-sk",
-            "-H", "Authorization: Bearer 633d0602c1469b69bd560a2d52b5ee7dc0dc830a8f9b50a45fb4064aca4e567c",
+            "-H", "Authorization: Bearer " .. token,
             "-X", "POST",
             "https://localhost:27124/open/" .. file,
           }, {
@@ -338,8 +321,8 @@ local function setup()
             on_stdout = function() end,
             on_stderr = function() end,
           })
-          -- Focus the Obsidian window on Sway (matches both Wayland app_id and XWayland class)
-          vim.fn.jobstart({ "swaymsg", '[app_id="obsidian"] focus; [class="obsidian"] focus' }, {
+          -- Focus the Obsidian window on Sway (snap Wayland app_id, legacy app_id, XWayland class)
+          vim.fn.jobstart({ "swaymsg", '[app_id="^md.obsidian.Obsidian$"] focus; [app_id="^obsidian$"] focus; [class="^obsidian$"] focus' }, {
             detach = true,
             on_stdout = function() end,
             on_stderr = function() end,
@@ -361,19 +344,19 @@ local function setup()
             attempts = attempts + 1
             -- Check for Obsidian in scratchpad (matches both Wayland app_id and XWayland class)
             local in_scratchpad = vim.fn.system(
-              'swaymsg -t get_tree | jq -e \'.. | select(.name? == "__i3_scratch") | .. | select(.app_id? == "obsidian" or .window_properties?.class? == "obsidian")\' >/dev/null 2>&1 && echo yes || echo no'
+              'swaymsg -t get_tree | jq -e \'.. | select(.name? == "__i3_scratch") | .. | select(.app_id? == "md.obsidian.Obsidian" or .app_id? == "obsidian" or .window_properties?.class? == "obsidian")\' >/dev/null 2>&1 && echo yes || echo no'
             ):gsub("%s+", "")
             if in_scratchpad == "yes" then
               timer:stop()
               timer:close()
               -- Show from scratchpad and ensure correct size (try both selectors)
-              vim.fn.system('swaymsg \'[app_id="obsidian"] scratchpad show, resize set width 2000 px height 1190 px, move position center; [class="obsidian"] scratchpad show, resize set width 2000 px height 1190 px, move position center\'')
+              vim.fn.system('swaymsg \'[app_id="^md.obsidian.Obsidian$" title="^(?!Settings - )"] scratchpad show, resize set width 2000 px height 1190 px, move position center; [app_id="^obsidian$" title="^(?!Settings - )"] scratchpad show, resize set width 2000 px height 1190 px, move position center; [class="^obsidian$" title="^(?!Settings - )"] scratchpad show, resize set width 2000 px height 1190 px, move position center\'')
               -- If we have a file path, open it via REST API once the server is ready
               if file then
                 vim.defer_fn(function()
                   vim.fn.jobstart({
                     "curl", "-sk",
-                    "-H", "Authorization: Bearer 633d0602c1469b69bd560a2d52b5ee7dc0dc830a8f9b50a45fb4064aca4e567c",
+                    "-H", "Authorization: Bearer " .. token,
                     "-X", "POST",
                     "https://localhost:27124/open/" .. file,
                   }, {
@@ -625,7 +608,10 @@ local function setup()
           markdown = "![](%s)",
           wiki = "![[%s]]",
         }
-        local style = Obsidian.opts.preferred_link_style or "markdown"
+        local style = Obsidian.opts.link.style
+        if type(style) ~= "string" or format_string[style] == nil then
+          style = "markdown"
+        end
 
         if style == "markdown" then
           relative_path = require("obsidian.util").urlencode(relative_path, { keep_path_sep = true })
@@ -690,6 +676,33 @@ return {
   },
   config = function()
     setup()
+
+    -- Vault-wide fallback for attachment/image links (replaces the removed
+    -- follow_img_func). obsidian.nvim's LSP definition handler resolves
+    -- attachments to <vault>/<attachments.folder>/<name> and calls vim.ui.open;
+    -- if the file isn't there, search the whole vault by basename instead.
+    do
+      local orig_ui_open = vim.ui.open
+      vim.ui.open = function(path, opt)
+        if
+          type(path) == "string"
+          and not path:match("^%a[%w+.-]*://") -- leave URIs (obsidian://, https://) alone
+          and vim.fn.filereadable(path) == 0
+        then
+          local vault_root = vim.fn.expand("~/notes/bgovault")
+          if path:sub(1, #vault_root + 1) == vault_root .. "/" then
+            local name = vim.fs.basename(path)
+            local found = vim.fn.globpath(vault_root, "**/" .. vim.fn.escape(name, "*?[\\"), false, true)
+            if #found > 0 then
+              return orig_ui_open(found[1], opt)
+            end
+            vim.notify("Attachment not found in vault: " .. name, vim.log.levels.WARN)
+            return nil
+          end
+        end
+        return orig_ui_open(path, opt)
+      end
+    end
 
     -- Initialize your PDF helper and create its keymap (guarded).
     do

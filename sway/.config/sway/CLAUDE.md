@@ -285,9 +285,11 @@ Non-Neovim scratchpad windows (Obsidian, Zotero, Zathura, Cisco, terminal, Libre
 
 This avoids the mark-stealing problem: Sway marks are unique, so when Electron apps (Obsidian, Zotero) spawn secondary windows with the same `app_id`, a mark-based `for_window` rule would move the mark to the new window, breaking the toggle. Using `app_id` in keybindings eliminates this failure mode.
 
+**Obsidian app_id caveat:** the snap on native Wayland reports `app_id="md.obsidian.Obsidian"` (Electron default), not `obsidian`. Secondary windows (Settings, pop-outs) share the app_id, so both the `for_window` scratchpad rule and `sway-obsidian-toggle` exclude them with a title criterion: main window = `title="^(?!Settings - )"`, Settings dialog = `title="^Settings - "` (floats centered on the current workspace, never scratchpadded). If a new dialog type ever gets stuck in the scratchpad, add its title prefix to the exclusion.
+
 | Shortcut | App ID | Description |
 |----------|--------|-------------|
-| `$mod+Shift+o` | `obsidian` | Show Obsidian app |
+| `$mod+Shift+o` | `md.obsidian.Obsidian` | Show Obsidian app |
 | `$mod+z` | `org.pwmt.zathura` | Show Zathura PDF reader |
 | `$mod+g` | `org.zotero.Zotero` | Show Zotero |
 | `$mod+c` | `com.cisco.secureclient.gui` | Show Cisco client |
