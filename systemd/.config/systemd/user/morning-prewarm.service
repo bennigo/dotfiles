@@ -1,0 +1,17 @@
+[Unit]
+Description=Pre-warm daily note + market pulse
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/morning-prewarm
+StandardOutput=journal
+StandardError=journal
+
+# Environment
+Environment="PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin"
+
+# Security hardening (matches bgovault-sync.service; PrivateTmp intentionally
+# omitted — user namespaces break OpenSSH on kernel 6.17)
+NoNewPrivileges=true

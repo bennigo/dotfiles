@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# morning-prewarm — Pre-warm the daily note before the manual /morning-v2 run.
+#
+# 1. Creates today's daily note (vault-create-daily; no-op if it exists)
+# 2. Injects a market one-liner under the title (idempotent — skipped if present)
+# 3. Sends a reminder notification to run /morning-v2 (the geopolitics scan
+#    itself stays manual/LLM-driven — Claude Code or Pi)
+#
+# Fired by morning-prewarm.timer (weekdays 07:30).
+
+set -uo pipefail
+
+VAULT_DIR="$HOME/notes/bgovault"
+NOTE="$VAULT_DIR/Journal/daily/$(date +%F).md"
+
+# ── 1. Daily note ────────────────────────────────────────────────────────────
+"$HOME/.local/bin/vault-create-daily" >/dev/null 2>&1 || true
+
+# ── 2. Market pulse ──────────────────────────────────────────────────────────
+if [[ -f "$NOTE" ]] && ! grep -q '^\*\*Markets\*\*:' "$NOTE"; then
+    json="$(cd "$VAULT_DIR" && uv run .scripts/market-tracker.py --json --no-plots 2>/dev/null)" || json=""
+    if [[ -n "$json" ]]; then
+        line="$(JSON="$json" python3 - <<'PYEOF'
+import json, os, sys
+data = json.loads(os.environ["JSON"])
+by = {i["name"]: i["current"] for i in data}
+try:
+    print("**Markets**: Brent ${:,.2f} · WTI ${:,.2f} · Gold ${:,.0f} · VIX {:.1f} · DXY {:.1f}".format(
+        by["Brent Crude Oil"], by["WTI Crude Oil"], by["Gold"],
+        by["VIX (Fear Index)"], by["US Dollar Index"]))
+except KeyError as e:
+    print(f"missing asset: {e}", file=sys.stderr)
+    sys.exit(1)
+PYEOF
+)" || line=""
+        if [[ -n "$line" ]]; then
+            # Insert on a blank line directly after the "# YYYY-MM-DD" title
+            python3 - "$NOTE" "$line" <<'PYEOF'
+import re, sys
+path, line = sys.argv[1], sys.argv[2]
+text = open(path).read()
+new, n = re.subn(r"(?m)^(# \d{4}-\d{2}-\d{2}\s*)$", "\\1\n" + line, text, count=1)
+if n:
+    open(path, "w").write(new)
+else:
+    print("title line not found — market line not injected", file=sys.stderr)
+PYEOF
+        fi
+    fi
+fi
+
+# ── 3. Reminder ──────────────────────────────────────────────────────────────
+notify-send "🌅 Morgunyfirlit tilbúið" \
+    "Dagsnóta + markaðslína tilbúin — keyra /morning-v2 fyrir geopolitics scan" \
+    2>/dev/null || true

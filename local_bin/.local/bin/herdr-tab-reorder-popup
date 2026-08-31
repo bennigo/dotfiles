@@ -1,1 +1,54 @@
-/home/bgo/.local/bin/herdr-tab-reorder-popup
+#!/bin/bash
+# herdr-tab-reorder-popup — floating popup for reordering tabs
+# Runs inside foot; shows current tabs, collects new permutation,
+# then stops herdr and reorders in the background.
+set -euo pipefail
+
+WS="${HERDR_WORKSPACE_ID:-}"
+[ -n "$WS" ] || { echo "ERROR: not in a herdr workspace"; sleep 2; exit 1; }
+
+clear
+echo "══ Tab Reorder — $WS ══"
+echo
+
+# ── Show current tabs + get count ──
+n=$(python3 -c "
+import json, re, os
+with open(os.path.expanduser('~/.config/herdr/session.json')) as f:
+    s = json.load(f)
+ws = next((w for w in s['workspaces'] if w['id']=='$WS'), None)
+if ws:
+    for i,t in enumerate(ws.get('tabs',[])):
+        name = re.sub(r'^\d+[\.\)]\s*', '', t.get('custom_name',''))
+        print(f'  {i+1}. {name}')
+    print(len(ws.get('tabs',[])))
+else:
+    print(0)
+")
+
+[ "$n" -le 1 ] && { echo "Nothing to reorder (1 tab)."; sleep 2; exit 0; }
+
+echo
+read -r -p "New order (e.g. $(seq -s' ' $n)): " order
+[ -z "$order" ] && { echo "Cancelled."; sleep 1; exit 0; }
+
+# ── Validate ──
+parts=($order)
+[ ${#parts[@]} -ne $n ] && { echo "Need exactly $n numbers."; sleep 2; exit 1; }
+seen=""
+for p in "${parts[@]}"; do
+    [[ "$p" =~ ^[1-9][0-9]*$ ]] || { echo "Invalid: $p"; sleep 2; exit 1; }
+    [ "$p" -gt $n ] && { echo "$p exceeds max ($n)"; sleep 2; exit 1; }
+    [[ " $seen " == *" $p "* ]] && { echo "Duplicate: $p"; sleep 2; exit 1; }
+    seen="$seen $p"
+done
+
+# ── Fork edit, then stop server ──
+(
+    sleep 2
+    ~/.local/bin/herdr-tab-swap --no-reattach "$WS" "${parts[@]}"
+    foot herdr &
+) & disown
+
+echo "Reordering…"
+herdr server stop

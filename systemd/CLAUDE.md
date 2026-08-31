@@ -29,6 +29,8 @@ git repo instead of in a real directory. Ansible handles this automatically duri
 | `mtp-automount@.service` | Template | on-demand | MTP device automount (activated by udev rules) |
 | `backup-claude-sessions.timer` | Timer | `enable --now` | Nightly (03:00) restic backup of session transcripts to Google Drive |
 | `backup-claude-sessions.service` | Triggered | via `.timer` | Runs `backup-claude-sessions` script (restic backup + retention) |
+| `morning-prewarm.timer` | Timer | `enable --now` | Weekdays 07:30 — pre-warms daily note + market pulse before /morning-v2 |
+| `morning-prewarm.service` | Triggered | via `.timer` | Runs `morning-prewarm` script (daily note + markets + Mako reminder) |
 
 ## Common Operations
 

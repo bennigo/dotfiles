@@ -1,1 +1,80 @@
-/home/bgo/.local/bin/herdr-header-init
+#!/bin/bash
+# herdr-header-init — Toggle a thin header status bar pane in the current herdr tab.
+# Designed to be invoked from a herdr [[keys.command]] with type = "shell".
+#
+# On first press: creates header pane (split, swap up, run herdr-header).
+# On second press: closes the header pane.
+#
+# Uses a per-workspace marker file in ~/.cache/herdr/headers/ to track state.
+
+set -euo pipefail
+
+HERDR="${HERDR_BIN_PATH:-herdr}"
+HEADER_SCRIPT="$HOME/.local/bin/herdr-header"
+RATIO="${HDR_HEADER_RATIO:-0.03}"
+MARKER_DIR="$HOME/.cache/herdr/headers"
+
+# ── Check prerequisites ────────────────────────────────────
+if [ ! -x "$HEADER_SCRIPT" ]; then
+    echo "herdr-header: $HEADER_SCRIPT not found or not executable" >&2
+    exit 1
+fi
+
+# ── Get current pane + workspace IDs ───────────────────────
+CURRENT_PANE="${HERDR_ACTIVE_PANE_ID:-}"
+WS_ID="${HERDR_ACTIVE_WORKSPACE_ID:-}"
+
+if [ -z "$CURRENT_PANE" ] || [ -z "$WS_ID" ]; then
+    # Fallback: query herdr if env vars not set
+    INFO=$("$HERDR" pane current 2>/dev/null)
+    CURRENT_PANE=$(echo "$INFO" | python3 -c "import json,sys; print(json.load(sys.stdin)['result']['pane']['pane_id'])" 2>/dev/null)
+    WS_ID=$(echo "$INFO" | python3 -c "import json,sys; print(json.load(sys.stdin)['result']['pane']['workspace_id'])" 2>/dev/null)
+fi
+
+if [ -z "$CURRENT_PANE" ] || [ -z "$WS_ID" ]; then
+    echo "herdr-header: could not determine current pane/workspace" >&2
+    exit 1
+fi
+
+# ── Toggle: check for existing header ──────────────────────
+MARKER_FILE="$MARKER_DIR/$WS_ID"
+
+if [ -f "$MARKER_FILE" ]; then
+    HEADER_PANE=$(cat "$MARKER_FILE")
+    if "$HERDR" pane get "$HEADER_PANE" &>/dev/null; then
+        # Header exists — close it
+        "$HERDR" pane close "$HEADER_PANE"
+        rm -f "$MARKER_FILE"
+        exit 0
+    fi
+    # Stale marker (pane no longer exists)
+    rm -f "$MARKER_FILE"
+fi
+
+# ── Create the header pane ─────────────────────────────────
+# Split current pane → new pane appears below
+"$HERDR" pane split --pane "$CURRENT_PANE" --direction down --ratio "$RATIO" --focus
+
+# Get the newly created pane ID (it's focused now)
+NEW_PANE=$("$HERDR" pane current 2>/dev/null | \
+    python3 -c "import json,sys; print(json.load(sys.stdin)['result']['pane']['pane_id'])" 2>/dev/null)
+
+if [ -z "$NEW_PANE" ] || [ "$NEW_PANE" = "$CURRENT_PANE" ]; then
+    echo "herdr-header: split failed or pane ID unchanged" >&2
+    exit 1
+fi
+
+# Swap new pane to the top
+"$HERDR" pane swap --pane "$NEW_PANE" --direction up
+
+# Run the header display script, passing the main pane ID for CWD tracking
+"$HERDR" pane run "$NEW_PANE" "$HEADER_SCRIPT" "$CURRENT_PANE"
+
+# Focus back down to the original content pane
+"$HERDR" pane focus --direction down --pane "$NEW_PANE"
+
+# Persist the header pane ID so toggle can find it later
+mkdir -p "$MARKER_DIR"
+echo "$NEW_PANE" > "$MARKER_FILE"
+
+exit 0
