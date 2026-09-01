@@ -22,6 +22,7 @@
         "custom/brightness",
         "custom/volume",
         "custom/mic",
+        "custom/recording",
         "custom/bluetooth",
         "clock",
         "custom/language",
@@ -138,5 +139,13 @@
         "on-click": "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle; pkill -RTMIN+13 waybar",
         "on-scroll-up": "wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SOURCE@ 5%+; pkill -RTMIN+13 waybar",
         "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 5%-; pkill -RTMIN+13 waybar"
+    },
+    "custom/recording": {
+        "exec": "~/.local/bin/herdr-waybar-recording",
+        "return-type": "json", "interval": 2, "format": "{}", "signal": 18,
+        "on-click": "~/.local/bin/record-desktop toggle; pkill -RTMIN+18 waybar",
+        "on-click-right": "~/.local/bin/record-desktop toggle-pause; pkill -RTMIN+18 waybar",
+        "on-click-middle": "notify-send -u normal 'Recording status' \"$(~/.local/bin/record-desktop status 2>&1)\"",
+        "tooltip": true
     }
 }
