@@ -21,17 +21,20 @@ window#waybar { background: rgba(24, 24, 37, 0.3); border: 1px solid rgba(114, 1
 #custom-git-sync.gitsync-error { background: rgba(243, 139, 168, 0.14); }
 #custom-network, #custom-localip, #custom-pubip, #custom-vpn,
 #custom-sysmon, #custom-cpu, #custom-battery,
-#custom-brightness, #custom-volume, #custom-mic {
+#custom-brightness, #custom-volume, #custom-mic, #custom-recording {
     padding: 0 5px; margin: 0; border-radius: 4px;
 }
 #custom-network:hover, #custom-localip:hover, #custom-pubip:hover,
 #custom-vpn:hover, #custom-sysmon:hover, #custom-cpu:hover,
 #custom-battery:hover, #custom-brightness:hover, #custom-volume:hover,
-#custom-mic:hover {
+#custom-mic:hover, #custom-recording:hover {
     background: rgba(137, 180, 250, 0.18);
 }
 #idle_inhibitor.activated { color: #f9e2af; }
 #custom-dnd.dnd { color: #f38ba8; }
+#custom-recording.idle { color: #a6e3a1; }
+#custom-recording.recording { color: #f38ba8; font-weight: bold; }
+#custom-recording.paused { color: #f9e2af; font-weight: bold; }
 #custom-power { color: #f38ba8; }
 #custom-power:hover { background: rgba(243, 139, 168, 0.2); }
 #custom-bluetooth { color: #89b4fa; }
