@@ -8,7 +8,7 @@ Left side (context) is left-aligned; the date/GPS block is right-aligned via
 computed space padding (requires a monospace font — set in style-herdr.css).
 Reads herdr session for the focused workspace / pane cwd. Refresh every 3s.
 """
-import json, os, subprocess, sys, datetime
+import json, os, shutil, subprocess, sys, datetime
 
 # Catppuccin latte (dark ink for the light/paper herdr background)
 B="#1e66f5"; G="#40a02b"; Y="#df8e1d"; R="#d20f39"; T="#179299"
@@ -106,7 +106,7 @@ def get_context():
 def get_time():
     gpsw = doy = yf = ""
     utcnow = datetime.datetime.now(datetime.timezone.utc)
-    if subprocess.run(['bash','-lc','command -v timecalc'],capture_output=True).returncode == 0:
+    if shutil.which('timecalc'):
         now = utcnow.strftime('%Y-%m-%d 12:00:00')
         w = run(['timecalc','-w']);  gpsw = ''.join(filter(str.isdigit, w.stdout)) if w else ""
         j = run(['timecalc','-j']);  doy  = ''.join(filter(str.isdigit, j.stdout)) if j else ""
