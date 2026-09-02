@@ -19,7 +19,7 @@ set virtual_spool_file = yes
 
 # SMTP settings (for sending)
 set smtp_url = "smtps://bgovedur@gmail.com@smtp.gmail.com:465"
-set smtp_pass = "tbnhzsumupteeibb"
+set smtp_pass = "`pass show email/bgovedur@gmail.com | head -1`"
 set smtp_authenticators = "plain"
 
 # Save current account for scripts

@@ -19,7 +19,7 @@ set virtual_spool_file = yes
 
 # SMTP settings (for sending)
 set smtp_url = "smtps://benedikt@klifursamband.is@smtp.gmail.com:465"
-set smtp_pass = "kvgsyiafjoljcnqb"
+set smtp_pass = "`pass show email/benedikt@klifursamband.is | head -1`"
 set smtp_authenticators = "plain"
 
 # Save current account for scripts

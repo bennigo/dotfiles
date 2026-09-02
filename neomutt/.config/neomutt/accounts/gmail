@@ -7,7 +7,7 @@ set from = "bgovedur@gmail.com"
 
 # IMAP settings
 set imap_user = "bgovedur@gmail.com"
-set imap_pass = "`pass show email/gmail`"
+set imap_pass = "`pass show email/bgovedur@gmail.com`"
 set folder = "imaps://imap.gmail.com:993/"
 set spoolfile = "+INBOX"
 set postponed = "+[Gmail]/Drafts"
@@ -16,7 +16,7 @@ set record = "+[Gmail]/Sent Mail"
 
 # SMTP settings  
 set smtp_url = "smtps://bgovedur@gmail.com@smtp.gmail.com:465/"
-set smtp_pass = "`pass show email/gmail`"
+set smtp_pass = "`pass show email/bgovedur@gmail.com`"
 
 # Gmail-specific folder mappings
 mailboxes =INBOX =[Gmail]/Sent\ Mail =[Gmail]/Drafts =[Gmail]/Spam =[Gmail]/Trash

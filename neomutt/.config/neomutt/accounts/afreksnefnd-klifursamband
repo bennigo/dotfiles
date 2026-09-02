@@ -7,7 +7,7 @@ set from = "afreksnefnd@klifursamband.is"
 
 # IMAP settings (Google Workspace)
 set imap_user = "afreksnefnd@klifursamband.is"
-set imap_pass = "`pass show email/afreksnefnd-klifursamband`"
+set imap_pass = "`pass show email/afreksnefnd@klifursamband.is`"
 set folder = "imaps://imap.gmail.com:993/"
 set spoolfile = "+INBOX"
 set postponed = "+[Gmail]/Drafts"
@@ -16,7 +16,7 @@ set record = "+[Gmail]/Sent Mail"
 
 # SMTP settings (Google Workspace)
 set smtp_url = "smtps://afreksnefnd@klifursamband.is@smtp.gmail.com:465/"
-set smtp_pass = "`pass show email/afreksnefnd-klifursamband`"
+set smtp_pass = "`pass show email/afreksnefnd@klifursamband.is`"
 
 # Gmail folder mappings (Google Workspace)
 mailboxes =INBOX =[Gmail]/Sent\ Mail =[Gmail]/Drafts =[Gmail]/Spam =[Gmail]/Trash
