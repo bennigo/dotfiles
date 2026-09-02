@@ -7,7 +7,7 @@ set from = "benedikt@klifursamband.is"
 
 # IMAP settings (Google Workspace)
 set imap_user = "benedikt@klifursamband.is"
-set imap_pass = "`pass show email/benedikt-klifursamband`"
+set imap_pass = "`pass show email/benedikt@klifursamband.is`"
 set folder = "imaps://imap.gmail.com:993/"
 set spoolfile = "+INBOX"
 set postponed = "+[Gmail]/Drafts"
@@ -16,7 +16,7 @@ set record = "+[Gmail]/Sent Mail"
 
 # SMTP settings (Google Workspace)
 set smtp_url = "smtps://benedikt@klifursamband.is@smtp.gmail.com:465/"
-set smtp_pass = "`pass show email/benedikt-klifursamband`"
+set smtp_pass = "`pass show email/benedikt@klifursamband.is`"
 
 # Gmail folder mappings (Google Workspace)
 mailboxes =INBOX =[Gmail]/Sent\ Mail =[Gmail]/Drafts =[Gmail]/Spam =[Gmail]/Trash
