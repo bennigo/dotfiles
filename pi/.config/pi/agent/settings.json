@@ -14,7 +14,8 @@
     "npm:pi-docparser",
     "npm:pi-conventions",
     "npm:@eko24ive/pi-ask",
-    "ssh://git@github.com/earendil-works/pi-transcribe"
+    "ssh://git@github.com/earendil-works/pi-transcribe",
+    "npm:vim-motions-pi"
   ],
   "lastChangelogVersion": "0.84.4",
   "defaultProvider": "deepseek",
