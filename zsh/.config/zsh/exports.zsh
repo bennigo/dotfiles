@@ -1,7 +1,7 @@
 #!/bin/sh
-# HISTFILE="$XDG_DATA_HOME"/zsh/history
-HISTSIZE=1000000
-SAVEHIST=1000000
+# History is configured at the END of .zshrc (after plugins). The supercharge
+# plugin overrides any HIST* variable set here, so do NOT set history
+# variables in this file — they would be silently ignored.
 export EDITOR="nvim"
 export TERMINAL="foot"
 # export BROWSER="qutebrowser"

@@ -37,7 +37,15 @@ Plugins loaded via `plug` in `.zshrc`:
 
 ## Key Settings
 
-- **History**: 1,000,000 entries (`HISTSIZE=SAVEHIST=1000000`)
+- **History**: file at `~/.local/state/zsh/history` (XDG state, outside this repo),
+  1,000,000 entries (`HISTSIZE=SAVEHIST=1000000`), with `SHARE_HISTORY` +
+  `INC_APPEND_HISTORY` so every command is written immediately and shared live
+  across all shells/tmux panes.
+
+> ⚠️ **The history block must stay at the END of `.zshrc`, after every `plug` call.**
+> The `zap-zsh/supercharge` plugin sets `HISTFILE`/`HISTSIZE`/`SAVEHIST` when it loads,
+> silently overriding anything configured earlier (this is what previously caused
+> history to be lost and to live inside the repo).
 - **Editor**: `nvim`
 - **Terminal**: `foot`
 - **Browser**: Firefox

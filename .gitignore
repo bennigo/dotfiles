@@ -1,6 +1,7 @@
-zsh/.config/zsh/.zcompdump
+zsh/.config/zsh/.zcompdump*
 zsh/.config/zsh/.zsh_history
 zsh/.config/zsh/zsh_history
+# Active history now lives in XDG state (~/.local/state/zsh/history), outside the repo
 tmux/.config/tmux/plugins/
 neovim/.config/nvim/lazy-lock.json
 system/.credentials_and_logins/

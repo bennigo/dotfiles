@@ -4,10 +4,9 @@
 # Load Zap plugin manager
 [ -f "${XDG_DATA_HOME:-$HOME/.local/share}/zap/zap.zsh" ] && source "${XDG_DATA_HOME:-$HOME/.local/share}/zap/zap.zsh"
 
-# History configuration
-HISTFILE="$HOME/.config/zsh/zsh_history"
-HISTSIZE=1000000
-SAVEHIST=1000000
+# NOTE: History is configured at the END of this file, after all `plug` calls.
+# The zap-zsh/supercharge plugin sets HISTFILE/HISTSIZE/SAVEHIST when it loads
+# and would silently override anything set here.
 
 # Source custom configurations
 plug "$HOME/.config/zsh/aliases.zsh"
@@ -99,3 +98,11 @@ else
 fi
 unset __mamba_setup
 # <<< mamba initialize <<<
+
+# ---------------------------------------------------------------------------
+# History — MUST stay last (after every `plug` call).
+# zap-zsh/supercharge sets HISTFILE/HISTSIZE/SAVEHIST on load, so any history
+# config placed earlier in this file is silently overridden. The config itself
+# lives in history.zsh so running shells can re-apply it via tmux `prefix + H`.
+# ---------------------------------------------------------------------------
+source "$HOME/.config/zsh/history.zsh"
