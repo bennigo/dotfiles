@@ -68,6 +68,8 @@ The agent system is designed to route tasks to the optimal LLM based on capabili
 
 Adding a new model: edit `models.json` (live-reloads via `/model`), then optionally create an agent that uses it.
 
+⚠️ **Do not redefine a built-in provider's models** (e.g. `deepseek`). A `models` array merges by `id`, so a custom entry with the same `id` **replaces** the built-in and drops its correct `compat`/`maxTokens` — this is what silently degraded DeepSeek to a 32.8K output cap and missing `thinkingFormat`/`requiresReasoningContentOnAssistantMessages`. To tweak a built-in model, use `modelOverrides`; to inherit pi's catalog, omit `models` from the provider block.
+
 ### Auto-Detection
 - `/context-model` — analyze current project and recommend optimal default model
 - On startup, detects project complexity and notifies if a cheaper model would suffice
