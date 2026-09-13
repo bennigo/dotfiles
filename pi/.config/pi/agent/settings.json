@@ -17,7 +17,7 @@
     "ssh://git@github.com/earendil-works/pi-transcribe",
     "npm:vim-motions-pi"
   ],
-  "lastChangelogVersion": "0.84.4",
+  "lastChangelogVersion": "0.85.1",
   "defaultProvider": "deepseek",
   "defaultModel": "deepseek-v4-flash",
   "defaultThinkingLevel": "high",
