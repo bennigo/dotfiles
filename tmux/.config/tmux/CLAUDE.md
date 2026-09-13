@@ -35,6 +35,7 @@ Terminal multiplexer setup with session persistence, plugin ecosystem, and Wayla
 - `prefix + P` — Floating pane menu
 - `prefix + o` — Session picker (sessionx with zoxide integration)
 - `prefix + E` — Bulk refresh shell env (aliases-claude.zsh) + Wayland env in all panes (see below)
+- `prefix + H` — Reload shell history config (HISTFILE + SHARE_HISTORY) in all panes
 
 ## Wayland Environment Fix
 

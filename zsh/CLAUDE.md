@@ -14,6 +14,7 @@ zsh/.config/zsh/
 ├── aliases-pi.zsh    # Pi coding agent aliases
 ├── aliases-sync.zsh  # Sync-related aliases (dotfiles-sync, sync-status)
 ├── hooks-sync.zsh    # Sync-related shell hooks
+├── history.zsh       # Shell history config (sourced LAST in .zshrc; re-applied via tmux prefix+H)
 ├── .zshenv           # Minimal env init (has stow conflict — use stow -R --ignore='\.zshenv' zsh)
 ├── api-keys.sh       # Decrypts API keys from `pass` ONCE (sourced by ~/.profile at login; ~/.zshenv only fallback-sources it)
 ```
@@ -37,15 +38,16 @@ Plugins loaded via `plug` in `.zshrc`:
 
 ## Key Settings
 
-- **History**: file at `~/.local/state/zsh/history` (XDG state, outside this repo),
-  1,000,000 entries (`HISTSIZE=SAVEHIST=1000000`), with `SHARE_HISTORY` +
-  `INC_APPEND_HISTORY` so every command is written immediately and shared live
-  across all shells/tmux panes.
+- **History**: config lives in `history.zsh` (sourced last in `.zshrc`); file at
+  `~/.local/state/zsh/history` (XDG state, outside this repo), 1,000,000 entries
+  (`HISTSIZE=SAVEHIST=1000000`), with `SHARE_HISTORY` + `INC_APPEND_HISTORY` so every
+  command is written immediately and shared live across all shells/tmux panes.
+  Already-running shells can adopt it with `reload-history` (tmux `prefix + H`).
 
-> ⚠️ **The history block must stay at the END of `.zshrc`, after every `plug` call.**
-> The `zap-zsh/supercharge` plugin sets `HISTFILE`/`HISTSIZE`/`SAVEHIST` when it loads,
-> silently overriding anything configured earlier (this is what previously caused
-> history to be lost and to live inside the repo).
+> ⚠️ **The `source history.zsh` line must stay at the END of `.zshrc`, after every
+> `plug` call.** The `zap-zsh/supercharge` plugin sets `HISTFILE`/`HISTSIZE`/`SAVEHIST`
+> when it loads, silently overriding anything configured earlier (this is what previously
+> caused history to be lost and to live inside the repo).
 - **Editor**: `nvim`
 - **Terminal**: `foot`
 - **Browser**: Firefox
