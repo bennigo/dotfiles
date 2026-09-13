@@ -49,6 +49,10 @@ PYEOF
     fi
 fi
 
+
+# ── 4. Morning enrichment (A: todo links, B: P1 scan, C: overdue OL, D: market alerts) ──
+python3 "$HOME/notes/bgovault/.scripts/morning-enrich/morning-enrich.py" "$(date +%F)" >> "$HOME/.cache/morning-enrich.log" 2>&1 || true
+
 # ── 3. Reminder ──────────────────────────────────────────────────────────────
 notify-send "🌅 Morgunyfirlit tilbúið" \
     "Dagsnóta + markaðslína tilbúin — keyra /morning-v2 fyrir geopolitics scan" \
