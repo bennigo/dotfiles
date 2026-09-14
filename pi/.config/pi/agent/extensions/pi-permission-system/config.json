@@ -1,0 +1,50 @@
+{
+  "$schema": "https://raw.githubusercontent.com/gotgenes/pi-packages/main/packages/pi-permission-system/schemas/permissions.schema.json",
+
+  "debugLog": false,
+  "permissionReviewLog": true,
+  "yoloMode": false,
+  "doublePressToConfirm": true,
+
+  "permission": {
+    "*": "allow",
+
+    "path": {
+      "*": "allow",
+      "*.env": "deny",
+      "*.env.*": "deny",
+      "*.env.example": "allow",
+      "*pgpass": "deny",
+      "*auth.json": "deny",
+      "*.pem": "deny",
+      "*.key": "deny",
+      "*.p12": "deny",
+      "*.pfx": "deny",
+      "*.kdbx": "deny",
+      "*.vault": "deny",
+      "**/id_rsa*": "deny",
+      "**/id_ed25519*": "deny",
+      "~/.ssh/*": "deny",
+      "~/.aws/*": "deny",
+      "**/.credentials_and_logins/**": "deny",
+      "**/.cloudflared/**": "deny"
+    },
+
+    "bash": { "*": "allow" },
+    "mcp": { "*": "allow" },
+    "skill": { "*": "allow" },
+
+    "external_directory": {
+      "*": "ask",
+      "~/.dotfiles/*": "allow",
+      "~/notes/*": "allow",
+      "~/.config/*": "allow",
+      "~/.local/*": "allow",
+      "~/.claude/*": "allow",
+      "~/.cache/*": "allow",
+      "~/.pi/*": "allow",
+      "~/tmp/*": "allow",
+      "/tmp/*": "allow"
+    }
+  }
+}

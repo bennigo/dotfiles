@@ -27,8 +27,6 @@
     "npm:@narumitw/pi-usage",
     "npm:pi-context-view",
     "npm:@juicesharp/rpiv-args",
-    "npm:@erichll/pi-auto-review",
-    "npm:@erichll/pi-sandbox",
     "npm:@gotgenes/pi-permission-system"
   ],
   "lastChangelogVersion": "0.85.1",
