@@ -701,6 +701,24 @@ return {
   config = function()
     setup()
 
+    -- obsidian.nvim builds the picker prompt as
+    --   "<title> | <CR> confirm | <C-x> new | <C-b> bookmark | <C-l> insert link"
+    -- and hands that whole string to fzf as --prompt. The typed query shares the
+    -- same line, so the long keybinding help crowds/masks what you're typing.
+    -- Keep the prompt short; the <C-x>/<C-l>/<C-b> mappings still work (the help
+    -- text is only a legend, it is not what enables the bindings).
+    do
+      local ut = require("obsidian.picker.util")
+      ut.build_prompt = function(opts)
+        opts = opts or {}
+        local title = opts.prompt_title or "Find"
+        if #title > 50 then
+          title = title:sub(1, 50) .. "…"
+        end
+        return title
+      end
+    end
+
     -- Vault-wide fallback for attachment/image links (replaces the removed
     -- follow_img_func). obsidian.nvim's LSP definition handler resolves
     -- attachments to <vault>/<attachments.folder>/<name> and calls vim.ui.open;

@@ -15,7 +15,8 @@
     "npm:pi-conventions",
     "npm:@eko24ive/pi-ask",
     "ssh://git@github.com/earendil-works/pi-transcribe",
-    "npm:vim-motions-pi"
+    "npm:vim-motions-pi",
+    "npm:pi-mcp-adapter"
   ],
   "lastChangelogVersion": "0.85.1",
   "defaultProvider": "deepseek",
