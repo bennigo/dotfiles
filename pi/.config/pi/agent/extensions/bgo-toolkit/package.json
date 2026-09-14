@@ -5,9 +5,7 @@
   "keywords": ["pi-package"],
   "pi": {
     "extensions": [
-      "./subagent.ts",
       "./pg.ts",
-      "./web.ts",
       "./capture.ts",
       "./memory-bridge.ts",
       "./vault.ts",

@@ -16,7 +16,10 @@
     "npm:@eko24ive/pi-ask",
     "ssh://git@github.com/earendil-works/pi-transcribe",
     "npm:vim-motions-pi",
-    "npm:pi-mcp-adapter"
+    "npm:pi-mcp-adapter",
+    "npm:pi-subagents",
+    "npm:pi-web-access",
+    "npm:@narumitw/pi-plan-mode"
   ],
   "lastChangelogVersion": "0.85.1",
   "defaultProvider": "deepseek",
