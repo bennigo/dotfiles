@@ -35,7 +35,17 @@ border-color=#d08770
 
 [urgency=high]
 border-color=#bf616a
-default-timeout=0
+# NOTE: this Mako treats timeout=0 as "expire immediately" (see the
+# sway-overlay-corner note below), so a finite value is required — otherwise
+# critical alerts vanish before they can be read.
+default-timeout=60000
+
+# The 07:30 morning-prewarm reminder. notify-send is called with
+# `-a morning-prewarm`, so it gets its own app-name and a full minute on
+# screen instead of the global 5s default.
+[app-name=morning-prewarm]
+border-color=#a3be8c
+default-timeout=60000
 
 [category=calendar]
 border-color=#88c0d0

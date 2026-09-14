@@ -53,7 +53,15 @@ fi
 # ── 4. Morning enrichment (A: todo links, B: P1 scan, C: overdue OL, D: market alerts) ──
 python3 "$HOME/notes/bgovault/.scripts/morning-enrich/morning-enrich.py" "$(date +%F)" >> "$HOME/.cache/morning-enrich.log" 2>&1 || true
 
-# ── 3. Reminder ──────────────────────────────────────────────────────────────
-notify-send "🌅 Morgunyfirlit tilbúið" \
+# ── 3. Reminder + durable marker ─────────────────────────────────────────────
+# -a sets an app-name so the mako rule for "morning-prewarm" holds the popup on
+# screen for a full minute (the default 5s was easy to miss).
+notify-send -a morning-prewarm -u normal \
+    "🌅 Morgunyfirlit tilbúið" \
     "Dagsnóta + markaðslína tilbúin — keyra /morning-v2 fyrir geopolitics scan" \
     2>/dev/null || true
+
+# Durable record — mako keeps only a 5-entry history, so a missed popup leaves
+# no trace that the briefing ran. Append a one-line marker instead.
+LOG="$HOME/.cache/morning-prewarm.log"
+printf '%s  briefing ready  note=%s\n' "$(date '+%Y-%m-%d %H:%M')" "$NOTE" >> "$LOG"
