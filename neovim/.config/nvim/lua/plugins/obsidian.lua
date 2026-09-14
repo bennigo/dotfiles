@@ -27,6 +27,28 @@ local function setup()
     -- Optional, if you keep notes in a specific subdirectory of your vault.
     notes_subdir = "0.Inbox",
 
+    -- Ignore generated / vendored / non-note directories. This matters for the
+    -- note cache's initial scan: it uses vim.fs.find, which walks *everything*
+    -- (including hidden dirs) rather than respecting .gitignore like ripgrep.
+    file = {
+      ignore_filters = {
+        ".obsidian",
+        ".trash",
+        "graphify-out",
+        "Assets",
+        ".assets-pre-migration-*",
+      },
+    },
+
+    -- Note cache: indexes note metadata once so quick_switch, link/heading
+    -- completion, backlinks and inlay hints don't re-scan/re-parse the whole
+    -- vault on every request. Was disabled (the plugin default), which is what
+    -- made vault-wide ops feel progressively slower as the vault grew.
+    cache = {
+      enabled = true,
+      backend = "json",
+    },
+
     -- Optional, set the log level for obsidian.nvim. This is an integer corresponding to one of the log
     -- levels defined by "vim.log.levels.*".
     log_level = vim.log.levels.INFO,
@@ -281,8 +303,10 @@ local function setup()
 
     -- Search configuration (replaces deprecated top-level sort_by, sort_reversed, search_max_lines)
     search = {
-      -- Sort search results by "path", "modified", "accessed", or "created".
-      sort_by = "modified",
+      -- sort_by = "modified" makes ripgrep run with --sortr=modified, which
+      -- disables its parallelism and stats every file. We don't need mtime
+      -- ordering, so keep ripgrep fast.
+      sort_by = false,
       sort_reversed = true,
       -- Maximum number of lines to read from notes on disk when performing searches.
       max_lines = 1000,
