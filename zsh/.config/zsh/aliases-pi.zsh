@@ -34,3 +34,7 @@ pilocalchat() {
        --no-context-files --no-skills --no-prompt-templates \
        --no-session --no-tools )
 }
+
+# pir — Pi with pi-repl-py's persistent Python kernel enabled (--repl).
+# Without this flag pi-repl-py stays dormant. Usage: pir [pi args...]
+pir() { pi --repl "$@"; }
