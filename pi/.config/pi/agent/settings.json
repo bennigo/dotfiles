@@ -20,7 +20,13 @@
     "npm:pi-subagents",
     "npm:pi-web-access",
     "npm:@narumitw/pi-plan-mode",
-    "npm:cc-safety-net"
+    "npm:cc-safety-net",
+    "npm:pi-lens",
+    "npm:pi-repl-py",
+    "npm:pi-cache-optimizer",
+    "npm:@narumitw/pi-usage",
+    "npm:pi-context-view",
+    "npm:@juicesharp/rpiv-args"
   ],
   "lastChangelogVersion": "0.85.1",
   "defaultProvider": "deepseek",
