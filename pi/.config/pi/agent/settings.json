@@ -19,7 +19,8 @@
     "npm:pi-mcp-adapter",
     "npm:pi-subagents",
     "npm:pi-web-access",
-    "npm:@narumitw/pi-plan-mode"
+    "npm:@narumitw/pi-plan-mode",
+    "npm:cc-safety-net"
   ],
   "lastChangelogVersion": "0.85.1",
   "defaultProvider": "deepseek",
