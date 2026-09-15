@@ -3,18 +3,21 @@
 
   "debugLog": false,
   "permissionReviewLog": true,
-  "yoloMode": false,
-  "doublePressToConfirm": true,
+
+  "yoloMode": true,
+  "doublePressToConfirm": false,
 
   "permission": {
     "*": "allow",
 
     "path": {
       "*": "allow",
+
       "*.env": "deny",
       "*.env.*": "deny",
       "*.env.example": "allow",
       "*pgpass": "deny",
+      "*netrc": "deny",
       "*auth.json": "deny",
       "*.pem": "deny",
       "*.key": "deny",
@@ -22,29 +25,28 @@
       "*.pfx": "deny",
       "*.kdbx": "deny",
       "*.vault": "deny",
+
       "**/id_rsa*": "deny",
       "**/id_ed25519*": "deny",
+      "**/id_ecdsa*": "deny",
+      "**/*_key": "deny",
       "~/.ssh/*": "deny",
+      "~/.gnupg/*": "deny",
+      "~/.password-store/*": "deny",
       "~/.aws/*": "deny",
+      "~/.docker/config.json": "deny",
+      "~/.local/share/keyrings/*": "deny",
       "**/.credentials_and_logins/**": "deny",
-      "**/.cloudflared/**": "deny"
+      "**/.cloudflared/**": "deny",
+      "/etc/shadow": "deny",
+      "/etc/gshadow": "deny",
+      "/etc/sudoers": "deny"
     },
 
     "bash": { "*": "allow" },
     "mcp": { "*": "allow" },
     "skill": { "*": "allow" },
 
-    "external_directory": {
-      "*": "ask",
-      "~/.dotfiles/*": "allow",
-      "~/notes/*": "allow",
-      "~/.config/*": "allow",
-      "~/.local/*": "allow",
-      "~/.claude/*": "allow",
-      "~/.cache/*": "allow",
-      "~/.pi/*": "allow",
-      "~/tmp/*": "allow",
-      "/tmp/*": "allow"
-    }
+    "external_directory": { "*": "allow" }
   }
 }
