@@ -132,6 +132,13 @@ resource: ""
 
 > Fljótlegar hugmyndir og athugasemdir — hreinsað í lok dags
 
+### 🌅 Morgunyfirlit — ${NOTE_DATE}
+
+**Íransstrof**: _bíður 07:30 vinnslu (morning-enrich)_
+**UN/Alþjóðastofnanir**: _bíður 07:30 vinnslu (morning-enrich)_
+**OL vanrúnar (7 dagar)**: _bíður 07:30 vinnslu (morning-enrich)_
+**Verkefni dagsins**:
+
 
 ## Verkefni dagsins
 
@@ -185,6 +192,11 @@ short mode
 ### Íslenskir keppendur
 
 ### Alþjóðlegt
+
+
+## Alþjóðastofnanir / UN
+
+_Engar nýjar fréttir._
 
 
 ## Dagbók
