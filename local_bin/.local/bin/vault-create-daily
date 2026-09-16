@@ -17,6 +17,21 @@ NOTE_FILE="${DAILY_DIR}/${NOTE_DATE}.md"
 # Already exists — nothing to do
 [[ -f "${NOTE_FILE}" ]] && exit 0
 
+# ── Adopt a note another writer already created + pushed for this date ──────
+# A /morning (or another Claude/Pi session) run can create AND push today's
+# note before the 07:30 prewarm gets here. Creating a second local copy makes
+# the next `git pull` abort with "untracked working tree files would be
+# overwritten" (2026-09-16). Adopt the pushed note instead of racing it.
+if git -C "${VAULT_DIR}" rev-parse --git-dir >/dev/null 2>&1; then
+    git -C "${VAULT_DIR}" fetch origin --quiet 2>/dev/null || true
+    if git -C "${VAULT_DIR}" cat-file -e "origin/main:Journal/daily/${NOTE_DATE}.md" 2>/dev/null; then
+        if git -C "${VAULT_DIR}" checkout origin/main -- "Journal/daily/${NOTE_DATE}.md" 2>/dev/null; then
+            echo "vault-create-daily: adopted origin/main:Journal/daily/${NOTE_DATE}.md (created by another session)" >&2
+            exit 0
+        fi
+    fi
+fi
+
 # ── Rollover uncompleted tasks from most recent previous daily note ───
 # Mirrors obsidian-rollover-daily-todos plugin behavior for notes created
 # outside Obsidian (Neovim, CLI). Finds tasks under "## Verkefni dagsins"
