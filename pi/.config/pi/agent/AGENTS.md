@@ -176,6 +176,8 @@ Spend order for every task: **local ($0, private) → subscription ($0 marginal)
 | **enricher** | DeepSeek V4 Pro | 1M | Transcript enrichment pipeline — speaker ID, filing, URL cleanup, wikilink weaving, claim extraction, cross-refs. **Default lane for `/transcribe` Step 2.** |
 
 > Enrichment is high-volume prose work where a frontier model buys nothing: the expensive failure mode is *fabrication*, not shallow reasoning, so the agent prompt carries hard anti-confabulation rules instead of a costly model. Route deep enrichment here by default; escalate to `worker` only for a transcript that needs genuine cross-document reasoning.
+>
+> **Do not downgrade `enricher` to DeepSeek Flash.** Pro-over-Flash is a deliberate reliability decision (agreed 2026-09-19), not an oversight: prior audits found batch-enriched notes inventing a person's death, missing a death date by eight weeks, and inflating roles. The ~4× cost saving is not worth re-introducing that failure mode. Improve reliability via the prompt's anti-confabulation rules, not by changing the model.
 
 ### Orchestration
 
