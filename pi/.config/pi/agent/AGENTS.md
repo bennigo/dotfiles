@@ -53,18 +53,31 @@ Custom tools from `bgo-toolkit` package:
 
 ## Default Model
 
-**Copilot Claude Sonnet 4.6** is the default for interactive sessions. It's subscription-based so there's zero per-token cost to you — always the safe default for direct work.
+**Copilot Claude Sonnet 5** is the session default (`settings.json`). It's subscription-based so there's zero per-token cost to you — always the safe default for direct work. (Anthropic models are otherwise used mostly via Claude Code; pi's free "think harder" lane is GLM.)
 
-The context-model extension auto-detects project complexity on startup and suggests switching to DeepSeek for simple/familiar projects.
+The context-model extension auto-detects project complexity on startup and notes when cheap DeepSeek Flash would suffice. The model-tiers extension provides instant switching:
+
+| Key | Command | Model | Cost |
+|-----|---------|-------|------|
+| Ctrl+1 | `/std` | Claude Sonnet 5 (Copilot) | $0 — default |
+| Ctrl+2 | `/fast` | DeepSeek V4.1 Flash | very cheap (~$0.30/$1.20 per M) — alternative default for familiar/high-volume work |
+| Ctrl+3 | `/pro` | DeepSeek V4 Pro | paid (~$1.32/$3.96 per M) — special occasions, parallel fanout |
+| Ctrl+4 | `/deep` | GLM-5.3-Highspeed (z.ai) | $0 (per models.json) — strong reasoning, 1M ctx |
+| Ctrl+5 | `/free` | Kimi K3 1M (subscription) | $0 — biggest context |
+| Ctrl+6 | `/glm` | GLM-5.3 (z.ai) | paid flagship — when Highspeed quality isn't enough |
+| — | `/local` | Llama 3.1 8B (Ollama) | $0 — offline/private |
+| — | `/tier` | show the ladder + active model | — |
+
+Suggest-only hints fire once per session when a trivial prompt hits a paid model or a heavy prompt hits a cheap lane. Nothing auto-switches except mode-router's offline/private handling.
 
 ## Model Optimization Framework
 
 The agent system is designed to route tasks to the optimal LLM based on capability match:
 
-- **Subscription models** (Copilot Sonnet 4.6): complex reasoning, security, architecture — no per-token cost
-- **Mid-tier models** (Kimi K2.5): large context (256K) research, deep scouting
-- **Budget models** (DeepSeek V3, Kimi K2 Turbo): scouting, simple changes, documentation
-- **Free/local models** (Qwen 3.5, DeepSeek Coder V2 via Ollama): fallback when cloud is rate-limited
+- **Subscription models** (Copilot Sonnet 5/4.6, Opus 4.8, GPT-5.3-Codex; Kimi K3 1M; GLM-5.3-Highspeed): everything non-trivial — no per-token cost
+- **Budget models** (DeepSeek V4.1 Flash): high-volume/simple work, familiar codebases, parallel fanout
+- **Premium paid** (DeepSeek V4 Pro, OpenRouter frontier): explicit request only
+- **Free/local models** (Llama 3.1 8B, Qwen 3.5 via Ollama): offline/private/rate-limited fallback
 
 Adding a new model: edit `models.json` (live-reloads via `/model`), then optionally create an agent that uses it.
 
@@ -115,51 +128,59 @@ Spend order for every task: **local ($0, private) → subscription ($0 marginal)
 - Reserve **premium-paid** for cases explicitly needing it.
 - The `orchestrator` agent enforces this automatically.
 
-## Agent Roster (15 agents)
+## Agent Roster (16 agents)
 
 ### Exploration & Analysis
 
 | Agent | Model | Context | Use for |
 |-------|-------|---------|---------|
-| **scout** | DeepSeek V4 Pro | 1M | Fast recon, small-medium codebases |
-| **deep-scout** | DeepSeek V4 Pro | 1M | Multi-file analysis, large codebases, cross-cutting traces — #1 coding benchmarks |
-| **researcher** | DeepSeek V4 Pro | 1M | Web research, source synthesis, tech evaluation — 1M context for many sources |
-| **db-analyst** | DeepSeek V4 Pro | 1M | SQL queries, schema analysis, data exploration — coding proficiency → strong SQL |
+| **scout** | Kimi K3 256K (subscription) | 256K | Fast recon, small-medium codebases |
+| **deep-scout** | Kimi K3 256K (subscription) | 256K | Multi-file analysis, large codebases, cross-cutting traces |
+| **researcher** | Kimi K3 256K (subscription) | 256K | Web research, source synthesis, tech evaluation |
+| **db-analyst** | Kimi K3 256K (subscription) | 256K | SQL queries, schema analysis, data exploration |
 
 ### Design & Planning
 
 | Agent | Model | Context | Use for |
 |-------|-------|---------|---------|
-| **architect** | GPT-5.5 (Copilot) | 400K | High-level design, tradeoff analysis — best reasoning, subscription |
-| **planner** | Claude Opus 4.7 (Copilot) | 144K | Implementation plans — methodical, precise |
+| **architect** | GPT-5.3-Codex (Copilot) | 1M | High-level design, tradeoff analysis — subscription |
+| **planner** | Claude Opus 4.8 (Copilot) | 1M | Implementation plans — methodical, precise |
 
 ### Implementation
 
 | Agent | Model | Context | Use for |
 |-------|-------|---------|---------|
-| **worker** | Claude Sonnet 4.6 (Copilot) | 1M | Complex implementation, multi-step refactors — known quantity |
-| **quick-worker** | DeepSeek V4 Pro | 1M | Boilerplate, simple changes — #1 coding, cheap |
-| **fallback-worker** | Llama 3.1 8B (local) | 32K | Offline / private / rate-limited work — fastest confirmed local tool-caller (~8s) |
+| **worker** | Claude Sonnet 5 (Copilot) | 1M | Complex implementation, multi-step refactors |
+| **quick-worker** | DeepSeek V4.1 Flash | 1M | Boilerplate, simple changes — very cheap paid |
+| **fallback-worker** | Llama 3.1 8B (local) | 4K | Offline / private / rate-limited work — fastest confirmed local tool-caller (~8s) |
+
+### Content Enrichment
+
+| Agent | Model | Context | Use for |
+|-------|-------|---------|---------|
+| **enricher** | DeepSeek V4 Pro | 1M | Transcript enrichment pipeline — speaker ID, filing, URL cleanup, wikilink weaving, claim extraction, cross-refs. **Default lane for `/transcribe` Step 2.** |
+
+> Enrichment is high-volume prose work where a frontier model buys nothing: the expensive failure mode is *fabrication*, not shallow reasoning, so the agent prompt carries hard anti-confabulation rules instead of a costly model. Route deep enrichment here by default; escalate to `worker` only for a transcript that needs genuine cross-document reasoning.
 
 ### Orchestration
 
 | Agent | Model | Context | Use for |
 |-------|-------|---------|---------|
-| **orchestrator** | Claude Sonnet 4.6 (Copilot) | 1M | Decompose multi-part tasks and dispatch each subtask to the optimal specialist/model; mode- & cost-aware |
+| **orchestrator** | Claude Sonnet 5 (Copilot) | 1M | Decompose multi-part tasks and dispatch each subtask to the optimal specialist/model; mode- & cost-aware |
 
 ### Quality
 
 | Agent | Model | Context | Use for |
 |-------|-------|---------|---------|
-| **reviewer** | Claude Opus 4.7 (Copilot) | 144K | Code review, style, correctness — best precision |
-| **auditor** | Claude Opus 4.7 (Copilot) | 144K | Security audit, vulnerability analysis — safety-critical |
+| **reviewer** | Claude Opus 4.8 (Copilot) | 1M | Code review, style, correctness — best precision |
+| **auditor** | Claude Opus 4.8 (Copilot) | 1M | Security audit, vulnerability analysis — safety-critical |
 
 ### Meta
 
 | Agent | Model | Context | Use for |
 |-------|-------|---------|---------|
-| **router** | DeepSeek V4 Pro | 1M | Task classification — recommends optimal agent/workflow |
-| **docs-writer** | DeepSeek V4 Pro | 1M | READMEs, API docs, changelogs, code comments |
+| **router** | Kimi K3 256K (subscription) | 256K | Task classification — recommends optimal agent/workflow |
+| **docs-writer** | Kimi K3 256K (subscription) | 256K | READMEs, API docs, changelogs, code comments |
 
 ### Second Opinion (Diversity)
 
@@ -202,29 +223,34 @@ subagent: router, task: I need to add OAuth support to the API
 | Tier | Models | Cost |
 |------|--------|------|
 | **Copilot Subscription** | Claude Opus 4.8, Claude Sonnet 5, Claude Sonnet 4.6, GPT-5.3-Codex, GPT-5 mini | $0 marginal (subscription) |
-| **Budget** | DeepSeek V4 Pro (1M ctx, #1 coding) | ~$0.50-2.00/M tokens |
-| **Free** | Ollama local models (Qwen, DeepSeek Coder) | $0 |
+| **Kimi Subscription** | Kimi K3 (256K / 1M) | $0 marginal (subscription) |
+| **Budget** | DeepSeek V4.1 Flash | ~$0.30/$1.20 per M tokens |
+| **Premium paid** | DeepSeek V4 Pro, OpenRouter frontier | ~$1.32/$3.96 per M and up |
+| **Free** | Ollama local models (Llama 3.1, Qwen 3.5) | $0 |
 
 Copilot models available: claude-opus-4.8, claude-sonnet-5, claude-sonnet-4.6, gpt-5.3-codex, gpt-5-mini (5 enabled; other catalogue models like claude-opus-4.7/5, fable-5, Gemini, Grok need the workplace admin to enable them).
 
 ## Final Agent↔Model Map
 
 ```
-DeepSeek V4 Pro (9 agents): scout, deep-scout, quick-worker, docs-writer,
-                             db-analyst, researcher, router, + 2 existing
-
-Copilot GPT-5.5 (1):       architect
-Copilot Opus 4.7 (3):      planner, auditor, reviewer
-Copilot Sonnet 4.6 (1):    worker
-Ollama Qwen 3.5 (1):       fallback-worker
+Kimi K3 256K, subscription (6):  scout, deep-scout, researcher, db-analyst,
+                                 router, docs-writer
+Copilot Sonnet 5 (2):            worker, orchestrator
+Copilot Opus 4.8 (3):            planner, auditor, reviewer
+Copilot GPT-5.3-Codex (1):       architect
+DeepSeek V4.1 Flash, cheap (1):  quick-worker
+DeepSeek V4 Pro, budget (1):     enricher
+Ollama Llama 3.1 8B, local (1):  fallback-worker
+Google Gemini 2.5 Flash (1):     read-image
 ```
 
 ## Routing Principles
 
 1. **Don't use a sledgehammer for a nail** — simple tasks go to cheap models
 2. **Security-sensitive = always the best model** — auditor/architect on Sonnet
-3. **Research benefits from large context** — researcher/deep-scout on Kimi K2.5 (256K)
-4. **If unsure, ask the router** — `/route <task>` classifies and recommends
+3. **Research benefits from large context** — researcher/deep-scout on Kimi K3 (256K, subscription)
+4. **Volume prose work goes to the cheapest capable lane** — transcript enrichment → `enricher` (DeepSeek V4 Pro). The risk there is fabrication, which is controlled by the agent's rules, not by paying for a frontier model.
+5. **If unsure, ask the router** — `/route <task>` classifies and recommends
 
 ## Vault Integration
 
