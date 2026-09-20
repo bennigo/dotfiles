@@ -42,21 +42,31 @@ interface AgentModelMap {
   model: string;
 }
 
-// Static agent→model map from our agent definitions
+function costTierFor(model: string): string {
+  if (model.startsWith("ollama/")) return "Free (local)";
+  if (model.startsWith("github-copilot/")) return "Subscription ($0)";
+  if (model.startsWith("kimi-coding/")) return "Subscription ($0)";
+  if (model.includes("flash")) return "Budget (very cheap)";
+  return "Paid";
+}
+
+// Static agent→model map from our agent definitions (keep in sync with agents/*.md)
 const AGENT_MODELS: AgentModelMap[] = [
-  { agent: "scout", model: "deepseek-v4-pro" },
-  { agent: "deep-scout", model: "kimi-k2.5" },
-  { agent: "quick-worker", model: "deepseek-v4-pro" },
-  { agent: "auditor", model: "claude-sonnet-4-6" },
-  { agent: "docs-writer", model: "deepseek-v4-pro" },
-  { agent: "db-analyst", model: "claude-sonnet-4-6" },
-  { agent: "researcher", model: "kimi-k2.5" },
-  { agent: "architect", model: "claude-sonnet-4-6" },
-  { agent: "router", model: "deepseek-v4-pro" },
-  { agent: "fallback-worker", model: "qwen3.5:latest" },
-  { agent: "planner", model: "claude-sonnet-4-6" },
-  { agent: "reviewer", model: "claude-sonnet-4-6" },
-  { agent: "worker", model: "claude-sonnet-4-6" },
+  { agent: "scout", model: "kimi-coding/k3" },
+  { agent: "deep-scout", model: "kimi-coding/k3" },
+  { agent: "quick-worker", model: "deepseek/deepseek-flash" },
+  { agent: "auditor", model: "github-copilot/claude-opus-4.8" },
+  { agent: "docs-writer", model: "kimi-coding/k3" },
+  { agent: "db-analyst", model: "kimi-coding/k3" },
+  { agent: "researcher", model: "kimi-coding/k3" },
+  { agent: "architect", model: "github-copilot/gpt-5.3-codex" },
+  { agent: "router", model: "kimi-coding/k3" },
+  { agent: "fallback-worker", model: "ollama/llama3.1:8b" },
+  { agent: "orchestrator", model: "github-copilot/claude-sonnet-5" },
+  { agent: "planner", model: "github-copilot/claude-opus-4.8" },
+  { agent: "reviewer", model: "github-copilot/claude-opus-4.8" },
+  { agent: "worker", model: "github-copilot/claude-sonnet-5" },
+  { agent: "read-image", model: "google/gemini-2.5-flash" },
 ];
 
 // Size thresholds for model capability hints
@@ -203,19 +213,11 @@ export default function (pi: ExtensionAPI) {
       lines.push("");
       lines.push("| Agent | Model | Cost Tier |");
       lines.push("|-------|-------|-----------|");
-      lines.push("| scout | DeepSeek V3 | Budget |");
-      lines.push("| deep-scout | Kimi K2.5 | Mid |");
-      lines.push("| quick-worker | DeepSeek V3 | Budget |");
-      lines.push("| auditor | Claude Sonnet 4.6 | Premium |");
-      lines.push("| docs-writer | DeepSeek V3 | Budget |");
-      lines.push("| db-analyst | Claude Sonnet 4.6 | Premium |");
-      lines.push("| researcher | Kimi K2.5 | Mid |");
-      lines.push("| architect | Claude Sonnet 4.6 | Premium |");
-      lines.push("| router | DeepSeek V3 | Budget |");
-      lines.push("| fallback-worker | Qwen 3.5 (local) | Free |");
-      lines.push("| planner | Claude Sonnet 4.6 | Premium |");
-      lines.push("| reviewer | Claude Sonnet 4.6 | Premium |");
-      lines.push("| worker | Claude Sonnet 4.6 | Premium |");
+      for (const m of AGENT_MODELS) {
+        lines.push(`| ${m.agent} | ${m.model} | ${costTierFor(m.model)} |`);
+      }
+      lines.push("");
+      lines.push("Session default: github-copilot/claude-sonnet-4.6 (Ctrl+1). See /tier for the switching ladder.");
       lines.push("");
       lines.push("### Local Models (Ollama)");
       lines.push("| Model | Size | Best For |");

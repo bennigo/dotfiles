@@ -214,10 +214,10 @@ function recommendModel(profile: ProjectProfile | null, cwd: string): {
   // Known production projects → always Sonnet
   if (PREMIUM_PROJECTS.some((p) => cwd.includes(p))) {
     return {
-      model: "claude-sonnet-4.6",
+      model: "claude-sonnet-5",
       provider: "github-copilot",
-      modelName: "Claude Sonnet 4.6",
-      reasoning: "Production/work project — use the most capable model. Copilot subscription means no per-token cost.",
+      modelName: "Claude Sonnet 5",
+      reasoning: "Production/work project — use a top model. Copilot subscription means no per-token cost.",
     };
   }
 
@@ -233,9 +233,9 @@ function recommendModel(profile: ProjectProfile | null, cwd: string): {
 
   if (!profile) {
     return {
-      model: "claude-sonnet-4.6",
+      model: "claude-sonnet-5",
       provider: "github-copilot",
-      modelName: "Claude Sonnet 4.6",
+      modelName: "Claude Sonnet 5",
       reasoning: "Couldn't analyze project — defaulting to Sonnet to be safe.",
     };
   }
@@ -250,16 +250,16 @@ function recommendModel(profile: ProjectProfile | null, cwd: string): {
       };
     case "medium":
       return {
-        model: "claude-sonnet-4.6",
+        model: "claude-sonnet-5",
         provider: "github-copilot",
-        modelName: "Claude Sonnet 4.6",
+        modelName: "Claude Sonnet 5",
         reasoning: `Medium project (${profile.fileCount} files, ${profile.totalLines} LOC, ${profile.languages.size} languages). Sonnet gives better accuracy for multi-file work — and it's subscription ($0 marginal).`,
       };
     case "complex":
       return {
-        model: "claude-sonnet-4.6",
+        model: "claude-sonnet-5",
         provider: "github-copilot",
-        modelName: "Claude Sonnet 4.6",
+        modelName: "Claude Sonnet 5",
         reasoning: `Complex project (${profile.fileCount} files, ${profile.totalLines} LOC, ${profile.languages.size} languages${profile.hasDatabase ? ", has database" : ""}${profile.isMonorepo ? ", monorepo" : ""}). Definitely Sonnet.`,
       };
   }
@@ -288,7 +288,7 @@ export default function (pi: ExtensionAPI) {
     const rec = recommendModel(profile, cwd);
     lastRecommendation = rec;
 
-    // Notify if recommendation differs from the default (Sonnet 4.6)
+    // Notify if recommendation differs from the default (Sonnet 5)
     if (rec.model === "deepseek-flash") {
       ctx.ui.notify(
         `Simple/familiar project — DeepSeek Flash is a fine cheap pick here (Ctrl+2). Sonnet (Ctrl+1) is free. /context-model for details.`,

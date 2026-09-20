@@ -105,7 +105,7 @@ duplication; existing `CLAUDE.md` hierarchy works as-is.
 ## Usage
 
 ```bash
-pi                              # Interactive TUI (default provider: google)
+pi                              # Interactive TUI (default: github-copilot/claude-sonnet-5)
 pi --provider anthropic         # Override provider
 pi -p "explain this file"       # Print mode (non-interactive)
 pi --continue                   # Resume last session
@@ -118,6 +118,15 @@ pi list                         # List installed extensions
 /login                          # OAuth for Claude Pro/Max etc.
 /model     or Ctrl+L            # Switch model mid-session
 Ctrl+P                          # Cycle favorite models
+Ctrl+1                          # Sonnet 5 (Copilot, $0) — session default
+Ctrl+2                          # DeepSeek V4.1 Flash (cheap paid) — alternative default
+Ctrl+3                          # DeepSeek V4 Pro (paid) — special occasions
+Ctrl+4                          # GLM-5.3-Highspeed (z.ai, $0) — strong reasoning
+Ctrl+5                          # Kimi K3 1M (subscription, $0) — biggest context
+Ctrl+6                          # GLM-5.3 flagship (z.ai, paid) — when Highspeed isn't enough
+/tier                           # Show the cost-aware tier ladder (see extensions/model-tiers.ts)
+/quota                          # Copilot quota fallback state; /quota restore|clear
+                                #   (auto-switches to DeepSeek Flash on Copilot 402/429)
 /tree                           # Navigate session branch tree
 /export                         # Export session to HTML
 /share                          # Upload session to GitHub gist
@@ -134,8 +143,8 @@ Alt+Enter                       # Send follow-up (waits for agent)
 
 | File | Managed by | Purpose |
 |------|-----------|---------|
-| `settings.json` | stow | Default provider/model, skills, thinking level |
-| `models.json` | stow | Custom provider definitions (kimi-coding subscription = default, kimi-cn PAYG, deepseek, ollama, google, openrouter) |
+| `settings.json` | stow | Default provider/model (github-copilot/claude-sonnet-5), skills, thinking level |
+| `models.json` | stow | Custom provider definitions (kimi-coding subscription, kimi-cn PAYG, deepseek, ollama, google, openrouter, zai) |
 | `auth.json` | **runtime** (gitignored) | API keys and OAuth tokens |
 | `sessions/` | **runtime** (gitignored) | Session JSONL files |
 
@@ -197,4 +206,4 @@ For pure coding, Pi's lean profile may be preferable.
 
 ---
 
-*Last reviewed: 2026-05-14*
+*Last reviewed: 2026-09-19*

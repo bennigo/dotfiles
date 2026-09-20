@@ -116,10 +116,10 @@ function findLocalModel(ctx: any) {
 }
 
 // Cloud models to restore when online and stuck on a local one (first
-// registered wins). Mirrors settings.json's default (Copilot Sonnet 4.6,
+// registered wins). Mirrors settings.json's default (Copilot Sonnet 5,
 // subscription = $0 marginal) with cheap DeepSeek Flash as fallback.
 const CLOUD_RESTORE = [
-  { provider: "github-copilot", id: "claude-sonnet-4.6" },
+  { provider: "github-copilot", id: "claude-sonnet-5" },
   { provider: "deepseek", id: "deepseek-flash" },
 ];
 

@@ -33,7 +33,7 @@
         },
         {
           "id": "k3",
-          "name": "Kimi K3 (1M — needs Allegretto+; 429s on Moderato)",
+          "name": "Kimi K3 (1M — best Kimi model, works on this subscription)",
           "reasoning": true,
           "input": [
             "text"

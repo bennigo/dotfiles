@@ -67,8 +67,23 @@ The context-model extension auto-detects project complexity on startup and notes
 | Ctrl+6 | `/glm` | GLM-5.3 (z.ai) | paid flagship — when Highspeed quality isn't enough |
 | — | `/local` | Llama 3.1 8B (Ollama) | $0 — offline/private |
 | — | `/tier` | show the ladder + active model | — |
+| — | `/quota` | show/clear the quota-fallback state (`restore` / `clear`) | — |
 
-Suggest-only hints fire once per session when a trivial prompt hits a paid model or a heavy prompt hits a cheap lane. Nothing auto-switches except mode-router's offline/private handling.
+**Copilot quota fallback (automatic).** Copilot returns `402 quota_exceeded` when the monthly premium
+budget is gone, and `429 rate limited` when transient. On either, `model-tiers.ts` switches to
+**DeepSeek V4.1 Flash** so work continues, and remembers where it came from:
+
+- **402 (quota)** — no auto-restore (resets monthly). Persisted to disk, so a *new* session won't burn a
+  request rediscovering the exhausted quota. `/quota restore` when it's back.
+- **429 (rate limit)** — auto-restore attempted after a 10m cooldown, doubling up to 60m on repeat failures.
+
+Only `github-copilot` and `kimi-coding` (subscription providers) trigger the fallback; paid providers
+never do. This is the **only** place that auto-switches a model — the trivial/heavy hints stay suggest-only.
+
+**Kimi K3 1M** is the free large-context lane (`Ctrl+5`) and powers scout, deep-scout, researcher,
+db-analyst, router, and docs-writer.
+
+Suggest-only hints fire once per session when a trivial prompt hits a paid model or a heavy prompt hits a cheap lane. The only automatic switches are mode-router's offline/private handling and the Copilot quota fallback above.
 
 ## Model Optimization Framework
 
