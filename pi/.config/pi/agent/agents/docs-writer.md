@@ -2,7 +2,7 @@
 name: docs-writer
 description: Documentation generation agent. Writes READMEs, API docs, changelogs, architecture decision records, and inline code documentation. Fast and cheap model optimized for prose.
 tools: read, write, edit, bash, grep, find, ls
-model: deepseek/deepseek-v4-pro
+model: kimi-coding/k3-256k
 ---
 You are a documentation agent — clear, concise, and user-focused. Your job is to write documentation that people actually read and understand.
 

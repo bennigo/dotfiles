@@ -4,24 +4,24 @@
  * Auto-detects project complexity and suggests the optimal default model.
  *
  * Heuristics:
- *   Simple project (<30 files, single language) → DeepSeek V3 (fast, cheap)
- *   Complex project (50+ files, multi-language) → Claude Sonnet (capable)
+ *   Simple project (<30 files, single language) → DeepSeek Flash (very cheap)
+ *   Complex project (50+ files, multi-language) → Claude Sonnet (capable, $0 subscription)
  *   Known projects → use learned preferences
  *   Database/security projects → always Sonnet
  *
  * Model economics:
- *   Copilot Sonnet is subscription-based (no per-token cost to you)
- *   DeepSeek V3 has per-token pricing but is very cheap
- *   The agent system already routes heavy work to Sonnet regardless
+ *   Copilot Sonnet/Opus are subscription-based (no per-token cost to you)
+ *   DeepSeek Flash is per-token but very cheap (~$0.30/$1.20 per M) — sanctioned
+ *     alternative default for familiar codebases and high-volume work
+ *   The agent system routes heavy subagent work to free tiers (Kimi K3, Copilot)
  *
  * So for direct chat sessions where YOU are talking to the model:
  *   - Sonnet is the safe default (already paid for)
- *   - DeepSeek is better for quick/simple one-off questions
+ *   - Flash is fine for quick/simple/familiar work (cheap, fast)
  *
  * Commands:
  *   /context-model  — analyze current project and recommend model
- *   /fast           — suggestion to switch to budget model
- *   /deep           — suggestion to switch to premium model
+ *   /fast, /pro, /deep, /free, /std, /local, /tier — see model-tiers.ts (Ctrl+1..5)
  */
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
@@ -214,27 +214,27 @@ function recommendModel(profile: ProjectProfile | null, cwd: string): {
   // Known production projects → always Sonnet
   if (PREMIUM_PROJECTS.some((p) => cwd.includes(p))) {
     return {
-      model: "claude-sonnet-4-6",
-      provider: "copilot",
+      model: "claude-sonnet-4.6",
+      provider: "github-copilot",
       modelName: "Claude Sonnet 4.6",
       reasoning: "Production/work project — use the most capable model. Copilot subscription means no per-token cost.",
     };
   }
 
-  // Known familiar projects → DeepSeek is fine
+  // Known familiar projects → DeepSeek Flash is fine
   if (FAMILIAR_PROJECTS.includes(basename)) {
     return {
-      model: "deepseek-v4-pro",
+      model: "deepseek-flash",
       provider: "deepseek",
-      modelName: "DeepSeek V4 Pro",
-      reasoning: "You know this codebase intimately. DeepSeek is fast and sufficient for config/docs changes.",
+      modelName: "DeepSeek V4.1 Flash",
+      reasoning: "You know this codebase intimately. Flash is very cheap and sufficient for config/docs changes. Ctrl+1 for free Sonnet.",
     };
   }
 
   if (!profile) {
     return {
-      model: "claude-sonnet-4-6",
-      provider: "copilot",
+      model: "claude-sonnet-4.6",
+      provider: "github-copilot",
       modelName: "Claude Sonnet 4.6",
       reasoning: "Couldn't analyze project — defaulting to Sonnet to be safe.",
     };
@@ -243,22 +243,22 @@ function recommendModel(profile: ProjectProfile | null, cwd: string): {
   switch (profile.complexity) {
     case "simple":
       return {
-        model: "deepseek-v4-pro",
+        model: "deepseek-flash",
         provider: "deepseek",
-        modelName: "DeepSeek V4 Pro",
-        reasoning: `Simple project (${profile.fileCount} files, ${profile.totalLines} LOC, ${profile.languages.size} language(s)). DeepSeek is fast and sufficient.`,
+        modelName: "DeepSeek V4.1 Flash",
+        reasoning: `Simple project (${profile.fileCount} files, ${profile.totalLines} LOC, ${profile.languages.size} language(s)). Flash is very cheap and sufficient. Ctrl+1 for free Sonnet.`,
       };
     case "medium":
       return {
-        model: "claude-sonnet-4-6",
-        provider: "copilot",
+        model: "claude-sonnet-4.6",
+        provider: "github-copilot",
         modelName: "Claude Sonnet 4.6",
-        reasoning: `Medium project (${profile.fileCount} files, ${profile.totalLines} LOC, ${profile.languages.size} languages). Sonnet gives better accuracy for multi-file work.`,
+        reasoning: `Medium project (${profile.fileCount} files, ${profile.totalLines} LOC, ${profile.languages.size} languages). Sonnet gives better accuracy for multi-file work — and it's subscription ($0 marginal).`,
       };
     case "complex":
       return {
-        model: "claude-sonnet-4-6",
-        provider: "copilot",
+        model: "claude-sonnet-4.6",
+        provider: "github-copilot",
         modelName: "Claude Sonnet 4.6",
         reasoning: `Complex project (${profile.fileCount} files, ${profile.totalLines} LOC, ${profile.languages.size} languages${profile.hasDatabase ? ", has database" : ""}${profile.isMonorepo ? ", monorepo" : ""}). Definitely Sonnet.`,
       };
@@ -289,9 +289,9 @@ export default function (pi: ExtensionAPI) {
     lastRecommendation = rec;
 
     // Notify if recommendation differs from the default (Sonnet 4.6)
-    if (rec.model === "deepseek-v4-pro") {
+    if (rec.model === "deepseek-flash") {
       ctx.ui.notify(
-        `Simple project detected — consider /fast to switch to DeepSeek for speed. Run /context-model for details.`,
+        `Simple/familiar project — DeepSeek Flash is a fine cheap pick here (Ctrl+2). Sonnet (Ctrl+1) is free. /context-model for details.`,
         "info"
       );
     }

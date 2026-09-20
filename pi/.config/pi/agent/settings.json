@@ -3,7 +3,8 @@
     "./extensions/bgo-toolkit",
     "./extensions/context-model.ts",
     "./extensions/model-discovery.ts",
-    "./extensions/mode-router.ts"
+    "./extensions/mode-router.ts",
+    "./extensions/model-tiers.ts"
   ],
   "skills": [
     "~/.claude/skills"
@@ -30,8 +31,8 @@
     "npm:@gotgenes/pi-permission-system"
   ],
   "lastChangelogVersion": "0.85.1",
-  "defaultProvider": "deepseek",
-  "defaultModel": "deepseek-v4-flash",
+  "defaultProvider": "github-copilot",
+  "defaultModel": "claude-sonnet-4.6",
   "defaultThinkingLevel": "high",
   "theme": "dark",
   "hideThinkingBlock": true,

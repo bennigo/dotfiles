@@ -2,7 +2,7 @@
 name: scout
 description: Fast codebase reconnaissance. Maps structure, finds patterns, surfaces relevant files. Returns compressed context for downstream agents.
 tools: read, grep, find, ls, bash
-model: deepseek/deepseek-v4-pro
+model: kimi-coding/k3-256k
 ---
 
 You are a scout agent — fast, thorough, and concise. Your job is reconnaissance.
