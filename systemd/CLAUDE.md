@@ -87,6 +87,66 @@ systemctl --user start  herdr.service     # or now
 Note the service **must** run through a login shell (`/bin/zsh -lc`) — see the comment in the
 unit: `systemctl --user` has a bare `PATH` and no API keys, and `~/.zshenv` is what supplies both.
 
+> The 18:51 verification above was recorded with auto-resume **on** (herdr's default). See
+> `[session] resume_agents_on_restore` below for turning that off.
+
+### `[session] resume_agents_on_restore` — don't auto-reopen conversations
+
+By default a restore does not merely re-create panes: it **re-launches each agent with its
+recorded conversation**. A reboot therefore silently reopens all 11 agents (and every MCP roster
+they start) whether or not you wanted to return to that work.
+
+Set in `herdr/config.toml`:
+
+```toml
+[session]
+resume_agents_on_restore = false
+```
+
+Agent panes then come back as **plain shells in the correct cwd**. herdr still records the
+session identity, so the conversation stays reachable on demand.
+
+Verification notes (this key appears in no offline doc — it was found in the herdr binary and
+confirmed against the schema):
+```bash
+herdr config check                  # validates config.toml; reports "config: ok"
+herdr server reload-config          # applies to a RUNNING server, no restart needed
+```
+- The table is **`[session]`**, and it accepts exactly `resume_agents_on_restore`. Sibling-looking
+  names such as `default_shell` and `scrollback_limit_bytes` are rejected there
+  (`unknown config key session.…`), so do not assume other `[session]` keys exist.
+- It is a **boolean** — a string value is a TOML parse error, not a silent coercion.
+- It affects the *next* restore, never the current session, so `reload-config` is safe.
+
+### `herdr-resume-hints` — the recovery commands
+
+With auto-resume off you need to know *what* to reopen. `local_bin/.local/bin/herdr-resume-hints`
+reads `~/.config/herdr/session.json` and prints a ready-to-run command per agent pane:
+
+```bash
+herdr-resume-hints              # grouped listing (workspace, tab, cwd)
+herdr-resume-hints --commands   # bare `cd … && …` lines, pipeable
+herdr-resume-hints --snapshot   # save to ~/.local/state/herdr/resume-hints.txt, then print
+herdr-resume-hints --file PATH  # read a given session.json OR a rendered snapshot
+```
+
+Resume syntax is verified per tool: `claude --resume <uuid>` (herdr stores `kind=id`) and
+`pi --session <transcript-path>` (herdr stores `kind=path`). Unknown agent/kind pairs are printed
+as a bracketed note rather than a command that would fail.
+
+**Why `--snapshot` exists.** `agent_session` records are only guaranteed to exist while the agents
+are running — herdr owns that file and may rewrite it on restore. A snapshot taken *before*
+shutdown survives, so the commands are still available afterwards. To automate it, add an
+`ExecStop` ahead of the server stop:
+
+```ini
+ExecStop=%h/.local/bin/herdr-resume-hints --snapshot
+ExecStop=%h/.local/bin/herdr server stop
+```
+
+(Multiple `ExecStop=` lines run in order, so the snapshot is taken while the session is still
+intact.)
+
 ## Common Operations
 
 ```bash

@@ -186,3 +186,24 @@ description = "harpoon: edit pin list (nvim)"
 # ranger refuses its kitty backend unless TERM contains "kitty" (see the
 # `figview` wrapper / TERM=xterm-kitty override).
 kitty_graphics = true
+
+[session]
+# Do NOT auto-resume agents when restoring a saved session.
+#
+# By default herdr restores every saved pane and re-launches the agent in it
+# with its recorded conversation (claude --resume <uuid>, pi --session <path>).
+# That means a reboot silently reopens all 11 agents — each starting its own
+# full MCP roster — whether or not you wanted to go back to that work yet.
+#
+# With this false, agent panes come back as plain shells in the right cwd, and
+# you choose what to reopen. herdr still records the session identity, so
+# `herdr-resume-hints` prints the exact command for each one:
+#
+#     claude --resume edb9f04b-e581-4551-8495-3022fc9e1f49
+#     pi --session /home/bgo/.local/share/pi/sessions/<ts>_<id>.jsonl
+#
+# Verified against the schema (herdr config check): the key is `session.
+# resume_agents_on_restore`, it takes a boolean, and it is the ONLY key in the
+# [session] table. Applies from the next restore; live servers pick it up with
+# `herdr server reload-config`.
+resume_agents_on_restore = false

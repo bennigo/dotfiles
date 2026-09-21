@@ -1,0 +1,139 @@
+#!/bin/bash
+## Herdr // print resume commands for saved agent panes // ⏯ ##
+#
+# herdr restores every saved pane. With `[session] resume_agents_on_restore =
+# false` in ~/.config/herdr/config.toml the claude/pi panes come back as plain
+# shells, so a conversation is NOT reopened automatically — but herdr still
+# records which session each pane held (session.json → pane.agent_session).
+# This prints the exact command that brings each one back.
+#
+#   herdr-resume-hints                    readable listing for the live session
+#   herdr-resume-hints --commands         bare `cd … && …` lines only (pipeable)
+#   herdr-resume-hints --snapshot         save to ~/.local/state/herdr/resume-hints.txt
+#   herdr-resume-hints --file PATH        read a given session.json or snapshot
+#
+# Why --snapshot exists: session.json is herdr's own state and may be rewritten
+# on restore (the agent_session records are only guaranteed to exist while the
+# agents are running). A snapshot taken before shutdown survives that, so the
+# recovery commands are still available on the other side of a reboot. Wire it
+# into herdr.service as an ExecStop if you want it automatic.
+#
+# Resume syntax (verified against each tool's --help):
+#   claude  --resume <session-id>          UUID
+#   pi      --session <path|id>            herdr records the transcript path
+set -euo pipefail
+
+SESSION_JSON="${HERDR_SESSION_JSON:-$HOME/.config/herdr/session.json}"
+SNAPSHOT="$HOME/.local/state/herdr/resume-hints.txt"
+MODE=listing
+FILE="$SESSION_JSON"
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --commands) MODE=commands ;;
+        --snapshot) MODE=snapshot ;;
+        --file)     shift; FILE="${1:?--file needs a path}" ;;
+        -h|--help)  sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        *) echo "unknown option: $1" >&2; exit 2 ;;
+    esac
+    shift
+done
+
+if [ ! -f "$FILE" ]; then
+    echo "no session file at $FILE" >&2
+    echo "(herdr writes it once the server is running)" >&2
+    exit 1
+fi
+
+render() {   # $1 = json path, $2 = mode (listing|commands)
+    python3 - "$1" "$2" <<'PY'
+import json, sys
+
+path, mode = sys.argv[1], sys.argv[2]
+
+try:
+    data = json.load(open(path))
+except Exception:
+    # Not JSON: already a rendered snapshot, pass straight through.
+    sys.stdout.write(open(path).read())
+    raise SystemExit(0)
+
+ws_list = data.get('workspaces') or []
+
+def resume_cmd(agent, kind, value):
+    if agent == 'claude' and kind == 'id':
+        return f'claude --resume {value}'
+    if agent == 'pi' and kind == 'path':
+        return f'pi --session {value}'
+    # Unknown agent or shape: say so rather than print a command that may fail.
+    return None
+
+rows = []
+for w in ws_list:
+    for t in (w.get('tabs') or []):
+        panes = t.get('panes') or {}
+        items = panes.items() if isinstance(panes, dict) else enumerate(panes)
+        for num, p in items:
+            if not isinstance(p, dict):
+                continue
+            a = p.get('agent_session')
+            if not isinstance(a, dict):
+                continue
+            cwd = p.get('cwd') or w.get('identity_cwd') or ''
+            rows.append({
+                'ws': w.get('id', '?'),
+                # Unnamed tabs fall back to the pane number so the row is still
+                # identifiable in the sidebar.
+                'tab': t.get('custom_name') or f'pane {num}',
+                'agent': a.get('agent') or '?',
+                'kind': a.get('kind') or '?',
+                'value': a.get('value') or '',
+                'cwd': cwd,
+            })
+
+if mode == 'commands':
+    for r in rows:
+        cmd = resume_cmd(r['agent'], r['kind'], r['value'])
+        if cmd:
+            print(f"cd {r['cwd']} && {cmd}")
+    raise SystemExit(0)
+
+if not rows:
+    print(f"no agent panes recorded in {path}")
+    raise SystemExit(0)
+
+print(f"{len(ws_list)} workspaces, {len(rows)} agent pane(s)")
+print(f"source: {path}")
+print()
+last_ws = None
+for r in rows:
+    if r['ws'] != last_ws:
+        print(f"{r['ws']}  ({r['cwd'] or 'no cwd'})")
+        last_ws = r['ws']
+    cmd = resume_cmd(r['agent'], r['kind'], r['value'])
+    label = f"[{r['tab']}]".ljust(14)
+    if cmd:
+        print(f"    {label} {cmd}")
+    else:
+        print(f"    {label} [{r['agent']} {r['kind']}={r['value']}]  <- unknown resume syntax")
+PY
+}
+
+case "$MODE" in
+    snapshot)
+        mkdir -p "$(dirname "$SNAPSHOT")"
+        {
+            echo "# herdr resume hints — saved $(date -Is)"
+            echo "# regenerate: herdr-resume-hints --snapshot    consume: herdr-resume-hints --commands"
+            echo
+            render "$FILE" listing
+            echo
+            echo "# --- commands ---"
+            render "$FILE" commands
+        } > "$SNAPSHOT"
+        echo "saved -> $SNAPSHOT"
+        render "$FILE" listing
+        ;;
+    commands) render "$FILE" commands ;;
+    *)        render "$FILE" listing ;;
+esac

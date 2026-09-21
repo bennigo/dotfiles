@@ -24,7 +24,16 @@ PartOf=graphical-session.target
 Type=simple
 ExecStart=/bin/zsh -lc 'exec %h/.local/bin/herdr server'
 
-# Shut down through herdr's own socket API so panes are closed cleanly and
+# Take the resume-hints snapshot BEFORE stopping the server, while the agents
+# are still running — `agent_session` records are only guaranteed to exist then,
+# and herdr owns session.json and may rewrite it during a restore.
+# Multiple ExecStop= lines run in order, so ordering here is load-bearing.
+# With [session] resume_agents_on_restore=false (see herdr/config.toml), restored
+# panes come back as plain shells, so this snapshot is how you find out which
+# conversation each pane held.
+ExecStop=%h/.local/bin/herdr-resume-hints --snapshot
+
+# Then shut down through herdr's own socket API so panes are closed cleanly and
 # session.json is flushed before the process exits. If it fails, systemd still
 # terminates the unit after TimeoutStopSec.
 ExecStop=%h/.local/bin/herdr server stop
