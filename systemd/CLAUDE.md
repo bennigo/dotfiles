@@ -75,18 +75,48 @@ herdr pane list         # every pane, with cwd and detected agent
 grep -E 'persist.restore|persist.save' ~/.config/herdr/herdr-server.log | tail
 ```
 
-**Startup target.** The unit is `WantedBy=graphical-session.target` (not `default.target` as
-`tmux.service` uses) because a restore is eager — it pulls 45 shell/agent spawns plus 11 agents
-and their MCP servers *before* you can use the desktop, which would contend with sway coming up.
-Subscribe it with:
-```bash
-systemctl --user daemon-reload
-systemctl --user enable herdr.service     # starts with the next graphical session
-systemctl --user start  herdr.service     # or now
+**Startup target — `default.target`, not `graphical-session.target`.**
+
+Originally written as `WantedBy=graphical-session.target` to keep the restore out of login. That
+does **not work on this machine**: there is no user-session systemd target. sway is launched by
+`/usr/local/bin/sway-debug` (which is only `exec sway --unsupported-gpu`), nothing runs
+`systemctl --user start graphical-session.target`, and the target is therefore permanently
+`inactive`. Confirmed 2026-09-21:
+
+```text
+graphical-session.target      active=inactive  enabled=static
+mako-watcher.path             active=inactive          <- never ran, same root cause
+sway-session.target           active=inactive  enabled=not-found
 ```
+
+Anything `WantedBy=graphical-session.target` silently never starts — which is why `herdr.service`
+did not autostart on the first test, and why `mako-watcher.path` has never worked. Using
+`default.target` makes it a sibling of `claude-imports.service` / `tmux.service`, which do start.
+
+At login is cheap enough here because `resume_agents_on_restore=false` means a restore brings back
+only shells in their cwds, not 11 agents each starting an MCP roster.
+
+**If you do want true "after the desktop"**, fix the root cause rather than this unit — add to
+`sway/.config/sway/config` (near the other startup `exec` lines):
+
+```text
+exec --no-startup-id systemctl --user start graphical-session.target
+```
+
+That activates the target, pulls in everything wanted by it (herdr *and* mako-watcher.path), and
+restores the intended `After=`/`PartOf=` semantics. Not applied yet — it is a wider behavioural
+change than the herdr fix, so it was left as a deliberate follow-up.
+
 Note the service **must** run through a login shell (`/bin/zsh -lc`) — see the comment in the
 unit: `systemctl --user` has a bare `PATH` and no API keys, and `~/.zshenv` is what supplies both.
 
+> ⚠ **Stow + systemd hazard.** `systemctl --user disable <unit>` deletes the **stow symlink** in
+> `~/.config/systemd/user/`, not just the `.wants/` link — after which the unit reports
+> `not-found` and `enable` fails with *"Unit … does not exist"*. Always **stow first, then
+> enable**, and after any `disable` re-run `stow -R --no-folding systemd` before re-enabling.
+> Hit for real on 2026-09-21 while moving this unit from `graphical-session.target` to
+> `default.target`.
+>
 > The 18:51 verification above was recorded with auto-resume **on** (herdr's default). See
 > `[session] resume_agents_on_restore` below for turning that off.
 

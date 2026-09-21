@@ -3,14 +3,22 @@ Description=herdr server (persistent agent workspace manager)
 # No Documentation= line: herdr ships no man page, and `herdr --help` is not a
 # valid URI for that key (systemd-analyze rejects it). See `herdr --help`
 # directly, plus systemd/CLAUDE.md → "herdr persistence".
-# Starts with the graphical session, not at login.
 #
-# A restore is eager: it respawns every saved pane at once (45 panes here, of
-# which 11 are agents). Pulling that in front of the desktop would make login
-# contend with 45 shell spawns and 11 agents starting their MCP servers. We are
-# fine waiting for sway — the workspace is there as soon as a terminal is.
-After=graphical-session.target
-PartOf=graphical-session.target
+# WantedBy=default.target, NOT graphical-session.target.
+#
+# This machine has no user-session systemd target: sway is launched by
+# /usr/local/bin/sway-debug (just `exec sway --unsupported-gpu`), nothing runs
+# `systemctl --user start graphical-session.target`, and the unit is therefore
+# never activated. Confirmed 2026-09-21: `graphical-session.target` inactive,
+# and `mako-watcher.path` — also WantedBy=graphical-session.target — has never
+# run as a result. So an `After=/PartOf=graphical-session.target` here would be
+# an inert ordering hint and herdr would simply never start.
+#
+# Starting at login is now cheap enough: with
+# `[session] resume_agents_on_restore=false` a restore brings back only plain
+# shells in their cwds, not 11 agents each starting a full MCP roster. (If you
+# later want true "after the desktop", the fix is to make sway start
+# graphical-session.target — see systemd/CLAUDE.md — not to change this line.)
 
 [Service]
 # MUST run through a login shell.
@@ -46,4 +54,4 @@ KillMode=mixed
 TimeoutStopSec=30
 
 [Install]
-WantedBy=graphical-session.target
+WantedBy=default.target
