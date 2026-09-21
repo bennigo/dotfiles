@@ -13,22 +13,36 @@
 
 # Network filesystems added from dotfiles configuration
 #
-granit.vedur.is:/mnt/sdc1/sk2  /mnt_data/sildata  nfs  soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10  0 0
-granit.vedur.is:/mnt/sdd1/sil/trem  /mnt_data/tremdata  nfs  soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10  0 0
+# All of these are reached over the Cisco AnyConnect tunnel (10.170.10.10 etc),
+# so the moment vpnagentd dies they point at a black hole. Hardening:
+#   soft,timeo=50,retrans=2   fail the RPC after ~10s instead of blocking forever
+#   nofail,_netdev            never block boot / shutdown
+#   x-systemd.automount       only mount on first access
+#   x-systemd.idle-timeout    drop an idle mount so a stale dead mount does not
+#                             linger; the next access retries from scratch
+# Reviewed 2026-09-20 after the freeze. Nothing on the box recursively scans
+# /mnt_data (syncthing syncs ~/Sync and ~/meeting-audio/inbox only), so these
+# were not the cause — the last log line before the wedge was an NFS timeout to
+# granit.vedur.is, i.e. a symptom of the memory exhaustion, not its origin.
+#
+granit.vedur.is:/mnt/sdc1/sk2  /mnt_data/sildata  nfs  soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.idle-timeout=120,x-systemd.mount-timeout=10  0 0
+granit.vedur.is:/mnt/sdd1/sil/trem  /mnt_data/tremdata  nfs  soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.idle-timeout=120,x-systemd.mount-timeout=10  0 0
 #rawdata.vedur.is:/exports/gpsdata /mnt_data/rawgpsdata nfs defaults 0 0
-ananas.vedur.is:/gps/gpsdata  /mnt_data/rawgpsdata  nfs  mountvers=3,auto,soft,timeo=50,retrans=2,nofail,nolock,tcp,ro,_netdev,x-systemd.automount,x-systemd.mount-timeout=10  0 0
+ananas.vedur.is:/gps/gpsdata  /mnt_data/rawgpsdata  nfs  mountvers=3,auto,soft,timeo=50,retrans=2,nofail,nolock,tcp,ro,_netdev,x-systemd.automount,x-systemd.idle-timeout=120,x-systemd.mount-timeout=10  0 0
 
 # rawdata.vedur.is:/exports/extension_meters_data /mnt_data/extension_meters_data nfs defaults 0 0
 
-frumgogn02.vedur.is:/home/vmfrum/vmgogn01/frumgogn  /mnt_data/hytrodata  nfs  soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10  0 0
+frumgogn02.vedur.is:/home/vmfrum/vmgogn01/frumgogn  /mnt_data/hytrodata  nfs  soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.idle-timeout=120,x-systemd.mount-timeout=10  0 0
 # #gpsplot.vedur.is:/home/gpsops/rtklib-run/data /mnt_data/rtgpsdata nfs defaults 0 0
-rtk.vedur.is:/home/gpsops/rtklib-run/data  /mnt_data/rtgpsdata  nfs  soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10  0 0
+rtk.vedur.is:/home/gpsops/rtklib-run/data  /mnt_data/rtgpsdata  nfs  soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.idle-timeout=120,x-systemd.mount-timeout=10  0 0
 # 
 # gpsplot.vedur.is:/exports/gpstimes /mnt_data/gpsdata nfs defaults 0 0
-okada.vedur.is:/D/GMT/TOT/  /mnt_data/gpsdata  nfs  soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10  0 0
-gpsplot.vedur.is:/exports/share  /mnt_data/datashare  nfs  soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10  0 0
-gpsplot.vedur.is:/home/gpsops/gamit-times  /mnt_data/gps  nfs  soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10  0 0
-gpsplot.vedur.is:/home/gpsops/.gpsconfig  /mnt_data/gpsconfig  nfs  soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10  0 0
+okada.vedur.is:/D/GMT/TOT/  /mnt_data/gpsdata  nfs  soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.idle-timeout=120,x-systemd.mount-timeout=10  0 0
+okada.vedur.is:/D/GMT/  /mnt_data/gps_gmt_data  nfs  soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.idle-timeout=120,x-systemd.mount-timeout=10  0 0
+okada.vedur.is:/D/DATABASE  /mnt_data/gps_database  nfs  ro,relatime,vers=3,rsize=1048576,wsize=1048576,soft,fatal_neterrors=none,proto=tcp,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.idle-timeout=120,x-systemd.mount-timeout=10  0 0
+gpsplot.vedur.is:/exports/share  /mnt_data/datashare  nfs  soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.idle-timeout=120,x-systemd.mount-timeout=10  0 0
+gpsplot.vedur.is:/home/gpsops/gamit-times  /mnt_data/gps  nfs  soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.idle-timeout=120,x-systemd.mount-timeout=10  0 0
+gpsplot.vedur.is:/home/gpsops/.gpsconfig  /mnt_data/gpsconfig  nfs  soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.idle-timeout=120,x-systemd.mount-timeout=10  0 0
 
 #nas
 #//nas.vedur.is/export/joklar /mnt/joklar cifs credentials=/root/.smbcredentials,iocharset=utf8,sec=ntlm,_netdev,domain=vi 0 0

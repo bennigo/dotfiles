@@ -1,0 +1,23 @@
+# Deployed to: /etc/systemd/system/vpn-route-fix-watchdog.timer
+#
+# Was previously deployed by hand (created 2026-05-11) and not tracked in the
+# repo.
+
+[Unit]
+Description=Periodic re-apply of VPN local-route bypass
+
+[Timer]
+# Wait 30s after boot before first run, then every 30s thereafter.
+#
+# 30s is NOT arbitrary and should not be raised: vpnagentd is measured
+# rebuilding its iptables chain ~9,576 times per boot (~100/hour at peak, i.e.
+# roughly one rebuild every 36 seconds). The watchdog has to poll faster than
+# that to keep the local-subnet bypass in place. See system/CLAUDE.md.
+OnBootSec=30s
+OnUnitActiveSec=30s
+Unit=vpn-route-fix-watchdog.service
+# Don't fire missed events after wakeup — the running rules are what matter.
+Persistent=false
+
+[Install]
+WantedBy=timers.target

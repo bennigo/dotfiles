@@ -5,7 +5,7 @@
   systemd:
     daemon_reload: yes
 
-- name: enable udevmon  
+- name: enable udevmon
   systemd:
     name: udevmon
     enabled: yes
@@ -17,3 +17,6 @@
 
 - name: reload udev rules
   command: udevadm control --reload-rules
+
+- name: apply sysctl
+  command: sysctl --system

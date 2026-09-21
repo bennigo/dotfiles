@@ -14,7 +14,7 @@
     - "{{ playbook_dir }}/../system/etc/udevmon.yaml"
     - "{{ playbook_dir }}/../system/etc/zsh/zshenv"
     - "{{ playbook_dir }}/../system/etc/security/pam_env.conf"
-  notify: 
+  notify:
     - reload systemd
   tags: ["system", "config"]
 
@@ -30,7 +30,7 @@
     - enable udevmon
   tags: ["system", "systemd"]
 
-- name: Deploy modprobe configurations  
+- name: Deploy modprobe configurations
   copy:
     src: "{{ item }}"
     dest: "/etc/modprobe.d/{{ item | basename }}"
@@ -80,9 +80,11 @@
   tags: ["system", "suspend", "notify"]
 
 - name: Deploy suspend-failure notifier service unit
+  vars:
+    unit: suspend-failed-notify.service
   copy:
-    src: "{{ playbook_dir }}/../system/etc/systemd/system/suspend-failed-notify.service"
-    dest: /etc/systemd/system/suspend-failed-notify.service
+    src: "{{ playbook_dir }}/../system/etc/systemd/system/{{ unit }}"
+    dest: "/etc/systemd/system/{{ unit }}"
     owner: root
     group: root
     mode: '0644'
@@ -91,9 +93,11 @@
   tags: ["system", "suspend", "notify"]
 
 - name: Wire OnFailure drop-in into systemd-suspend.service
+  vars:
+    dropin: systemd-suspend.service.d/onfailure.conf
   copy:
-    src: "{{ playbook_dir }}/../system/etc/systemd/system/systemd-suspend.service.d/onfailure.conf"
-    dest: /etc/systemd/system/systemd-suspend.service.d/onfailure.conf
+    src: "{{ playbook_dir }}/../system/etc/systemd/system/{{ dropin }}"
+    dest: "/etc/systemd/system/{{ dropin }}"
     owner: root
     group: root
     mode: '0644'
@@ -136,6 +140,97 @@
     - resolv-fallback.timer
   tags: ["system", "vpn", "dns"]
 
+# ---------------------------------------------------------------------------
+# VPN local-route bypass
+#
+# The dispatcher script and its watchdog units were previously placed by hand
+# (~2026-05-11) and were not tracked by ansible, so a fresh bootstrap silently
+# left the VPN local-subnet bypass missing. Now deployed.
+# ---------------------------------------------------------------------------
+
+- name: Deploy VPN local-route bypass dispatcher script
+  vars:
+    nm_script: NetworkManager/dispatcher.d/99-fix-vpn-local-routes
+  copy:
+    src: "{{ playbook_dir }}/../system/etc/{{ nm_script }}"
+    dest: "/etc/{{ nm_script }}"
+    owner: root
+    group: root
+    mode: '0755'
+  tags: ["system", "vpn", "routes"]
+
+- name: Deploy VPN local-route watchdog units
+  copy:
+    src: "{{ playbook_dir }}/../system/etc/systemd/system/{{ item }}"
+    dest: "/etc/systemd/system/{{ item }}"
+    owner: root
+    group: root
+    mode: '0644'
+  loop:
+    - vpn-route-fix-watchdog.service
+    - vpn-route-fix-watchdog.timer
+  notify:
+    - reload systemd
+  tags: ["system", "vpn", "routes"]
+
+- name: Enable VPN local-route watchdog timer
+  systemd:
+    name: vpn-route-fix-watchdog.timer
+    enabled: true
+    state: started
+    daemon_reload: true
+  tags: ["system", "vpn", "routes"]
+
+# ---------------------------------------------------------------------------
+# Memory-pressure guards (added after the 2026-09-20 hard freeze)
+# ---------------------------------------------------------------------------
+
+- name: Deploy memory-pressure sysctl drop-ins
+  copy:
+    src: "{{ playbook_dir }}/../system/etc/sysctl.d/{{ item }}"
+    dest: "/etc/sysctl.d/{{ item }}"
+    owner: root
+    group: root
+    mode: '0644'
+  loop:
+    - 10-memory-headroom.conf
+    - 99-swappiness.conf
+  notify:
+    - apply sysctl
+  tags: ["system", "memory"]
+
+- name: Deploy user-slice memory guard drop-in
+  vars:
+    dropin: systemd/system/user-.slice.d/50-memory-guard.conf
+  copy:
+    src: "{{ playbook_dir }}/../system/etc/{{ dropin }}"
+    dest: "/etc/systemd/system/user-.slice.d/50-memory-guard.conf"
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - reload systemd
+  tags: ["system", "memory"]
+
+- name: Apply memory limits to the running user slice
+  # The drop-in only takes effect for slices started after a daemon-reload, so
+  # push the same limits onto the live slice too. Safe to re-run; the slice is
+  # far below MemoryHigh in normal use.
+  command: >-
+    systemctl set-property user-1000.slice
+    MemoryAccounting=yes MemoryHigh=46G MemoryMax=54G
+  changed_when: false
+  tags: ["system", "memory"]
+
+- name: Deploy sysstat collector config (adds MEM statistics)
+  copy:
+    src: "{{ playbook_dir }}/../system/etc/sysstat/sysstat"
+    dest: /etc/sysstat/sysstat
+    owner: root
+    group: root
+    mode: '0644'
+  tags: ["system", "sysstat"]
+
 - name: Deploy system files (fstab, hosts) with validation
   block:
     - name: Backup original fstab
@@ -144,19 +239,19 @@
         dest: /etc/fstab.backup.{{ ansible_date_time.epoch }}
         remote_src: yes
 
-    - name: Deploy custom fstab  
+    - name: Deploy custom fstab
       copy:
         src: "{{ playbook_dir }}/../system/etc/fstab"
         dest: /etc/fstab
         owner: root
-        group: root  
+        group: root
         mode: '0644'
         backup: yes
       when: deploy_custom_fstab | default(false)
 
     - name: Deploy custom hosts file
       copy:
-        src: "{{ playbook_dir }}/../system/etc/hosts"  
+        src: "{{ playbook_dir }}/../system/etc/hosts"
         dest: /etc/hosts
         owner: root
         group: root

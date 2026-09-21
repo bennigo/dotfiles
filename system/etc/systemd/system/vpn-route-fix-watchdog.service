@@ -1,0 +1,20 @@
+# Deployed to: /etc/systemd/system/vpn-route-fix-watchdog.service
+#
+# Was previously deployed by hand (created 2026-05-11) and not tracked in the
+# repo. Added to source control alongside its timer.
+#
+# NOTE: passes the `watchdog` action, not `vpn-up`. The dispatcher script's
+# `vpn-up` path runs a 5x retry loop with 3 s sleeps (12+ s of wall clock per
+# invocation) which is right for a real tunnel-up event but pure waste for a
+# periodic re-apply. `watchdog` does a single, quiet pass instead.
+
+[Unit]
+Description=Re-apply VPN local-route bypass rules (counters vpnagentd chain rebuilds)
+After=NetworkManager.service
+Wants=NetworkManager.service
+
+[Service]
+Type=oneshot
+# The dispatcher script no-ops when cscotun0 is absent and is idempotent
+# (iptables -C / ip route replace) when rules are already in place.
+ExecStart=/etc/NetworkManager/dispatcher.d/99-fix-vpn-local-routes cscotun0 watchdog

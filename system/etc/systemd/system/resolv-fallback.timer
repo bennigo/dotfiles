@@ -3,7 +3,11 @@ Description=Periodic VPN-DNS death-spiral check (catch-all for silent tunnel dea
 
 [Timer]
 OnBootSec=1min
-OnUnitActiveSec=30s
+# Was 30s. resolv-fallback.path is the real trigger — it fires the instant
+# /etc/resolv.conf is rewritten — so this timer only has to cover the case where
+# the tunnel dies *without* touching the file. 5min still catches that long
+# before anyone notices, and cuts 2,880 executions/day down to 288.
+OnUnitActiveSec=5min
 AccuracySec=5s
 Unit=resolv-fallback.service
 

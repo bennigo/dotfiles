@@ -202,11 +202,29 @@ sudo systemctl daemon-reload
 ```
 
 ### Cisco VPN Local Route Fix
-**File**: `etc/NetworkManager/dispatcher.d/99-fix-vpn-local-routes`
+**Files**: `etc/NetworkManager/dispatcher.d/99-fix-vpn-local-routes`,
+`etc/systemd/system/vpn-route-fix-watchdog.{service,timer}`
 
 Bypasses Cisco AnyConnect VPN hijacking of local subnet routes. Uses policy routing (table 200)
 + iptables RETURN rules with device whitelist (router, printer, etc.). Auto-retries to survive
 vpnagentd chain rebuilds.
+
+**The watchdog timer must stay at 30s.** `vpnagentd` rebuilds its iptables chains ~9,576 times
+per boot (~100/hour at peak — roughly one rebuild every 36s), so the poll has to be faster than
+that to keep the bypass in place. Do not slow it down.
+
+What *was* wasteful (fixed 2026-09-20): the timer invoked the script with the `vpn-up` action,
+which runs a 5x/3s retry loop — 12+ seconds of wall clock, plus 5 journal lines, every 30 seconds
+(~14k log entries/day; a large part of why the journal had reached 4 GB). The timer now passes a
+`watchdog` action that does a **single quiet pass**, and `apply_fixes()` only logs when the rules
+actually needed changing. The 5x retry loop still runs for real NetworkManager `vpn-up` events,
+where the post-connect rebuild burst makes it worthwhile.
+
+Verify the change is behaving:
+```bash
+# should produce NO output when the rules are already correct
+sudo journalctl -t vpn-route-fix --since "-10min"
+```
 
 ### Cisco VPN DNS Death-Spiral Fix
 
@@ -226,8 +244,8 @@ second, only causes churn). When the tunnel is **down** (no `cscotun0` carrier) 
 entries. Idempotent. Driven by **both**:
 - `resolv-fallback.path` — `PathModified=/etc/resolv.conf`, instant reaction when the file
   is rewritten (e.g. NM rewrites it on the drop).
-- `resolv-fallback.timer` — every 30s, the catch-all for a *silent* tunnel death where
-  nothing rewrites the file (heals within 30s).
+- `resolv-fallback.timer` — every **5min** (was 30s until 2026-09-20; `.path` is the real
+  trigger, so this only has to cover a *silent* tunnel death where nothing rewrites the file).
 
 Deployed by Ansible `system_files` role (tags: `vpn`,`dns`). Manual deploy:
 ```bash
@@ -239,6 +257,104 @@ sudo systemctl enable --now resolv-fallback.path resolv-fallback.timer
 Note: `systemd-resolved`'s occasional boot crash-loop ("start operation timed out") is a
 separate, transient race — `systemctl start systemd-resolved` recovers it; it is not part
 of this fix.
+
+## Memory Pressure Guards (2026-09-20 hard freeze)
+
+**What happened.** The machine hard-wedged for ~3 hours and had to be power-cycled.
+Reconstructed from the previous boot's journal and sysstat:
+
+| Time | Event |
+|---|---|
+| 13:16:58 | Resumed from suspend; `nvidia-uvm-reload.service` failed (`nvidia_uvm is in use`) |
+| 13:18:04 | Swap already exhausted — `Free swap = 205864kB` of 8.4 GB |
+| 13:35:45 | Kernel OOM killer: 2× `chrome` |
+| 13:41:23 | Last sysstat sample: **0.14% idle, 89% kernel time** — reclaim storm |
+| 13:41:24 | Kernel OOM killer: `spotify` + `chrome`. journald journal corrupted |
+| 13:46:42 | `systemd-udevd` / `systemd-journald` / `snapd` all **watchdog timeout** (3–5 min) |
+| 13:47:11 | `nfs: server granit.vedur.is not responding` → **log ends** |
+| 16:46:42 | Boot (hard power-off). EXT4 orphan cleanup, journal unclean |
+
+sysstat collected **no samples at all** between 13:41 and the 16:46 reboot.
+
+**Root cause: total memory exhaustion, not a hardware fault.** At the OOM moment the kernel
+reported ~58 GB anonymous memory, `all_unreclaimable? yes`, and `Free swap = 88kB` of 8.4 GB.
+The I/O "stalls" were a *symptom*: `jbd2/nvme0n1p2`, `postgres`, `syncthing`, `zotero-bin` and
+`chrome` were all blocked >122 s in D-state because every allocation had to enter direct reclaim.
+NVMe showed zero I/O errors, resets or AER events.
+
+**What ate it** (RSS aggregated by process name at the OOM dump):
+
+| RSS | Procs | Process |
+|---:|---:|---|
+| **41.7 GB** | **112** | **`node`** |
+| 8.5 GB | 12 | `obsidian` |
+| 4.8 GB | 8 | `pi` |
+| 3.6 GB | 14 | `claude` |
+| 3.0 GB | 6 | `firefox` |
+| 1.9 GB | 18 | `nvim` |
+| 1.9 GB | 33 | `chrome` |
+| 0.9 GB | 114 | `Isolated Web Co` |
+
+The `node` total is **MCP-server and agent-session sprawl**, not one runaway process: 12 MCP
+servers are defined in `claude-code/.mcp.json` (7 of them `postgres-*`), and every Claude Code /
+pi session spawns its own complete set. 6-7 concurrent sessions × ~12 servers ≈ 72-84 processes.
+This accumulated over a **7-day uptime** (boot ran Sep 13 → Sep 20).
+
+**Guards added** — see the files for full rationale:
+
+| File | Effect |
+|---|---|
+| `etc/systemd/system/user-.slice.d/50-memory-guard.conf` | `MemoryHigh=46G` throttles + reclaims early (kernel-enforced, so it works even when userspace — including `systemd-oomd` — is too starved to run); `MemoryMax=54G` makes the *cgroup* OOM killer pick one victim instead of freeezing the desktop |
+| `etc/sysctl.d/99-swappiness.conf` | `vm.swappiness=60` (was 10). With zswap enabled a low swappiness is self-defeating — the kernel OOM-kills instead of compressing cold pages into the zswap pool |
+| `etc/sysctl.d/10-memory-headroom.conf` | `vm.min_free_kbytes=262144` (was ~66 MB) so kswapd starts reclaiming *before* allocation paths stall |
+| `etc/sysstat/sysstat` | `SADC_OPTIONS="-S DISK,MEM"` (was `-S DISK`). With DISK only there was **no memory history**, which is why this incident had to be reconstructed from OOM dumps |
+
+Deployed by the Ansible `system_files` role (tag: `memory`). Manual apply:
+```bash
+sudo install -Dm0644 system/etc/systemd/system/user-.slice.d/50-memory-guard.conf \
+    /etc/systemd/system/user-.slice.d/50-memory-guard.conf
+sudo install -m0644 system/etc/sysctl.d/{10-memory-headroom,99-swappiness}.conf /etc/sysctl.d/
+sudo install -m0644 system/etc/sysstat/sysstat /etc/sysstat/sysstat
+sudo sysctl --system && sudo systemctl daemon-reload
+# push onto the live slice too (drop-ins only affect slices started after a reload)
+sudo systemctl set-property user-1000.slice MemoryHigh=46G MemoryMax=54G
+```
+
+**Recommended follow-ups:**
+
+- ~~Enlarge swap.~~ **DONE 2026-09-20** — `/swap.img` resized 8 GB → **32 GB**
+  (`swapoff` → `fallocate -l 32G` → `chmod 600` → `mkswap` → `swapon`). `/etc/fstab` was
+  already path-based (`/swap.img none swap sw 0 0`), so it re-activates on boot via the
+  generated `swap.img.swap` unit — verified active. No fstab change needed.
+
+  This is worth more than it looks, because **cgroup v2 `memory.max` does NOT include swap**
+  (verified: a scope with `MemoryMax=200M` successfully allocated and touched 600 MB by
+  swapping). So swap genuinely *extends* the ceiling rather than just moving the pressure:
+  the user slice now gets 54 GB RAM (`MemoryMax`) **plus** up to 32 GB of swap, while
+  `MemoryHigh=46G` still stops a runaway from freezing the desktop.
+
+- Trim the MCP roster. `pi` already has native `pg_query` / `web_fetch` / `web_search` tools, so
+  `postgres-*`, `fetch` and `brave-search` MCP servers are redundant there. Consolidating
+  `google-workspace` (defined twice: `claude-code/.mcp.json` *and* `~/.claude.json`) helps too.
+  Measured usage across 266 session transcripts is in the "MCP roster" section below — the
+  7 `postgres-*` servers are the standout: 252 invocations *total* across all history, yet
+  they cost 7 processes per agent pane, and a herdr restore brings up 7 claude panes at once.
+- Keep uptime sane. The build-up to 58 GB took a week; herdr now restores the whole workspace
+  automatically (see `systemd/CLAUDE.md`), which removes the main reason to avoid rebooting.
+
+**Not a cause** (do not chase these):
+- `SLUB: Unable to allocate memory ... GFP_DMA` + `cs35l41-hda: Cannot Initialize Firmware.
+  Error: -12` appear at **every** boot and on resume. The DMA zone is only 15 MB and the audio
+  codec probe retries forever. Harmless boot noise.
+- The NFS timeout to `granit.vedur.is` at 13:47 was the last thing logged before the silence, but
+  the mounts are already hardened (`soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount`)
+  and nothing scans `/mnt_data` (syncthing syncs only `~/Sync` and `~/meeting-audio/inbox`). It was
+  a symptom of the exhaustion, aggravated by the VPN collapsing. `x-systemd.idle-timeout=120` was
+  added so a dead mount does not linger.
+- `systemd-oomd` is enabled with `ManagedOOMMemoryPressure=kill` on `user@1000.service`, but it
+  **never fired** in the frozen boot. It was almost certainly starved of CPU along with everything
+  else, which is why the guards above rely on kernel-enforced cgroup limits rather than a userspace
+  daemon.
 
 ## GPU / Nvidia Configuration
 

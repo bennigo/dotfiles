@@ -2,85 +2,102 @@
 
 Configuration for Claude Code CLI tool, MCP servers, notification hooks, and remote control.
 
-## MCP Servers (`.mcp.json`)
+## MCP Servers — DISABLED (2026-09-20)
 
-Deployed via stow to `~/.mcp.json` (global project scope — found by Claude Code's directory tree
-walk, applies to all projects under `$HOME`).
-
-**Format**: `{ "mcpServers": { ... } }` wrapper required. Claude Code 2.x reads `.mcp.json` files
-via a project-scope tree walk (from CWD up to `/`) using a schema that requires the `mcpServers`
-key. Flat format (no wrapper) fails schema validation with "Does not adhere to MCP server
-configuration schema".
-
-**Dependencies**: `postgres-mcp` must be installed: `uv tool install postgres-mcp`
-
-### Web & Search
-- **fetch**: Web content fetching (via uvx/mcp-server-fetch)
-- **brave-search**: Web search via Brave Search API
-
-### PostgreSQL Database Access
-
-Via `postgres-mcp` (PyPI, run with `uvx`). Uses `DATABASE_URI` env var and `--access-mode` flag.
-Multiple connections configured for various projects:
-
-| Server | Database | Access |
-|--------|----------|--------|
-| `postgres-local` | Local development | Read-write |
-| `postgres-gas-readonly` | Production GAS | Read-only |
-| `postgres-skjalftalisa-readonly` | Production earthquake | Read-only |
-| `postgres-tos-readonly` | Production TOS | Read-only |
-| `postgres-epos-readonly` | Development EPOS | Read-only |
-| `postgres-gnss-readonly` | Development GNSS | Read-only |
-| `postgres-metrics-readonly` | Development metrics | Read-only |
-
-### Google Workspace (`google-workspace`)
-
-Multi-account Google Workspace access via [`@aaronsb/google-workspace-mcp`](https://github.com/aaronsb/google-workspace-mcp).
-
-**Authenticated accounts:**
-
-| Account | Category | Description |
-|---------|----------|-------------|
-| `bgovedur@gmail.com` | personal | Personal Gmail |
-| `benedikt@klifursamband.is` | work | KI Climbing Association |
-
-**Services:** Gmail, Calendar, Drive, Sheets, Docs, Tasks, Meet
-
-**Tools:** `manage_email`, `manage_calendar`, `manage_drive`, `manage_sheets`, `manage_docs`,
-`manage_tasks`, `manage_meet`, `manage_accounts`, `manage_workspace`, `manage_scratchpad`, `queue_operations`
-
-Each tool takes an `email` parameter to specify which account to use.
-
-**Credentials:** OAuth via GCP project "Claude code" (bgovedur org). Tokens stored
-XDG-compliant at `~/.config/google-workspace-mcp/accounts.json` and
-`~/.local/share/google-workspace-mcp/credentials/`.
-
-**Account routing policy:** See `../CLAUDE.md` → "Google Account Routing Policy"
-
-**Re-authenticating accounts:**
-```bash
-bash /tmp/auth-google.sh  # Edit script to change email, then run
-```
-
-### Environment Variables
-
-MCP servers require connection strings set in shell profile (`zsh/.config/zsh/exports.zsh`):
+**Active config is empty.** `.mcp.json` now contains `{"mcpServers": {}}` and the previous
+11-server definitions are preserved in **`.mcp.json.disabled`** for easy restore:
 
 ```bash
-BRAVE_API_KEY              # Brave Search API
-GOOGLE_MCP_CLIENT_ID       # Google OAuth client ID (from pass)
-GOOGLE_MCP_CLIENT_SECRET   # Google OAuth client secret (from pass)
-LOCAL_POSTGRES_URL         # postgresql://user:pass@localhost:5432/dbname
-PROD_GAS_URL               # Production GAS database
-PROD_SKJALFTALISA_URL      # Production earthquake database
-PROD_TOS_URL               # Production TOS database
-DEV_EPOS_URL               # Development EPOS database
-DEV_GNSS_URL               # Development GNSS database
-DEV_METRICS_URL            # Development metrics database
+# re-enable everything
+mv claude-code/.mcp.json.disabled claude-code/.mcp.json
+# or restore just one server by copying its block back into the active file
 ```
 
-**Security**: Config uses `${VAR}` references — no credentials stored in this repository.
-Production databases are read-only for safety. Google OAuth tokens managed by the MCP server locally.
+### Why they were removed
+
+Measured over **82 Claude Code transcripts spanning a full year** (2025-09-25 → 2026-09-20),
+counting real `tool_use` blocks:
+
+| MCP server | invocations in a year |
+|---|---:|
+| `claude-in-chrome` (cloud connector, spawns nothing local) | 362 |
+| `brave-search` | 4 |
+| `gps-health-pgdev` | 2 |
+| `firecrawl` | 2 |
+| `fetch` | 2 |
+| `postgres-*` (all 7), `google-workspace`, `excalidraw` | **0** |
+
+For scale, in the same window: `Bash` 20,642, `Edit` 2,318, `Read` 1,296.
+
+These servers were spawned by **every** session regardless of use (~12 processes per session),
+and with 6-7 concurrent claude agents that is ~75-84 processes. This was the dominant term in
+the **41.7 GB of `node` memory** present during the 2026-09-20 hard freeze — see
+`system/CLAUDE.md` → "Memory Pressure Guards".
+
+Everything they provided is available natively in pi, which is where the work actually happens
+(319 pi transcripts: `web_search` 660, `web_fetch` 358, `pg_query` 86 — versus **12** uses of
+pi's `mcp` gateway in total):
+
+| Removed MCP server | Native replacement |
+|---|---|
+| `fetch`, `brave-search`, `firecrawl` | pi `web_search` / `web_fetch` |
+| `postgres-*` (7) | pi `pg_query`, `pg_list_databases`, `pg_describe_table` |
+| `google-workspace` | pi Google tooling / claude.ai connectors |
+| `excalidraw` | `excalidraw-canvas.service` + the excalidraw skill |
+
+> **Note on firecrawl.** Firecrawl *may* still be active as a backend provider inside pi's
+> native `web_search`/`web_fetch` — that would be configured in
+> `~/.config/pi/agent/auth.json`, which this repo does not read. Removing the firecrawl **MCP
+> server** does not affect that. If search results stop being firecrawl-quality, this is the
+> first thing to check.
+
+Also removed: `excalidraw`, which was defined separately in `~/.claude.json` (user scope) rather
+than here. Removed with `claude mcp remove excalidraw -s user`; recover with
+`claude mcp add`.
+
+### Still active (deliberately NOT touched)
+
+Project-scoped MCP servers defined in individual projects' own `.mcp.json` files, plus pi's own
+MCP installs (`~/.config/pi/agent/mcp-cache.json`: `zotero`, `exa`, `semantic-scholar`,
+`gps-health-pgdev`). These are work-critical and were out of scope for the trim: `mcp-grafana`,
+`mcp-gdrive`, `mcp-gmail`, `gps-health-*`, `semanticscholar`, `zotero`.
+
+### Reference — the archived server set
+
+Kept for when a server needs restoring. **Format**: `{ "mcpServers": { ... } }` wrapper is
+required — Claude Code reads `.mcp.json` via a project-scope tree walk (from CWD up to `/`) using
+a schema that requires the `mcpServers` key. Flat format fails schema validation.
+
+**Dependencies**: `postgres-mcp` via `uv tool install postgres-mcp`; `mcp-server-fetch` via uvx.
+
+| Server | Purpose |
+|--------|---------|
+| `fetch` | Web content fetching (uvx `mcp-server-fetch`) |
+| `brave-search` | Web search (`.scripts/brave-mcp-wrapper.sh`) |
+| `firecrawl` | Scrape/crawl (`npx firecrawl-mcp`) |
+| `postgres-local` | Local development (read-write) |
+| `postgres-gas-readonly` | Production GAS (read-only) |
+| `postgres-skjalftalisa-readonly` | Production earthquake (read-only) |
+| `postgres-tos-readonly` | Production TOS (read-only) |
+| `postgres-epos-readonly` | Development EPOS (read-only) |
+| `postgres-gnss-readonly` | Development GNSS (read-only) |
+| `postgres-metrics-readonly` | Development metrics (read-only) |
+| `google-workspace` | Multi-account Google Workspace (`@aaronsb/google-workspace-mcp`) |
+
+`google-workspace` authenticated two accounts — `bgovedur@gmail.com` (personal) and
+`benedikt@klifursamband.is` (KI) — exposing `manage_email`, `manage_calendar`, `manage_drive`,
+`manage_sheets`, `manage_docs`, `manage_tasks`, `manage_meet`, `manage_accounts`,
+`manage_workspace`, `manage_scratchpad`, `queue_operations`, each taking an `email` parameter.
+OAuth tokens live XDG-compliant at `~/.config/google-workspace-mcp/accounts.json` and
+`~/.local/share/google-workspace-mcp/credentials/`. Account routing policy is in `../CLAUDE.md`.
+
+Required env vars (set in `zsh/.config/zsh/exports.zsh`) — `BRAVE_API_KEY`,
+`GOOGLE_MCP_CLIENT_ID`, `GOOGLE_MCP_CLIENT_SECRET`, `LOCAL_POSTGRES_URL`, `PROD_GAS_URL`,
+`PROD_SKJALFTALISA_URL`, `PROD_TOS_URL`, `DEV_EPOS_URL`, `DEV_GNSS_URL`, `DEV_METRICS_URL`.
+
+**Security**: the config uses `${VAR}` references — no credentials are stored in this repository
+(verified 2026-09-20: every env value is an env-var reference, not a literal). Production
+databases are read-only for safety.
 
 ## Notification Hook
 

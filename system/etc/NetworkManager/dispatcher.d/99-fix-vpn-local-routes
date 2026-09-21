@@ -43,10 +43,19 @@ apply_fixes() {
     fi
 
     # --- Fix 1: Policy routing to bypass route hijack ---
+    # Track whether anything actually changed so the watchdog can stay silent
+    # when the rules are already correct (it runs every 30s).
+    local changed=0
+
+    if ! ip route show table "$LOCAL_TABLE" 2>/dev/null | grep -qF "$LOCAL_SUBNET"; then
+        changed=1
+    fi
+
     ip route replace "$LOCAL_SUBNET" dev "$LOCAL_IF" src "$LOCAL_SRC" table "$LOCAL_TABLE" 2>/dev/null
 
     if ! ip rule show | grep -q "lookup $LOCAL_TABLE"; then
         ip rule add to "$LOCAL_SUBNET" lookup "$LOCAL_TABLE" priority 50
+        changed=1
     fi
 
     ip route flush cache
@@ -86,9 +95,15 @@ apply_fixes() {
 
     if [[ $added -gt 0 ]]; then
         logger -t vpn-route-fix "Added $added iptables RETURN rules for local devices before DROP rule"
+        changed=1
     fi
 
-    logger -t vpn-route-fix "Local network fix applied: $LOCAL_SUBNET via $LOCAL_IF (table $LOCAL_TABLE), ${#LOCAL_DEVICES[@]} devices whitelisted"
+    # Only log when something actually changed. The watchdog invokes this every
+    # 30s, and the previous unconditional log line produced ~14k entries/day —
+    # a large part of why the journal had grown to 4 GB by 2026-09-20.
+    if [[ $changed -gt 0 ]]; then
+        logger -t vpn-route-fix "Local network fix applied: $LOCAL_SUBNET via $LOCAL_IF (table $LOCAL_TABLE), ${#LOCAL_DEVICES[@]} devices whitelisted"
+    fi
 }
 
 case "$ACTION" in
@@ -102,6 +117,18 @@ case "$ACTION" in
                     sleep "$RETRY_DELAY"
                 fi
             done
+        fi
+        ;;
+    watchdog)
+        # Periodic re-apply from vpn-route-fix-watchdog.timer.
+        #
+        # Single pass: the 5x/3s retry loop above exists to survive the burst of
+        # chain rebuilds right after a tunnel-up event. For a periodic re-apply
+        # it just means the service spends 12+ s of every 30 s asleep, so it is
+        # skipped here. Logging is suppressed inside apply_fixes() unless the
+        # rules actually needed changing.
+        if [[ "$INTERFACE" == cscotun* ]] || ip link show cscotun0 &>/dev/null; then
+            apply_fixes
         fi
         ;;
     vpn-down|down)
