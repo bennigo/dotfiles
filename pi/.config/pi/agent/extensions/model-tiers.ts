@@ -7,10 +7,10 @@
  *   ----  ------  -------------------------------  --------------------------
  *   free  Ctrl+5  kimi-coding/k3 (1M)              $0 (Kimi subscription)
  *   std   Ctrl+1  github-copilot/claude-sonnet-5   $0 (Copilot subscription) ← session default
- *   deep  Ctrl+4  zai/glm-5.3-highspeed            $0 (per models.json)
+ *   deep  Ctrl+4  zai-coding-cn/glm-5.3-flash      $0 (GLM Coding Plan)
  *   fast  Ctrl+2  deepseek/deepseek-flash          ~$0.30/$1.20 per M tok (cheap paid)
  *   pro   Ctrl+3  deepseek/deepseek-v4-pro         ~$1.32/$3.96 per M tok (paid, special occasions)
- *   glm   Ctrl+6  zai/glm-5.3                      paid flagship GLM (1M ctx)
+ *   glm   Ctrl+6  zai-coding-cn/glm-5.3            $0 (GLM Coding Plan, 1M ctx)
  *   local /local  ollama/llama3.1:8b               $0 (on-device, offline/private)
  *
  * Philosophy:
@@ -109,22 +109,22 @@ const TIERS: Tier[] = [
   {
     key: "deep",
     shortcut: "ctrl+4",
-    provider: "zai",
-    id: "glm-5.3-highspeed",
-    label: "GLM-5.3 Highspeed",
-    cost: "$0 (per models.json)",
+    provider: "zai-coding-cn",
+    id: "glm-5.3-flash",
+    label: "GLM-5.3 Flash",
+    cost: "$0 (GLM Coding Plan)",
     paid: false,
     blurb: "Free strong reasoning — hard bugs, delicate refactors, 1M ctx",
   },
   {
     key: "glm",
     shortcut: "ctrl+6",
-    provider: "zai",
+    provider: "zai-coding-cn",
     id: "glm-5.3",
     label: "GLM-5.3",
-    cost: "~$1.40/$4.40 M tok",
-    paid: true,
-    blurb: "Paid flagship GLM — when Highspeed quality isn't enough",
+    cost: "$0 (GLM Coding Plan)",
+    paid: false,
+    blurb: "Flagship GLM — when Flash quality isn't enough",
   },
   {
     key: "free",
@@ -160,8 +160,8 @@ const PAID_PROVIDERS = new Set([
 
 // Exceptions: free-tier models on otherwise-paid providers (per models.json cost=0).
 const FREE_MODEL_OVERRIDES = new Set([
-  "zai/glm-5.2-highspeed",
-  "zai/glm-5.3-highspeed",
+  "zai-coding-cn/glm-5.3",
+  "zai-coding-cn/glm-5.3-flash",
   "zai-coding-cn/glm-5.3-highspeed",
 ]);
 
