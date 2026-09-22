@@ -52,14 +52,24 @@ set $wallpaper $XDG_CONFIG_HOME/sway/wallpapers/mahdi-khomsaz-asset.jpg
 # output * bg $XDG_CONFIG_HOME/sway/wallpapers/mahdi-khomsaz-asset.jpg fill
 # output * bg $XDG_CONFIG_HOME/sway/wallpapers/mahdi-khomsaz-asset.jpg fill
 # ── systemd user session target ──────────────────────────────────────────────
-# Nothing else starts this. sway is launched by /usr/local/bin/sway-debug, which
-# is only `exec sway --unsupported-gpu`, and there is no session-target wrapper
-# anywhere — so `graphical-session.target` sat permanently inactive and every
-# unit with WantedBy=graphical-session.target silently never ran. That is why
-# mako-watcher.path had never started, and why herdr.service (initially written
+# Sway is launched by GDM (/usr/libexec/gdm-wayland-session → sway-debug → sway)
+# and no session wrapper activates a systemd session target, so
+# `graphical-session.target` sat permanently inactive and every unit with
+# `WantedBy=graphical-session.target` silently never ran — that is why
+# mako-watcher.path had never started, and why herdr.service (originally written
 # the same way) did not autostart on 2026-09-21.
-# Activating it pulls in those units the way a normal desktop session would.
-exec --no-startup-id systemctl --user start graphical-session.target
+#
+# This used to be `systemctl --user start graphical-session.target`, which CAN
+# NEVER WORK — that target is RefuseManualStart=yes and rejects direct starts
+# with "may be requested by dependency only". sway-session.target exists to be
+# pulled in as a dependency and pull graphical-session.target in after it.
+#
+# The two commands are sequenced in ONE shell on purpose: the env import must
+# land in the systemd user manager BEFORE the target activates, because the
+# units it pulls in (herdr.service above all) inherit that environment. Two
+# separate `exec` lines would race — sway starts them asynchronously and the
+# session target could win, leaving herdr without WAYLAND_DISPLAY/SWAYSOCK.
+exec --no-startup-id sh -c 'dbus-update-activation-environment --systemd WAYLAND_DISPLAY SWAYSOCK XDG_SESSION_TYPE XDG_CURRENT_DESKTOP; systemctl --user start sway-session.target'
 
 exec_always swaybg -i $wallpaper -m fill
 # automounting requires udisks2

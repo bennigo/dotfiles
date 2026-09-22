@@ -4,21 +4,30 @@ Description=herdr server (persistent agent workspace manager)
 # valid URI for that key (systemd-analyze rejects it). See `herdr --help`
 # directly, plus systemd/CLAUDE.md → "herdr persistence".
 #
-# WantedBy=default.target, NOT graphical-session.target.
+# WantedBy=graphical-session.target, via systemd/.config/systemd/user/sway-session.target.
 #
-# This machine has no user-session systemd target: sway is launched by
-# /usr/local/bin/sway-debug (just `exec sway --unsupported-gpu`), nothing runs
-# `systemctl --user start graphical-session.target`, and the unit is therefore
-# never activated. Confirmed 2026-09-21: `graphical-session.target` inactive,
-# and `mako-watcher.path` — also WantedBy=graphical-session.target — has never
-# run as a result. So an `After=/PartOf=graphical-session.target` here would be
-# an inert ordering hint and herdr would simply never start.
+# herdr is a SESSION service: its panes are the user's terminals and must carry
+# the graphical session environment. It was briefly parked on default.target
+# (2026-09-22) only because nothing on this machine could activate
+# graphical-session.target — that is now fixed by sway-session.target, which
+# sway starts (see that unit's header and sway/config).
 #
-# Starting at login is now cheap enough: with
-# `[session] resume_agents_on_restore=false` a restore brings back only plain
-# shells in their cwds, not 11 agents each starting a full MCP roster. (If you
-# later want true "after the desktop", the fix is to make sway start
-# graphical-session.target — see systemd/CLAUDE.md — not to change this line.)
+# What the earlier login-time start cost: a bare systemd environment. No
+# WAYLAND_DISPLAY, no SWAYSOCK, and a PATH without the directories the zsh
+# configs add — so every `[[keys.command]]` popup that needed one silently
+# misbehaved. Concretely: herdr-sessionx could not find fzf, exited 0 in ~40 ms,
+# and `ctrl+a o` looked like "a popup flashes open and closes instantly". The
+# zsh/.zshenv fzf export fixes the PATH half; this unit fixes the environment
+# half. See systemd/CLAUDE.md → "herdr persistence".
+#
+# After=/PartOf= are load-bearing here (they were inert while the target never
+# activated): After orders herdr behind the target so the environment import in
+# sway/config has already landed, PartOf stops it with the session.
+After=graphical-session.target
+PartOf=graphical-session.target
+#
+# Restores stay cheap: `[session] resume_agents_on_restore=false` brings panes
+# back as plain shells in their cwds, not 11 agents each starting an MCP roster.
 
 [Service]
 # MUST run through a login shell.
@@ -54,4 +63,4 @@ KillMode=mixed
 TimeoutStopSec=30
 
 [Install]
-WantedBy=default.target
+WantedBy=graphical-session.target

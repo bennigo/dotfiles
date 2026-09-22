@@ -23,7 +23,7 @@ git repo instead of in a real directory. Ansible handles this automatically duri
 | `password-store-sync.timer` | Timer | `enable --now` | Schedules periodic password store and dotfiles sync |
 | `password-store-sync.service` | Triggered | via `.timer` | Runs the actual sync (git pull/push) |
 | `tmux.service` | Forking | `enable` only | Starts detached tmux session at login |
-| `herdr.service` | Simple | `enable` only | Starts the herdr server with the graphical session — restores all saved workspaces/tabs/panes **and resumes the claude/pi agents in them** from `~/.config/herdr/session.json`. See "herdr persistence" below |
+| `herdr.service` | Simple | `enable` only | Starts the herdr server with the graphical session — restores all saved workspaces/tabs/panes **as plain shells** (`[session] resume_agents_on_restore=false`); agents are reopened on demand with `herdr-resume-hints`, from `~/.config/herdr/session.json`. See "herdr persistence" below |
 | `calendar-notify.timer` | Timer | `enable --now` | Checks Google Calendar events every 10 min, sends Mako notifications |
 | `calendar-notify.service` | Triggered | via `.timer` | Runs calendar-notify script for both Google accounts |
 | `spotify-notify.service` | Long-running | `enable --now` | Track change notifications via playerctl + notify-send |
@@ -75,37 +75,75 @@ herdr pane list         # every pane, with cwd and detected agent
 grep -E 'persist.restore|persist.save' ~/.config/herdr/herdr-server.log | tail
 ```
 
-**Startup target — `default.target`, not `graphical-session.target`.**
+**Startup target — `graphical-session.target`, pulled in by `sway-session.target`.**
 
-Originally written as `WantedBy=graphical-session.target` to keep the restore out of login. That
-does **not work on this machine**: there is no user-session systemd target. sway is launched by
-`/usr/local/bin/sway-debug` (which is only `exec sway --unsupported-gpu`), nothing runs
-`systemctl --user start graphical-session.target`, and the target is therefore permanently
-`inactive`. Confirmed 2026-09-21:
+herdr is a *session* service: its panes are the user's terminals, so it has to inherit the
+graphical session environment (WAYLAND_DISPLAY, SWAYSOCK, the session PATH). It is therefore
+`WantedBy=graphical-session.target` with `After=`/`PartOf=graphical-session.target`.
 
-```text
-graphical-session.target      active=inactive  enabled=static
-mako-watcher.path             active=inactive          <- never ran, same root cause
-sway-session.target           active=inactive  enabled=not-found
-```
-
-Anything `WantedBy=graphical-session.target` silently never starts — which is why `herdr.service`
-did not autostart on the first test, and why `mako-watcher.path` has never worked. Using
-`default.target` makes it a sibling of `claude-imports.service` / `tmux.service`, which do start.
-
-At login is cheap enough here because `resume_agents_on_restore=false` means a restore brings back
-only shells in their cwds, not 11 agents each starting an MCP roster.
-
-**If you do want true "after the desktop"**, fix the root cause rather than this unit — add to
-`sway/.config/sway/config` (near the other startup `exec` lines):
+That only works because `sway-session.target` now exists, because `graphical-session.target`
+ships with `RefuseManualStart=yes` and therefore **cannot be started directly**:
 
 ```text
-exec --no-startup-id systemctl --user start graphical-session.target
+$ systemctl --user start graphical-session.target
+Failed to start graphical-session.target: Operation refused, unit graphical-session.target
+may be requested by dependency only (it is configured to refuse manual start/stop).
 ```
 
-That activates the target, pulls in everything wanted by it (herdr *and* mako-watcher.path), and
-restores the intended `After=`/`PartOf=` semantics. Not applied yet — it is a wider behavioural
-change than the herdr fix, so it was left as a deliberate follow-up.
+A `BindsTo=` edge *is* a dependency, so a unit that binds to it pulls it in. That is the
+documented idiom — systemd's own `gnome-session.target` does exactly this, with the comment
+"gnome-session.target pulls in graphical-session.target":
+
+```ini
+# systemd/.config/systemd/user/sway-session.target
+[Unit]
+BindsTo=graphical-session.target
+Before=graphical-session.target
+```
+
+sway starts it, importing the session environment into the systemd user manager *first*. The two
+commands are sequenced in **one** shell on purpose — two `exec` lines would race, and the target
+could activate before the env landed, leaving herdr (and its panes) without it:
+
+```text
+# sway/.config/sway/config
+exec --no-startup-id sh -c 'dbus-update-activation-environment --systemd WAYLAND_DISPLAY SWAYSOCK XDG_SESSION_TYPE XDG_CURRENT_DESKTOP; systemctl --user start sway-session.target'
+```
+
+Verified live 2026-09-22: starting `sway-session.target` made `graphical-session.target` active
+and started `mako-watcher.path` — **the first time it had ever run** — while leaving the running
+herdr untouched. `After=`/`PartOf=` are non-inert now (they were meaningless while the target
+could never activate).
+
+> **Vendor-enabled duplicates — mask `waybar.service` + `mako.service`.** Activating the target
+> also woke two units that the waybar/mako packages enable by default under
+> `/etc/systemd/user/graphical-session.target.wants/`. This machine does NOT use them: sway owns
+> both bars via `bar` blocks (`swaybar_command` = `launch-top.sh` / `launch-herdr.sh`), and mako
+> is D-Bus-activated (its cgroup is `dbus.service`, not `mako.service`). Leaving them enabled
+> produced a third waybar and a spurious `mako.service` failure (*"Is a notification daemon
+> already running?"*). Fix (user-level mask, no root needed):
+>
+> ```bash
+> systemctl --user mask waybar.service mako.service
+> systemctl --user stop  waybar.service
+> ```
+> The remaining `/etc/systemd/user/graphical-session.target.wants/` entries (`foot-server.service`,
+> `spice-vdagent.service`, the update-notifier `*.path` units) are harmless and correct to keep.
+
+> **Three wrong answers, do not repeat them.** (1) The unit was originally on
+> `WantedBy=graphical-session.target` with nothing able to activate that target, so herdr
+> silently never autostarted. (2) The follow-up "fix" was to have sway run
+> `systemctl --user start graphical-session.target` directly — refused outright, per the error
+> above. (3) A stop-gap parked the unit on `default.target`, which *did* start herdr but handed
+> it a bare systemd environment: no `WAYLAND_DISPLAY`, no `SWAYSOCK`, and a PATH without the tool
+> directories the zsh configs add. That is what broke `ctrl+a o` — `herdr-sessionx` could not
+> find `fzf`, exited 0 in ~40 ms, and the picker popup merely flashed and vanished. See
+> `zsh/.zshenv` (fzf for non-interactive consumers) and `local_bin/.local/bin/herdr-sessionx`
+> (resolves fzf itself, and now fails loudly instead of silently).
+
+Anything `WantedBy=graphical-session.target` starts only when `sway-session.target` is started,
+i.e. from sway's config — never at login. If a session unit mysteriously never runs, check
+`systemctl --user is-active graphical-session.target` first.
 
 Note the service **must** run through a login shell (`/bin/zsh -lc`) — see the comment in the
 unit: `systemctl --user` has a bare `PATH` and no API keys, and `~/.zshenv` is what supplies both.
@@ -114,8 +152,14 @@ unit: `systemctl --user` has a bare `PATH` and no API keys, and `~/.zshenv` is w
 > `~/.config/systemd/user/`, not just the `.wants/` link — after which the unit reports
 > `not-found` and `enable` fails with *"Unit … does not exist"*. Always **stow first, then
 > enable**, and after any `disable` re-run `stow -R --no-folding systemd` before re-enabling.
-> Hit for real on 2026-09-21 while moving this unit from `graphical-session.target` to
-> `default.target`.
+> Hit for real on 2026-09-21 while moving this unit between targets.
+>
+> To move a unit between systemd targets: edit `[Install]`, re-stow, `rm` the stale symlink in
+> `~/.config/systemd/user/<old-target>.wants/`, create the new one by hand
+> (`ln -s /home/bgo/.dotfiles/systemd/.config/systemd/user/<unit>
+> ~/.config/systemd/user/<new-target>.wants/<unit>` — that absolute form is what `enable`
+> produces and what the existing links use), then `systemctl --user daemon-reload`. Avoid
+> `disable` entirely on stow-managed units.
 >
 > The 18:51 verification above was recorded with auto-resume **on** (herdr's default). See
 > `[session] resume_agents_on_restore` below for turning that off.

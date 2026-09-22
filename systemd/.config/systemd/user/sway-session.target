@@ -1,0 +1,45 @@
+[Unit]
+Description=Sway compositor session (activates graphical-session.target)
+Documentation=man:systemd.special(7)
+
+# Purpose: this unit exists ONLY to pull in graphical-session.target.
+#
+# Nothing else on this machine can. graphical-session.target is shipped by
+# systemd with `RefuseManualStart=yes` (see
+# /usr/lib/systemd/user/graphical-session.target), so asking for it directly is
+# refused:
+#
+#     $ systemctl --user start graphical-session.target
+#     Failed to start graphical-session.target: Operation refused, unit
+#     graphical-session.target may be requested by dependency only (it is
+#     configured to refuse manual start/stop).
+#
+# A `BindsTo=` edge IS a dependency, so starting THIS unit starts it. That is
+# the documented idiom, not a trick: systemd's own gnome-session.target does
+# exactly this, with the comment "gnome-session.target pulls in
+# graphical-session.target".
+#
+# Why it matters here: sway is launched by GDM via
+# /usr/libexec/gdm-wayland-session → /usr/local/bin/sway-debug → sway, and no
+# session wrapper ever activates a session target. So graphical-session.target
+# sat permanently inactive and every unit with `WantedBy=graphical-session.target`
+# silently never ran — mako-watcher.path had never started, and herdr.service
+# (originally written the same way) did not autostart on 2026-09-21.
+#
+# An earlier attempt (commit b20a7d9) had sway run `systemctl --user start
+# graphical-session.target` directly. That can never work, for the reason above;
+# sway now starts THIS unit instead.
+#
+# `Before=` gives the ordering the name implies: graphical-session.target's units
+# start once sway is already up, so they inherit a real WAYLAND_DISPLAY/SWAYSOCK
+# rather than the bare systemd environment. sway's config imports those into the
+# systemd user manager immediately before starting this unit, which is what makes
+# a session-scoped service like herdr.service behave like one (its panes get the
+# session env, and its popup commands get the session's tool paths).
+BindsTo=graphical-session.target
+Before=graphical-session.target
+
+# No [Install] section on purpose. This unit is not enabled by anything — sway
+# starts it explicitly from sway/config. A `WantedBy=` would make it start at
+# login, before the compositor (and the environment it exists to describe)
+# exists, which is precisely backwards.
