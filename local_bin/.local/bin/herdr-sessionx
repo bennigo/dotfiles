@@ -28,6 +28,33 @@ while [ $# -gt 0 ]; do
     esac
 done
 
+# ── locate fzf without trusting PATH ────────────────────────────────────────
+# Do NOT rely on a bare `fzf`. herdr runs this from a [[keys.command]] popup
+# whose environment is inherited from the herdr SERVER, and since 2026-09-22
+# that server is started by systemd (herdr.service, WantedBy=default.target)
+# with a minimal PATH — the interactive-only block in $ZDOTDIR/.zshrc that adds
+# the fzf git-install directory never runs there. A bare `fzf` then fails
+# instantly while the script still exits 0, so `ctrl+a o` showed a popup that
+# flashed open and closed in ~40 ms and did nothing at all.
+#
+# zsh/.zshenv now exports that directory for non-interactive consumers too, but
+# this also keeps working on a server started before that fix.
+FZF_BIN="${FZF_BIN:-}"
+[ -n "$FZF_BIN" ] || FZF_BIN="$(command -v fzf 2>/dev/null || true)"
+if [ -z "$FZF_BIN" ]; then
+    for cand in "$HOME/.local/share/fzf/bin/fzf" /snap/bin/fzf /usr/bin/fzf; do
+        if [ -x "$cand" ]; then FZF_BIN="$cand"; break; fi
+    done
+fi
+if [ -z "$FZF_BIN" ]; then
+    # Fail LOUDLY — the silent version of this cost ~an hour of debugging.
+    echo "herdr-sessionx: fzf not found — cannot open the workspace picker." >&2
+    echo "  tried: fzf on PATH, ~/.local/share/fzf/bin/fzf, /snap/bin/fzf, /usr/bin/fzf" >&2
+    echo "  PATH=$PATH" >&2
+    sleep 4
+    exit 1
+fi
+
 # ── helper: resolve a workspace's cwd via its first pane ────────────────────
 ws_cwd() {
     herdr pane list --workspace "$1" 2>/dev/null | python3 -c "
@@ -179,7 +206,7 @@ else
 fi
 
 # --print-query: line 1 = query, line 2 = selection (empty if user typed a non-matching path)
-output=$( build_source | fzf --ansi \
+output=$( build_source | "$FZF_BIN" --ansi \
        --delimiter='\t' \
        --with-nth=3 \
        --tiebreak=index \
