@@ -51,6 +51,16 @@ set $wallpaper $XDG_CONFIG_HOME/sway/wallpapers/mahdi-khomsaz-asset.jpg
 # Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
 # output * bg $XDG_CONFIG_HOME/sway/wallpapers/mahdi-khomsaz-asset.jpg fill
 # output * bg $XDG_CONFIG_HOME/sway/wallpapers/mahdi-khomsaz-asset.jpg fill
+# ── systemd user session target ──────────────────────────────────────────────
+# Nothing else starts this. sway is launched by /usr/local/bin/sway-debug, which
+# is only `exec sway --unsupported-gpu`, and there is no session-target wrapper
+# anywhere — so `graphical-session.target` sat permanently inactive and every
+# unit with WantedBy=graphical-session.target silently never ran. That is why
+# mako-watcher.path had never started, and why herdr.service (initially written
+# the same way) did not autostart on 2026-09-21.
+# Activating it pulls in those units the way a normal desktop session would.
+exec --no-startup-id systemctl --user start graphical-session.target
+
 exec_always swaybg -i $wallpaper -m fill
 # automounting requires udisks2
 exec /usr/bin/lxqt-policykit-agent &

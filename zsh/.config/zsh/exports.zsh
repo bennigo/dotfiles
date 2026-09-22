@@ -132,10 +132,78 @@ if [[ -n "$TMUX" && -z "$WAYLAND_DISPLAY" ]]; then
     precmd_functions+=(_auto_refresh_wayland_precmd)
 fi
 
+# NOTE: both of these register with a remove-then-add rather than a bare `+=`.
+# .zshrc sources this file TWICE (line 13 `plug`, line 15 `source`), so a bare
+# `+=` registers the hook twice — which silently doubled the per-prompt `tmux
+# set-option` fork in _tmux_track_conda. Remove-then-add makes every hook here
+# idempotent regardless of how many times the file is sourced.
+
 # Track active conda/mamba env in a tmux pane option so resurrect hooks can
 # restore it. The option is read by save-conda-envs.sh at save time.
 _tmux_track_conda() {
     [[ -z "$TMUX" ]] && return
     tmux set-option -p @conda_env "${CONDA_DEFAULT_ENV:-}" 2>/dev/null || true
 }
+precmd_functions=(${precmd_functions:#_tmux_track_conda})
 precmd_functions+=(_tmux_track_conda)
+
+# ── mamba/conda activation by directory ──────────────────────────────────────
+# Activate the env named in a `.mamba-env` file found in the current directory or
+# any parent. This is what makes a mamba env survive a herdr restart: herdr
+# brings each pane back in its saved cwd, so the shell re-activates by itself —
+# no per-pane state to snapshot and no timing race against the restore.
+#
+#     echo gpslibrary > ~/work/projects/gpslibrary/.mamba-env
+#
+# Only an env this hook activated is deactivated on leaving; one you activated
+# by hand is left alone. Set MAMBA_AUTOENV=0 to disable.
+_mamba_autoenv() {
+    [[ -o interactive ]] || return 0
+    [[ "${MAMBA_AUTOENV:-1}" == "1" ]] || return 0
+    # Requires the `mamba` shell function from .zshrc's `mamba shell init` block;
+    # the bare binary cannot modify the parent shell's environment.
+    (( $+functions[mamba] )) || return 0
+
+    local dir=$PWD want=""
+    while true; do
+        if [[ -r "$dir/.mamba-env" ]]; then
+            read -r want < "$dir/.mamba-env" || want=""
+            want=${want//[[:space:]]/}
+            break
+        fi
+        [[ "$dir" == "/" ]] && break
+        dir=${dir:h}
+    done
+
+    local current="${CONDA_DEFAULT_ENV:-}"
+    [[ "$current" == "base" ]] && current=""
+
+    if [[ -n "$want" ]]; then
+        [[ "$want" == "$current" ]] && return 0
+        if mamba activate "$want" 2>/dev/null; then
+            _MAMBA_AUTOENV_OWNED="$want"
+        else
+            print -u2 "mamba-autoenv: cannot activate '$want' (from $dir/.mamba-env)"
+            _MAMBA_AUTOENV_OWNED=""
+        fi
+    elif [[ -n "$current" && "$current" == "${_MAMBA_AUTOENV_OWNED:-}" ]]; then
+        mamba deactivate 2>/dev/null || true
+        _MAMBA_AUTOENV_OWNED=""
+    fi
+}
+chpwd_functions=(${chpwd_functions:#_mamba_autoenv})
+chpwd_functions+=(_mamba_autoenv)
+
+# First run at shell start, deferred until the mamba shell hook exists (.zshrc
+# initialises mamba *after* sourcing this file, so calling it inline would be a
+# silent no-op). Self-removing, so there is no per-prompt cost afterwards — same
+# idiom as _auto_refresh_wayland_precmd above. This deferred first run is what
+# re-activates the env in a herdr-restored pane.
+_mamba_autoenv_boot() {
+    (( $+functions[mamba] )) || return 0
+    precmd_functions=(${precmd_functions:#_mamba_autoenv_boot})
+    unfunction _mamba_autoenv_boot 2>/dev/null
+    _mamba_autoenv
+}
+precmd_functions=(${precmd_functions:#_mamba_autoenv_boot})
+precmd_functions+=(_mamba_autoenv_boot)
