@@ -21,6 +21,18 @@ rename_workspace = "prefix+t"
 # level was missing.
 switch_workspace = "prefix+shift+1..9"
 
+# ctrl+a shift+j / shift+k — step through the workspace list sequentially.
+#
+# Needed because the numbered binding above can only reach workspaces 1..9 and
+# there are 21 (measured 2026-09-22: 12 workspaces had no key at all). These two
+# move to the adjacent workspace regardless of numbering, so every workspace is
+# reachable without pinning. Keys are free: shift+l is the last-workspace
+# toggle and unshifted j/k remain focus_pane_down/up.
+#
+# Direction follows the sidebar: j = next (down the list), k = previous (up).
+previous_workspace = "prefix+shift+k"
+next_workspace = "prefix+shift+j"
+
 # ctrl+a alt+<N> — focus AGENT N in the current workspace.
 # Herdr detects agent panes natively (claude/pi/codex/...) and tracks their
 # status, so this is SEMANTIC, not positional: it keeps working when tabs are

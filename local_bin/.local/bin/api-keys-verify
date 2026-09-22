@@ -1,0 +1,199 @@
+#!/bin/bash
+## Keys // verify + fingerprint rotated API keys // 🔑 ##
+#
+# Verifies every key in ~/.config/zsh/api-keys.sh against a cheap authenticated
+# endpoint and reports the HTTP status. NEVER prints a key value — only a salted
+# SHA256 fingerprint (8 hex chars) and the status code, so it is safe to run in
+# a recorded session.
+#
+#   api-keys-verify              verify all keys, and flag which are unchanged
+#                                since the last --baseline run
+#   api-keys-verify --baseline   record fingerprints FIRST, then verify. Use
+#                                this before you start rotating to capture the
+#                                "old key" state.
+#   api-keys-verify kimi         verify one key (name substring match)
+#   api-keys-verify --list       show what will be checked, no network
+#
+# Why fingerprints: after rotating, you need to be sure the entry you updated is
+# actually the one the shell reads. `pass show` still works on a stale entry, so
+# the fingerprint is what proves it changed. Fingerprints are salted per machine
+# and truncated, and API keys are high-entropy, so they are not reversible.
+#
+# Status codes: 200 ok · 401/403 key invalid or revoked · 402/429 quota or rate
+# limit (key is VALID — usage problem, not credential) · 404 endpoint moved.
+set -uo pipefail
+
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/api-keys-verify"
+BASE_FILE="$STATE_DIR/baseline"
+SALT_FILE="$STATE_DIR/salt"
+PASS_STORE_KIND=pass
+FILTER=""
+MODE=verify
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --baseline) MODE=baseline ;;
+        --list)     MODE=list ;;
+        -h|--help)  sed -n '2,25p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -*)         echo "unknown option: $1" >&2; exit 2 ;;
+        *)          FILTER="$1" ;;
+    esac
+    shift
+done
+
+mkdir -p "$STATE_DIR"
+chmod 700 "$STATE_DIR"
+
+# Per-machine salt so fingerprints are not portable across machines.
+if [ ! -f "$SALT_FILE" ]; then
+    head -c 32 /dev/urandom > "$SALT_FILE"
+    chmod 600 "$SALT_FILE"
+fi
+
+fingerprint() {   # stdin -> 8 hex chars, never the value
+    { cat "$SALT_FILE"; cat; } | sha256sum | cut -c1-10
+}
+
+# ── key table ───────────────────────────────────────────────────────────────
+# name|env var|pass path|probe (curl url + auth header style)
+KEYS=(
+    "anthropic_api_key|ANTHROPIC_API_KEY|tokens/anthropic_api_key|xmail|https://api.anthropic.com/v1/models"
+    "brave_api|BRAVE_API_KEY|tokens/brave_api|bravetok|https://api.search.brave.com/res/v1/web/search?q=test&count=1"
+    "kimi_api_key|KIMI_API_KEY|tokens/kimi_api_key|bearer|https://api.moonshot.ai/v1/models"
+    "kimi_code_api_key|KIMI_CODE_API_KEY|tokens/kimi_code_api_key|bearer|https://api.kimi.com/coding/v1/models"
+    "openrouter_api_key|OPENROUTER_API_KEY|tokens/openrouter_api_key|bearer|https://openrouter.ai/api/v1/key"
+    "deepseek_api_key|DEEPSEEK_API_KEY|tokens/deepseek_api_key|bearer|https://api.deepseek.com/v1/models"
+    "zhipu_api_key|ZHIPU_API_KEY / ZAI_CODING_CN_API_KEY|tokens/zhipu_api_key|bearer|https://api.z.ai/api/coding/paas/v4/models"
+    "firecrawl_api_key|FIRECRAWL_API_KEY|tokens/firecrawl_api_key|bearer|https://api.firecrawl.dev/v1/team/credit-usage"
+)
+
+probe() {   # $1=style $2=url $3=key -> prints HTTP code only
+    local style="$1" url="$2" key="$3" out
+    case "$style" in
+        xmail)    out=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 \
+                        -H "x-api-key: $key" -H 'anthropic-version: 2023-06-01' "$url") ;;
+        bravetok) out=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 \
+                        -H "X-Subscription-Token: $key" -H 'Accept: application/json' "$url") ;;
+        bearer)   out=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 \
+                        -H "Authorization: Bearer $key" "$url") ;;
+        *)        out="??" ;;
+    esac
+    printf '%s' "${out:-000}"
+}
+
+verdict() {   # $1=http code -> short human note
+    case "$1" in
+        200) echo "ok" ;;
+        401|403) echo "INVALID/REVOKED" ;;
+        402) echo "quota exhausted (key valid)" ;;
+        429) echo "rate limited (key valid)" ;;
+        404) echo "endpoint moved (key untested)" ;;
+        000) echo "no response" ;;
+        *) echo "" ;;
+    esac
+}
+
+if [ "$MODE" = list ]; then
+    printf '%-22s %-38s %s\n' KEY ENV PASS
+    for row in "${KEYS[@]}"; do
+        IFS='|' read -r n v p _ <<<"$row"
+        printf '%-22s %-38s %s\n' "$n" "$v" "$p"
+    done
+    echo
+    echo "not auto-verifiable (needs an interactive OAuth flow):"
+    echo "  google_mcp_claude_client_id / _secret  -> re-auth the Google Workspace MCP"
+    exit 0
+fi
+
+if [ "$MODE" = baseline ]; then : > "$BASE_FILE"; echo "recording baseline fingerprints -> $BASE_FILE"; fi
+echo
+
+printf '%-22s %-8s %-8s %s\n' KEY FP STATUS NOTE
+for row in "${KEYS[@]}"; do
+    IFS='|' read -r name envvar passpath style url <<<"$row"
+    [ -n "$FILTER" ] && [[ "$name" != *"$FILTER"* ]] && continue
+
+    value=$(pass show "$passpath" 2>/dev/null | head -1 || true)
+    if [ -z "$value" ]; then
+        printf '%-22s %-8s %-8s %s\n' "$name" "-" "MISSING" "no value at pass:$passpath"
+        continue
+    fi
+
+    fp=$(printf '%s' "$value" | fingerprint)
+    [ "$MODE" = baseline ] && echo "$name $fp" >> "$BASE_FILE"
+
+    code=$(probe "$style" "$url" "$value")
+    note=$(verdict "$code")
+
+    # Compare against baseline, if we have one.
+    if [ "$MODE" != baseline ] && [ -f "$BASE_FILE" ]; then
+        oldfp=$(grep -m1 "^$name " "$BASE_FILE" 2>/dev/null | awk '{print $2}')
+        if [ -n "$oldfp" ]; then
+            if [ "$oldfp" = "$fp" ]; then note="UNCHANGED since baseline — $note"
+            else note="rotated ✓ — $note"; fi
+        fi
+    fi
+
+    printf '%-22s %-8s %-8s %s\n' "$name" "$fp" "$code" "$note"
+    unset value
+done
+
+# ── Google OAuth client secret ──────────────────────────────────────────────
+# A two-part credential and a different kind of probe. client_id is public; the
+# secret is only ever used in a token exchange, so there is no Bearer endpoint
+# to test. Instead, exchange a DELIBERATELY BOGUS refresh token:
+#
+#   invalid_client -> the client credentials were REJECTED (secret wrong, or the
+#                     old secret was disabled before the new one was saved)
+#   invalid_grant  -> the client credentials were ACCEPTED and only the bogus
+#                     token was refused  ==  this is a PASS
+#
+# Nothing is revoked or mutated by this probe. The secret is piped into curl via
+# --data-binary @- rather than passed as an argument, so it never shows up in `ps`.
+verify_google() {
+    local cid csec fp body err code note oldfp
+    cid=$(pass show tokens/google_mcp_claude_client_id 2>/dev/null | head -1 || true)
+    csec=$(pass show tokens/google_mcp_claude_client_secret 2>/dev/null | head -1 || true)
+    if [ -z "$cid" ] || [ -z "$csec" ]; then
+        printf '%-22s %-8s %-8s %s\n' google_mcp_claude_client_secret "-" "MISSING" "client_id or client_secret absent from pass"
+        return
+    fi
+    fp=$(printf '%s' "$csec" | fingerprint)
+
+    body=$(printf 'client_id=%s&client_secret=%s&grant_type=refresh_token&refresh_token=api-keys-verify-probe' \
+                "$cid" "$csec" \
+           | curl -s --max-time 20 -X POST \
+                  -H 'Content-Type: application/x-www-form-urlencoded' \
+                  --data-binary @- https://oauth2.googleapis.com/token 2>/dev/null)
+
+    err=$(printf '%s' "$body" | python3 -c 'import json,sys
+try:
+    print(json.load(sys.stdin).get("error", ""))
+except Exception:
+    print("unparseable")' 2>/dev/null)
+
+    case "$err" in
+        invalid_grant)  code=200 ; note="credentials accepted (only the bogus token was rejected)" ;;
+        invalid_client) code=401 ; note="INVALID client credentials — secret wrong, or old secret disabled and new one not saved" ;;
+        "")             code="??"  ; note="no error field in Google's response" ;;
+        *)              code="??"  ; note="google said: $err" ;;
+    esac
+
+    if [ "$MODE" != baseline ] && [ -f "$BASE_FILE" ]; then
+        oldfp=$(grep -m1 '^google_mcp_claude_client_secret ' "$BASE_FILE" 2>/dev/null | awk '{print $2}')
+        if [ -n "$oldfp" ]; then
+            if [ "$oldfp" = "$fp" ]; then note="UNCHANGED since baseline — $note"
+            else note="rotated ✓ — $note"; fi
+        fi
+    fi
+    [ "$MODE" = baseline ] && echo "google_mcp_claude_client_secret $fp" >> "$BASE_FILE"
+
+    printf '%-22s %-8s %-8s %s\n' google_mcp_claude_client_secret "$fp" "$code" "$note"
+    unset csec
+}
+
+{ [ -z "$FILTER" ] || [[ google_mcp_claude_client_secret == *"$FILTER"* ]]; } && verify_google
+
+echo
+echo "fingerprints use a per-machine salt ($SALT_FILE); they are not reversible"
+echo "and never reveal a key value."
