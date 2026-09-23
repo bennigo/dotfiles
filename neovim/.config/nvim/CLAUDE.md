@@ -17,7 +17,9 @@ This is a production IDE for scientific computing (GPS/GNSS data processing), kn
 
 **File**: `lua/plugins/claude-code.lua`
 **Primary Keymap**: `<M-c>` (toggle/focus)
-**Leader Mappings**: `<leader>aci` (toggle), `<leader>acc` (focus), `<leader>acs` (send), `<leader>acd/D` (accept/reject diff), `<leader>acR` (remote control)
+**Leader Mappings**: `<leader>aci` (toggle), `<leader>acc` (focus), `<leader>acs` (send),
+  `<leader>acd/D` (accept/reject diff), `<leader>acp` (compose prompt),
+  `<leader>ace` (expand stub), `<leader>acR` (remote control)
 
 **Configuration**:
 - Floating window: 95% width, 95% height
@@ -26,6 +28,19 @@ This is a production IDE for scientific computing (GPS/GNSS data processing), kn
 - WebSocket connection to Claude Code CLI
 - Transparency enabled (winblend: 30)
 - Remote control: `<leader>acR` opens Claude Code with `--remote-control` flag, accessible from phone/browser via claude.ai/code or QR code scan
+- Fallback focus: `<C-M-c>` returns focus to Claude Code (for when a diff steals focus)
+- Hide from inside the terminal: `<M-c>`
+- Prompt compose: `<leader>acp` opens a scratch buffer; `<C-s>` inside it sends the buffer to the Claude
+  Code terminal via bracketed paste **with no trailing newline** — it pastes into the prompt and you
+  press Enter there. It also clears the scratch, closes it, and copies the text to the `+` register as
+  a fallback when no Claude terminal is found. Contrast with Pi's `<C-s>`, which appends a newline and
+  submits.
+- Scratch persistence: the compose buffer is a real file at
+  `~/.local/share/nvim/scratch/<hash>.markdown` (+ a `.meta` name index), auto-written whenever it is
+  hidden and keyed by **name + filetype + cwd** (branch/count disabled in this config). So `q` only
+  closes the float — nothing is lost. Re-run `<leader>acp` to toggle it back with its content, or use
+  `<leader>S` (`Snacks.scratch.select()`) to pick any saved prompt scratch, including one belonging to
+  another project directory. `<leader>.` is LazyVim's generic "Scratch" buffer — a different file.
 
 ### Avante (Secondary AI - Local + ACP)
 
@@ -71,16 +86,44 @@ This is a production IDE for scientific computing (GPS/GNSS data processing), kn
 
 ### Pi Coding Agent (Minimal Terminal AI)
 
-**File**: `lua/user/pi.lua` (module) + `lua/plugins/pi.lua` (loader)
-**Primary Keymap**: `<M-p>` (toggle)
-**Leader Mappings**: `<leader>ait` (toggle), `<leader>aif` (focus), `<leader>ais` (send selection, visual), `<leader>aip` (compose prompt), `<leader>aik` (kill), `<leader>aiR` (restart)
+**File**: `lua/user/pi.lua` (module) + `lua/plugins/pi.lua` (loader + LSP key-conflict fix)
+**Primary Keymap**: `<M-p>` (toggle), `<C-M-p>` (secondary toggle — for keyboard layouts where
+  right-Alt/AltGr never reaches Neovim as `<M-p>`)
+**Leader Mappings**: `<leader>ait` (toggle), `<leader>aif` (focus), `<leader>ais` (send selection,
+  visual), `<leader>aip` (compose prompt), `<leader>aik` (kill), `<leader>aiR` (restart)
 
 **Configuration**:
-- Floating terminal window: 95% width, 95% height
+- Floating terminal window: 95% width, 95% height, float title `π Pi`
 - Border: rounded, winblend: 30 (transparency)
 - Default: uses pi's settings.json defaults (currently deepseek-v4-pro). To switch provider, edit `pi/.config/pi/agent/settings.json` or use `/model` inside pi TUI.
-- Terminal hide: `<M-p>` from inside terminal mode
-- Prompt compose: `<leader>aip` opens scratch buffer, `<C-s>` sends to Pi
+- Terminal hide: `<M-p>` from inside terminal mode (Snacks' buffer-local `t`-mode keymap)
+- Prompt compose: `<leader>aip` opens scratch buffer, `<C-s>` sends to Pi **and submits**
+  (appends a newline — unlike Claude Code's `<C-s>`)
+- Scratch persistence: same mechanics as Claude Code's compose buffer — `q` only closes the float
+  (the text is auto-written to `~/.local/share/nvim/scratch/`), re-run `<leader>aip` to toggle it back
+  with content intact, or `<leader>S` to pick any saved prompt scratch. See the Claude Code section.
+- Binary resolution: `vim.fn.exepath("pi")` with fallbacks to `~/.local/share/npm-global/bin/pi`;
+  the spawned terminal gets a patched `PATH` (npm-global/bin + node's directory). Needed because
+  `pi`'s shebang is `#!/usr/bin/env node` and the Sway/systemd user PATH does **not** contain
+  npm-global, so a launcher-started Neovim would otherwise flash-and-die
+
+**⚠️ Gotchas (each cost a debugging session on 2026-09-23)**:
+
+1. **`Snacks.terminal` has no `name` option** — verified against snacks.nvim git history, it never
+   existed. A Snacks terminal buffer is named `term://<cwd>//<pid>:<cmd>`, so finding it by a friendly
+   name silently matches nothing, and every feature built on that lookup (send selection, kill,
+   focus) fails with no error. Identity must come from the Snacks terminal object returned by
+   `Snacks.terminal()` or from `vim.b[buf].snacks_terminal` (`{ cmd, id, cwd, env }`). Claude Code's
+   equivalent lookup works only by accident: its command literally is `claude`.
+2. **`<M-p>` collides with LazyVim's LSP `<a-p>`** ("Prev Reference", applied buffer-locally on
+   `LspAttach`). `<a-p>` and `<M-p>` are the same key to Neovim and a buffer-local map beats the
+   global one, so in any LSP-attached buffer Alt+P was a silent no-op — while still hiding the float
+   from inside the terminal buffer. Symptom: *"Alt+P collapses the Pi window but never opens it."*
+   Fixed in `lua/plugins/pi.lua` with `opts.servers["*"].keys = { { "<a-p>", false } }`; the
+   lspconfig spec declares `opts_extend = { "servers.*.keys" }`, so the entry is appended to
+   LazyVim's and `rhs == false` cancels it. `]]` / `[[` keep the reference jumps. A plugin-level
+   `keys = { { "<a-p>", false } }` does **not** work — that targets lazy.nvim's proxy-key list, a
+   different mechanism.
 
 **Approach**: Terminal wrapper (no dedicated Neovim plugin exists for pi). Pi's SDK and RPC mode could enable deeper integration later, but the terminal wrapper works well and mirrors the Claude Code pattern.
 
@@ -349,6 +392,7 @@ Shared helpers: `now_tt()`, `now_dt()`, `now_td()`, `unit_to_seconds()`, `future
 - `<leader>uN`: Toggle Noice UI (enhanced messages)
 - `<M-m>`: Float terminal (works in normal and terminal mode)
 - `<M-c>`: Toggle Claude Code
+- `<M-p>`: Toggle Pi (secondary: `<C-M-p>`) — see the Pi Coding Agent section for the `<a-p>` LSP-collision gotcha
 - `<M-tab>`: Switch to alternate buffer
 - `<M-q>`: Delete buffer
 
