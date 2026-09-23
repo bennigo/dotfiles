@@ -31,6 +31,7 @@
                           reject('equalto', 'ansible') |
                           reject('equalto', 'system') |
                           reject('equalto', 'systemd') |
+                          reject('equalto', 'tmux') |
                           reject('equalto', '.git') |
                           list }}"
   when: stow_directories | default([]) | length == 0
@@ -41,7 +42,14 @@
       Dotfiles directories to be deployed:
       {{ stowable_dirs | join(', ') }}
 
-      Skipped directories: ansible, system, systemd (separate --no-folding), .git, hidden dirs
+      Skipped directories: ansible, system, systemd (separate --no-folding),
+      .git, hidden dirs
+
+      Also skipped by default: tmux. tmux is retired on laptops (see
+      systemd/CLAUDE.md -> herdr persistence), but the module stays in the
+      repo because profiles that genuinely need it — agent_server — list it
+      in stow_directories explicitly. Without this reject, auto-discovery
+      stows the tmux config on every laptop again.
 
 - name: Deploy dotfiles with stow
   command: stow {{ item }}
@@ -149,7 +157,7 @@
       loop:
         - '# Cargo (Rust) environment'
         - '[[ -f "$HOME/.cargo/env" ]] && source "$HOME/.cargo/env"'
-        - '# FNM (Node.js) environment'  
+        - '# FNM (Node.js) environment'
         - '[[ -f "$HOME/.local/share/fnm/fnm" ]] && eval "$(fnm env --use-on-cd)"'
         - '# FZF key bindings'
         - '[[ -f "$HOME/.fzf.zsh" ]] && source "$HOME/.fzf.zsh"'
@@ -170,13 +178,13 @@
   debug:
     msg: |
       Dotfiles deployment completed:
-      
+
       ✅ Stowed directories: {{ stowable_dirs | join(', ') }}
       ✅ Systemd user services deployed (--no-folding) and activated
       ✅ Local bin scripts deployed
       ✅ Shell environment configured
       ✅ Critical configs verified (sway, waybar, foot)
-      
+
       Configuration files are now linked from {{ directories.dotfiles }}
       Any changes to source files will immediately affect the system.
   tags: ["dotfiles", "summary"]

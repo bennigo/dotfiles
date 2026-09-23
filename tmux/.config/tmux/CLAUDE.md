@@ -1,5 +1,31 @@
 # Tmux Configuration
 
+> ## ⚠️ RETIRED ON LAPTOPS (2026-09-23) — kept for the `agent_server` profile only
+>
+> tmux was replaced by **herdr** for day-to-day work. On this laptop the module is no longer
+> stowed (the deployed `~/.config/tmux` symlink is gone, the Ansible dotfiles role now rejects
+> `tmux` during auto-discovery) and `tmux.service` is no longer deployed or enabled.
+> `ansible/profiles/agent_server.yml` still lists tmux explicitly, because that headless
+> profile hosts agents in it. See `systemd/CLAUDE.md` → "herdr persistence".
+>
+> **Why it was retired, and what was actually broken.** `tmux.service` had been **failing at
+> every boot** for ~3 weeks — `bash -l -c 'tmux new-session -d'` took 31 s and eventually
+> exceeded the 90 s `Type=forking` timeout, so no tmux server existed at all. Consequences:
+>
+> - **Every resurrect save since 2026-09-01 12:52 is 0 bytes.** The `ExecStop` save ran with no
+>   server (`save.sh: no server running on /tmp/tmux-1000/default` in the journal), captured
+>   nothing, and still wrote a file.
+> - `last` pointed at one of those empty files, so a restore restored nothing.
+> - `resurrect-guard.sh` would *also* have discarded the last real save (2026-09-01 12:41,
+>   2255 B) — its orphan check requires every `pane` line's session to have a matching `window`
+>   line, but resurrect legitimately omits `window` lines for **grouped** sessions. That save had
+>   panes for 15 session groups and windows for 6, so `find_latest_valid` returned empty and the
+>   guard took its `rm -f "$LAST_LINK"` branch.
+>
+> So the last ~3 weeks of "my sessions resume on reboot" was not happening. If this module is ever
+> revived, fix the guard's grouped-session handling first — and note that `save.sh` itself was
+> verified healthy (an isolated run on a bare socket produced a valid save).
+
 Terminal multiplexer setup with session persistence, plugin ecosystem, and Wayland integration.
 
 ## Overview

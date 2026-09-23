@@ -1,0 +1,93 @@
+#!/bin/bash
+## Herdr // Claude Code remote-control tab // 🤖 ##
+#
+# Port of the retired tmux binding `prefix + C-c`, which did `if-shell
+# 'select-window -t :claude-rc' '' 'new-window -n claude-rc "claude
+# remote-control …"'` — jump to the session's window, or create it.
+#
+# tmux is retired on this laptop (see systemd/CLAUDE.md → "herdr persistence");
+# the tmux window became a herdr TAB. Behaviour is deliberately identical:
+#
+#   * an existing `claude-rc` tab in the current workspace is FOCUSED, never
+#     duplicated — repeated presses are safe;
+#   * otherwise a tab is created (labelled, focused) and the command is typed
+#     into its shell, so the tab survives the remote-control process exiting and
+#     behaves like a normal shell afterwards.
+#
+# The tab is created in the workspace you are *in* ($HERDR_WORKSPACE_ID), not the
+# focused one: `herdr tab create` with no --workspace follows the focused
+# workspace, which is wrong when you invoke this from an unfocused pane.
+#
+#   herdr-remote-control              focus or create the claude-rc tab
+#   herdr-remote-control --print      show what it would do, change nothing
+#   herdr-remote-control --label NAME use a different tab label
+#
+# Bound in herdr/config.toml as `prefix+alt+c`.
+#
+# Env overrides (for testing): HERDR_RC_CMD, HERDR_RC_LABEL.
+#
+# Note: the tmux version used the absolute path to the npm-global claude binary
+# because tmux started via systemd before any shell profile ran. herdr panes are
+# launched by a server that DID get a login shell, so `claude` resolves — but the
+# absolute path is kept anyway; it costs nothing and removes the failure mode.
+
+set -uo pipefail
+
+HERDR_BIN="${HERDR_BIN:-}"
+[ -n "$HERDR_BIN" ] || HERDR_BIN="$(command -v herdr 2>/dev/null || true)"
+[ -n "$HERDR_BIN" ] || HERDR_BIN="$HOME/.local/bin/herdr"
+
+CLAUDE_BIN="${CLAUDE_BIN:-$HOME/.local/share/npm-global/bin/claude}"
+LABEL="${HERDR_RC_LABEL:-claude-rc}"
+CMD="${HERDR_RC_CMD:-$CLAUDE_BIN remote-control --name herdr-remote --spawn=same-dir}"
+PRINT_ONLY=0
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --print) PRINT_ONLY=1 ;;
+        --label) shift; LABEL="${1:?--label needs a name}" ;;
+        -h|--help) awk 'NR==1{next} /^#{2,}/{next} /^#/{sub(/^# ?/,""); print; next} {exit}' "$0"; exit 0 ;;
+        *) echo "herdr-remote-control: unknown option: $1" >&2; exit 2 ;;
+    esac
+    shift
+done
+
+# Outside herdr (or with no workspace context) there is nothing to focus or
+# create — say so rather than silently doing nothing.
+WS="${HERDR_WORKSPACE_ID:-}"
+if [ -z "$WS" ] && [ "$PRINT_ONLY" = 0 ]; then
+    echo "herdr-remote-control: not inside a herdr workspace (no HERDR_WORKSPACE_ID)" >&2
+    exit 1
+fi
+
+existing="$("$HERDR_BIN" tab list 2>/dev/null \
+    | jq -r --arg l "$LABEL" --arg ws "$WS" \
+        '.result.tabs[]? | select(.label == $l and .workspace_id == $ws) | .tab_id' 2>/dev/null \
+    | head -1)"
+
+if [ "$PRINT_ONLY" = 1 ]; then
+    printf 'workspace : %s\nlabel     : %s\ncommand   : %s\n' "${WS:-<unset>}" "$LABEL" "$CMD"
+    if [ -n "$existing" ]; then
+        printf 'action    : focus existing tab %s\n' "$existing"
+    else
+        printf 'action    : create tab + run the command\n'
+    fi
+    exit 0
+fi
+
+if [ -n "$existing" ]; then
+    "$HERDR_BIN" tab focus "$existing" >/dev/null 2>&1
+    exit 0
+fi
+
+created="$("$HERDR_BIN" tab create --label "$LABEL" --workspace "$WS" --cwd "$PWD" --focus 2>/dev/null)"
+pane="$(jq -r '.result.root_pane.pane_id // empty' <<<"$created" 2>/dev/null)"
+if [ -z "$pane" ]; then
+    echo "herdr-remote-control: could not create the $LABEL tab" >&2
+    exit 1
+fi
+
+# Typed into the tab's shell, not exec'd, so the tab keeps a live shell afterwards
+# exactly like the tmux new-window it replaces.
+"$HERDR_BIN" pane run "$pane" "$CMD" >/dev/null 2>&1
+exit 0

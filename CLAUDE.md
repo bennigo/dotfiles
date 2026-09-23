@@ -62,7 +62,7 @@ architecture guidelines. Subdirectories with their own CLAUDE.md are marked with
 ├── sway/           # Sway compositor — see sway/.config/sway/CLAUDE.md 📄
 ├── waybar/         # Status bar with custom modules — see waybar/CLAUDE.md 📄
 ├── neovim/         # LazyVim-based IDE (75+ plugins) — see neovim/.config/nvim/CLAUDE.md 📄
-├── tmux/           # Terminal multiplexer + plugins — see tmux/.config/tmux/CLAUDE.md 📄
+├── tmux/           # Multiplexer — RETIRED on laptops; agent_server only 📄
 ├── local_bin/      # Custom executable scripts (~28 scripts) — see local_bin/CLAUDE.md 📄
 ├── system/         # System configs, hardware, installation — see system/CLAUDE.md 📄
 ├── ansible/        # System provisioning and automation — see ansible/CLAUDE.md 📄
@@ -98,7 +98,7 @@ architecture guidelines. Subdirectories with their own CLAUDE.md are marked with
 Each directory contains `.config/[app]` structure for GNU Stow deployment:
 
 ```bash
-stow sway waybar neovim tmux   # Deploy multiple configs
+stow sway waybar neovim kitty   # Deploy multiple configs
 stow -t ~ sway                 # Deploy single config
 ```
 
@@ -135,7 +135,7 @@ Sway config uses structured comments (`## Category // Description // Icon ##`) p
 ### Claude Code Integration
 - **MCP servers**: Database access, web search, Google Workspace — see `claude-code/CLAUDE.md`
 - **Notifications**: Hook-based forwarding to Mako — see `claude-code/CLAUDE.md`
-- **Remote control**: Tmux persistent window + Neovim keymap — see `tmux/.config/tmux/CLAUDE.md`
+- **Remote control**: herdr `claude-rc` tab (`prefix+alt+c`) + Neovim keymap — see `claude-code/CLAUDE.md`
 
 ### Google Account Routing Policy
 When using Google Workspace tools (email, calendar, drive), always use the correct account:
@@ -171,7 +171,7 @@ When using Google Workspace tools (email, calendar, drive), always use the corre
 - **Draft over send** — when composing emails, always create a draft first unless the user explicitly says to send
 
 ### Wayland Environment
-- Tmux session env refresh after reboot — see `tmux/.config/tmux/CLAUDE.md`
+- herdr panes inherit the graphical env from the server that launched them (no per-pane refresh needed) — see `systemd/CLAUDE.md`
 - System-level fixes (Thunderbolt, VPN) — see `system/CLAUDE.md`
 
 ## Common Operations
@@ -225,7 +225,7 @@ Edit source files in this repository, not deployed locations in `~/.config/`.
 |------|---------|
 | `sway/.config/sway/CLAUDE.md` | Compositor config, workspaces, shortcuts, scratchpads |
 | `neovim/.config/nvim/CLAUDE.md` | 75+ plugins, AI integration, database UI, keymaps |
-| `tmux/.config/tmux/CLAUDE.md` | Session management, plugins, Wayland env fix, remote control |
+| `tmux/.config/tmux/CLAUDE.md` | Session management, plugins, Wayland env fix — **retired on laptops**, kept for the `agent_server` profile |
 | `docker/CLAUDE.md` | Daemon config, VPN networking, scripts, compose templates |
 | `claude-code/CLAUDE.md` | MCP servers, notification hooks, remote control, shared skills (with pi) |
 | `crush/CLAUDE.md` | Multi-provider AI coding TUI, Ollama integration, cloud provider setup |

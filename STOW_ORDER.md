@@ -25,7 +25,7 @@ In particular, these have **no** stow-time dependencies despite seeming related:
 | Module | Seems like it depends on… | Actually independent because… |
 |--------|--------------------------|-------------------------------|
 | neovim | zsh (shell aliases?) | Loads via Lua/LazyVim, no shell sourcing |
-| tmux | zsh (shell env?) | TPM plugin manager is self-contained |
+| tmux | zsh (shell env?) | TPM plugin manager is self-contained. **Not stowed on laptops** — retired 2026-09-23; only `agent_server` deploys it |
 | sway | waybar, kitty, foot, mako | References binaries, not config paths |
 | waybar | sway | Reads sway IPC at runtime, no config dependency |
 
@@ -40,7 +40,7 @@ stow -R --ignore='\.zshenv' zsh
 stow profile gnupg local_bin
 
 # 3. Core tools (parallel, any order)
-stow neovim tmux kitty foot sway waybar mako
+stow neovim kitty foot sway waybar mako
 
 # 4. After zsh env vars are available
 stow claude-code crush
@@ -54,7 +54,7 @@ Or deploy everything at once (Ansible does this):
 ```bash
 stow -R --no-folding systemd
 stow -R --ignore='\.zshenv' zsh
-stow profile gnupg local_bin neovim tmux kitty foot sway waybar mako \
+stow profile gnupg local_bin neovim kitty foot sway waybar mako \
      claude-code crush docker firefox ollama grim swappy alacritty qutebrowser
 ```
 

@@ -160,11 +160,16 @@ with the same name — no conflict.
 
 Claude Code can be accessed from phone or browser via remote control.
 
-### Tmux Integration
-Persistent `claude-rc` window spawned at tmux startup:
-- Uses full path to npm-global claude binary (avoids PATH issues when tmux starts via systemd)
-- Only creates window if it doesn't exist (safe to re-source tmux.conf)
-- See `tmux/.config/tmux/CLAUDE.md` for details
+### herdr Integration (was: tmux)
+The persistent `claude-rc` tab is created on demand, not at startup:
+- `prefix + alt+c` runs `local_bin/.local/bin/herdr-remote-control`, which focuses the existing
+  `claude-rc` tab in the current workspace or creates it and types the command into its shell
+- Uses the full path to the npm-global claude binary (the tmux original needed this because tmux
+  started via systemd before any shell profile loaded; kept because it costs nothing and removes
+  the failure mode)
+- Never duplicates the tab — repeated presses focus the one that exists, matching the tmux
+  binding's `if-shell 'select-window -t :claude-rc'` behaviour it replaced
+- tmux is retired on laptops (2026-09-23): see `systemd/CLAUDE.md` → "herdr persistence"
 
 ### Neovim Integration
 `<leader>acR` keymap launches a remote control session from within Neovim.
@@ -187,7 +192,7 @@ Ansible bootstrap automatically deploys this with other dotfiles.
 
 - **Notification script**: `local_bin/.local/bin/claude-notify`
 - **Shell env vars**: `zsh/.config/zsh/exports.zsh`
-- **Tmux remote control**: `tmux/.config/tmux/CLAUDE.md`
+- **herdr remote control**: `local_bin/.local/bin/herdr-remote-control` (`prefix+alt+c`)
 - **Database setup**: `ansible/DATABASE_SETUP.md`
 - **Top-level overview**: `../CLAUDE.md`
 

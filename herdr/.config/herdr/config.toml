@@ -188,6 +188,20 @@ type = "pane"
 command = "~/.local/bin/herdr-harpoon edit"
 description = "harpoon: edit pin list (nvim)"
 
+[[keys.command]]
+# ctrl+a alt+c — Claude Code remote control (port of the retired tmux prefix+C-c).
+#
+# type = "shell" because the tab has to be created and then driven through the API;
+# the wrapper focuses the existing `claude-rc` tab if there is one, otherwise
+# creates it and types the command into its shell. See herdr-remote-control.
+# Without the wrapper a `type = "pane"` binding would spawn a fresh instance on
+# every press — the tmux binding's `if-shell 'select-window -t :claude-rc'`
+# behaviour is exactly what is being preserved here.
+key = "prefix+alt+c"
+type = "shell"
+command = "~/.local/bin/herdr-remote-control"
+description = "claude remote control (focus or create tab)"
+
 [experimental]
 # Render Kitty graphics locally for attached clients, so image previews work
 # INSIDE a herdr pane (ranger figure browsing for gps_plot). The outer terminal

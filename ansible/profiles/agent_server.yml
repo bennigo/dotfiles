@@ -1,7 +1,12 @@
 ---
 # Agent server profile - OpenClaw AI agent with isolation
-# Usage (local):  ansible-playbook bootstrap.yml --extra-vars "@profiles/agent_server.yml"
-# Usage (remote): ansible-playbook bootstrap.yml -i inventory.yml --extra-vars "@profiles/agent_server.yml" --limit agent_servers
+#
+# Usage (local):
+#   ansible-playbook bootstrap.yml \
+#     --extra-vars "@profiles/agent_server.yml"
+# Usage (remote):
+#   ansible-playbook bootstrap.yml -i inventory.yml \
+#     --extra-vars "@profiles/agent_server.yml" --limit agent_servers
 
 profile: agent_server
 
@@ -13,7 +18,8 @@ features:
   install_media_tools: false
   setup_credentials: true           # SSH keys + GPG for bgo user
   deploy_work_configs: false
-  setup_personal_repos: true        # bgovault yes, but read-only (agent role handles no-push)
+  # bgovault yes, but read-only (the agent role handles no-push)
+  setup_personal_repos: true
   setup_work_infrastructure: false  # No vedur.is NFS/hosts
   setup_agent_server: true
   setup_tailscale: true
@@ -31,12 +37,18 @@ base_packages:
   - jq
 
 # Dotfiles: only deploy shell config, not desktop
+#
+# tmux is listed explicitly and on purpose: it is RETIRED on the laptops (see
+# systemd/CLAUDE.md -> "herdr persistence") but this headless profile still uses
+# it to host agents. The dotfiles role's auto-discovery deliberately skips tmux,
+# so this explicit list is the only thing that stows it. Do not "clean it up".
 stow_directories:
   - zsh
   - tmux
   - profile
 
-# Systemd: only tmux (no mako-watcher, no password-store-sync, no claude-imports)
+# Systemd: only tmux.service (the multiplexer that hosts agents here);
+# no mako-watcher, no password-store-sync, no claude-imports
 dotfiles_systemd_services: []
 dotfiles_systemd_services_no_start:
   - tmux.service

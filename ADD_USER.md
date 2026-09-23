@@ -53,7 +53,7 @@ The `dotfiles` role stows the **same** dotfiles for every user. If `newuser` nee
 different configs:
 
 1. Create a branch in the dotfiles repo for their customizations
-2. Or override specific stow modules: `--extra-vars "stow_directories=['zsh','tmux']"`
+2. Or override specific stow modules: `--extra-vars "stow_directories=['zsh','kitty']"`
 3. Or skip dotfiles entirely: `--skip-tags dotfiles`
 
 ## Removing a user

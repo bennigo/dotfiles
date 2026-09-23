@@ -22,15 +22,11 @@
 --   desc = "Auto-activate conda environment in terminals"
 -- })
 
--- Refresh Wayland env vars from tmux (fixes xdg-open after session restore)
-if vim.env.TMUX and vim.env.TMUX ~= "" then
-  for _, var in ipairs({ "WAYLAND_DISPLAY", "SWAYSOCK", "DISPLAY", "KITTY_LISTEN_ON" }) do
-    local ok, result = pcall(vim.fn.system, { "tmux", "show-environment", var })
-    if ok and result and result:match("^" .. var .. "=") then
-      vim.env[var] = result:match("^" .. var .. "=(.+)"):gsub("%s+$", "")
-    end
-  end
-end
+-- NOTE: the tmux Wayland-env refresh that used to live here (it shelled out to
+-- `tmux show-environment` for WAYLAND_DISPLAY/SWAYSOCK/DISPLAY/KITTY_LISTEN_ON to
+-- fix xdg-open after a session restore) was retired with tmux on 2026-09-23.
+-- herdr panes inherit the graphical environment from the server that launched
+-- them, so nothing needs refreshing. See systemd/CLAUDE.md → "herdr persistence".
 
 -- Override gx in markdown buffers to resolve vault paths for wikilinks/images
 vim.api.nvim_create_autocmd("FileType", {

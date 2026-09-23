@@ -14,7 +14,7 @@ zsh/.config/zsh/
 ├── aliases-pi.zsh    # Pi coding agent aliases
 ├── aliases-sync.zsh  # Sync-related aliases (dotfiles-sync, sync-status)
 ├── hooks-sync.zsh    # Sync-related shell hooks
-├── history.zsh       # Shell history config (sourced LAST in .zshrc; re-applied via tmux prefix+H)
+├── history.zsh       # Shell history config (sourced LAST in .zshrc; re-applied via reload-history)
 ├── .zshenv           # Minimal env init (has stow conflict — use stow -R --ignore='\.zshenv' zsh)
 ├── api-keys.sh       # Decrypts API keys from `pass` ONCE (sourced by ~/.profile at login; ~/.zshenv only fallback-sources it)
 ```
@@ -41,8 +41,8 @@ Plugins loaded via `plug` in `.zshrc`:
 - **History**: config lives in `history.zsh` (sourced last in `.zshrc`); file at
   `~/.local/state/zsh/history` (XDG state, outside this repo), 1,000,000 entries
   (`HISTSIZE=SAVEHIST=1000000`), with `SHARE_HISTORY` + `INC_APPEND_HISTORY` so every
-  command is written immediately and shared live across all shells/tmux panes.
-  Already-running shells can adopt it with `reload-history` (tmux `prefix + H`).
+  command is written immediately and shared live across all shells and herdr panes.
+  Already-running shells can adopt it with `reload-history`.
 
 > ⚠️ **The `source history.zsh` line must stay at the END of `.zshrc`, after every
 > `plug` call.** The `zap-zsh/supercharge` plugin sets `HISTFILE`/`HISTSIZE`/`SAVEHIST`
@@ -57,9 +57,11 @@ Plugins loaded via `plug` in `.zshrc`:
 | Binding | Action |
 |---------|--------|
 | `Ctrl+Space` | Accept autosuggestion |
-| `Ctrl+H` | tmux-sessionizer (home) |
-| `Ctrl+F` | tmux-sessionizer |
-| `Ctrl+L` | tmux-cht |
+
+> `Ctrl+H`, `Ctrl+F` and `Ctrl+L` used to run `tmux-sessionizer` / `tmux-cht`. Both commands
+> were already absent from PATH, and tmux is retired on this laptop (2026-09-23), so the
+> bindings were removed. herdr's `prefix + o` picker (`herdr-sessionx`, fzf + zoxide) covers
+> the same ground. See `systemd/CLAUDE.md` → "herdr persistence".
 
 ## Notable Aliases
 
@@ -72,11 +74,18 @@ Plugins loaded via `plug` in `.zshrc`:
 
 Includes: Rust cargo, Go, Node.js (fnm), Neovim (custom build), miniforge3, Deno, `~/.local/bin`
 
-## Wayland Environment Fix (`exports.zsh`)
+## Wayland Environment Fix (`exports.zsh`) — retired with tmux
 
-The `refresh-wayland-env` function pulls fresh `WAYLAND_DISPLAY`, `SWAYSOCK`, and `DISPLAY`
-from tmux session env. Runs automatically on shell startup when `WAYLAND_DISPLAY` is empty
-inside tmux. See `tmux/.config/tmux/CLAUDE.md` for the full Wayland env architecture.
+This used to hold `refresh-wayland-env`, which pulled fresh `WAYLAND_DISPLAY`, `SWAYSOCK` and
+`DISPLAY` out of the tmux session env for shells restored by tmux-continuum before Sway had
+started, plus an `_auto_refresh_wayland_precmd` hook that retried it each prompt and a
+`_tmux_track_conda` hook that forked `tmux set-option` on every prompt.
+
+**All three are gone as of 2026-09-23.** They were guarded on `$TMUX` and therefore already
+inert, and the case they existed for no longer arises: herdr panes inherit the graphical
+environment from the server that launched them. The conda-tracking job is now done by
+`_mamba_autoenv` in the same file, which reactivates from a `.mamba-env` file — no per-prompt
+fork. See `systemd/CLAUDE.md` → "herdr persistence".
 
 ## Database Integration (`exports.zsh`)
 
@@ -92,7 +101,7 @@ stow -R --ignore='\.zshenv' zsh
 
 ## Cross-References
 
-- **Tmux Wayland fix**: `tmux/.config/tmux/CLAUDE.md` (refresh-wayland-env, prefix + E)
+- **herdr persistence**: `systemd/CLAUDE.md` (resume hints, env inheritance)
 - **Sync system**: `SYNC_WORKFLOW.md` (aliases-sync.zsh, hooks-sync.zsh)
 - **Claude Code MCP env vars**: `claude-code/CLAUDE.md`
 - **Top-level overview**: `../CLAUDE.md`

@@ -60,10 +60,11 @@ export FZF_MARKS_COMMAND="fzf --height 40% --reverse"
 [ -f "$HOME/.config/grim/config.sh" ] && source "$HOME/.config/grim/config.sh"
 
 # Keybinds
+# ^h / ^f / ^l used to run `tmux-sessionizer` and `tmux-cht`. Both were already
+# dead commands (neither is on PATH) and tmux is retired on this laptop; herdr's
+# `prefix + o` picker covers the same ground. See systemd/CLAUDE.md → "herdr
+# persistence".
 bindkey '^ ' autosuggest-accept
-bindkey -s "^h" "tmux-sessionizer ~/\n"
-bindkey -s "^f" "tmux-sessionizer\n"
-bindkey -s "^l" "tmux-cht\n"
 
 # Aliases
 if command -v bat &>/dev/null; then
@@ -107,6 +108,6 @@ unset __mamba_setup
 # History — MUST stay last (after every `plug` call).
 # zap-zsh/supercharge sets HISTFILE/HISTSIZE/SAVEHIST on load, so any history
 # config placed earlier in this file is silently overridden. The config itself
-# lives in history.zsh so running shells can re-apply it via tmux `prefix + H`.
+# lives in history.zsh so running shells can re-apply it on demand.
 # ---------------------------------------------------------------------------
 source "$HOME/.config/zsh/history.zsh"

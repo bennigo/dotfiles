@@ -22,7 +22,7 @@ git repo instead of in a real directory. Ansible handles this automatically duri
 | `mako-watcher.service` | Triggered | via `.path` | Reloads Mako notification daemon on config change |
 | `password-store-sync.timer` | Timer | `enable --now` | Schedules periodic password store and dotfiles sync |
 | `password-store-sync.service` | Triggered | via `.timer` | Runs the actual sync (git pull/push) |
-| `tmux.service` | Forking | `enable` only | Starts detached tmux session at login |
+| `tmux.service` | Forking | — | **RETIRED on laptops 2026-09-23.** The unit file stays in the repo for the `agent_server` profile (headless agent hosting) but is no longer deployed or enabled here — its `Type=forking` start had been timing out for ~3 weeks, producing the 0-byte resurrect saves described below |
 | `herdr.service` | Simple | `enable` only | Starts the herdr server with the graphical session — restores all saved workspaces/tabs/panes **as plain shells** (`[session] resume_agents_on_restore=false`); agents are reopened on demand — each restored pane prints its own command on startup (`herdr-pane-resume-hint`), or list every one with `herdr-resume-hints`. See "herdr persistence" below |
 | `calendar-notify.timer` | Timer | `enable --now` | Checks Google Calendar events every 10 min, sends Mako notifications |
 | `calendar-notify.service` | Triggered | via `.timer` | Runs calendar-notify script for both Google accounts |
@@ -328,10 +328,10 @@ touch it. `--all` is ~0.7 s for 13 panes; it is an audit command, not a startup 
 
 ```bash
 # Check all managed services
-systemctl --user status claude-imports password-store-sync.timer mako-watcher.path tmux spotify-notify
+systemctl --user status claude-imports password-store-sync.timer mako-watcher.path herdr spotify-notify
 
 # View all managed unit files
-systemctl --user list-unit-files | grep -E '(claude|tmux|mako|password|mtp|spotify)'
+systemctl --user list-unit-files | grep -E '(claude|herdr|mako|password|mtp|spotify)'
 
 # Enable a new service
 systemctl --user enable --now <service-name>
@@ -345,13 +345,18 @@ systemctl --user daemon-reload
 - **claude-imports**: Requires `inotifywait` (inotify-tools package)
 - **mako-watcher**: Requires `makoctl` (mako package)
 - **password-store-sync**: Requires `pass`, `git`, network access
-- **tmux**: Requires tmux binary, starts before shell profile loads
+- **herdr**: Requires the herdr binary and a graphical session (`WantedBy=graphical-session.target`)
+- ~~**tmux**: Requires tmux binary, starts before shell profile loads~~ — retired on laptops; see the note below
 - **spotify-notify**: Requires `playerctl`, `notify-send` (libnotify-bin)
 - **mtp-automount**: Requires `gio`, udev rules in `/etc/udev/rules.d/`
 
 ## Notes
 
-- `tmux.service` uses `enable` only (not `--now`) — it starts at login via systemd user session
+- `herdr.service` uses `enable` only (not `--now`) — it starts with the graphical session
+- **tmux is retired on laptops (2026-09-23).** Its unit is no longer deployed here; the file is kept
+  only for the `agent_server` profile. The Ansible dotfiles role now also rejects `tmux` during
+  stow auto-discovery, so a bootstrap will not bring the config back; `agent_server.yml` lists it
+  explicitly. See "herdr persistence" below for what replaced it (including the resume hints).
 - `mtp-automount@.service` is a template unit — instances are started by udev rules, not manually
 - The `password-store-sync.timer` also triggers `dotfiles-sync` for multi-machine sync
 

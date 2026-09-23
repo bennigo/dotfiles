@@ -89,63 +89,20 @@ if [[ -f ~/.pgpass ]]; then
   export GPS_HEALTH_LOCAL_URL=$(pg_url "localhost" "gps_health")
 fi
 
-# --- Wayland env refresh for tmux-continuum restored sessions ---
-# After reboot, tmux-continuum restores shells before Sway starts,
-# leaving WAYLAND_DISPLAY/SWAYSOCK/DISPLAY empty. This pulls current
-# values from the tmux session env (populated by update-environment on attach).
-refresh-wayland-env() {
-    [[ -z "$TMUX" ]] && return 0
-
-    local var val
-    for var in WAYLAND_DISPLAY SWAYSOCK DISPLAY; do
-        val=$(tmux show-environment "$var" 2>/dev/null)
-        case "$val" in
-            "$var="*)  export "$val" ;;
-            "-$var")   unset "$var" ;;
-            *)         ;;
-        esac
-    done
-}
-
-# Superset refresh — sources custom alias files and refreshes Wayland env.
-# Called by tmux `prefix + E` to bring long-running shells up to date after
-# any zsh config change. Add new alias/export files to the source list below.
-refresh-shell-env() {
-    [ -f ~/.config/zsh/aliases-claude.zsh ] && source ~/.config/zsh/aliases-claude.zsh
-    [ -f ~/.config/zsh/aliases-ai.zsh ] && source ~/.config/zsh/aliases-ai.zsh
-    refresh-wayland-env
-}
-
-# Auto-refresh Wayland env in tmux (handles continuum-restored shells too).
-# A precmd hook retries each prompt until WAYLAND_DISPLAY is set, then
-# removes itself so there is zero overhead after the first successful refresh.
-_auto_refresh_wayland_precmd() {
-    if [[ -z "$WAYLAND_DISPLAY" ]]; then
-        refresh-wayland-env
-    fi
-    if [[ -n "$WAYLAND_DISPLAY" ]]; then
-        precmd_functions=(${precmd_functions:#_auto_refresh_wayland_precmd})
-        unfunction _auto_refresh_wayland_precmd 2>/dev/null
-    fi
-}
-if [[ -n "$TMUX" && -z "$WAYLAND_DISPLAY" ]]; then
-    precmd_functions+=(_auto_refresh_wayland_precmd)
-fi
-
-# NOTE: both of these register with a remove-then-add rather than a bare `+=`.
-# .zshrc sources this file TWICE (line 13 `plug`, line 15 `source`), so a bare
-# `+=` registers the hook twice — which silently doubled the per-prompt `tmux
-# set-option` fork in _tmux_track_conda. Remove-then-add makes every hook here
-# idempotent regardless of how many times the file is sourced.
-
-# Track active conda/mamba env in a tmux pane option so resurrect hooks can
-# restore it. The option is read by save-conda-envs.sh at save time.
-_tmux_track_conda() {
-    [[ -z "$TMUX" ]] && return
-    tmux set-option -p @conda_env "${CONDA_DEFAULT_ENV:-}" 2>/dev/null || true
-}
-precmd_functions=(${precmd_functions:#_tmux_track_conda})
-precmd_functions+=(_tmux_track_conda)
+# NOTE: hooks in this file register with a remove-then-add rather than a bare
+# `+=`. .zshrc sources this file TWICE (line 13 `plug`, line 15 `source`), so a
+# bare `+=` registers a hook twice and it then runs twice per prompt.
+# Remove-then-add makes every hook here idempotent regardless of how many times
+# the file is sourced.
+#
+# Retired 2026-09-23 with tmux: a `refresh-wayland-env` / `refresh-shell-env`
+# pair, the `_auto_refresh_wayland_precmd` hook that retried it each prompt, and
+# `_tmux_track_conda` (which forked `tmux set-option` on EVERY prompt to record
+# the conda env in a pane option for the resurrect hooks). All three were guarded
+# on `$TMUX` and therefore already inert. herdr panes inherit the graphical
+# environment from the server that launched them, so there is nothing to refresh,
+# and `_mamba_autoenv` below replaces the pane-option tracking outright. See
+# systemd/CLAUDE.md → "herdr persistence".
 
 # ── mamba/conda activation by directory ──────────────────────────────────────
 # Activate the env named in a `.mamba-env` file found in the current directory or
@@ -196,9 +153,8 @@ chpwd_functions+=(_mamba_autoenv)
 
 # First run at shell start, deferred until the mamba shell hook exists (.zshrc
 # initialises mamba *after* sourcing this file, so calling it inline would be a
-# silent no-op). Self-removing, so there is no per-prompt cost afterwards — same
-# idiom as _auto_refresh_wayland_precmd above. This deferred first run is what
-# re-activates the env in a herdr-restored pane.
+# silent no-op). Self-removing, so there is no per-prompt cost afterwards. This
+# deferred first run is what re-activates the env in a herdr-restored pane.
 _mamba_autoenv_boot() {
     (( $+functions[mamba] )) || return 0
     precmd_functions=(${precmd_functions:#_mamba_autoenv_boot})

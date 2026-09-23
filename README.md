@@ -22,7 +22,7 @@ bootstrap for fresh machines. Runs on Ubuntu 26.04 (Resolute Raccoon) and 24.04 
 ├── sway/        Sway compositor (Wayland)
 ├── waybar/      Status bar + custom modules
 ├── neovim/      LazyVim IDE (75+ plugins)
-├── tmux/        Terminal multiplexer + plugins
+├── tmux/        Multiplexer — retired on laptops (agent_server only)
 ├── zsh/         Shell (Zap plugins, aliases)
 ├── kitty/       Terminal emulator (primary)
 ├── foot/        Lightweight terminal
@@ -48,7 +48,7 @@ linking all of them.
 cd ~/.dotfiles
 
 # Deploy individual modules
-stow sway waybar neovim tmux zsh kitty
+stow sway waybar neovim zsh kitty
 
 # Special cases
 stow -R --ignore='\.zshenv' zsh      # known .zshenv conflict
