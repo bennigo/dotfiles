@@ -119,14 +119,11 @@ rollover_tasks() {
 }
 
 # Compute template values
-PREV=$(date -d "${NOTE_DATE} - 1 day" +%Y-%m-%d)
-NEXT=$(date -d "${NOTE_DATE} + 1 day" +%Y-%m-%d)
-VIKAN=$(date -d "${NOTE_DATE} - 6 days" +%Y-%m-%d)
 ALIAS=$(date -d "${NOTE_DATE}" +"📅 %B %-d, %Y day: %j")
 NOW=$(date +%H:%M)
 CREATED=$(date +"%Y-%m-%d %H:%M")
 
-cat > "${NOTE_FILE}" <<TEMPLATE
+cat > "${NOTE_FILE}" <<FRONTMATTER
 ---
 area: "Journal"
 id: ${NOTE_DATE}
@@ -138,119 +135,56 @@ tags:
 project: ""
 resource: ""
 ---
+FRONTMATTER
 
-# ${NOTE_DATE}
+# ── Body: render the CANONICAL template — one source of truth ────────────────
+# Templates/template_daily.md is what Obsidian's Templater applies to a new note
+# in Journal/daily. This CLI used to carry its own copy of the body, and the two
+# drifted badly: the CLI had the /morning-v2 sections, the Templater template did
+# not, and the notes actually created matched NEITHER. Render the one source.
+#
+# Templater is an Obsidian-only runtime, so the few expressions the template uses
+# are substituted here; anything left unsubstituted is a hard error (this vault
+# has already shipped literal "(CCYY-MM-DDThh:mmZ)" placeholders once).
+# The trailing <%* ... %> hook is dropped — it calls
+# app.commands.executeCommandById(...), meaningless outside Obsidian. Rollover is
+# handled natively by rollover_tasks() below.
+TEMPLATE_FILE="${VAULT_DIR}/Templates/template_daily.md"
+if [[ ! -f "${TEMPLATE_FILE}" ]]; then
+    echo "vault-create-daily: missing ${TEMPLATE_FILE}" >&2
+    exit 1
+fi
+NOTE_DATE="${NOTE_DATE}" NOW="${NOW}" python3 - "${TEMPLATE_FILE}" >> "${NOTE_FILE}" <<'PYRENDER'
+import os, re, sys
+from datetime import date, timedelta
 
-<< [[Journal/daily/${PREV}|${PREV}]] | [[Journal/daily/${NEXT}|${NEXT}]] >>
+tpl = open(sys.argv[1], encoding="utf-8").read()
 
-## Skyndiminnispunktar
+# Body only — the frontmatter above is generated here, not by the template.
+m = re.match(r"^---\n.*?\n---\n", tpl, re.S)
+body = tpl[m.end():] if m else tpl
 
-> Fljótlegar hugmyndir og athugasemdir — hreinsað í lok dags
+day = date.fromisoformat(os.environ["NOTE_DATE"])
+shift = lambda n: (day + timedelta(days=n)).isoformat()
 
-### 🌅 Morgunyfirlit — ${NOTE_DATE}
+for pattern, value in (
+    (r'<% tp\.date\.now\("YYYY-MM-DD", -1, tp\.file\.title, "YYYY-MM-DD"\) %>', shift(-1)),
+    (r'<% tp\.date\.now\("YYYY-MM-DD", 1, tp\.file\.title, "YYYY-MM-DD"\) %>', shift(1)),
+    (r'<% tp\.date\.now\("YYYY-MM-DD", -6, tp\.file\.title, "YYYY-MM-DD"\) %>', shift(-6)),
+    (r'<% tp\.date\.now\("HH:mm"\) %>', os.environ["NOW"]),
+    (r'<% tp\.file\.title %>', os.environ["NOTE_DATE"]),
+):
+    body = re.sub(pattern, value, body)
 
-**Íransstrof**: _bíður 07:30 vinnslu (morning-enrich)_
-**UN/Alþjóðastofnanir**: _bíður 07:30 vinnslu (morning-enrich)_
-**OL vanrúnar (7 dagar)**: _bíður 07:30 vinnslu (morning-enrich)_
-**Verkefni dagsins**:
+# Drop the Obsidian-only rollover hook.
+body = re.sub(r"\n*<%\*.*?%>\s*$", "\n", body, flags=re.S)
 
+left = re.findall(r"<%.*?%>", body, re.S)
+if left:
+    sys.exit(f"vault-create-daily: unsubstituted Templater expression(s): {left}")
 
-## Verkefni dagsins
-
-### Áætlað í dag
-
-\`\`\`tasks
-not done
-happens on ${NOTE_DATE}
-group by filename
-short mode
-\`\`\`
-
-### Tímasett / Yfirstandandi
-
-\`\`\`tasks
-not done
-due before ${NOTE_DATE}
-limit 10
-short mode
-\`\`\`
-
-
-## 🌍 Geopolitics Scan
-
-> _Populated by \`/morning-v2\` — calls \`monitor-domain\` for each domain._
-
-### 🏴 Iran-US War
-
-### 🏴 Ukraine-Russia
-
-### 🏴 Caucasus Watch
-
-### 🇨🇳 China Strategic
-
-### 🇹🇷 Turkey Regional
-
-### 🇮🇳🇵🇰 South Asia
-
-### 🇺🇳 UNSC/UNGA Activity
-
-
-## 🇮🇸 Iceland Monitor
-
-### Utanríkismál / ESB aðild
-
-### Innanríkismál
-
-
-## 🧗 IFSC Tracker
-
-### Íslenskir keppendur
-
-### Alþjóðlegt
-
-
-## Alþjóðastofnanir / UN
-
-_Engar nýjar fréttir._
-
-
-## Dagbók
-
-- ${NOW} —
-
-**Hvað er í forgrunni í dag?**
-
-
-**Hvað lærði ég / tók eftir?**
-
-
-**Þakklæti / jákvætt**
-
-
-## Nótur dagsins
-
-\`\`\`dataview
-TABLE WITHOUT ID
-  file.link as "Nóta",
-  file.folder as "Staðsetning"
-FROM "" AND -"Templates" AND -"4.Archive" AND -"Journal"
-WHERE file.cday = date("${NOTE_DATE}")
-SORT file.ctime ASC
-\`\`\`
-
-## Vikan til þessa
-
-> Nótur og lotur síðustu 7 daga — lifandi dataview. Frystur vikusnarmynd með athugasemdum: \`/weekly\`.
-
-\`\`\`dataview
-TABLE WITHOUT ID
-  file.link as "Daily",
-  file.cday as "Búin til"
-FROM "Journal/daily"
-WHERE file.day >= date("${VIKAN}") AND file.day <= date("${NOTE_DATE}")
-SORT file.day ASC
-\`\`\`
-TEMPLATE
+sys.stdout.write(body)
+PYRENDER
 
 # Roll over uncompleted tasks from previous daily note
 rollover_tasks "${NOTE_FILE}" "${NOTE_DATE}"
