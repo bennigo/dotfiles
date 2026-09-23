@@ -15,7 +15,6 @@
     "npm:pi-docparser",
     "npm:pi-conventions",
     "npm:@eko24ive/pi-ask",
-    "ssh://git@github.com/earendil-works/pi-transcribe",
     "npm:vim-motions-pi",
     "npm:pi-mcp-adapter",
     "npm:pi-subagents",
@@ -28,7 +27,8 @@
     "npm:@narumitw/pi-usage",
     "npm:pi-context-view",
     "npm:@juicesharp/rpiv-args",
-    "npm:@gotgenes/pi-permission-system"
+    "npm:@gotgenes/pi-permission-system",
+    "npm:@earendil-works/pi-voice"
   ],
   "lastChangelogVersion": "0.87.1",
   "defaultProvider": "github-copilot",
