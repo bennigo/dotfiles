@@ -5,10 +5,13 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
-# --vault-only is PUSH-ONLY (pull --rebase --autostash + push). It never
+# --vault-only is PUSH-ONLY (merge-only pull --no-rebase + push). It never
 # auto-commits, so it is safe to run frequently (hourly). Commits stay
 # Obsidian Git's job; this just gets them off the box (Obsidian's GUI process
 # lacks the ssh-agent, so its own push silently fails).
+# It must NOT use --rebase/--autostash: bgovault is a multi-writer repo, and an
+# autostash pull is what baked conflict markers into Journal/daily/*.md
+# (2026-08-30, 09-07, 09-22, 09-23) and kept local main diverging from origin.
 ExecStart=%h/.local/bin/dotfiles-sync --vault-only
 StandardOutput=journal
 StandardError=journal

@@ -721,6 +721,7 @@ fi
 # so its own push silently fails and unpushed commits pile up. Running from the
 # shell env (timer/click) has working SSH, so the push succeeds here.
 # We do NOT commit working files — that stays Obsidian's job.
+# Pull strategy is MERGE ONLY (--no-rebase). See the note inside.
 sync_bgovault() {
     log_info "Syncing bgovault (Obsidian vault)..."
 
@@ -731,9 +732,22 @@ sync_bgovault() {
 
     cd "$BGOVAULT_DIR"
 
-    # Integrate remote changes first; --autostash protects live Obsidian edits
-    if ! git pull --rebase --autostash; then
-        log_error "bgovault pull/rebase failed (resolve manually)"
+    # NEVER --rebase/--autostash here. bgovault is a multi-writer repo (Obsidian
+    # Git, Obsidian Sync, agent sessions) and CLAUDE.md bans rebase/autostash pulls
+    # there: a stalled rebase has wiped work 3x in Aug-Sep 2026. An autostash
+    # silently moves Obsidian's live edits aside and re-applies them — that is how
+    # conflict markers ended up inside Journal/daily/*.md (2026-08-30, 09-07,
+    # 09-22, 09-23) and why local main kept diverging from origin.
+    # Merge only (pull.rebase=false is set repo-side too), and never on top of a
+    # paused operation. A failed merge leaves the repo untouched — nothing is lost.
+    local paused=""
+    for m in MERGE_HEAD rebase-merge rebase-apply CHERRY_PICK_HEAD REVERT_HEAD; do
+        [[ -e ".git/$m" ]] && paused="$m" && break
+    done
+    if [[ -n "$paused" ]]; then
+        log_warning "bgovault has a paused git operation ($paused) - skipping pull"
+    elif ! git pull --no-rebase; then
+        log_error "bgovault merge failed (resolve manually) - skipping push"
         return 1
     fi
 
