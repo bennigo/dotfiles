@@ -1,0 +1,570 @@
+#!/bin/bash
+## Herdr // which conversation did THIS pane hold? // ⏯ ##
+#
+# With `[session] resume_agents_on_restore = false` in ~/.config/herdr/config.toml,
+# agent panes come back after a reboot as plain shells in their cwds — you choose
+# what to reopen. Problem: you then have ~11 shells and no idea which
+# conversation lived in which pane.
+#
+# This prints the resume command *inside the pane it belongs to*.
+#
+# Two sources, in order of trust:
+#   1. The pane's own record. herdr tracks agent session identity per pane
+#      (session.json → pane.agent_session; `herdr pane current` exposes it), so a
+#      restored pane still knows the exact conversation it held.
+#   2. If the pane has no record (a shell you made yourself, or a pane that never
+#      ran an agent), the newest pi/claude session whose project is this pane's
+#      cwd — i.e. "the last session in this project".
+#
+# Wired into interactive shells via ~/.config/zsh/herdr-resume-hint.zsh and
+# deduped once per boot per pane (marker keyed on boot_id), so it appears when a
+# pane comes back after a reboot but not on every nested subshell. Any explicit
+# flag bypasses the dedupe.
+#
+#   herdr-pane-resume-hint                 hint for this pane (once per boot)
+#   herdr-pane-resume-hint --force         print again even if already shown
+#   herdr-pane-resume-hint --all           every pane herdr recorded a session for
+#   herdr-pane-resume-hint --commands      bare `cd … && …` lines only
+#   herdr-pane-resume-hint --pane wF:p1    inspect a specific pane
+#   herdr-pane-resume-hint --cwd DIR       answer for a directory, ignoring this pane
+#   herdr-pane-resume-hint --debug         explain the choice on stderr
+#
+# Empty sessions. A transcript that never produced an assistant turn — a claude
+# `/exit`, a pi session killed before it answered — is a dead end, not a resume
+# target, and herdr records it anyway. Such a session is shown with a ⚠ and, when
+# the cwd has a real conversation, that alternative is offered on a `↳ use instead:`
+# line. `--commands` skips the empty one outright (leaving a `#` comment, which is
+# inert to a shell) so a pipe into `bash` cannot reanimate a stub. The test is the
+# transcript, not sessions-index.json: the index can be missing the entry
+# altogether, whereas the transcript is ground truth.
+#
+# One conversation, one pane. Two panes attached to the same transcript would
+# both write to it, so a conversation already held by another pane is *reported*
+# ("already open in wF:p1") rather than offered a second time. `--all` also audits
+# for a session claimed by two panes, which a per-pane view cannot see.
+#
+# Resume syntax (verified against each tool's --help):
+#   claude --resume <session-id>   UUID
+#   pi     --session <path|id>     path or partial UUID
+#
+# Sibling tool: `herdr-resume-hints` renders the whole session from a snapshot
+# taken at shutdown (systemd ExecStop). That one survives a lost session.json;
+# this one is per-pane and works live. See systemd/CLAUDE.md → "herdr persistence".
+
+set -uo pipefail
+
+HERDR_BIN="${HERDR_BIN:-}"
+[ -n "$HERDR_BIN" ] || HERDR_BIN="$(command -v herdr 2>/dev/null || true)"
+[ -n "$HERDR_BIN" ] || HERDR_BIN="$HOME/.local/bin/herdr"
+
+PI_SESSION_DIR="${PI_SESSION_DIR:-$HOME/.local/share/pi/sessions}"
+CLAUDE_PROJECTS_DIR="${CLAUDE_PROJECTS_DIR:-$HOME/.claude/projects}"
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/herdr"
+MARKER_DIR="$STATE_DIR/hint-shown"
+PI_INDEX="$STATE_DIR/pi-index.tsv"
+
+LIST_ALL=0
+OUTPUT=listing      # listing | commands
+EXPLICIT=0
+DEBUG=0
+OPT_PANE=""
+OPT_CWD=""
+COLOR=auto
+
+# Diagnostics go to stderr so they never contaminate --commands output.
+debug() { [ "$DEBUG" = 1 ] && printf '[herdr-pane-resume-hint] %s\n' "$*" >&2; return 0; }
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --force)    EXPLICIT=1 ;;
+        --all)      LIST_ALL=1; EXPLICIT=1 ;;
+        --commands) OUTPUT=commands; EXPLICIT=1 ;;
+        --pane)     shift; OPT_PANE="${1:?--pane needs a pane id}"; EXPLICIT=1 ;;
+        --cwd)      shift; OPT_CWD="${1:?--cwd needs a path}"; EXPLICIT=1 ;;
+        --no-color) COLOR=never ;;
+        --debug)    DEBUG=1 ;;
+        # Print the whole leading comment block, however long it grows. The
+        # `## … ##` banner line is skipped; it is a title, not help text.
+        -h|--help)  awk 'NR==1{next} /^#{2,}/{next} /^#/{sub(/^# ?/,""); print; next} {exit}' "$0"; exit 0 ;;
+        *) echo "herdr-pane-resume-hint: unknown option: $1" >&2; exit 2 ;;
+    esac
+    shift
+done
+
+# The dedupe exists so this does not reprint on every nested subshell. It must
+# never suppress an explicit invocation — those are always answered.
+DEDUPE=1
+[ "$EXPLICIT" = 1 ] && DEDUPE=0
+
+# Self-gate before touching the socket: this runs in every interactive shell, so
+# outside a herdr pane it has to be a silent, cheap no-op.
+if [ -z "${HERDR_ENV:-}" ] && [ "$EXPLICIT" = 0 ]; then
+    exit 0
+fi
+
+# ── presentation ─────────────────────────────────────────────────────────────
+if [ "$COLOR" = auto ]; then
+    [ -t 1 ] && COLOR=always || COLOR=never
+fi
+
+if [ "$COLOR" = always ]; then
+    C_ACC=$'\033[38;5;111m' C_DIM=$'\033[2m' C_CMD=$'\033[38;5;150m'
+    C_WARN=$'\033[38;5;180m' C_OFF=$'\033[0m'
+else
+    C_ACC='' C_DIM='' C_CMD='' C_WARN='' C_OFF=''
+fi
+
+# ── herdr lookups ────────────────────────────────────────────────────────────
+#
+# NB: jq process startup (~25 ms) dominates everything here, and this runs on
+# every shell start. Each pane/record object is therefore parsed exactly ONCE,
+# into tab-separated fields, and the rest is bash + `cut`. Do not reintroduce
+# per-field jq calls.
+
+pane_json() {   # $1 = "current" | pane id  → the pane object as JSON
+    local what="$1" raw id cur
+    if [ "$what" = current ]; then
+        raw="$("$HERDR_BIN" pane current 2>/dev/null)" || raw=""
+        # `herdr pane current` resolves via the calling process's terminal. That
+        # can fail outright in a pane restored by the server, so fall back to the
+        # authoritative lookup: $HERDR_PANE_ID is exported into every pane.
+        if [ -z "$raw" ] && [ -n "${HERDR_PANE_ID:-}" ]; then
+            debug "pane current failed; falling back to pane get $HERDR_PANE_ID"
+            raw="$("$HERDR_BIN" pane get "$HERDR_PANE_ID" 2>/dev/null)" || raw=""
+        fi
+    else
+        raw="$("$HERDR_BIN" pane get "$what" 2>/dev/null)" || return 1
+    fi
+    [ -n "$raw" ] || return 1
+
+    # Guard against ever printing another pane's conversation: if `pane current`
+    # disagrees with the pane we are actually running in, re-ask by id.
+    if [ "$what" = current ] && [ -n "${HERDR_PANE_ID:-}" ]; then
+        id="$(jq -r '.result.pane.pane_id // empty' <<<"$raw" 2>/dev/null)"
+        if [ -n "$id" ] && [ "$id" != "$HERDR_PANE_ID" ]; then
+            debug "pane current disagreed ($id vs $HERDR_PANE_ID); re-asked by id"
+            cur="$("$HERDR_BIN" pane get "$HERDR_PANE_ID" 2>/dev/null)" || true
+            [ -n "$cur" ] && raw="$cur"
+        fi
+    fi
+    jq -c '.result.pane // .result' <<<"$raw" 2>/dev/null
+}
+
+# tab_id → the user's own tab label ("2. pi"), which is far more recognisable
+# than wF:t2. Loaded lazily: --commands output never needs labels.
+TAB_LABELS=""
+tab_label_for() {
+    local tid="$1" id label
+    [ -n "$tid" ] || return 0
+    if [ -z "$TAB_LABELS" ]; then
+        TAB_LABELS="$("$HERDR_BIN" tab list 2>/dev/null \
+            | jq -r '.result.tabs[]? | [.tab_id, (.label // "")] | @tsv' 2>/dev/null)"
+    fi
+    while IFS=$'\t' read -r id label; do
+        if [ "$id" = "$tid" ]; then printf '%s' "$label"; return 0; fi
+    done <<<"$TAB_LABELS"
+    return 0
+}
+
+# Sessions already held by another pane. Also lazy: the fast path (a pane
+# carrying its own live record) never needs it, and it costs a socket call.
+CLAIMED=""
+build_claimed() {
+    [ -n "$CLAIMED" ] && return 0
+    CLAIMED="$("$HERDR_BIN" pane list 2>/dev/null \
+        | jq -r '.result.panes[]? | select(.agent_session != null) | [.agent_session.value, .pane_id] | @tsv' 2>/dev/null)"
+    return 0
+}
+
+claimed_by() {   # $1 = session value → pane id holding it, if any
+    [ -n "$1" ] || return 1
+    build_claimed
+    local v p
+    while IFS=$'\t' read -r v p; do
+        if [ "$v" = "$1" ]; then printf '%s' "$p"; return 0; fi
+    done <<<"$CLAIMED"
+    return 1
+}
+
+# ── session stores ───────────────────────────────────────────────────────────
+
+human_age() {   # $1 = file or epoch seconds
+    local ref epoch secs
+    if [ -f "$1" ]; then
+        ref="$(stat -c %Y "$1" 2>/dev/null)" || return 0
+    else
+        ref="$1"
+    fi
+    # A caller may hand us a path for a transcript that no longer exists. Never
+    # let that reach the arithmetic below — it aborts the call with a syntax
+    # error, which is how this was found (see the `dead` handling in render_pane).
+    case "$ref" in
+        ''|*[!0-9]*) return 0 ;;
+    esac
+    epoch="$(date +%s)"; secs=$(( epoch - ref ))
+    [ "$secs" -lt 0 ] && secs=0
+    if   [ "$secs" -lt 90 ];     then printf 'just now'
+    elif [ "$secs" -lt 5400 ];   then printf '%d min ago' "$(( secs / 60 ))"
+    elif [ "$secs" -lt 172800 ]; then printf '%d h ago'   "$(( secs / 3600 ))"
+    else                              printf '%d d ago'   "$(( secs / 86400 ))"
+    fi
+}
+
+# cwd → newest pi session transcript, via a cached index.
+#
+# Reading the header of all ~145 transcripts costs ~0.3 s, which is too much to
+# pay on every shell start, so the index is cached and only rebuilt when the
+# session directory actually gained a file. Lines are `path<TAB>cwd`; sessions
+# are named <ISO8601>_<uuid>.jsonl, so a reverse filename sort is a reverse
+# time sort.
+pi_index_file() {
+    local dir="$PI_SESSION_DIR" stale=0
+    [ -d "$dir" ] || return 1
+    if [ ! -f "$PI_INDEX" ]; then
+        stale=1
+    elif find "$dir" -maxdepth 1 -name '*.jsonl' -newer "$PI_INDEX" -print -quit 2>/dev/null | grep -q .; then
+        stale=1
+    fi
+    if [ "$stale" = 1 ]; then
+        mkdir -p "$STATE_DIR" 2>/dev/null || return 1
+        # -m1 keeps only the header line per file. The `:"cwd":"` junction is
+        # unique per output line, so splitting there survives colons in paths.
+        grep -H -m1 -o '"cwd":"[^"]*"' "$dir"/*.jsonl 2>/dev/null \
+            | sed 's#:"cwd":"#\t#; s#"$##' > "$PI_INDEX.tmp" 2>/dev/null \
+            && mv "$PI_INDEX.tmp" "$PI_INDEX"
+    fi
+    [ -f "$PI_INDEX" ] || return 1
+    printf '%s' "$PI_INDEX"
+}
+
+pi_latest_for() {   # $1 = cwd → newest transcript path
+    local cwd="$1" idx
+    idx="$(pi_index_file)" || return 1
+    awk -F'\t' -v cwd="$cwd" '$2 == cwd { print $1 }' "$idx" 2>/dev/null \
+        | sort -r | head -1
+}
+
+# Claude Code keeps one directory per project, named after the cwd with every
+# non-alphanumeric character replaced by '-'. Note that includes '_':
+# /home/bgo/work/gps_servers → -home-bgo-work-gps-servers. Verify against
+# sessions-index.json (which carries the real projectPath) and scan the indexes
+# when the guess misses.
+claude_project_dir() {
+    local cwd="$1" base="$CLAUDE_PROJECTS_DIR" enc f
+    [ -d "$base" ] || return 1
+    enc="$(printf '%s' "$cwd" | sed 's#[^A-Za-z0-9]#-#g')"
+    if [ -d "$base/$enc" ]; then
+        printf '%s\n' "$base/$enc"; return 0
+    fi
+    for f in "$base"/*/sessions-index.json; do
+        [ -f "$f" ] || continue
+        if jq -e --arg p "$cwd" 'any(.entries[]?; .projectPath == $p)' "$f" >/dev/null 2>&1; then
+            dirname "$f"; return 0
+        fi
+    done
+    return 1
+}
+
+claude_latest_for() {   # $1 = cwd → "uuid<TAB>summary<TAB>age"
+    local cwd="$1" dir entry uuid summary age
+    dir="$(claude_project_dir "$cwd")" || return 1
+    if [ -f "$dir/sessions-index.json" ]; then
+        entry="$(jq -r '[.entries[]? | select(.isSidechain | not)] | max_by(.modified) // empty
+                        | [.sessionId, (.summary // ""), (.modified // "")] | @tsv' \
+                 "$dir/sessions-index.json" 2>/dev/null)"
+        uuid="$(cut -f1 <<<"$entry" 2>/dev/null)"
+        if [ -n "$uuid" ]; then
+            summary="$(cut -f2 <<<"$entry")"
+            [ -f "$dir/$uuid.jsonl" ] && age="$(human_age "$dir/$uuid.jsonl")" || age=""
+            printf '%s\t%s\t%s\n' "$uuid" "$summary" "$age"; return 0
+        fi
+    fi
+    uuid="$(ls -t "$dir"/*.jsonl 2>/dev/null | head -1 | xargs -r basename | sed 's/\.jsonl$//')"
+    [ -n "$uuid" ] || return 1
+    printf '%s\t\t%s\n' "$uuid" "$(human_age "$dir/$uuid.jsonl")"
+}
+
+# pi records the transcript path; claude records a UUID that must be resolved
+# through the project directory. Prints the path (which may not exist).
+transcript_path() {   # $1 = agent, $2 = value, $3 = cwd
+    case "$1" in
+        pi)     printf '%s' "$2" ;;
+        claude)
+            local dir
+            dir="$(claude_project_dir "$3" || true)"
+            [ -n "$dir" ] && printf '%s/%s.jsonl' "$dir" "$2"
+            ;;
+    esac
+    return 0
+}
+
+# Is a transcript a dead end? Returns 0 (true) when the file exists but never
+# produced an assistant turn. A missing file is *not* called empty — herdr's
+# record may still be valid with the transcript stored elsewhere.
+is_empty() {   # $1 = claude|pi, $2 = transcript path
+    local kind="$1" path="$2"
+    [ -f "$path" ] || return 1
+    case "$kind" in
+        claude) ! grep -q '"type":"assistant"'  "$path" 2>/dev/null ;;
+        pi)     ! grep -q '"role":"assistant"' "$path" 2>/dev/null ;;
+        *)      return 1 ;;
+    esac
+}
+
+resume_cmd() {   # $1 = agent, $2 = kind, $3 = value → exact resume command
+    [ -n "$1" ] && [ -n "$3" ] || return 1
+    case "$1:$2" in
+        claude:id)   printf 'claude --resume %s\n' "$3" ;;
+        pi:path)     printf 'pi --session %s\n'    "$3" ;;
+        # Unknown agent or shape: say so rather than print a command that may fail.
+        *)           printf 'echo "unknown resume syntax: %s %s=%s"\n' "$1" "$2" "$3" ;;
+    esac
+}
+
+# ── rendering ────────────────────────────────────────────────────────────────
+
+render_pane() {   # $1 = pane json, $2 = "auto" | "plain"
+    local json="$1"
+    local meta pane_id cwd tab ws rec
+    local rmeta rec_agent rec_kind rec_value rec_path
+    local cmd="" note="" age="" summary="" empty=0 held="" dead=""
+    local alt="" alt_age="" alt_note=""
+
+    # One jq pass for the whole pane object (agent_session included, as compact
+    # JSON in its own field).
+    meta="$(jq -r '[.pane_id // "", .cwd // "", .tab_id // "", .workspace_id // "",
+                    ((.agent_session // {}) | tojson)] | @tsv' <<<"$json" 2>/dev/null)"
+    IFS=$'\t' read -r pane_id cwd tab ws rec <<<"$meta"
+    [ "$rec" = "{}" ] && rec=""
+    [ -n "$cwd" ] || cwd="$PWD"
+
+    # An explicit --cwd asks about that directory, so it overrides both the
+    # printed cwd and the pane's own recorded conversation.
+    if [ -n "$OPT_CWD" ]; then
+        cwd="$OPT_CWD"; rec=""
+    fi
+
+    if [ -n "$rec" ]; then
+        rmeta="$(jq -r '[.agent // "", .kind // "", .value // ""] | @tsv' <<<"$rec" 2>/dev/null)"
+        IFS=$'\t' read -r rec_agent rec_kind rec_value <<<"$rmeta"
+        cmd="$(resume_cmd "$rec_agent" "$rec_kind" "$rec_value")" || cmd=""
+        note="this pane held this conversation"
+        rec_path="$(transcript_path "$rec_agent" "$rec_value" "$cwd")"
+        if [ -n "$rec_path" ]; then
+            if [ ! -f "$rec_path" ]; then
+                # herdr will happily hold a record for a transcript that is gone.
+                dead="missing"; empty=1
+            else
+                age="$(human_age "$rec_path")"
+                if is_empty "$rec_agent" "$rec_path"; then dead="empty"; empty=1; fi
+            fi
+        fi
+        debug "source: pane's own agent_session record (dead=${dead:-no})"
+    fi
+
+    # The directory fallback is needed when there is no record at all, and also
+    # when the record is a dead end and the cwd holds something better.
+    if [ -z "$cmd" ] || [ "$empty" = 1 ]; then
+        local pi_path claude_row claude_uuid pi_ts claude_ts dir
+        local pi_empty=0 cl_empty=0 pi_score="" cl_score=""
+        local fcmd="" fage="" fsummary="" fempty=1 fvalue="" other
+
+        pi_path="$(pi_latest_for "$cwd" || true)"
+        claude_row="$(claude_latest_for "$cwd" || true)"
+        claude_uuid="$(cut -f1 <<<"$claude_row" 2>/dev/null)"
+        fsummary="$(cut -f2 <<<"$claude_row" 2>/dev/null)"
+        fage="$(cut -f3 <<<"$claude_row" 2>/dev/null)"
+
+        pi_ts=0; claude_ts=0; dir=""
+        if [ -n "$pi_path" ]; then
+            pi_ts="$(stat -c %Y "$pi_path" 2>/dev/null || echo 0)"
+            is_empty pi "$pi_path" && pi_empty=1
+        fi
+        if [ -n "$claude_uuid" ]; then
+            dir="$(claude_project_dir "$cwd" || true)"
+            if [ -n "$dir" ] && [ -f "$dir/$claude_uuid.jsonl" ]; then
+                claude_ts="$(stat -c %Y "$dir/$claude_uuid.jsonl" 2>/dev/null || echo 0)"
+                is_empty claude "$dir/$claude_uuid.jsonl" && cl_empty=1
+            fi
+        fi
+
+        # Rank by "has an assistant turn", then by recency: a real conversation
+        # beats a newer dead end. The offset exceeds any epoch, so it dominates.
+        [ -n "$pi_path" ]     && pi_score="$(( pi_ts     + (1 - pi_empty) * 1000000000000 ))"
+        [ -n "$claude_uuid" ] && cl_score="$(( claude_ts + (1 - cl_empty) * 1000000000000 ))"
+
+        if [ -n "$cl_score" ] && { [ -z "$pi_score" ] || [ "$cl_score" -gt "$pi_score" ]; }; then
+            fcmd="claude --resume $claude_uuid"; fempty="$cl_empty"; fvalue="$claude_uuid"
+        elif [ -n "$pi_score" ]; then
+            fcmd="pi --session $pi_path"; fempty="$pi_empty"; fvalue="$pi_path"
+            fage="$(human_age "$pi_path")"; fsummary=""
+        fi
+
+        debug "source: cwd fallback for $cwd (pi=$pi_path empty=$pi_empty | claude=$claude_uuid empty=$cl_empty)"
+
+        if [ -z "$cmd" ]; then
+            [ -n "$fcmd" ] || return 1
+            cmd="$fcmd"; age="$fage"; summary="$fsummary"; empty="$fempty"
+            [ "$empty" = 1 ] && dead="empty"
+            note="no conversation recorded for this pane — newest session in this directory"
+            # Never aim two panes at one transcript: if another pane already holds
+            # this conversation, say where instead of offering a second copy.
+            held="$(claimed_by "$fvalue" || true)"
+            [ "$held" = "$pane_id" ] && held=""
+        elif [ -n "$fcmd" ] && [ "$fcmd" != "$cmd" ] && [ "$fempty" = 0 ]; then
+            # The record is a dead end and this directory has a real conversation —
+            # unless another pane already holds that one too.
+            other="$(claimed_by "$fvalue" || true)"
+            [ "$other" = "$pane_id" ] && other=""
+            if [ -n "$other" ]; then
+                alt_note="the newest session in this directory is already open in $other"
+            else
+                alt="$fcmd"; alt_age="$fage"
+            fi
+        fi
+    fi
+
+    [ -n "$cmd" ] || return 1
+
+    if [ "$OUTPUT" = commands ]; then
+        if [ "$empty" = 1 ]; then
+            printf '# %s — recorded session is %s; skipped\n' "${pane_id:-$cwd}" "${dead:-empty}"
+            [ -n "$alt" ] && printf 'cd %s && %s\n' "$cwd" "$alt"
+        elif [ -n "$held" ]; then
+            printf '# %s — conversation already held by %s; not offered again\n' "${pane_id:-$cwd}" "$held"
+        else
+            printf 'cd %s && %s\n' "$cwd" "$cmd"
+        fi
+        return 0
+    fi
+
+    local label head
+    label="$(tab_label_for "$tab")"
+    head="${C_ACC}⏯${C_OFF}"
+    if [ -n "$pane_id" ]; then
+        head+="  ${C_ACC}${pane_id}${C_OFF}"
+        [ -n "$ws" ] && head+=" ${C_DIM}(${ws})${C_OFF}"
+        [ -n "$label" ] && head+=" · ${C_DIM}${label}${C_OFF}"
+    fi
+    printf '%s · %s\n' "$head" "$cwd"
+
+    [ -n "$note" ] && printf '   %s%s%s\n' "$C_DIM" "$note" "$C_OFF"
+
+    printf '   %s%s%s' "$C_CMD" "$cmd" "$C_OFF"
+    [ -n "$age" ] && printf '   %s%s%s' "$C_DIM" "$age" "$C_OFF"
+    printf '\n'
+    [ -n "$summary" ] && printf '   %s↳ %s%s\n' "$C_DIM" "$summary" "$C_OFF"
+    case "$dead" in
+        empty)   printf '   %s⚠ empty — no assistant turn recorded, nothing to come back to%s\n' "$C_WARN" "$C_OFF" ;;
+        missing) printf '   %s⚠ transcript missing — the recorded session file is gone%s\n' "$C_WARN" "$C_OFF" ;;
+    esac
+    if [ -n "$alt" ]; then
+        printf '   %s↳ use instead:%s %s%s%s' "$C_DIM" "$C_OFF" "$C_CMD" "$alt" "$C_OFF"
+        [ -n "$alt_age" ] && printf '   %s%s%s' "$C_DIM" "$alt_age" "$C_OFF"
+        printf '\n'
+    fi
+    [ -n "$alt_note" ] && printf '   %s↳ %s%s\n' "$C_DIM" "$alt_note" "$C_OFF"
+    if [ -n "$held" ]; then
+        printf '   %s↳ already open in %s — resuming it here would open one transcript twice%s\n' \
+            "$C_WARN" "$held" "$C_OFF"
+    fi
+    return 0
+}
+
+# ── once-per-boot dedupe ─────────────────────────────────────────────────────
+
+boot_id() { cat /proc/sys/kernel/random/boot_id 2>/dev/null || printf 'noboot'; }
+
+marker_key() { printf '%s' "$1" | tr -c 'A-Za-z0-9._-' '_'; }
+
+already_shown() {   # $1 = pane id
+    [ "$DEDUPE" = 1 ] || return 1
+    [ -n "${1:-}" ] || return 1
+    [ -f "$MARKER_DIR/$(boot_id)_$(marker_key "$1")" ]
+}
+
+mark_shown() {      # $1 = pane id
+    [ "$DEDUPE" = 1 ] || return 0
+    [ -n "${1:-}" ] || return 0
+    mkdir -p "$MARKER_DIR" 2>/dev/null || return 0
+    : > "$MARKER_DIR/$(boot_id)_$(marker_key "$1")" 2>/dev/null || return 0
+    # Drop markers from earlier boots so the directory cannot grow forever.
+    find "$MARKER_DIR" -maxdepth 1 -type f -mtime +2 -delete 2>/dev/null
+    return 0
+}
+
+# ── modes ────────────────────────────────────────────────────────────────────
+
+if [ "$LIST_ALL" = 1 ]; then
+    list_raw="$("$HERDR_BIN" pane list 2>/dev/null)"
+    panes="$(jq -c '.result.panes[]? | select(.agent_session != null)' <<<"$list_raw" 2>/dev/null)"
+    if [ -z "$panes" ]; then
+        echo "herdr has no recorded agent panes right now" >&2
+        exit 1
+    fi
+    while IFS= read -r p; do
+        [ -n "$p" ] || continue
+        render_pane "$p" plain || true
+        [ "$OUTPUT" = listing ] && echo
+    done <<<"$panes"
+
+    # Two panes claiming one transcript is dangerous (both would attach to the
+    # same file), and it is the one thing a per-pane view cannot see on its own,
+    # so report it here. stderr, so --commands stays pipeable.
+    dupes="$(jq -r '.result.panes[]? | select(.agent_session != null) | [.agent_session.value, .pane_id] | @tsv' \
+                <<<"$list_raw" 2>/dev/null \
+        | sort \
+        | awk -F'\t' '$1 == prev { if (!shown) { printf "  %s\n", prev; shown = 1 } printf "    → %s\n", $2; next }
+                      { prev = $1; shown = 0 }')"
+    if [ -n "$dupes" ]; then
+        echo "⚠ the same conversation is recorded on more than one pane:" >&2
+        printf '%s\n' "$dupes" >&2
+    fi
+    exit 0
+fi
+
+# Cheap dedupe short-circuit. $HERDR_PANE_ID is exported into the pane, so a
+# repeat shell here can bail before spending a socket round-trip plus jq — this
+# is the common case after the first shell of a boot, and it is the only part of
+# this script that runs on *every* shell start.
+if [ -z "$OPT_PANE" ] && [ -z "$OPT_CWD" ] && [ -n "${HERDR_PANE_ID:-}" ] \
+   && already_shown "$HERDR_PANE_ID"; then
+    debug "already shown in this pane this boot (--force to override)"
+    exit 0
+fi
+
+if [ -n "$OPT_PANE" ]; then
+    json="$(pane_json "$OPT_PANE" || true)"
+    if [ -z "$json" ]; then
+        echo "$HERDR_BIN: no such pane: $OPT_PANE (is the herdr server running?)" >&2
+        exit 1
+    fi
+elif [ -n "$OPT_CWD" ]; then
+    json="$(jq -cn --arg cwd "$OPT_CWD" '{pane_id:null,cwd:$cwd}')"
+else
+    json="$(pane_json current || true)"
+    if [ -z "$json" ]; then
+        # Server down (e.g. mid-restore). Silent when implicitly invoked.
+        [ "$EXPLICIT" = 1 ] && \
+            echo "$HERDR_BIN: could not resolve the current pane (is the herdr server running?)" >&2
+        exit 0
+    fi
+fi
+
+pane_id="$(jq -r '.pane_id // empty' <<<"$json" 2>/dev/null)"
+if already_shown "$pane_id"; then
+    debug "already shown in this pane this boot (--force to override)"
+    exit 0
+fi
+debug "pane=$pane_id cwd=$(jq -r '.cwd // empty' <<<"$json" 2>/dev/null) dedupe=$DEDUPE"
+
+if render_pane "$json" auto; then
+    mark_shown "$pane_id"
+    exit 0
+fi
+
+# Nothing to resume here. Silent when we were invoked by a shell startup, and
+# explicit when someone asked on purpose.
+[ "$EXPLICIT" = 0 ] && exit 0
+echo "no pi/claude session recorded for this pane or ${OPT_CWD:-$PWD}" >&2
+exit 1

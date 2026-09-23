@@ -23,7 +23,7 @@ git repo instead of in a real directory. Ansible handles this automatically duri
 | `password-store-sync.timer` | Timer | `enable --now` | Schedules periodic password store and dotfiles sync |
 | `password-store-sync.service` | Triggered | via `.timer` | Runs the actual sync (git pull/push) |
 | `tmux.service` | Forking | `enable` only | Starts detached tmux session at login |
-| `herdr.service` | Simple | `enable` only | Starts the herdr server with the graphical session — restores all saved workspaces/tabs/panes **as plain shells** (`[session] resume_agents_on_restore=false`); agents are reopened on demand with `herdr-resume-hints`, from `~/.config/herdr/session.json`. See "herdr persistence" below |
+| `herdr.service` | Simple | `enable` only | Starts the herdr server with the graphical session — restores all saved workspaces/tabs/panes **as plain shells** (`[session] resume_agents_on_restore=false`); agents are reopened on demand — each restored pane prints its own command on startup (`herdr-pane-resume-hint`), or list every one with `herdr-resume-hints`. See "herdr persistence" below |
 | `calendar-notify.timer` | Timer | `enable --now` | Checks Google Calendar events every 10 min, sends Mako notifications |
 | `calendar-notify.service` | Triggered | via `.timer` | Runs calendar-notify script for both Google accounts |
 | `spotify-notify.service` | Long-running | `enable --now` | Track change notifications via playerctl + notify-send |
@@ -220,6 +220,109 @@ ExecStop=%h/.local/bin/herdr server stop
 
 (Multiple `ExecStop=` lines run in order, so the snapshot is taken while the session is still
 intact.)
+
+### `herdr-pane-resume-hint` — the command, printed *inside the pane it belongs to*
+
+`herdr-resume-hints` answers *"what was open?"* centrally. This answers *"what was THIS shell?"*
+from inside the pane — the question you actually have when eleven restored shells are staring at
+you and you cannot tell which was the receivers work and which was the vault.
+
+Wired automatically: `zsh/.config/zsh/herdr-resume-hint.zsh`, sourced at the end of
+`zsh/.config/zsh/.zshrc`, calls it on every interactive shell start. A restored pane therefore
+prints this before you type anything:
+
+```text
+⏯  wF:p1 (wF) · 2. pi · /home/bgo/.dotfiles
+   this pane held this conversation
+   pi --session /home/bgo/.local/share/pi/sessions/2026-09-23T19-02-26-947Z_…jsonl   just now
+```
+
+**Two sources, in order of trust** — this is the whole design:
+
+1. **The pane's own `agent_session` record**, read from `herdr pane current` (falling back to
+   `herdr pane get $HERDR_PANE_ID`). Exact, and survives a restore.
+2. **The newest pi/claude session whose project is this pane's cwd** — for panes that never ran an
+   agent or whose record was lost. pi is indexed from the `cwd` field in each transcript header;
+   claude is resolved via `~/.claude/projects/<encoded-cwd>/sessions-index.json`. Whichever of the
+   two was touched most recently wins, and the line is labelled as inferred rather than presented
+   as a fact about the pane.
+
+```bash
+herdr-pane-resume-hint                 # this pane (once per boot)
+herdr-pane-resume-hint --force         # print again, ignoring the marker
+herdr-pane-resume-hint --all           # every pane with a recorded conversation
+herdr-pane-resume-hint --commands      # bare `cd … && …` lines, pipeable
+herdr-pane-resume-hint --pane wF:p1    # inspect another pane
+herdr-pane-resume-hint --cwd DIR       # answer for a directory, ignoring this pane
+```
+
+**Three properties worth not breaking:**
+
+- **It can never print another pane's conversation.** `herdr pane current` resolves via the
+  calling process's terminal, so if its answer disagrees with `$HERDR_PANE_ID` the script re-asks
+  by id.
+- **It is a no-op outside herdr**, gated on `$HERDR_ENV` before any socket call, so the `tmux` /
+  plain-kitty case is untouched. Inside a pane with nothing to resume it stays silent too.
+- **Once per boot per pane**, via a marker in `~/.local/state/herdr/hint-shown/` keyed on
+  `/proc/sys/kernel/random/boot_id` — so it appears after a reboot but not on every nested
+  subshell. Any explicit flag bypasses the marker.
+
+### Dead ends: `⚠ empty` and `⚠ transcript missing`
+
+herdr records a session identity even when there is nothing behind it. Two kinds were found in
+this session's live state:
+
+| Case | Example | Detection |
+|---|---|---|
+| **empty** — never produced an assistant turn | `wF:p46` → claude `aa8faf6e`, a `/exit` stub (3.3 KB, 0 assistant records) | no `"type":"assistant"` (claude) / no `"role":"assistant"` (pi) in the transcript |
+| **missing** — the transcript is gone | `w12:p2` → pi `2026-09-13T12-00-20…jsonl`, deleted since | recorded path does not exist |
+
+Both are shown with a `⚠` line and, when the cwd has a real conversation, a `↳ use instead:`
+line pointing at it. `--commands` skips the dead one outright and leaves a `#` comment, so piping
+into `bash` cannot reanimate a stub.
+
+**The test is the transcript, not `sessions-index.json`.** The index proved unreliable — for
+`aa8faf6e` it had no entry at all, so `messageCount` was simply unavailable. The transcript is
+ground truth.
+
+> A missing transcript is also why `human_age` now refuses non-numeric input. It used to fall
+> through to `ref="$1"` and do `$(( epoch - ref ))` on a *path*, aborting with
+> `arithmetic syntax error`. Found via `w12:p2` in an `--all` sweep.
+
+### One conversation, one pane
+
+Two panes attached to the same transcript both write to it, so a conversation that is already
+held by another pane is **reported**, not offered a second time:
+
+```text
+⏯  wE:p1 (wE) · 1. bgo rek_d01 · /home/bgo/work/gps_servers
+   no conversation recorded for this pane — newest session in this directory
+   claude --resume e6018791-08ed-44df-9633-ac30fe754ada   12 h ago
+   ↳ already open in wE:p9 — resuming it here would open one transcript twice
+```
+
+This matters most for the `--cwd` fallback, which by construction points at "the newest session in
+this directory" — a conversation another pane may well be holding. `--commands` emits a `#`
+comment instead of the command. A per-pane view cannot see this on its own, so `--all` also audits
+for a session claimed by two panes and reports it on stderr.
+
+**Cost and the jq trap.** The banner path is ~50 ms: jq process startup (~25 ms) dominates, so the
+pane object and its `agent_session` are each parsed **exactly once** into tab-separated fields.
+Per-field jq calls had pushed this to 148 ms — do not reintroduce them. The repeat-shell path is
+free (0.00 s) because the dedupe marker is keyed on `$HERDR_PANE_ID`, which lets a second shell in
+the same pane exit before the socket round-trip. The pi index (`~/.local/state/herdr/pi-index.tsv`)
+is rebuilt only when the session directory gains a file, because reading all ~145 transcript
+headers costs ~0.3 s — too much for every shell start, and panes carrying their own record never
+touch it. `--all` is ~0.7 s for 13 panes; it is an audit command, not a startup path.
+
+> Note that `claude_project_dir` must encode **every** non-alphanumeric character as `-`, not just
+> `/` and `.`: `/home/bgo/work/gps_servers` is `-home-bgo-work-gps-servers`. Getting this wrong
+> does not produce a wrong answer (the `projectPath` scan still finds it) but silently turns the
+> fast path into a scan of every project index.
+>
+> The pane record is only as fresh as herdr's own tracking: a pane whose agent was restarted
+> reports whatever that agent last reported. `herdr pane get <id>` is the ground truth — the tool
+> prints exactly what it says, and never guesses.
 
 ## Common Operations
 

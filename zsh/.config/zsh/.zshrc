@@ -99,6 +99,10 @@ fi
 unset __mamba_setup
 # <<< mamba initialize <<<
 
+# herdr per-pane resume hint — tells a restored pane which conversation it held.
+# Self-gating and once-per-boot; see zsh/.config/zsh/herdr-resume-hint.zsh
+[ -f "$HOME/.config/zsh/herdr-resume-hint.zsh" ] && source "$HOME/.config/zsh/herdr-resume-hint.zsh"
+
 # ---------------------------------------------------------------------------
 # History — MUST stay last (after every `plug` call).
 # zap-zsh/supercharge sets HISTFILE/HISTSIZE/SAVEHIST on load, so any history
