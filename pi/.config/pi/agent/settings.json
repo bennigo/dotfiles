@@ -35,6 +35,7 @@
   "defaultModel": "claude-sonnet-5",
   "defaultThinkingLevel": "high",
   "theme": "dark",
+  "tuiMode": "regular",
   "hideThinkingBlock": true,
   "editorPaddingX": 0,
   "terminal": {
