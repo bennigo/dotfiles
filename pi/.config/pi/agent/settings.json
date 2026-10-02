@@ -4,10 +4,13 @@
     "./extensions/context-model.ts",
     "./extensions/model-discovery.ts",
     "./extensions/mode-router.ts",
-    "./extensions/model-tiers.ts"
+    "./extensions/model-tiers.ts",
+    "+extensions/bgo-toolkit/git-checkpoint.ts",
+    "+builtin:mcp"
   ],
   "skills": [
-    "~/.claude/skills"
+    "~/.claude/skills",
+    "+../../../.claude/skills/synced/55815cd3-3edc-4949-bc53-1bb2b0b5516b_6a18d867-26d0-4e30-8320-1af54364380c/xlsx/SKILL.md"
   ],
   "enableSkillCommands": true,
   "packages": [
@@ -28,7 +31,12 @@
     "npm:pi-context-view",
     "npm:@juicesharp/rpiv-args",
     "npm:@gotgenes/pi-permission-system",
-    "npm:@earendil-works/pi-voice"
+    {
+      "source": "npm:@earendil-works/pi-voice",
+      "extensions": [
+        "+index.ts"
+      ]
+    }
   ],
   "lastChangelogVersion": "0.87.1",
   "defaultProvider": "github-copilot",
@@ -40,5 +48,8 @@
   "editorPaddingX": 0,
   "terminal": {
     "showTerminalProgress": true
-  }
+  },
+  "prompts": [
+    "+prompts/quick.md"
+  ]
 }
