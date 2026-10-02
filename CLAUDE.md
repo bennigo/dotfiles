@@ -69,6 +69,7 @@ architecture guidelines. Subdirectories with their own CLAUDE.md are marked with
 ├── systemd/        # User systemd services (9 units) — see systemd/CLAUDE.md 📄
 ├── docker/         # Docker Engine + compose templates — see docker/CLAUDE.md 📄
 ├── claude-code/    # Claude Code CLI + MCP servers — see claude-code/CLAUDE.md 📄
+├── mcp/            # Global MCP servers (pi-mcp-adapter) — ~/.config/mcp/mcp.json
 ├── firefox/        # Multi-profile Firefox + Sway workspace integration — see firefox/CLAUDE.md 📄
 ├── kitty/          # Terminal emulator (primary)
 ├── foot/           # Lightweight terminal emulator
