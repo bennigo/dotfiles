@@ -38,7 +38,7 @@
       ]
     }
   ],
-  "lastChangelogVersion": "0.87.1",
+  "lastChangelogVersion": "0.99.2",
   "defaultProvider": "github-copilot",
   "defaultModel": "claude-sonnet-5",
   "defaultThinkingLevel": "high",
