@@ -51,16 +51,30 @@ except KeyError as e:
 PYEOF
 )" || line=""
         if [[ -n "$line" ]]; then
-            # Insert on a blank line directly after the "# YYYY-MM-DD" title
+            # Insert the market pulse directly under the "### 🌅 Morgunyfirlit — DATE"
+            # heading, so it heads the morning summary.
+            #
+            # Until 2026-10-08 this anchored on the "# YYYY-MM-DD" title instead,
+            # which put the line at the very top of the note — above the prev/next
+            # nav links — and left the nav stranded under the market data. The
+            # heading is the right anchor: it is written by vault-create-daily's
+            # heredoc, so it exists before this runs.
             python3 - "$NOTE" "$line" <<'PYEOF'
 import re, sys
 path, line = sys.argv[1], sys.argv[2]
 text = open(path).read()
-new, n = re.subn(r"(?m)^(# \d{4}-\d{2}-\d{2}\s*)$", "\\1\n" + line, text, count=1)
+
+# Preferred anchor: the Morgunyfirlit heading, matched as a full line.
+pat = re.compile(r"(?m)^(###\s*🌅\s*Morgunyfirlit[^\n]*\n)")
+new, n = pat.subn(lambda m: m.group(1) + "\n" + line + "\n", text, count=1)
+if not n:
+    # Fallback: no heading (older note shape) — keep the old title-anchored
+    # behaviour rather than dropping the line.
+    new, n = re.subn(r"(?m)^(# \d{4}-\d{2}-\d{2}\s*)$", "\\1\n\n" + line + "\n", text, count=1)
 if n:
     open(path, "w").write(new)
 else:
-    print("title line not found — market line not injected", file=sys.stderr)
+    print("no Morgunyfirlit heading and no title line — market line not injected", file=sys.stderr)
 PYEOF
         fi
     fi
