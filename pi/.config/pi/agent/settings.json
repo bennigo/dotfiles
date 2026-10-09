@@ -5,7 +5,8 @@
     "./extensions/model-discovery.ts",
     "./extensions/mode-router.ts",
     "./extensions/model-tiers.ts",
-    "+extensions/bgo-toolkit/git-checkpoint.ts"
+    "+extensions/bgo-toolkit/git-checkpoint.ts",
+    "-builtin:mcp"
   ],
   "skills": [
     "~/.claude/skills",
