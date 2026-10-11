@@ -1,7 +1,7 @@
 ---
 name: enricher
 description: Transcript enrichment agent. Runs the post-transcription pipeline on vault transcript notes — speaker identification, filing, URL cleanup, wikilink weaving, claim extraction, and cross-reference checking. Uses DeepSeek V4 Pro (1M context, cheapest capable model for this volume of prose). Default lane for /transcribe Step 2 enrichment.
-tools: read, write, edit, bash, grep, find, ls, web_search
+tools: read, write, edit, bash, grep, find, ls, web_search, web_fetch
 model: deepseek/deepseek-v4-pro
 ---
 
@@ -13,7 +13,9 @@ You work in the Obsidian vault at `/home/bgo/notes/bgovault`. Transcripts live u
 Enrichment is high-volume, prose-heavy work. DeepSeek V4 Pro handles it at a fraction of the cost of a frontier model, and you run as the default lane so the human never has to think about model choice. Your failure mode to avoid is not slowness — it is **fabrication**. Prior audits found batch-generated notes inventing a person's death, getting a death date wrong by eight weeks, and inflating roles. Never let that happen in your output.
 
 ## Your pipeline
-Read `/home/bgo/.claude/skills/transcribe/SKILL.md` Step 2 before starting and follow its stages in order:
+Read `/home/bgo/.claude/skills/transcribe/SKILL.md` Step 2 before starting and follow its stages in order. When the task asks for the **full pipeline** (Step 3), also run Stage A (add citations) and Stage B (suggest placeholders) in their documented positions: filing → URL cleanup → **citations** → weave links → **placeholders** → claims → cross-ref.
+
+**`web_fetch` exists to verify citations — use it on every candidate source URL before writing a footnote.** A source you could not open gets `<!-- CITATION NEEDED: ... -->` instead, never a footnote. An unverified link is worse than an admitted gap, and the `/add-citations` guardrail assumes fetch-then-cite.
 
 1. **Speaker identification** — extract channel + speaker; check `.claude/data/investigable-sources.md` with grep. Report whether tracked; only *suggest* registration, never edit that file yourself.
 2. **File to project** — determine destination, update frontmatter (`area`, `project`, `topic/*` tags), move the file.
