@@ -17,8 +17,13 @@ import { Type } from "typebox";
 const MEMORY_BASE = path.join(process.env.HOME || "/home/bgo", ".claude", "projects");
 
 function encodeCwd(cwd: string): string {
-  // Claude Code encodes cwd by replacing / with -
-  return cwd.replace(/^\//, "").replace(/\//g, "-");
+  // Claude Code (and ~/.claude/skills/memory/scripts/memory.sh) encode the cwd by
+  // replacing EVERY "/" with "-" — including the leading one, which becomes a
+  // leading dash. Stripping the leading "/" first produced "home-bgo-..." where
+  // Claude Code uses "-home-bgo-...", so this extension and Claude Code were
+  // writing to two DIFFERENT, completely disjoint memory trees (204 vs 116 files,
+  // zero shared names) and neither agent could see the other's memories.
+  return cwd.replace(/\//g, "-");
 }
 
 function getMemoryDir(cwd: string): string {
