@@ -699,6 +699,8 @@ return {
     "nvim-treesitter",
   },
   config = function()
+    -- Must run before setup() so the note cache's first scan sees symlinked notes.
+    require("user.obsidian_symlinks").setup("~/notes/bgovault")
     setup()
 
     -- obsidian.nvim builds the picker prompt as
