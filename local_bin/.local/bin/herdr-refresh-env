@@ -1,38 +1,60 @@
 #!/bin/bash
-## Herdr // refresh env in all shell panes // 🔄 ##
+## Herdr // restart the shell in all idle shell panes // 🔄 ##
 #
-# Bound to prefix+R in herdr config. After editing ~/.zshenv (new exports,
-# API keys, etc.), this re-sources it in every SHELL pane so existing
-# sessions pick up the change without a restart.
+# Bound to prefix+R in herdr config. After editing ~/.zshenv, .zshrc,
+# aliases.zsh, functions…, this sends `exec zsh` to every shell pane that is
+# sitting at a prompt, so each gets a fresh shell: new and changed aliases,
+# functions and env apply, and removed/renamed ones are gone (re-sourcing a
+# file can add but never remove). Exported env (e.g. an active mamba env) is
+# inherited; unexported shell variables and the per-shell history list are not.
 #
-# Agent panes (pi, claude, codex, etc.) are skipped — they inherited env at
-# launch and re-sourcing would inject text into their TUI input. Restart
-# those individually if they need new env.
+# A pane is touched only if its foreground process IS its own zsh
+# (herdr pane process-info: foreground_process_group_id == shell_pid), so a
+# pane running nvim, ssh, a long job, or an agent (claude, pi…) is skipped —
+# the text would otherwise be typed into that program.
 
 set -euo pipefail
 
 mapfile -t PANES < <(herdr pane list 2>/dev/null | python3 -c "
 import json, sys
 try:
-    d = json.load(sys.stdin)['result']
-    panes = d.get('panes') or d.get('pane_list') or []
-    for p in panes:
-        agent = (p.get('agent') or '-').strip()
-        if agent in ('-', '', 'unknown', None):   # shell panes only
-            print(p['pane_id'])
+    for p in json.load(sys.stdin)['result'].get('panes') or []:
+        print(p['pane_id'])
 except Exception:
     pass
 ")
 
-count=0
+idle_zsh() {
+    herdr pane process-info --pane "$1" 2>/dev/null | python3 -c "
+import json, sys
+i = json.load(sys.stdin)['result']['process_info']
+fg = i.get('foreground_processes') or []
+ok = (i.get('foreground_process_group_id') == i.get('shell_pid')
+      and len(fg) == 1 and fg[0].get('name') == 'zsh')
+sys.exit(0 if ok else 1)
+"
+}
+
+count=0 skipped=0
 for pane in "${PANES[@]:-}"; do
     [ -z "$pane" ] && continue
-    if herdr pane send-text "$pane" $'source ~/.zshenv\n' 2>/dev/null; then
+    # ctrl+u first: a half-typed line would otherwise prefix the command
+    # ("l exec zsh"). The second line runs in the NEW shell: the mamba env is
+    # still exported (PATH, CONDA_DEFAULT_ENV) but its prompt label is not, so
+    # re-activate it. No brackets/quotes: text is typed, and zsh-autopair
+    # would add closing pairs.
+    if idle_zsh "$pane" \
+        && herdr pane send-keys "$pane" ctrl+u >/dev/null 2>&1 \
+        && herdr pane send-text "$pane" $' exec zsh\n' >/dev/null 2>&1 \
+        && herdr pane send-text "$pane" \
+            $' test $CONDA_DEFAULT_ENV && mamba activate $CONDA_DEFAULT_ENV\n' >/dev/null 2>&1; then
         count=$((count + 1))
+    else
+        skipped=$((skipped + 1))
     fi
 done
 
 # Brief confirmation (shows in the temp pane if run via type=pane binding)
-echo "refreshed ~/.zshenv in $count shell pane(s)"
-echo "(agent panes skipped — restart those individually if needed)"
-sleep 1.2
+echo "restarted zsh in $count idle shell pane(s)"
+echo "skipped $skipped busy/agent pane(s) (nvim, ssh, jobs, claude, pi…)"
+sleep 1.5
