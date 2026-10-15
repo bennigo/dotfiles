@@ -8,10 +8,17 @@
  *   free  Ctrl+5  kimi-coding/k3 (1M)              $0 (Kimi subscription)
  *   std   Ctrl+1  github-copilot/claude-sonnet-5   $0 (Copilot subscription) ← session default
  *   deep  Ctrl+4  zai-coding-cn/glm-5.3-flash      $0 (GLM Coding Plan)
- *   fast  Ctrl+2  deepseek/deepseek-flash          ~$0.30/$1.20 per M tok (cheap paid)
+ *   flash Ctrl+2  deepseek/deepseek-flash          ~$0.30/$1.20 per M tok (cheap paid)
  *   pro   Ctrl+3  deepseek/deepseek-v4-pro         ~$1.32/$3.96 per M tok (paid, special occasions)
  *   glm   Ctrl+6  zai-coding-cn/glm-5.3            $0 (GLM Coding Plan, 1M ctx)
+ *   codex Ctrl+7  openai-codex/gpt-6.1-sol         $0 (ChatGPT work seat, 500K ctx)
  *   local /local  ollama/llama3.1:8b               $0 (on-device, offline/private)
+ *
+ * Codex note: openai-codex is a ChatGPT *subscription* provider (OAuth sign-in via
+ * /login openai-codex), NOT an API key. A ChatGPT Team/Business seat includes Codex
+ * but no OpenAI API credits — those are a separately billed product. Treat Codex like
+ * the other subscription lanes ($0 marginal), but it is an employer-managed quota, so
+ * check your org's policy before using it for non-work tasks.
  *
  * Philosophy:
  *   - Default is Copilot Sonnet 5: subscription = $0 marginal, newest Sonnet.
@@ -43,15 +50,20 @@
  *   `/quota` shows state · `/quota restore` force-returns · `/quota clear` forgets.
  *
  * Commands:
- *   /fast    → DeepSeek V4.1 Flash   (cheap paid workhorse)
+ *   /flash   → DeepSeek V4.1 Flash   (cheap paid workhorse)
  *   /pro     → DeepSeek V4 Pro       (special occasions)
  *   /deep    → GLM-5.3-Highspeed     (free strong reasoning, 1M ctx)
  *   /glm     → GLM-5.3               (paid flagship GLM, Ctrl+6)
  *   /free    → Kimi K3 (1M)          (free subscription, biggest context)
+ *   /codex   → GPT-6.1 Sol (Codex)   (ChatGPT work seat, Ctrl+7)
  *   /std     → Claude Sonnet 5       (back to default)
  *   /local   → Llama 3.1 8B          (on-device)
  *   /tier    → show tier table + current model
  *
+ * Naming note: the DeepSeek lane is `/flash`, NOT `/fast`. @narumitw/pi-usage also
+ * registers `/fast` (toggle Codex Fast mode), and Pi resolves duplicate command names
+ * by suffixing BOTH (fast:1 / fast:2) — so a plain `/fast` would silently break for both
+ * extensions. Ctrl+2 is unaffected, since shortcuts are namespaced per extension.
  * Interplay with mode-router: switches done here fire model_select with a normal
  * (non-restore) source, so mode-router adopts them as your manual baseline — no
  * fighting between the two extensions.
@@ -87,7 +99,7 @@ const TIERS: Tier[] = [
     blurb: "Session default — newest Sonnet, subscription",
   },
   {
-    key: "fast",
+    key: "flash",
     shortcut: "ctrl+2",
     provider: "deepseek",
     id: "deepseek-flash",
@@ -135,6 +147,16 @@ const TIERS: Tier[] = [
     cost: "$0 (Kimi sub)",
     paid: false,
     blurb: "Free largest-context — research, scouting, many-file analysis",
+  },
+  {
+    key: "codex",
+    shortcut: "ctrl+7",
+    provider: "openai-codex",
+    id: "gpt-6.1-sol",
+    label: "GPT-6.1 Sol (Codex)",
+    cost: "$0 (ChatGPT seat)",
+    paid: false,
+    blurb: "Work ChatGPT seat — agentic coding specialist, 500K ctx, text+image",
   },
   {
     key: "local",
@@ -194,7 +216,9 @@ function isHeavy(prompt: string): boolean {
 // ---- Quota / rate-limit fallback ------------------------------------------
 
 const QUOTA_FALLBACK = { provider: "deepseek", id: "deepseek-flash" };
-const SUBSCRIPTION_PROVIDERS = new Set(["github-copilot", "kimi-coding"]);
+// Subscription providers get the 402/429 → Flash fallback. openai-codex qualifies:
+// it is a ChatGPT seat quota, not a paid API key, so it hits usage limits the same way.
+const SUBSCRIPTION_PROVIDERS = new Set(["github-copilot", "kimi-coding", "openai-codex"]);
 const RATE_LIMIT_COOLDOWN_MS = 10 * 60_000;
 const MAX_COOLDOWN_MS = 60 * 60_000;
 
@@ -308,7 +332,7 @@ export default function (pi: ExtensionAPI) {
     );
   }
 
-  // Commands (/fast, /pro, /deep, /free, /std, /local)
+  // Commands (/flash, /pro, /deep, /glm, /free, /codex, /std, /local)
   for (const tier of TIERS) {
     pi.registerCommand(tier.key, {
       description: `Switch to ${tier.label} (${tier.cost}) — ${tier.blurb}`,
@@ -340,7 +364,7 @@ export default function (pi: ExtensionAPI) {
       }
       lines.push("");
       lines.push(
-        "Rule of thumb: Sonnet 5 (Ctrl+1) for everything · Flash (Ctrl+2) for volume · GLM-5.3-HS (Ctrl+4) for hard · Kimi K3 (Ctrl+5) for huge context · Pro (Ctrl+3) only when you specifically want DeepSeek's best."
+        "Rule of thumb: Sonnet 5 (Ctrl+1) for everything · Flash (Ctrl+2) for volume · GLM-5.3-HS (Ctrl+4) for hard · Kimi K3 (Ctrl+5) for huge context · Codex (Ctrl+7) for agentic coding on the work seat · Pro (Ctrl+3) only when you specifically want DeepSeek's best."
       );
       ctx.ui.notify(lines.join("\n"), "info");
     },

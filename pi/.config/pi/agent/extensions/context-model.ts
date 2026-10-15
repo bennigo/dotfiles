@@ -21,7 +21,7 @@
  *
  * Commands:
  *   /context-model  — analyze current project and recommend model
- *   /fast, /pro, /deep, /free, /std, /local, /tier — see model-tiers.ts (Ctrl+1..5)
+ *   /flash, /pro, /deep, /codex, /free, /std, /local, /tier — see model-tiers.ts (Ctrl+1..7)
  */
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";

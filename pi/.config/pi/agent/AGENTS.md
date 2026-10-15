@@ -60,11 +60,12 @@ The context-model extension auto-detects project complexity on startup and notes
 | Key | Command | Model | Cost |
 |-----|---------|-------|------|
 | Ctrl+1 | `/std` | Claude Sonnet 5 (Copilot) | $0 — default |
-| Ctrl+2 | `/fast` | DeepSeek V4.1 Flash | very cheap (~$0.30/$1.20 per M) — alternative default for familiar/high-volume work |
+| Ctrl+2 | `/flash` | DeepSeek V4.1 Flash | very cheap (~$0.30/$1.20 per M) — alternative default for familiar/high-volume work |
 | Ctrl+3 | `/pro` | DeepSeek V4 Pro | paid (~$1.32/$3.96 per M) — special occasions, parallel fanout |
 | Ctrl+4 | `/deep` | GLM-5.3-Highspeed (z.ai) | $0 (per models.json) — strong reasoning, 1M ctx |
 | Ctrl+5 | `/free` | Kimi K3 1M (subscription) | $0 — biggest context |
 | Ctrl+6 | `/glm` | GLM-5.3 (z.ai) | paid flagship — when Highspeed quality isn't enough |
+| Ctrl+7 | `/codex` | GPT-6.1 Sol (openai-codex) | $0 — work ChatGPT Team/Business seat, 500K ctx |
 | — | `/local` | Llama 3.1 8B (Ollama) | $0 — offline/private |
 | — | `/tier` | show the ladder + active model | — |
 | — | `/quota` | show/clear the quota-fallback state (`restore` / `clear`) | — |
@@ -77,7 +78,7 @@ budget is gone, and `429 rate limited` when transient. On either, `model-tiers.t
   request rediscovering the exhausted quota. `/quota restore` when it's back.
 - **429 (rate limit)** — auto-restore attempted after a 10m cooldown, doubling up to 60m on repeat failures.
 
-Only `github-copilot` and `kimi-coding` (subscription providers) trigger the fallback; paid providers
+Only `github-copilot`, `kimi-coding` and `openai-codex` (subscription providers) trigger the fallback; paid providers
 never do. This is the **only** place that auto-switches a model — the trivial/heavy hints stay suggest-only.
 
 **Kimi K3 1M** is the free large-context lane (`Ctrl+5`) and powers scout, deep-scout, researcher,

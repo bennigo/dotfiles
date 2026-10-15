@@ -52,6 +52,7 @@ Pi resolves keys from `auth.json` before falling back to environment variables.
 | **DeepSeek** | API key | `!pass show tokens/deepseek_api_key` in auth.json |
 | **Kimi Code (subscription, default)** | API key | `!pass show tokens/kimi_code_api_key` in auth.json (provider `kimi-coding`). Needs `compat.supportsDeveloperRole:false` or Kimi 400s on the `developer` role. |
 | **GitHub Copilot** | OAuth via `/login` | token stored by pi in auth.json |
+| **OpenAI Codex (ChatGPT Team/Business seat)** | OAuth via `/login openai-codex` | token stored by pi in auth.json (provider `openai-codex`) — see note below |
 | Anthropic API | API key | `ANTHROPIC_API_KEY` (env or auth.json) |
 | OpenAI | API key | `OPENAI_API_KEY` |
 | Google Gemini | API key | `GEMINI_API_KEY` |
@@ -63,6 +64,35 @@ Pi resolves keys from `auth.json` before falling back to environment variables.
 | Ollama (local) | none | none |
 
 For custom/exotic providers, add entries to `models.json` (also symlinked via stow).
+
+### ChatGPT Subscription vs OpenAI API Key
+
+These are **two different products with separate billing**, and only one of them comes with a
+work ChatGPT seat:
+
+| | Provider ID | Auth | What it is |
+|---|---|---|---|
+| ChatGPT seat (Team/Business) | `openai-codex` | OAuth via `/login openai-codex` | Codex included with the seat; **no** API credits |
+| OpenAI API platform | `openai` | `OPENAI_API_KEY` / `/login openai` | Pay-per-token, billed separately |
+
+A ChatGPT Team/Business subscription does **not** include OpenAI API access — API usage is a
+separate purchase on the API platform. So for a work ChatGPT seat the correct path is
+`/login openai-codex` (choose **Browser login** or **Device code login** for headless), not an
+API key.
+
+- Default model: `openai-codex/gpt-6.1-sol` (500K ctx, text+image). Tier shortcut: **Ctrl+7** (`/codex`).
+- Check seat allowance with `/usage` (from `@narumitw/pi-usage`), which reports Codex plan usage
+  once a same-account `openai-codex` login exists.
+- **Catalog listing ≠ entitlement.** Pi lists 9 `openai-codex` models, but a seat may not unlock
+  all of them. The failure mode is a server-side 4xx on the request, not a registry miss — so a
+  successful model switch proves nothing. Verify with a one-line prompt.
+- `openai-codex` counts as a **subscription** provider in `model-tiers.ts`, so a seat 402/429
+  trips the same automatic DeepSeek-Flash fallback as Copilot and Kimi.
+- The seat is **employer-managed** (admins control Codex access and seat type) — check your org's
+  policy before using it for non-work tasks.
+
+Do not add a `models` array for `openai`/`openai-codex` in `models.json`: Pi's built-in catalog
+is inherited, and redefining a provider's models drops its `compat` and context metadata.
 
 ### Credential Resolution
 
@@ -124,6 +154,7 @@ Ctrl+3                          # DeepSeek V4 Pro (paid) — special occasions
 Ctrl+4                          # GLM-5.3-Highspeed (z.ai, $0) — strong reasoning
 Ctrl+5                          # Kimi K3 1M (subscription, $0) — biggest context
 Ctrl+6                          # GLM-5.3 flagship (z.ai, paid) — when Highspeed isn't enough
+Ctrl+7                          # GPT-6.1 Sol (openai-codex, work ChatGPT seat, $0) — 500K ctx
 /tier                           # Show the cost-aware tier ladder (see extensions/model-tiers.ts)
 /quota                          # Copilot quota fallback state; /quota restore|clear
                                 #   (auto-switches to DeepSeek Flash on Copilot 402/429)
