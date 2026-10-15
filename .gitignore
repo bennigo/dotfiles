@@ -37,6 +37,11 @@ systemd/.config/systemd/user/*.wants/
 excalidraw.log
 **/*.log
 
+# Pi permission-system review log — machine-generated, appended on every
+# permission review (77 commits in its first month). Kept on disk; untracked so
+# it stops churning the repo history.
+pi/.config/pi/agent/extensions/*/logs/
+
 # Python bytecode — ranger regenerates plugins/__pycache__ on every run, so
 # tracking it means the repo is permanently "modified"
 __pycache__/
