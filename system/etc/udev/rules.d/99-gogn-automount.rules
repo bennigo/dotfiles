@@ -1,0 +1,28 @@
+# gogn — Seagate M3 Portable 3.6 TB ext4 shuttle drive (label "gogn")
+#
+# Creates ~/mnt/gogn via the user service, matching the ~/mnt/<name> convention
+# already used by ~/mnt/tread and ~/mnt/monterra.
+#
+# Why the rule looks like this:
+#   - Matched by filesystem UUID. It is unique to this drive, and because it
+#     matches the filesystem rather than the raw disk it cannot fire for a
+#     different Seagate M3 Portable or for a re-partitioned disk.
+#   - The 99- prefix is required, not cosmetic: ID_FS_UUID is only populated
+#     after the blkid builtin runs (60-persistent-storage.rules), so an earlier
+#     rule would see it empty and never match.
+#   - SYSTEMD_USER_WANTS is read by the *user* service manager, so the script
+#     runs as you. That matters: udisks2 gives the mount to the invoking user,
+#     so a root-triggered mount would be root-owned and not writable by you.
+#   - TAG+="systemd" is required for either systemd property to be honoured.
+#   - There is deliberately no ACTION=="remove" rule. Removal would need a root
+#     udev helper plus an su/sudo bridge into the user session. Instead
+#     `gogn-automount prune` removes the dangling link, and the user service
+#     runs it at login.
+#
+# Install: sudo cp ~/.dotfiles/system/etc/udev/rules.d/99-gogn-automount.rules /etc/udev/rules.d/
+# Reload:  sudo udevadm control --reload-rules && sudo udevadm trigger --subsystem-match=block
+# Verify:  sudo udevadm test /sys/class/block/sda1 2>&1 | grep -i gogn
+
+ACTION=="add", SUBSYSTEM=="block", ENV{DEVTYPE}=="partition", \
+    ENV{ID_FS_USAGE}=="filesystem", ENV{ID_FS_UUID}=="e8bc5f22-5df3-41ca-bde0-b7b11ddc36e1", \
+    TAG+="systemd", ENV{SYSTEMD_USER_WANTS}="gogn-automount.service"

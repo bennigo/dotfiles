@@ -1,0 +1,212 @@
+#!/bin/bash
+# gogn-automount — keep ~/mnt/gogn pointing at the external "gogn" drive.
+#
+# The drive is a Seagate M3 Portable (3.6 TB ext4, label "gogn") used as a
+# shuttle drive: plugged in and out often, sometimes on different ports. udisks2
+# already auto-mounts it at /run/media/$USER/gogn. This script adds only a
+# stable, friendly name on top, matching the ~/mnt/<name> convention already
+# used by ~/mnt/tread and ~/mnt/monterra.
+#
+# Design notes (see 99-gogn-automount.rules for why each matters):
+#   - Matched by filesystem UUID, so it works on any port and can never touch
+#     a different disk.
+#   - Uses udisksctl, not gio/gvfs: this is a plain ext4 block device, so no
+#     GNOME session or gvfs daemon is needed to reach it.
+#   - Meant to run as the user (via the systemd user service), which is what
+#     makes the udisks2 mount user-owned and therefore writable.
+#   - Idempotent: safe at login, from udev, or by hand at any time.
+#   - `prune` clears the link when the drive is absent, so an unplugged drive
+#     cannot leave a link that silently points nowhere.
+#
+# Usage: gogn-automount {mount|unmount|prune|status}
+
+set -euo pipefail
+
+DRIVE_UUID="e8bc5f22-5df3-41ca-bde0-b7b11ddc36e1"
+DRIVE_LABEL="gogn"
+DRIVE_SERIAL="NM16FST9"
+
+MOUNT_ROOT="${HOME}/mnt"
+LINK="${MOUNT_ROOT}/${DRIVE_LABEL}"
+BY_UUID="/dev/disk/by-uuid/${DRIVE_UUID}"
+LOG_TAG="gogn-automount"
+
+# How long to wait for the device node / the udisks2 mount to appear, in
+# seconds. Deliberately a bounded poll rather than a fixed sleep, so a slow
+# disk costs nothing and a fast one is not delayed.
+WAIT_SECS=20
+
+log() {
+    logger -t "$LOG_TAG" "$*" 2>/dev/null || true
+    printf '[%s] %s\n' "$(date '+%H:%M:%S')" "$*"
+}
+
+notify() {
+    command -v notify-send >/dev/null 2>&1 || return 0
+    notify-send -i drive-removable-media "$1" "$2" 2>/dev/null || true
+}
+
+# Echo the real device node, or nothing when the drive is not attached.
+device_node() {
+    readlink -f "$BY_UUID" 2>/dev/null || true
+}
+
+# Echo the current mount point of the drive, or nothing when not mounted.
+mount_point() {
+    local dev mp
+
+    dev=$(device_node)
+    if [[ -n "$dev" ]]; then
+        mp=$(findmnt -rno TARGET --source "$dev" 2>/dev/null | head -1 || true)
+        if [[ -n "$mp" ]]; then printf '%s' "$mp"; return 0; fi
+    fi
+
+    # Fall back to the label: covers the case where the node is gone but a
+    # mount is still recorded.
+    mp=$(findmnt -rno TARGET --source "LABEL=${DRIVE_LABEL}" 2>/dev/null | head -1 || true)
+    if [[ -n "$mp" ]]; then printf '%s' "$mp"; return 0; fi
+
+    return 1
+}
+
+# Point the friendly name at the drive, replacing whatever was there.
+link_to() {
+    mkdir -p "$MOUNT_ROOT"
+    ln -sfn "$1" "$LINK"
+}
+
+do_mount() {
+    local dev mp i
+
+    if mp=$(mount_point); then
+        link_to "$mp"
+        log "already mounted at ${mp}; ${LINK} -> ${mp}"
+        return 0
+    fi
+
+    dev=$(device_node)
+    if [[ -z "$dev" ]]; then
+        log "drive not attached (no ${BY_UUID}); nothing to do"
+        return 0
+    fi
+
+    # udisks2 may still be probing the filesystem right after plug-in, so give
+    # udisksctl a few tries rather than failing on the first attempt.
+    for ((i = 0; i < WAIT_SECS; i++)); do
+        if udisksctl mount -b "$dev" --no-user-interaction >/dev/null 2>&1; then
+            break
+        fi
+        sleep 1
+    done
+
+    for ((i = 0; i < WAIT_SECS; i++)); do
+        if mp=$(mount_point); then break; fi
+        sleep 1
+    done
+
+    if ! mp=$(mount_point); then
+        log "FAILED: ${dev} did not mount within ${WAIT_SECS}s (see: journalctl -t ${LOG_TAG})"
+        notify "${DRIVE_LABEL}: mount failed" "Could not mount ${dev}"
+        return 1
+    fi
+
+    link_to "$mp"
+    log "mounted ${dev} at ${mp}; ${LINK} -> ${mp}"
+    notify "${DRIVE_LABEL} connected" "Mounted at ${mp} (linked as ${LINK})"
+}
+
+do_unmount() {
+    local dev
+
+    dev=$(device_node)
+
+    # Drop the friendly name first: once unmounted it would dangle.
+    if [[ -L "$LINK" ]]; then
+        rm -f "$LINK"
+        log "removed ${LINK}"
+    fi
+
+    if [[ -n "$dev" ]] && mount_point >/dev/null 2>&1; then
+        if udisksctl unmount -b "$dev" --no-user-interaction >/dev/null 2>&1; then
+            log "unmounted ${dev}"
+        else
+            log "unmount of ${dev} failed (already gone?)"
+        fi
+    fi
+
+    notify "${DRIVE_LABEL} disconnected" "Unmounted; ${LINK} removed"
+}
+
+# Remove the gogn link if it dangles. Scoped deliberately to $LINK only: other
+# entries under ~/mnt (tread, monterra) are managed by their own automation and
+# are not this script's business.
+do_prune() {
+    local target
+
+    if [[ ! -L "$LINK" ]]; then
+        log "prune: no link at ${LINK}"
+        return 0
+    fi
+
+    target=$(readlink -f "$LINK" 2>/dev/null || true)
+    if [[ -z "$target" || ! -e "$target" ]]; then
+        log "prune: ${LINK} dangles (-> ${target:-<unresolvable>}), removing"
+        rm -f "$LINK"
+    else
+        log "prune: ${LINK} -> ${target} is valid, keeping"
+    fi
+
+    return 0
+}
+
+do_status() {
+    local mp dev
+
+    mp=$(mount_point || true)
+    dev=$(device_node)
+
+    printf 'drive  : %s (%s)\n' "$DRIVE_LABEL" "$DRIVE_UUID"
+    printf 'serial : %s\n' "$DRIVE_SERIAL"
+
+    if [[ -n "$dev" ]]; then printf 'device : attached (%s)\n' "$dev"
+    else printf 'device : NOT attached\n'; fi
+
+    if [[ -n "$mp" ]]; then printf 'mount  : %s\n' "$mp"
+    else printf 'mount  : not mounted\n'; fi
+
+    if [[ -L "$LINK" ]]; then
+        if [[ -e "$LINK" ]]; then
+            printf 'link   : ok      %s -> %s\n' "$LINK" "$(readlink "$LINK")"
+        else
+            printf 'link   : BROKEN  %s -> %s  (fix: gogn-automount prune)\n' "$LINK" "$(readlink "$LINK")"
+        fi
+    elif [[ -e "$LINK" ]]; then
+        printf 'link   : %s exists but is not a symlink\n' "$LINK"
+    else
+        printf 'link   : absent  %s\n' "$LINK"
+    fi
+}
+
+case "${1:-}" in
+    mount)          do_mount ;;
+    unmount|umount) do_unmount ;;
+    prune)          do_prune ;;
+    status)         do_status ;;
+    *)
+        cat <<EOF
+gogn-automount — manage the ~/mnt/gogn link for the external "gogn" drive
+
+Usage: $(basename "$0") <command>
+
+Commands:
+  mount     Mount the drive if needed, and create/repoint ~/mnt/gogn
+  unmount   Remove ~/mnt/gogn and unmount the drive
+  prune     Remove ~/mnt/gogn if it dangles
+  status    Show whether the drive is attached, mounted and linked
+
+Normally run automatically by gogn-automount.service — triggered on plug-in by
+99-gogn-automount.rules, and run once at login as a safety net for a drive that
+was already attached.
+EOF
+        ;;
+esac

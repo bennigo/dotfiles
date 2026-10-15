@@ -1,0 +1,19 @@
+[Unit]
+Description=Point ~/mnt/gogn at the external "gogn" drive
+Documentation=man:systemd.device(5)
+# Started on plug-in by 99-gogn-automount.rules (via SYSTEMD_USER_WANTS), and
+# also enabled at default.target so a drive attached before login still gets
+# its link. The script is idempotent, so both paths are safe.
+
+[Service]
+Type=oneshot
+# Clear a stale link first (e.g. drive unplugged while logged out). Scoped to
+# the gogn link only, and non-fatal, hence the "-" prefix.
+ExecStartPre=-%h/.local/bin/gogn-automount prune
+# Exits 0 with a log line when the drive is absent, so this never shows as a
+# failed unit at login.
+ExecStart=%h/.local/bin/gogn-automount mount
+RemainAfterExit=no
+
+[Install]
+WantedBy=default.target
