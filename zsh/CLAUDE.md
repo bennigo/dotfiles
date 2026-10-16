@@ -40,9 +40,13 @@ Plugins loaded via `plug` in `.zshrc`:
 
 - **History**: config lives in `history.zsh` (sourced last in `.zshrc`); file at
   `~/.local/state/zsh/history` (XDG state, outside this repo), 1,000,000 entries
-  (`HISTSIZE=SAVEHIST=1000000`), with `SHARE_HISTORY` + `INC_APPEND_HISTORY` so every
-  command is written immediately and shared live across all shells and herdr panes.
-  Already-running shells can adopt it with `reload-history`.
+  (`HISTSIZE=SAVEHIST=1000000`). `INC_APPEND_HISTORY` saves commands immediately,
+  but `SHARE_HISTORY` and `INC_APPEND_HISTORY_TIME` are explicitly disabled.
+  Each new shell loads the full saved history; existing shells keep their own
+  history view without importing commands from other terminals or herdr panes.
+  Already-running shells can adopt this with `reload-history`, which reapplies
+  settings without importing saved entries. Previously imported commands remain
+  in those shells; new shells start with the new behavior.
 
 > ⚠️ **The `source history.zsh` line must stay at the END of `.zshrc`, after every
 > `plug` call.** The `zap-zsh/supercharge` plugin sets `HISTFILE`/`HISTSIZE`/`SAVEHIST`
