@@ -77,8 +77,18 @@ work ChatGPT seat:
 
 A ChatGPT Team/Business subscription does **not** include OpenAI API access — API usage is a
 separate purchase on the API platform. So for a work ChatGPT seat the correct path is
-`/login openai-codex` (choose **Browser login** or **Device code login** for headless), not an
-API key.
+`/login openai-codex`, not an API key.
+
+**Use `Browser login`, not `Device code login`.** `/login openai-codex` offers two methods:
+
+| Method | When |
+|---|---|
+| **Browser login (default)** | Use this. Opens the browser, signs in, and pi catches the localhost callback. |
+| Device code login (headless) | Only if the browser callback cannot reach pi. **Admin-gated:** a managed Business/Enterprise workspace can disable it, and the page then returns *"Please contact your workspace admin to enable device code authentication."* |
+
+If a sign-in page's input won't accept typing, remember the keystrokes may be going to the
+terminal — check `swaymsg -t get_tree` for the focused window before debugging the page, and
+click directly into the field to focus it.
 
 - Default model: `openai-codex/gpt-6.1-sol` (500K ctx, text+image). Tier shortcut: **Ctrl+7** (`/codex`).
 - Check seat allowance with `/usage` (from `@narumitw/pi-usage`), which reports Codex plan usage
