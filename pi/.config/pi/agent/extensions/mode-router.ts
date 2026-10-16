@@ -116,10 +116,13 @@ function findLocalModel(ctx: any) {
 }
 
 // Cloud models to restore when online and stuck on a local one (first
-// registered wins). Mirrors settings.json's default (Copilot Sonnet 5,
-// subscription = $0 marginal) with cheap DeepSeek Flash as fallback.
+// registered wins). Mirrors settings.json's default (GPT-6.1 Sol, OpenAI
+// company subscription = $0 marginal within quota), falling through to the
+// independent $0 GLM pool and then cheap DeepSeek Flash — so a single
+// exhausted quota does not leave the session with no cloud target.
 const CLOUD_RESTORE = [
-  { provider: "github-copilot", id: "claude-sonnet-5" },
+  { provider: "openai-codex", id: "gpt-6.1-sol" },
+  { provider: "zai-coding-cn", id: "glm-5.3" },
   { provider: "deepseek", id: "deepseek-flash" },
 ];
 

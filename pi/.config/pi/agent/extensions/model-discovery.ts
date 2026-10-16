@@ -44,29 +44,35 @@ interface AgentModelMap {
 
 function costTierFor(model: string): string {
   if (model.startsWith("ollama/")) return "Free (local)";
-  if (model.startsWith("github-copilot/")) return "Subscription ($0)";
+  if (model.startsWith("openai-codex/")) return "Subscription ($0, quota)";
+  if (model.includes("highspeed")) return "Subscription ($0)";
   if (model.startsWith("kimi-coding/")) return "Subscription ($0)";
+  if (model.startsWith("github-copilot/")) return "Subscription ($0)";
   if (model.includes("flash")) return "Budget (very cheap)";
   return "Paid";
 }
 
 // Static agent→model map from our agent definitions (keep in sync with agents/*.md)
+// NOTE: this is the THIRD copy of the roster (agents/*.md = source of truth,
+// AGENTS.md = docs, this = display). It went stale on 2026-10-16 when Copilot was
+// retired. Prefer deriving it from agents/*.md rather than hand-maintaining it.
 const AGENT_MODELS: AgentModelMap[] = [
-  { agent: "scout", model: "kimi-coding/k3" },
-  { agent: "deep-scout", model: "kimi-coding/k3" },
+  { agent: "scout", model: "kimi-coding/k3-256k" },
+  { agent: "deep-scout", model: "zai/glm-5.3-highspeed" },
   { agent: "quick-worker", model: "deepseek/deepseek-flash" },
-  { agent: "auditor", model: "github-copilot/claude-opus-4.8" },
-  { agent: "docs-writer", model: "kimi-coding/k3" },
-  { agent: "db-analyst", model: "kimi-coding/k3" },
-  { agent: "researcher", model: "kimi-coding/k3" },
-  { agent: "architect", model: "github-copilot/gpt-5.3-codex" },
-  { agent: "router", model: "kimi-coding/k3" },
+  { agent: "auditor", model: "openai-codex/gpt-6-astra" },
+  { agent: "docs-writer", model: "kimi-coding/k3-256k" },
+  { agent: "db-analyst", model: "kimi-coding/k3-256k" },
+  { agent: "researcher", model: "zai/glm-5.3-highspeed" },
+  { agent: "architect", model: "openai-codex/gpt-6.1-sol" },
+  { agent: "router", model: "deepseek/deepseek-flash" },
   { agent: "fallback-worker", model: "ollama/llama3.1:8b" },
-  { agent: "orchestrator", model: "github-copilot/claude-sonnet-5" },
-  { agent: "planner", model: "github-copilot/claude-opus-4.8" },
-  { agent: "reviewer", model: "github-copilot/claude-opus-4.8" },
-  { agent: "worker", model: "github-copilot/claude-sonnet-5" },
+  { agent: "orchestrator", model: "openai-codex/gpt-6.1-sol" },
+  { agent: "planner", model: "openai-codex/gpt-6.1-sol" },
+  { agent: "reviewer", model: "openai-codex/gpt-6.1-sol" },
+  { agent: "worker", model: "openai-codex/gpt-6.1-sol" },
   { agent: "read-image", model: "google/gemini-2.5-flash" },
+  { agent: "enricher", model: "deepseek/deepseek-v4-pro" },
 ];
 
 // Size thresholds for model capability hints
@@ -217,7 +223,7 @@ export default function (pi: ExtensionAPI) {
         lines.push(`| ${m.agent} | ${m.model} | ${costTierFor(m.model)} |`);
       }
       lines.push("");
-      lines.push("Session default: github-copilot/claude-sonnet-4.6 (Ctrl+1). See /tier for the switching ladder.");
+      lines.push("Session default: openai-codex/gpt-6.1-sol (Ctrl+1). See /tier for the switching ladder.");
       lines.push("");
       lines.push("### Local Models (Ollama)");
       lines.push("| Model | Size | Best For |");

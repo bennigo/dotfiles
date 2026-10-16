@@ -6,7 +6,7 @@
  *   Tier  Key     Model                            Cost
  *   ----  ------  -------------------------------  --------------------------
  *   free  Ctrl+5  kimi-coding/k3 (1M)              $0 (Kimi subscription)
- *   std   Ctrl+1  github-copilot/claude-sonnet-5   $0 (Copilot subscription) ← session default
+ *   std   Ctrl+1  openai-codex/gpt-6.1-sol        $0 (OpenAI company sub) ← session default
  *   deep  Ctrl+4  zai-coding-cn/glm-5.3-flash      $0 (GLM Coding Plan)
  *   flash Ctrl+2  deepseek/deepseek-flash          ~$0.30/$1.20 per M tok (cheap paid)
  *   pro   Ctrl+3  deepseek/deepseek-v4-pro         ~$1.32/$3.96 per M tok (paid, special occasions)
@@ -91,12 +91,12 @@ const TIERS: Tier[] = [
   {
     key: "std",
     shortcut: "ctrl+1",
-    provider: "github-copilot",
-    id: "claude-sonnet-5",
-    label: "Claude Sonnet 5",
-    cost: "$0 (Copilot)",
+    provider: "openai-codex",
+    id: "gpt-6.1-sol",
+    label: "GPT-6.1 Sol",
+    cost: "$0 (OpenAI Codex)",
     paid: false,
-    blurb: "Session default — newest Sonnet, subscription",
+    blurb: "Session default — 500K ctx, company subscription",
   },
   {
     key: "flash",

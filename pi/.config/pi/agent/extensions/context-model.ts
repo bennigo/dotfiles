@@ -214,10 +214,10 @@ function recommendModel(profile: ProjectProfile | null, cwd: string): {
   // Known production projects → always Sonnet
   if (PREMIUM_PROJECTS.some((p) => cwd.includes(p))) {
     return {
-      model: "claude-sonnet-5",
-      provider: "github-copilot",
-      modelName: "Claude Sonnet 5",
-      reasoning: "Production/work project — use a top model. Copilot subscription means no per-token cost.",
+      model: "gpt-6.1-sol",
+      provider: "openai-codex",
+      modelName: "GPT-6.1 Sol",
+      reasoning: "Production/work project — use a top model. OpenAI company subscription means no per-token cost within quota.",
     };
   }
 
@@ -227,16 +227,16 @@ function recommendModel(profile: ProjectProfile | null, cwd: string): {
       model: "deepseek-flash",
       provider: "deepseek",
       modelName: "DeepSeek V4.1 Flash",
-      reasoning: "You know this codebase intimately. Flash is very cheap and sufficient for config/docs changes. Ctrl+1 for free Sonnet.",
+      reasoning: "You know this codebase intimately. Flash is very cheap and sufficient for config/docs changes. Ctrl+1 for the $0 subscription lane.",
     };
   }
 
   if (!profile) {
     return {
-      model: "claude-sonnet-5",
-      provider: "github-copilot",
-      modelName: "Claude Sonnet 5",
-      reasoning: "Couldn't analyze project — defaulting to Sonnet to be safe.",
+      model: "gpt-6.1-sol",
+      provider: "openai-codex",
+      modelName: "GPT-6.1 Sol",
+      reasoning: "Couldn't analyze project — defaulting to the $0 subscription lane to be safe.",
     };
   }
 
@@ -246,21 +246,21 @@ function recommendModel(profile: ProjectProfile | null, cwd: string): {
         model: "deepseek-flash",
         provider: "deepseek",
         modelName: "DeepSeek V4.1 Flash",
-        reasoning: `Simple project (${profile.fileCount} files, ${profile.totalLines} LOC, ${profile.languages.size} language(s)). Flash is very cheap and sufficient. Ctrl+1 for free Sonnet.`,
+        reasoning: `Simple project (${profile.fileCount} files, ${profile.totalLines} LOC, ${profile.languages.size} language(s)). Flash is very cheap and sufficient. Ctrl+1 for the $0 subscription lane.`,
       };
     case "medium":
       return {
-        model: "claude-sonnet-5",
-        provider: "github-copilot",
-        modelName: "Claude Sonnet 5",
-        reasoning: `Medium project (${profile.fileCount} files, ${profile.totalLines} LOC, ${profile.languages.size} languages). Sonnet gives better accuracy for multi-file work — and it's subscription ($0 marginal).`,
+        model: "gpt-6.1-sol",
+        provider: "openai-codex",
+        modelName: "GPT-6.1 Sol",
+        reasoning: `Medium project (${profile.fileCount} files, ${profile.totalLines} LOC, ${profile.languages.size} languages). GPT-6.1 Sol gives better accuracy for multi-file work — and it's subscription ($0 marginal within quota).`,
       };
     case "complex":
       return {
-        model: "claude-sonnet-5",
-        provider: "github-copilot",
-        modelName: "Claude Sonnet 5",
-        reasoning: `Complex project (${profile.fileCount} files, ${profile.totalLines} LOC, ${profile.languages.size} languages${profile.hasDatabase ? ", has database" : ""}${profile.isMonorepo ? ", monorepo" : ""}). Definitely Sonnet.`,
+        model: "gpt-6.1-sol",
+        provider: "openai-codex",
+        modelName: "GPT-6.1 Sol",
+        reasoning: `Complex project (${profile.fileCount} files, ${profile.totalLines} LOC, ${profile.languages.size} languages${profile.hasDatabase ? ", has database" : ""}${profile.isMonorepo ? ", monorepo" : ""}). Definitely the top subscription lane.`,
       };
   }
 }

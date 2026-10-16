@@ -136,13 +136,24 @@ Ornith was capped to 16K context (`ornith-16k`) to fit 8GB VRAM. Never route age
 
 ## Token-Cost Policy (non-subscription optimization)
 
-Spend order for every task: **local ($0, private) → subscription ($0 marginal) → cheap-paid (DeepSeek) → premium-paid (Kimi/OpenRouter)**.
+Spend order for every task: **local ($0, private) → `$0` subscription quota pools → cheap-paid (DeepSeek) → premium-paid (OpenRouter, Kimi 1M)**.
 
-- Subscription Copilot is free at the margin → prefer it over cheap-paid DeepSeek for any non-trivial single task.
-- Reserve **cheap-paid** for high-volume/parallel scouting where many Copilot calls would be slow/rate-limited.
-- Reserve **local** for trivial or privacy-bound work (and all offline/private work).
-- Reserve **premium-paid** for cases explicitly needing it.
+**Drain the `$0` quotas first — an unused quota is wasted value.** It resets and is gone, so route work to the `$0` pools until they are exhausted, and treat DeepSeek as the *cheap overflow*, not the default. Three independent `$0` pools exist, and spreading across them also buys failure isolation:
+
+| `$0` pool | Model | Context | Notes |
+|---|---|---|---|
+| OpenAI Codex (company sub) | `openai-codex/gpt-6.1-sol`, `gpt-6-astra` | 500K / 272K | quota-capped; heavy reasoning |
+| GLM-Highspeed (z.ai) | `zai/glm-5.3-highspeed` | 1M | the long-context research pool |
+| Kimi | `kimi-coding/k3-256k` | 256K | 5-hour window; short-context lanes |
+
+- **DeepSeek is cheap enough to use freely** and is the right pick for high-volume trivial work and for overflow once the `$0` pools are spent — but it should not be the *default* while quota remains.
+- **Reserve `local` for trivial or privacy-bound work** (and all offline/private work).
+- **Reserve premium-paid** (OpenRouter frontier, `kimi-coding/k3` 1M, `zai/glm-5.3` non-highspeed) for cases explicitly needing it.
 - The `orchestrator` agent enforces this automatically.
+
+⚠️ **Metered-tier trap:** several `$0` models sit beside near-identical *paid* siblings and the paid one is the obvious-looking choice — `kimi-coding/k3` ($3/$15) vs `k3-256k` (**$0**); `zai/glm-5.3` ($1.40/$4.40) vs `zai/glm-5.3-highspeed` (**$0**, same 1M ctx). The research lanes ran on paid Kimi for weeks for exactly this reason. **Check the `cost` field in `models-store.json` before assigning a lane.**
+
+**Subagent caveat:** children do **not** inherit `model-tiers`' automatic quota fallback (that covers the main model only), so a lane on an exhausted pool simply fails. Pool diversity is the only protection at the subagent layer.
 
 ## Agent Roster (16 agents)
 
@@ -150,23 +161,23 @@ Spend order for every task: **local ($0, private) → subscription ($0 marginal)
 
 | Agent | Model | Context | Use for |
 |-------|-------|---------|---------|
-| **scout** | Kimi K3 256K (subscription) | 256K | Fast recon, small-medium codebases |
-| **deep-scout** | Kimi K3 256K (subscription) | 256K | Multi-file analysis, large codebases, cross-cutting traces |
-| **researcher** | Kimi K3 256K (subscription) | 256K | Web research, source synthesis, tech evaluation |
-| **db-analyst** | Kimi K3 256K (subscription) | 256K | SQL queries, schema analysis, data exploration |
+| **scout** | Kimi K3 256K ($0) | 256K | Fast recon, small-medium codebases |
+| **deep-scout** | GLM-5.3-Highspeed (z.ai, $0) | 1M | Multi-file analysis, large codebases, cross-cutting traces |
+| **researcher** | GLM-5.3-Highspeed (z.ai, $0) | 1M | Web research, source synthesis, tech evaluation |
+| **db-analyst** | Kimi K3 256K ($0) | 256K | SQL queries, schema analysis, data exploration |
 
 ### Design & Planning
 
 | Agent | Model | Context | Use for |
 |-------|-------|---------|---------|
-| **architect** | GPT-5.3-Codex (Copilot) | 1M | High-level design, tradeoff analysis — subscription |
-| **planner** | Claude Opus 4.8 (Copilot) | 1M | Implementation plans — methodical, precise |
+| **architect** | GPT-6.1 Sol (OpenAI Codex) | 500K | High-level design, tradeoff analysis — $0 subscription |
+| **planner** | GPT-6.1 Sol (OpenAI Codex) | 500K | Implementation plans — methodical, precise |
 
 ### Implementation
 
 | Agent | Model | Context | Use for |
 |-------|-------|---------|---------|
-| **worker** | Claude Sonnet 5 (Copilot) | 1M | Complex implementation, multi-step refactors |
+| **worker** | GPT-6.1 Sol (OpenAI Codex, $0) | 500K | Complex implementation, multi-step refactors |
 | **quick-worker** | DeepSeek V4.1 Flash | 1M | Boilerplate, simple changes — very cheap paid |
 | **fallback-worker** | Llama 3.1 8B (local) | 4K | Offline / private / rate-limited work — fastest confirmed local tool-caller (~8s) |
 
@@ -184,21 +195,21 @@ Spend order for every task: **local ($0, private) → subscription ($0 marginal)
 
 | Agent | Model | Context | Use for |
 |-------|-------|---------|---------|
-| **orchestrator** | Claude Sonnet 5 (Copilot) | 1M | Decompose multi-part tasks and dispatch each subtask to the optimal specialist/model; mode- & cost-aware |
+| **orchestrator** | GPT-6.1 Sol (OpenAI Codex, $0) | 500K | Decompose multi-part tasks and dispatch each subtask to the optimal specialist/model; mode- & cost-aware |
 
 ### Quality
 
 | Agent | Model | Context | Use for |
 |-------|-------|---------|---------|
-| **reviewer** | Claude Opus 4.8 (Copilot) | 1M | Code review, style, correctness — best precision |
-| **auditor** | Claude Opus 4.8 (Copilot) | 1M | Security audit, vulnerability analysis — safety-critical |
+| **reviewer** | GPT-6.1 Sol (OpenAI Codex, $0) | 500K | Code review, style, correctness — best precision |
+| **auditor** | GPT-6 Astra (OpenAI Codex, $0) | 272K | Security audit, vulnerability analysis — safety-critical. The one flagship-tier lane; kept there deliberately since audit errors are the most expensive to miss |
 
 ### Meta
 
 | Agent | Model | Context | Use for |
 |-------|-------|---------|---------|
-| **router** | Kimi K3 256K (subscription) | 256K | Task classification — recommends optimal agent/workflow |
-| **docs-writer** | Kimi K3 256K (subscription) | 256K | READMEs, API docs, changelogs, code comments |
+| **router** | DeepSeek V4.1 Flash | 1M | Task classification — recommends optimal agent/workflow. Cheap enough that the metered cost is irrelevant for one-line output |
+| **docs-writer** | Kimi K3 256K ($0) | 256K | READMEs, API docs, changelogs, code comments |
 
 ### Second Opinion (Diversity)
 
@@ -240,27 +251,45 @@ subagent: router, task: I need to add OAuth support to the API
 
 | Tier | Models | Cost |
 |------|--------|------|
-| **Copilot Subscription** | Claude Opus 4.8, Claude Sonnet 5, Claude Sonnet 4.6, GPT-5.3-Codex, GPT-5 mini | $0 marginal (subscription) |
-| **Kimi Subscription** | Kimi K3 (256K / 1M) | $0 marginal (subscription) |
-| **Budget** | DeepSeek V4.1 Flash | ~$0.30/$1.20 per M tokens |
-| **Premium paid** | DeepSeek V4 Pro, OpenRouter frontier | ~$1.32/$3.96 per M and up |
-| **Free** | Ollama local models (Llama 3.1, Qwen 3.5) | $0 |
+| **OpenAI Codex (company subscription)** | GPT-6.1 Sol, GPT-6 Astra, GPT-6 Sol/Luna, GPT-5.6 family | $0 marginal within quota |
+| **GLM-Highspeed (z.ai)** | GLM-5.3-Highspeed, GLM-5.2-Highspeed — **1M context** | $0 marginal within quota |
+| **Kimi (subscription)** | Kimi K3-256K only | $0 marginal within quota |
+| **Free / local** | Ollama (Llama 3.1 8B, Hermes 3, Qwen 3.5) | $0, no quota |
+| **Cheap metered** | DeepSeek V4.1 Flash | ~$0.30/$1.20 per M |
+| **Metered — avoid for lanes** | DeepSeek V4 Pro, `zai/glm-5.3`, `kimi-coding/k3`, OpenRouter frontier | $1.30–$10 in / up to $50 out per M |
 
-Copilot models available: claude-opus-4.8, claude-sonnet-5, claude-sonnet-4.6, gpt-5.3-codex, gpt-5-mini (5 enabled; other catalogue models like claude-opus-4.7/5, fable-5, Gemini, Grok need the workplace admin to enable them).
+**Metered-tier trap (verified 2026-10-16):** several `$0` models sit beside near-identical *paid* siblings with the same name, and the paid one is the obvious-looking choice — `kimi-coding/k3` ($3/$15) vs `k3-256k` (**$0**); `zai/glm-5.3` ($1.40/$4.40) vs `zai/glm-5.3-highspeed` (**$0**, same 1M ctx). Six research lanes were running on the paid Kimi tier for exactly this reason. **Check the `cost` field in `models-store.json` before assigning a lane.**
+
+Copilot is **being retired** (2026-10-16) — no agent lane depends on it any more; the roster moved to OpenAI Codex (`$0` company subscription, quota-capped) and GLM-5.3-Highspeed (`$0`). If Copilot returns, treat it as an extra independent `$0` pool rather than a primary lane, since pool diversity is what prevents one quota exhaustion from halting everything.
 
 ## Final Agent↔Model Map
 
 ```
-Kimi K3 256K, subscription (6):  scout, deep-scout, researcher, db-analyst,
-                                 router, docs-writer
-Copilot Sonnet 5 (2):            worker, orchestrator
-Copilot Opus 4.8 (3):            planner, auditor, reviewer
-Copilot GPT-5.3-Codex (1):       architect
-DeepSeek V4.1 Flash, cheap (1):  quick-worker
-DeepSeek V4 Pro, budget (1):     enricher
-Ollama Llama 3.1 8B, local (1):  fallback-worker
-Google Gemini 2.5 Flash (1):     read-image
+$0 — OpenAI Codex (company sub, quota) (6):
+                                 architect, orchestrator, planner, reviewer,
+                                 worker          [gpt-6.1-sol, 500K ctx]
+                                 auditor         [gpt-6-astra, safety-critical]
+$0 — GLM-5.3-Highspeed (z.ai, 1M ctx) (2):
+                                 deep-scout, researcher
+$0 — Kimi K3-256K (256K ctx) (3):
+                                 scout, db-analyst, docs-writer
+$0 — local (1):                  fallback-worker  (Ollama Llama 3.1 8B)
+Cheap metered (2):               quick-worker, router   (DeepSeek Flash $0.30/$1.20)
+Budget metered (1):              enricher               (DeepSeek V4 Pro $1.32/$3.96)
+Vision metered (1):              read-image             (Gemini 2.5 Flash)
 ```
+
+**Provider-pool spread is deliberate.** Every `$0` lane sits in one of three *independent*
+quota pools (OpenAI Codex, GLM-Highspeed, local). On 2026-10-16 a single kimi 5-hour quota
+exhaustion took out six agents at once — recon, routing, DB analysis and docs simultaneously —
+because all six shared one pool. Keep at least two pools live for any critical role, and note
+that children do **not** inherit `model-tiers`' automatic quota fallback (that applies to the
+main model only), so a subagent lane on an exhausted pool simply fails.
+
+**Never put a lane on a metered tier when a `$0` sibling exists.** `kimi-coding/k3` is $3/$15 but
+kimi's `$0` variant is `k3-256k`; `zai/glm-5.3` is $1.40/$4.40 but `zai/glm-5.3-highspeed` is
+$0 with the same 1M context. As of 2026-10-16 no agent sits on a metered tier except the three
+cheap lanes listed above.
 
 ## Routing Principles
 
