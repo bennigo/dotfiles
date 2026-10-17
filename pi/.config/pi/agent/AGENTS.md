@@ -155,6 +155,18 @@ Spend order for every task: **local ($0, private) → `$0` subscription quota po
 
 **Subagent caveat:** children do **not** inherit `model-tiers`' automatic quota fallback (that covers the main model only), so a lane on an exhausted pool simply fails. Pool diversity is the only protection at the subagent layer.
 
+⚠️ **Tool-surface caveat: what a child can actually call.** Verified 2026-10-16 against `pi-subagents`:
+
+| Capability | Foreground child (`async: false`) | Background child (default) |
+|---|---|---|
+| `mcp:*` direct MCP tools | ✗ | **✗ — unavailable either way** |
+| Extension tools (e.g. `vault_lookup`) | ✗ | ✓ |
+| `bash`, `read`, `web_fetch`, core tools | ✓ | ✓ |
+
+- **Never launch a child with `async: false` when it needs an extension or MCP tool.** Foreground children never load the parent's ambient extensions; only background children do. The failure is a terse "these child tools were unavailable" — easy to misread as a config bug.
+- **`mcp:` selectors cannot be made to work by any launch mode.** MCP servers registered at runtime by `pi-mcp-adapter` are not resolvable at child launch (`Unresolved MCP direct-tool selectors`). Prefer giving the child the **underlying API via `bash`** instead — e.g. the Zotero local HTTP API on `localhost:23119`, which needs no MCP at all. Runtime-registered servers would need a host/pi-mcp-adapter handoff before child launch, which is not wired up here.
+- Any agent whose work matters should degrade to `bash` rather than depend on an MCP tool.
+
 ## Agent Roster (16 agents)
 
 ### Exploration & Analysis

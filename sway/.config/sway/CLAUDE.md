@@ -290,7 +290,7 @@ This avoids the mark-stealing problem: Sway marks are unique, so when Electron a
 | Shortcut | App ID | Description |
 |----------|--------|-------------|
 | `$mod+Shift+o` | `md.obsidian.Obsidian` | Show Obsidian app |
-| `$mod+z` | `org.pwmt.zathura` | Show Zathura PDF reader |
+| `$mod+z` | `org.pwmt.zathura` (floating only) | Show Zathura PDF scratchpad; tiled directory-browsing windows are excluded |
 | `$mod+g` | `org.zotero.Zotero` | Show Zotero |
 | `$mod+c` | `com.cisco.secureclient.gui` | Show Cisco client |
 | `$mod+Shift+Return` | `terminal_floating` | Show floating terminal |
@@ -315,6 +315,31 @@ would only produce an error (194 have data).
 Its `app_id` is pinned inside the application (`setDesktopFileName`) rather
 than derived from `argv[0]`, so the binding cannot break depending on how the
 program was invoked.
+
+### Browsing a directory of PDFs
+
+```sh
+zathura-tabs /path/to/pdfs    # all PDFs, non-recursive, filename order
+zathura-tabs                # PDFs in the current directory
+zathura-tabs one.pdf two.pdf # explicit files, argument order
+```
+
+The launcher groups its new windows on the dedicated **`pdfs`** workspace as
+Sway tabs. **Super+h/l** or **Super+Left/Right** changes document; normal Zathura
+**j/k**, arrows and page keys continue to navigate within the document.
+Revisit the group with `swaymsg workspace pdfs`. Use `--workspace NAME` for a
+separate group; choose a dedicated workspace rather than one holding other apps.
+
+Ordinary Zathura still follows the existing scratchpad placement rule. The
+launcher identifies only its own new windows by PID, moves them to `pdfs`, and
+disables floating. **Super+z** matches floating Zathura windows only, so it does
+not pull the tiled browsing group into the scratchpad. Existing reader windows
+are never moved by the launcher. Closing a browsing window closes that PDF tab.
+
+For application-level tabs instead, use **`qpdfview ./*.pdf`** with
+**Alt+Shift+h/l** (previous/next document) and arrows (scroll). Plain Alt+h
+conflicts with qpdfview's Help menu. Settings are in the `qpdfview`
+Stow package; neither alternative changes the default PDF application.
 
 ### Neovim Obsidian Windows
 

@@ -25,6 +25,7 @@
 | `run_screenshot.sh` | Screenshot wrapper with default directory handling |
 | `run_swappy.sh` | Clipboard image annotation/editing |
 | `print-md` | Markdown to PDF via pandoc + CUPS (duplex, draft, grayscale) |
+| `zathura-tabs` | Open a directory's PDFs (or explicit files) as Sway tabs on workspace `pdfs`; Super+h/l switches documents while ordinary Zathura stays in the scratchpad |
 
 ### Voice / Speech
 | Script | Purpose |
@@ -105,6 +106,7 @@ Core dependencies used across multiple scripts:
 | `pandoc` + `xelatex` | print-md |
 | `faster-whisper` | voice-input |
 | `gio` | mtp-automount |
+| `python3`, `swaymsg`, `zathura` | zathura-tabs |
 
 ## Adding New Scripts
 

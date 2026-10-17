@@ -342,8 +342,10 @@ bindcode $mod+108 exec ~/.config/sway/scripts/show-layout.sh --restore
     exec sleep 3 && ~/.local/bin/firefox-profile personal
 # bindsym $mod+o exec gtk-launch obsidian.desktop
 
+# zathura-tabs makes its browsing windows tiled; only ordinary floating
+# readers participate in the scratchpad toggle.
 ## Scratchpad // Show Zathura from scratchpad // 📚 ##
-bindsym $mod+z [app_id="org.pwmt.zathura"] scratchpad show
+bindsym $mod+z [app_id="^org.pwmt.zathura$" floating] scratchpad show
 ## Scratchpad // Show Cisco client from scratchpad // 🛡️ ##
 bindsym $mod+c [app_id="com.cisco.secureclient.gui"] scratchpad show
 ## Scratchpad // Show Obsidian from scratchpad // 🗒️ ##

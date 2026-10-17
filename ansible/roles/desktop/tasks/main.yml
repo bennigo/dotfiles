@@ -24,6 +24,7 @@
       - kanshi
       - pandoc
       - zathura
+      - qpdfview          # Tabbed PDF viewer (Alt+Shift+h/l switches documents)
       - poppler-utils
       - eog
       - grim              # Screenshot capture tool for Wayland
@@ -52,11 +53,11 @@
       - qpdf              # PDF transformation and overlay tool
       - xournalpp         # PDF annotation and signature tool
       - openvpn                  # OpenVPN client (used by vpn-public via NM)
-      - network-manager-openvpn  # NM plugin for vpn-public (VPN Gate / public VPN)
+      - network-manager-openvpn  # NM plugin for vpn-public
     state: present
   tags: ["desktop", "utilities"]
 
-- name: Install Syncthing (LAN file sync — phone<->desktop for meeting audio pipeline)
+- name: Install Syncthing (phone/desktop meeting audio sync)
   block:
     - name: Install syncthing package
       apt:
@@ -66,7 +67,7 @@
 
     - name: Enable and start syncthing user service (per-user, no sudo)
       # Runs as the invoking user (default) so `systemctl --user` works.
-      # On a fresh bootstrap, after this task the web UI is at http://127.0.0.1:8384
+      # After a fresh bootstrap the web UI is at http://127.0.0.1:8384.
       # and the user pairs their device via QR/Device-ID in that UI.
       ansible.builtin.systemd:
         name: syncthing
@@ -137,7 +138,10 @@
 
     - name: Download clipse
       get_url:
-        url: "https://github.com/savedra1/clipse/releases/download/{{ clipse_version }}/clipse_{{ clipse_version }}_linux_wayland_amd64.tar.gz"
+        url: >-
+          https://github.com/savedra1/clipse/releases/download/{{
+          clipse_version }}/clipse_{{ clipse_version
+          }}_linux_wayland_amd64.tar.gz
         dest: "/tmp/clipse.tar.gz"
 
     - name: Extract clipse
@@ -189,7 +193,8 @@
 - name: Install kitty terminal from official installer
   block:
     - name: Download and install kitty
-      shell: curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin
+      shell: >-
+        curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin
       become: no
       args:
         creates: "{{ target_home }}/.local/kitty.app"
@@ -290,7 +295,10 @@
       args:
         creates: "{{ target_home }}/.fzf.zsh"
     - name: Install Nerd Fonts getter
-      shell: curl -fsSL https://raw.githubusercontent.com/ronniedroid/getnf/master/install.sh | bash
+      shell: >-
+        curl -fsSL
+        https://raw.githubusercontent.com/ronniedroid/getnf/master/install.sh
+        | bash
       become: no
       args:
         creates: "{{ target_home }}/.local/bin/getnf"
@@ -320,10 +328,14 @@
       register: lazygit_release
     - name: Extract LazyGit version
       set_fact:
-        lazygit_version: "{{ (lazygit_release.content | from_json).tag_name | regex_replace('^v', '') }}"
+        lazygit_version: >-
+          {{ (lazygit_release.content | from_json).tag_name
+             | regex_replace('^v', '') }}
     - name: Download LazyGit
       get_url:
-        url: "https://github.com/jesseduffield/lazygit/releases/download/v{{ lazygit_version }}/lazygit_{{ lazygit_version }}_Linux_x86_64.tar.gz"
+        url: >-
+          https://github.com/jesseduffield/lazygit/releases/download/v{{
+          lazygit_version }}/lazygit_{{ lazygit_version }}_Linux_x86_64.tar.gz
         dest: "/tmp/lazygit.tar.gz"
     - name: Extract LazyGit
       unarchive:
@@ -379,8 +391,10 @@
       copy:
         content: |
           # Allow members of video group to control brightness
-          SUBSYSTEM=="backlight", ACTION=="add", RUN+="/bin/chgrp video /sys/class/backlight/%k/brightness"
-          SUBSYSTEM=="backlight", ACTION=="add", RUN+="/bin/chmod g+w /sys/class/backlight/%k/brightness"
+          SUBSYSTEM=="backlight", ACTION=="add", \
+            RUN+="/bin/chgrp video /sys/class/backlight/%k/brightness"
+          SUBSYSTEM=="backlight", ACTION=="add", \
+            RUN+="/bin/chmod g+w /sys/class/backlight/%k/brightness"
         dest: /etc/udev/rules.d/90-brightness.rules
         mode: '0644'
       notify: reload udev
@@ -413,7 +427,8 @@
 - name: Display sway configuration validation results
   debug:
     msg: |
-      Sway config validation: {{ 'PASSED' if sway_config_check.rc == 0 else 'FAILED' }}
+      Sway config validation: {{
+        'PASSED' if sway_config_check.rc == 0 else 'FAILED' }}
       {% if sway_config_check.rc != 0 %}
       Error: {{ sway_config_check.stderr }}
       {% endif %}
@@ -432,7 +447,9 @@
     - name: Display Obsidian installation results
       debug:
         msg: |
-          Obsidian installation: {{ 'SUCCESS' if obsidian_install_result.changed or obsidian_install_result.failed == false else 'FAILED' }}
+          Obsidian installation: {{
+            'SUCCESS' if obsidian_install_result.changed
+            or obsidian_install_result.failed == false else 'FAILED' }}
           {% if obsidian_install_result.failed %}
           Error: {{ obsidian_install_result.msg | default('Unknown error') }}
           {% else %}
@@ -445,7 +462,7 @@
         content: |
           [Desktop Entry]
           Name=Obsidian
-          Comment=A powerful knowledge base that works on top of a local folder of plain text Markdown files
+          Comment=A local Markdown knowledge base
           Exec=obsidian --no-sandbox %u
           Icon=obsidian
           Type=Application
@@ -472,7 +489,10 @@
 
     - name: Add Google Chrome repository
       apt_repository:
-        repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main"
+        repo: >-
+          deb [arch=amd64
+          signed-by=/usr/share/keyrings/google-chrome-keyring.gpg]
+          http://dl.google.com/linux/chrome/deb/ stable main
         state: present
         filename: google-chrome
         update_cache: yes
