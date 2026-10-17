@@ -57,22 +57,24 @@ function costTierFor(model: string): string {
 // AGENTS.md = docs, this = display). It went stale on 2026-10-16 when Copilot was
 // retired. Prefer deriving it from agents/*.md rather than hand-maintaining it.
 const AGENT_MODELS: AgentModelMap[] = [
-  { agent: "scout", model: "zai-coding-cn/glm-5.3-highspeed" },
-  { agent: "deep-scout", model: "zai/glm-5.3-highspeed" },
-  { agent: "quick-worker", model: "deepseek/deepseek-flash" },
-  { agent: "auditor", model: "openai-codex/gpt-6-astra" },
-  { agent: "docs-writer", model: "zai-coding-cn/glm-5.3-highspeed" },
-  { agent: "db-analyst", model: "kimi-coding/k3-256k" },
-  { agent: "researcher", model: "zai/glm-5.3-highspeed" },
+  // GENERATED from agents/*.md by scripts/sync-roster.py --write.
+  // Do not hand-edit: run the script instead, or drift returns silently.
   { agent: "architect", model: "openai-codex/gpt-6.1-sol" },
-  { agent: "router", model: "deepseek/deepseek-flash" },
+  { agent: "auditor", model: "openai-codex/gpt-6-astra" },
+  { agent: "db-analyst", model: "kimi-coding/k3-256k" },
+  { agent: "deep-scout", model: "zai/glm-5.3-highspeed" },
+  { agent: "docs-writer", model: "zai-coding-cn/glm-5.3-highspeed" },
+  { agent: "enricher", model: "deepseek/deepseek-v4-pro" },
   { agent: "fallback-worker", model: "ollama/llama3.1:8b" },
   { agent: "orchestrator", model: "openai-codex/gpt-6.1-sol" },
   { agent: "planner", model: "openai-codex/gpt-6.1-sol" },
-  { agent: "reviewer", model: "openai-codex/gpt-6.1-sol" },
-  { agent: "worker", model: "openai-codex/gpt-6.1-sol" },
+  { agent: "quick-worker", model: "deepseek/deepseek-flash" },
   { agent: "read-image", model: "google/gemini-2.5-flash" },
-  { agent: "enricher", model: "deepseek/deepseek-v4-pro" },
+  { agent: "researcher", model: "zai/glm-5.3-highspeed" },
+  { agent: "reviewer", model: "openai-codex/gpt-6.1-sol" },
+  { agent: "router", model: "deepseek/deepseek-flash" },
+  { agent: "scout", model: "zai-coding-cn/glm-5.3-highspeed" },
+  { agent: "worker", model: "openai-codex/gpt-6.1-sol" },
 ];
 
 // Size thresholds for model capability hints
