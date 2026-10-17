@@ -1,15 +1,18 @@
 {
   "mcpServers": {
-    "chrome-devtools": {
-      "command": "npx",
-      "args": ["-y", "chrome-devtools-mcp@1.6.0"],
-      "exposure": "deferred",
-      "description": "Chrome DevTools browser automation for reading JS-heavy pages"
-    },
     "deepwiki": {
       "url": "https://mcp.deepwiki.com/mcp",
       "exposure": "deferred",
       "description": "AI question-answering over any GitHub repository's documentation"
+    },
+    "chrome_devtools": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@1.6.0"
+      ],
+      "exposure": "deferred",
+      "description": "Chrome DevTools browser automation for reading JS-heavy pages"
     }
   }
 }
