@@ -5,8 +5,7 @@
     "./extensions/model-discovery.ts",
     "./extensions/mode-router.ts",
     "./extensions/model-tiers.ts",
-    "+extensions/bgo-toolkit/git-checkpoint.ts",
-    "-builtin:mcp"
+    "+extensions/bgo-toolkit/git-checkpoint.ts"
   ],
   "skills": [
     "~/.claude/skills",
@@ -19,7 +18,6 @@
     "npm:pi-conventions",
     "npm:@eko24ive/pi-ask",
     "npm:vim-motions-pi",
-    "npm:pi-mcp-adapter",
     "npm:pi-subagents",
     "npm:pi-web-access",
     "npm:@narumitw/pi-plan-mode",
