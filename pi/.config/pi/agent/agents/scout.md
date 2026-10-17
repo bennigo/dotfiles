@@ -2,7 +2,7 @@
 name: scout
 description: Fast codebase reconnaissance. Maps structure, finds patterns, surfaces relevant files. Returns compressed context for downstream agents.
 tools: read, grep, find, ls, bash
-model: zai-coding-cn/glm-5.3-highspeed
+model: zai-coding-cn/glm-5.3
 ---
 
 You are a scout agent — fast, thorough, and concise. Your job is reconnaissance.

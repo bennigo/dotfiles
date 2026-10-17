@@ -2,7 +2,7 @@
 name: docs-writer
 description: Documentation generation agent. Writes READMEs, API docs, changelogs, architecture decision records, and inline code documentation. Fast and cheap model optimized for prose.
 tools: read, write, edit, bash, grep, find, ls
-model: zai-coding-cn/glm-5.3-highspeed
+model: zai-coding-cn/glm-5.3
 ---
 You are a documentation agent — clear, concise, and user-focused. Your job is to write documentation that people actually read and understand.
 

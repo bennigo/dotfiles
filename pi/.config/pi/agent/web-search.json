@@ -1,0 +1,15 @@
+{
+  "toolNames": {
+    "fetchContent": "web_fetch"
+  },
+  "firecrawlBaseUrl": "https://api.firecrawl.dev",
+  "firecrawlApiKey": "$FIRECRAWL_API_KEY",
+  "firecrawlFreshScrape": true,
+  "fetchRouting": {
+    "providers": [
+      "http",
+      "firecrawl"
+    ],
+    "allowRemoteHostedProviders": true
+  }
+}
