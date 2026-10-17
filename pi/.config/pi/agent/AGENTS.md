@@ -161,7 +161,7 @@ Spend order for every task: **local ($0, private) → `$0` subscription quota po
 
 | Agent | Model | Context | Use for |
 |-------|-------|---------|---------|
-| **scout** | Kimi K3 256K ($0) | 256K | Fast recon, small-medium codebases |
+| **scout** | GLM-5.3-Highspeed (z.ai CN plan, $0) | 1M | Fast recon, small-medium codebases |
 | **deep-scout** | GLM-5.3-Highspeed (z.ai, $0) | 1M | Multi-file analysis, large codebases, cross-cutting traces |
 | **researcher** | GLM-5.3-Highspeed (z.ai, $0) | 1M | Web research, source synthesis, tech evaluation |
 | **db-analyst** | Kimi K3 256K ($0) | 256K | SQL queries, schema analysis, data exploration |
@@ -209,7 +209,7 @@ Spend order for every task: **local ($0, private) → `$0` subscription quota po
 | Agent | Model | Context | Use for |
 |-------|-------|---------|---------|
 | **router** | DeepSeek V4.1 Flash | 1M | Task classification — recommends optimal agent/workflow. Cheap enough that the metered cost is irrelevant for one-line output |
-| **docs-writer** | Kimi K3 256K ($0) | 256K | READMEs, API docs, changelogs, code comments |
+| **docs-writer** | GLM-5.3-Highspeed (z.ai CN plan, $0) | 1M | READMEs, API docs, changelogs, code comments |
 
 ### Second Opinion (Diversity)
 
@@ -271,8 +271,10 @@ $0 — OpenAI Codex (company sub, quota) (6):
                                  auditor         [gpt-6-astra, safety-critical]
 $0 — GLM-5.3-Highspeed (z.ai, 1M ctx) (2):
                                  deep-scout, researcher
-$0 — Kimi K3-256K (256K ctx) (3):
-                                 scout, db-analyst, docs-writer
+$0 — GLM-5.3-Highspeed (z.ai CN coding plan) (2):
+                                 scout, docs-writer
+$0 — Kimi K3-256K (256K ctx, 5h window) (1):
+                                 db-analyst
 $0 — local (1):                  fallback-worker  (Ollama Llama 3.1 8B)
 Cheap metered (2):               quick-worker, router   (DeepSeek Flash $0.30/$1.20)
 Budget metered (1):              enricher               (DeepSeek V4 Pro $1.32/$3.96)

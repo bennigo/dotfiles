@@ -57,11 +57,11 @@ function costTierFor(model: string): string {
 // AGENTS.md = docs, this = display). It went stale on 2026-10-16 when Copilot was
 // retired. Prefer deriving it from agents/*.md rather than hand-maintaining it.
 const AGENT_MODELS: AgentModelMap[] = [
-  { agent: "scout", model: "kimi-coding/k3-256k" },
+  { agent: "scout", model: "zai-coding-cn/glm-5.3-highspeed" },
   { agent: "deep-scout", model: "zai/glm-5.3-highspeed" },
   { agent: "quick-worker", model: "deepseek/deepseek-flash" },
   { agent: "auditor", model: "openai-codex/gpt-6-astra" },
-  { agent: "docs-writer", model: "kimi-coding/k3-256k" },
+  { agent: "docs-writer", model: "zai-coding-cn/glm-5.3-highspeed" },
   { agent: "db-analyst", model: "kimi-coding/k3-256k" },
   { agent: "researcher", model: "zai/glm-5.3-highspeed" },
   { agent: "architect", model: "openai-codex/gpt-6.1-sol" },
