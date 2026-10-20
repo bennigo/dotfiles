@@ -1,0 +1,6 @@
+{
+  "_comment": "The needs_attention idle watchdog defaults to 60s. For agentic lanes that is too aggressive: activity is derived from output-<n>.log mtime plus tool boundaries, and workflow children have no output log at all, so any generation gap over 60s looks idle. Raised to 5 minutes; genuine stuck lanes still surface.",
+  "control": {
+    "needsAttentionAfterMs": 300000
+  }
+}
