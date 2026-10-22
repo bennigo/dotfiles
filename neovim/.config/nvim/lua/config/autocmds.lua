@@ -70,6 +70,19 @@ vim.api.nvim_create_autocmd("FileType", {
         return
       end
 
+      -- Image embed: open with imv (in-buffer snacks rendering can show a black window)
+      local ext = target and target:lower():match("%.(%w+)$")
+      if ext and vim.tbl_contains({ "png", "jpg", "jpeg", "gif", "webp", "bmp", "svg" }, ext) then
+        local vault = vim.fn.expand("~/notes/bgovault")
+        local found = vim.fn.globpath(vault, "**/" .. vim.fn.escape(target, "*?[\\"), false, true)
+        if #found > 0 then
+          vim.fn.jobstart({ "imv", found[1] }, { detach = true })
+        else
+          vim.notify("Image not found in vault: " .. target, vim.log.levels.WARN)
+        end
+        return
+      end
+
       -- Fall back: check for markdown link syntax [text](path) under cursor
       if not target then
         local cfile = vim.fn.expand("<cfile>")
