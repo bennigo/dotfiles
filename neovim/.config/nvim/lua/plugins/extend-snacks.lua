@@ -12,6 +12,8 @@ return {
       end
     end
 
+    local found_cache = {} -- recursive Assets/ lookups, keyed by vault + src
+
     local function resolve_obsidian_image(file, src)
       if not src or src == "" or src:find("^%w%w+://") then
         return nil
@@ -34,7 +36,16 @@ return {
           return p
         end
       end
-      return nil
+      -- Obsidian resolves ![[name.png]] anywhere in the vault; search Assets/ recursively
+      -- (e.g. Assets/charts/ki_tolfraedi/). Assets is a symlink, so search its real path.
+      local key = vault .. "\0" .. src
+      if found_cache[key] == nil then
+        local assets = uv.fs_realpath(vault .. "/Assets")
+        local hit = assets
+          and vim.fs.find(vim.fs.basename(src), { path = assets, type = "file", limit = 1 })[1]
+        found_cache[key] = hit or false
+      end
+      return found_cache[key] or nil
     end
 
     local final_opts = vim.tbl_deep_extend("force", {
