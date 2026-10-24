@@ -263,3 +263,28 @@ if vim.fn.executable("swaymsg") == 1 and vim.env.SWAYSOCK then
     desc = "Restore keyboard layout on Neovim exit",
   })
 end
+
+-- Pick up on-disk edits (Obsidian, Claude, scripts) while the buffer stays open.
+-- autoread only reloads when :checktime runs, and LazyVim runs that on FocusGained
+-- alone — so a window that keeps focus never sees the change. Poll every 2 s, only
+-- in Normal mode: a modified buffer then prompts instead of being overwritten, and
+-- the prompt never lands mid-typing or in the cmdline.
+local checktime_timer = vim.uv.new_timer()
+if checktime_timer then
+  checktime_timer:start(
+    2000,
+    2000,
+    vim.schedule_wrap(function()
+      if vim.api.nvim_get_mode().mode == "n" and vim.fn.getcmdwintype() == "" then
+        vim.cmd("silent! checktime")
+      end
+    end)
+  )
+  vim.api.nvim_create_autocmd("VimLeavePre", {
+    callback = function()
+      checktime_timer:stop()
+      checktime_timer:close()
+    end,
+    desc = "Stop the on-disk change poller",
+  })
+end
