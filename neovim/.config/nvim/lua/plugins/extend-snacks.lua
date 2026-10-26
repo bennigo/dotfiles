@@ -58,6 +58,13 @@ return {
           float = true,   -- floating windows instead
         },
         convert = {
+          magick = {
+            -- snacks' pdf default has no size cap: a tall matplotlib page
+            -- (gpsplot stack, ~11x17 in) became 2046x3277 px at 192 dpi and the
+            -- hover float stayed empty; cap it like snacks' raster default
+            pdf = { "-density", 192, "{src}[{page}]", "-background", "white",
+                    "-alpha", "remove", "-trim", "-scale", "1920x1080>" },
+          },
           mermaid = function()
             local theme = vim.o.background == "light" and "neutral" or "dark"
             -- Create puppeteer config file for --no-sandbox
