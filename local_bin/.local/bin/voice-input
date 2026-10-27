@@ -26,6 +26,7 @@ set -euo pipefail
 LANGUAGE="auto"
 MODEL="large-v3-turbo"   # large-v3-level language auto-detection, much faster (CT2, needs GPU)
 OUTPUT_MODE="clipboard"
+TYPE_OUTPUT=false   # --type: also wtype the transcript into the focused window
 TIMEOUT=0          # 0 = no timeout, stop with Ctrl+C (auto-set to 15s if no TTY)
 AUDIO_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/voice-input"
 KEEP_AUDIO=false
@@ -51,6 +52,8 @@ Options:
   -d, --device DEVICE   Audio device for arecord (default or hw:X,Y)
   --toggle              Toggle mode for keybindings: 1st call starts recording,
                         2nd call stops and transcribes to clipboard
+  --type                Also type the transcript into the focused window (wtype);
+                        clipboard copy is kept as a fallback
   --keep-audio          Keep the recorded WAV file after transcription
   -q, --quiet           Suppress status messages (only output transcript)
   -h, --help            Show this help
@@ -66,6 +69,7 @@ while [[ $# -gt 0 ]]; do
         -t|--timeout)  TIMEOUT="$2"; shift 2 ;;
         -d|--device)   DEVICE="$2"; shift 2 ;;
         --toggle)      TOGGLE=true; shift ;;
+        --type)        TYPE_OUTPUT=true; shift ;;
         --keep-audio)  KEEP_AUDIO=true; shift ;;
         -q|--quiet)    QUIET=true; shift ;;
         -h|--help)     usage ;;
@@ -141,12 +145,17 @@ print(result.text)
             exit 0
         fi
 
-        echo "$TEXT" | wl-copy
+        echo "$TEXT" | wl-copy   # clipboard alltaf (öryggisafrit)
         # Replace "Transcribing" with result preview
         PREVIEW="${TEXT:0:80}"
         [[ ${#TEXT} -gt 80 ]] && PREVIEW="${PREVIEW}..."
         makoctl dismiss --all 2>/dev/null || true
-        notify-send -t 5000 "Voice Input" "Copied to clipboard:\n${PREVIEW}"
+        if [[ "$TYPE_OUTPUT" == true ]] && command -v wtype >/dev/null 2>&1; then
+            wtype -- "$TEXT"   # skrifa beint í gluggann í fókus
+            notify-send -t 4000 "Voice Input" "Skrifað í glugga (+ klippiborð):\n${PREVIEW}"
+        else
+            notify-send -t 5000 "Voice Input" "Copied to clipboard:\n${PREVIEW}"
+        fi
 
         rm -f "$AUDIO_FILE"
         exit 0

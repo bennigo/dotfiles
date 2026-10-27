@@ -291,8 +291,8 @@ bindsym $mod+Ctrl+j exec ~/.local/bin/vault-jot
 bindsym $mod+Shift+v exec ~/.local/bin/voice-input --toggle
 ## Voice (íslenska) // Toggle voice-to-clipboard, þvingað íslenska (large-v3) // 🎙️🇮🇸 ##
 bindsym $mod+Alt+v exec ~/.local/bin/voice-input --toggle -l is
-## Voice (Pi-samræmt) // Toggle voice-to-clipboard, auto — sami takki og á Pi // 🎙️ ##
-bindsym Ctrl+Alt+z exec ~/.local/bin/voice-input --toggle
+## Voice (Pi-samræmt) // Toggle voice → skrifar beint í glugga, auto — sami takki og á Pi // 🎙️⌨️ ##
+bindsym Ctrl+Alt+z exec ~/.local/bin/voice-input --toggle --type
 # floating terminal
 ## Apps // Open floating terminal // 🪟🖥️ ##
 bindsym $mod+t exec $term --class "terminal_floating"
