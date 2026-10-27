@@ -279,6 +279,38 @@ releases the GPU. Implemented in three layers:
 Verify a clean cycle: `journalctl -t nvidia-dpms-off -b` (expect power off/on)
 and `journalctl -b -k | grep -c "waiting for GPU progress"` (expect 0).
 
+### External Display: Mirror / Independent Workspace
+
+**F7** toggles the laptop panel's live image on the external display. Press it
+again to close only the mirror and reveal the external's existing workspace
+(normally workspace **5**). **XF86Display** (the ThinkPad F7 display icon / Fn mode)
+runs the same toggle. Bindings are in `config.d/display-toggle.conf`; the helper
+is `scripts/display-toggle.py`. Neither mode changes output resolution, scaling,
+position, existing windows, or workspace assignments.
+
+- Requires `wl-mirror` (`sudo apt install wl-mirror`), Python 3, `swaymsg`, and
+  optionally `notify-send`. Installed and tested on eldey, 2026-10-27.
+- Uses `screencopy-shm` for Intel/NVIDIA compatibility, fullscreen on the external,
+  and **fit** scaling: the entire 16:10 laptop image fits a 16:9 monitor with
+  black side margins rather than cropping. Keyboard focus returns to the laptop.
+- Mirror mode shows **everything visible on the laptop, including notifications**.
+  It is a presentation convenience, not a privacy boundary. Changing the external
+  workspace can hide the mirror; F7 still closes it wherever it is.
+- With no active external display, the helper reports an error and changes nothing.
+  With several externals, use `--output HDMI-A-1` (or another connector) explicitly.
+- Only this helper's exact wl-mirror app ID + title are matched; unrelated mirror
+  sessions and application windows are not closed. A runtime lock ignores repeats
+  during startup. Startup errors clean up the newly launched mirror.
+- Manual recovery: `~/.config/sway/scripts/display-toggle.py extend`.
+  If the external is unplugged and the mirror remains on the laptop, F7 or this
+  command closes it. `mirror` and `extend` are idempotent; default is `toggle`.
+- Diagnostics: `$XDG_RUNTIME_DIR/display-mirror.log`.
+- Tests: `python3 -m unittest discover -s tests -p 'test_display_toggle.py'` from
+  the dotfiles root (mocked IPC; no desktop changes).
+
+Live test verified the mirror fullscreen on HDMI-A-1, keyboard focus on eDP-1,
+and successful return to workspace 5 with both outputs' modes/scales unchanged.
+
 ### Scratchpad Windows
 
 Non-Neovim scratchpad windows (Obsidian, Zotero, Zathura, Cisco, terminal, LibreOffice) use **`app_id`-based** keybindings — the toggle shortcut matches the window by its `app_id` property directly, with no marks involved. The `for_window` rules handle initial placement (move to scratchpad + resize) when the window first appears.
