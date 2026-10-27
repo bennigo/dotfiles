@@ -1,0 +1,7 @@
+# EMERGENCY ONLY — public DNS while disconnected from the work VPN.
+# This is not the normal /etc/resolv.conf and does not resolve private work names.
+# Public DNS queries go to Google and Cloudflare, not the work DNS servers.
+# See ~/.dotfiles/system/DNS-RECOVERY.md for activation and restoration.
+nameserver 8.8.8.8
+nameserver 1.1.1.1
+options timeout:2 attempts:2

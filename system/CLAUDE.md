@@ -228,6 +228,14 @@ sudo journalctl -t vpn-route-fix --since "-10min"
 
 ### Cisco VPN DNS Death-Spiral Fix
 
+**Manual recovery guide**: [DNS-RECOVERY.md](DNS-RECOVERY.md) — diagnosis,
+public-DNS emergency activation, restoring managed DNS, and the 2026-10-27 incident.
+**Emergency file**: `etc/resolv.conf.contingency` (installed as
+`/etc/resolv.conf.contingency`; use only temporarily with the VPN disconnected).
+On 2026-10-27, resolved startup was observed blocked in kernel RPC/NFS wait;
+VPN reconnection coincided with recovery. Cisco then restored its correct work
+DNS configuration, and both public and private lookups were verified.
+
 **Files**: `usr/local/bin/resolv-fallback`,
 `etc/systemd/system/resolv-fallback.{service,path,timer}`
 
