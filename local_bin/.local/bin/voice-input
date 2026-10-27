@@ -24,7 +24,7 @@ set -euo pipefail
 
 # --- Defaults ---
 LANGUAGE="auto"
-MODEL="medium"
+MODEL="large-v3-turbo"   # large-v3-level language auto-detection, much faster (CT2, needs GPU)
 OUTPUT_MODE="clipboard"
 TIMEOUT=0          # 0 = no timeout, stop with Ctrl+C (auto-set to 15s if no TTY)
 AUDIO_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/voice-input"
@@ -44,8 +44,8 @@ Record microphone audio and transcribe to text via Whisper.
 
 Options:
   -l, --language LANG   Language code (en, is, auto) [default: auto]
-  -m, --model MODEL     Whisper model (tiny|base|small|medium|large-v3) [default: medium]
-                        Low-resource languages (e.g. Icelandic) auto-upgrade to large-v3
+  -m, --model MODEL     Whisper model (tiny|base|small|medium|large-v3|large-v3-turbo) [default: large-v3-turbo]
+                        Full large-v3 gives best low-resource (e.g. Icelandic) transcription fidelity
   -o, --output MODE     Output mode: clipboard, stdout, both [default: clipboard]
   -t, --timeout SECS    Auto-stop recording after SECS seconds (0=manual) [default: 0]
   -d, --device DEVICE   Audio device for arecord (default or hw:X,Y)

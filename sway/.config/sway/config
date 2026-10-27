@@ -287,8 +287,10 @@ bindsym $mod+i exec ~/.local/bin/sway-nvim-toggle quick
 bindsym $mod+Shift+i exec ~/.local/bin/sway-nvim-toggle template
 ## Notes // Quick jot to daily note (rofi popup) // ✏️ ##
 bindsym $mod+Ctrl+j exec ~/.local/bin/vault-jot
-## Voice // Toggle voice-to-clipboard (Whisper) // 🎙️ ##
+## Voice // Toggle voice-to-clipboard (Whisper, auto-detect) // 🎙️ ##
 bindsym $mod+Shift+v exec ~/.local/bin/voice-input --toggle
+## Voice (íslenska) // Toggle voice-to-clipboard, þvingað íslenska (large-v3) // 🎙️🇮🇸 ##
+bindsym $mod+Alt+v exec ~/.local/bin/voice-input --toggle -l is
 # floating terminal
 ## Apps // Open floating terminal // 🪟🖥️ ##
 bindsym $mod+t exec $term --class "terminal_floating"
