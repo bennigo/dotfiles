@@ -232,9 +232,14 @@ sudo journalctl -t vpn-route-fix --since "-10min"
 public-DNS emergency activation, restoring managed DNS, and the 2026-10-27 incident.
 **Emergency file**: `etc/resolv.conf.contingency` (installed as
 `/etc/resolv.conf.contingency`; use only temporarily with the VPN disconnected).
-On 2026-10-27, resolved startup was observed blocked in kernel RPC/NFS wait;
-VPN reconnection coincided with recovery. Cisco then restored its correct work
-DNS configuration, and both public and private lookups were verified.
+On 2026-10-27 **and again 2026-10-28**, a VPN drop (10-28: gateway "Max time
+exceeded") made Cisco restart systemd-resolved, whose sandboxed startup then hung on
+the now-dead NFS mounts (D-state `rpc_wait_bit_killable`, 15 s start timeout, ~21 min
+outage). `resolv-fallback` now auto-retires the contingency file once resolved is
+healthy — on 10-28 the manual restore step was forgotten and left public-only DNS for
+18 h. Root-cause mitigation (applied 2026-10-29): `x-systemd.idle-timeout=600` on
+every NFS automount in `etc/fstab`, so idle shares can't block resolved. See
+DNS-RECOVERY.md.
 
 **Files**: `usr/local/bin/resolv-fallback`,
 `etc/systemd/system/resolv-fallback.{service,path,timer}`
@@ -249,11 +254,16 @@ AnyConnect bypasses it (writes the file directly, never registers `vedur.is` DNS
 the file and its DNS works — fighting `vpnagentd`, which re-asserts the file within a
 second, only causes churn). When the tunnel is **down** (no `cscotun0` carrier) it makes
 `1.1.1.1` the **first** nameserver so lookups succeed immediately regardless of stale VPN
-entries. Idempotent. Driven by **both**:
+entries. With the tunnel down it also **retires the emergency contingency file**
+(header `# EMERGENCY ONLY`) by restoring the stub symlink — only when resolved is
+active *and* `dig @127.0.0.53 example.com` returns an address (dig prints its errors on
+stdout, so the match is on an IPv4 answer). Idempotent. Driven by **both**:
 - `resolv-fallback.path` — `PathModified=/etc/resolv.conf`, instant reaction when the file
   is rewritten (e.g. NM rewrites it on the drop).
 - `resolv-fallback.timer` — every **5min** (was 30s until 2026-09-20; `.path` is the real
   trigger, so this only has to cover a *silent* tunnel death where nothing rewrites the file).
+  The 5min source was never deployed — `/etc` still ran 30s until 2026-10-29. After any
+  edit here, `diff` the source against `/etc` (or run the ansible `dns` tag).
 
 Deployed by Ansible `system_files` role (tags: `vpn`,`dns`). Manual deploy:
 ```bash
@@ -262,9 +272,9 @@ sudo install -m0644 system/etc/systemd/system/resolv-fallback.{service,path,time
 sudo systemctl daemon-reload
 sudo systemctl enable --now resolv-fallback.path resolv-fallback.timer
 ```
-Note: `systemd-resolved`'s occasional boot crash-loop ("start operation timed out") is a
-separate, transient race — `systemctl start systemd-resolved` recovers it; it is not part
-of this fix.
+Note: `systemd-resolved` "start operation timed out" loops are **not** a harmless boot
+race. Twice (2026-10-27/28) they followed a VPN drop and were the NFS-mount hang above;
+`systemctl restart` does not help while the mounts are dead. See DNS-RECOVERY.md.
 
 ## Memory Pressure Guards (2026-09-20 hard freeze)
 

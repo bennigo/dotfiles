@@ -51,6 +51,13 @@ the normal network stack need to update DNS.
 
 ## Return to normal DNS
 
+**Automatic since 2026-10-29:** `resolv-fallback` (path trigger + 5 min timer) restores
+the stub symlink by itself once the tunnel is down, systemd-resolved is active, and
+`dig @127.0.0.53 example.com` returns an address. It recognises the contingency file
+by its `# EMERGENCY ONLY` header, so keep that line. Check with
+`journalctl -t resolv-fallback`, looking for "contingency retired". The manual steps
+below are still valid if you want to restore it sooner, or while the VPN is up.
+
 If work NFS mounts are unreachable and the resolver cannot start, reconnect the
 VPN using the working public-DNS workaround first. Then:
 
@@ -133,3 +140,39 @@ journalctl -u systemd-resolved -b -n 40 --no-pager
 The existing automatic `resolv-fallback` handles stale VPN DNS in a **regular**
 `/etc/resolv.conf` when the tunnel is down. It intentionally skips symlinks and
 therefore does not repair a failed systemd-resolved service in this incident.
+
+## Incident observed 2026-10-28 (repeat)
+
+Same mechanism as 10-27, now traced from the journal:
+
+1. **19:47:15** The VPN gateway ended the session ("Max time exceeded", reason 21).
+   As Cisco restored the OS configuration, it **restarted systemd-resolved**.
+2. All NFS mounts (`clientaddr` = the VPN address) became unreachable. The kernel
+   logged `nfs: server … not responding` from 19:47:30.
+3. The new resolved process never logged a single line. Every start hit the 15 s
+   `TimeoutStartSec` until 20:07:47 (start-limit-hit). It started cleanly at 20:08:37,
+   with the VPN still down. Why it was released at that moment is unknown.
+   Likely mechanism: resolved's sandbox (`ProtectSystem=strict`, `ProtectHome`,
+   `PrivateTmp`) builds a mount namespace that touches every mount, and each dead
+   **soft** NFS op takes about `timeo=50` × `retrans=2`. That matches the 10-27
+   `rpc_wait_bit_killable` observation.
+4. With DNS down, Cisco could not resolve `vpn.vedur.is` to reconnect (20:00, 20:04),
+   and `dotfiles-sync` / `epos-rerinex-watch` failed.
+5. **20:05:23** The emergency file was activated per this runbook. The "Return to
+   normal DNS" step was never done. Public-only DNS stayed in place until 10-29 13:57,
+   which broke `tosGPS` (`vi-api.vedur.is` NameResolutionError).
+
+Changes made after it: auto-retire of the contingency file (above), and the
+5 min timer actually deployed (it had drifted at 30 s).
+
+**Root-cause mitigation (applied 2026-10-29):** 12 of the 15 NFS automounts in
+`system/etc/fstab` had no `x-systemd.idle-timeout`, so once they had been touched
+they stayed mounted forever and all went dead together on a VPN drop. All 15 now
+carry `x-systemd.idle-timeout=600`, so idle shares fall back to bare autofs points,
+which should not block namespace setup. A share in active use at the moment of a
+drop can still hang resolved, so this narrows the window; it does not close it.
+How it was applied: back up `/etc/fstab` (to `/etc/fstab.bak-20261029-idle-timeout`),
+install the new file, run `daemon-reload`, then for each idle share run `umount`
+followed by `systemctl restart <unit>.automount`. A running autofs point keeps its
+old timeout until its automount unit restarts. Verify the setting with
+`findmnt /mnt_data/<share>` (look for `timeout=600` on the autofs line).

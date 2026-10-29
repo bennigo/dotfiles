@@ -36,24 +36,24 @@
 # gamit-p01 read-only mounts, and dropped x-systemd.idle-timeout=120 in favour
 # of an explicit =600 on the read-only set.
 #
-granit.vedur.is:/mnt/sdc1/sk2  /mnt_data/sildata  nfs  soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10  0 0
-granit.vedur.is:/mnt/sdd1/sil/trem  /mnt_data/tremdata  nfs  soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10  0 0
+granit.vedur.is:/mnt/sdc1/sk2  /mnt_data/sildata  nfs  soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.idle-timeout=600,x-systemd.mount-timeout=10  0 0
+granit.vedur.is:/mnt/sdd1/sil/trem  /mnt_data/tremdata  nfs  soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.idle-timeout=600,x-systemd.mount-timeout=10  0 0
 #rawdata.vedur.is:/exports/gpsdata /mnt_data/rawgpsdata nfs defaults 0 0
-ananas.vedur.is:/gps/gpsdata  /mnt_data/rawgpsdata  nfs  mountvers=3,auto,soft,timeo=50,retrans=2,nofail,nolock,tcp,ro,_netdev,x-systemd.automount,x-systemd.mount-timeout=10  0 0
-ananas.vedur.is:/gps/  /mnt_data/gps  nfs  mountvers=3,auto,soft,timeo=50,retrans=2,nofail,nolock,tcp,ro,_netdev,x-systemd.automount,x-systemd.mount-timeout=10  0 0
+ananas.vedur.is:/gps/gpsdata  /mnt_data/rawgpsdata  nfs  mountvers=3,auto,soft,timeo=50,retrans=2,nofail,nolock,tcp,ro,_netdev,x-systemd.automount,x-systemd.idle-timeout=600,x-systemd.mount-timeout=10  0 0
+ananas.vedur.is:/gps/  /mnt_data/gps  nfs  mountvers=3,auto,soft,timeo=50,retrans=2,nofail,nolock,tcp,ro,_netdev,x-systemd.automount,x-systemd.idle-timeout=600,x-systemd.mount-timeout=10  0 0
 
 # rawdata.vedur.is:/exports/extension_meters_data /mnt_data/extension_meters_data nfs defaults 0 0
 
-frumgogn02.vedur.is:/home/vmfrum/vmgogn01/frumgogn  /mnt_data/hytrodata  nfs  soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10  0 0
+frumgogn02.vedur.is:/home/vmfrum/vmgogn01/frumgogn  /mnt_data/hytrodata  nfs  soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.idle-timeout=600,x-systemd.mount-timeout=10  0 0
 # #gpsplot.vedur.is:/home/gpsops/rtklib-run/data /mnt_data/rtgpsdata nfs defaults 0 0
-rtk.vedur.is:/home/gpsops/rtklib-run/data  /mnt_data/rtgpsdata  nfs  soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10  0 0
+rtk.vedur.is:/home/gpsops/rtklib-run/data  /mnt_data/rtgpsdata  nfs  soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.idle-timeout=600,x-systemd.mount-timeout=10  0 0
 # 
 # gpsplot.vedur.is:/exports/gpstimes /mnt_data/gpsdata nfs defaults 0 0
-okada.vedur.is:/D/GMT/TOT/  /mnt_data/gpsdata  nfs  ro,soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10  0 0
-okada.vedur.is:/D/GMT/  /mnt_data/gps_gmt_data  nfs  ro,soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10  0 0
-gpsplot.vedur.is:/exports/share  /mnt_data/datashare  nfs  soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10  0 0
-gpsplot.vedur.is:/home/gpsops/gamit-times  /mnt_data/gpsplot/gamit-times  nfs  ro,soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10  0 0
-gpsplot.vedur.is:/home/gpsops/.gpsconfig  /mnt_data/gpsconfig  nfs  soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10  0 0
+okada.vedur.is:/D/GMT/TOT/  /mnt_data/gpsdata  nfs  ro,soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.idle-timeout=600,x-systemd.mount-timeout=10  0 0
+okada.vedur.is:/D/GMT/  /mnt_data/gps_gmt_data  nfs  ro,soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.idle-timeout=600,x-systemd.mount-timeout=10  0 0
+gpsplot.vedur.is:/exports/share  /mnt_data/datashare  nfs  soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.idle-timeout=600,x-systemd.mount-timeout=10  0 0
+gpsplot.vedur.is:/home/gpsops/gamit-times  /mnt_data/gpsplot/gamit-times  nfs  ro,soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.idle-timeout=600,x-systemd.mount-timeout=10  0 0
+gpsplot.vedur.is:/home/gpsops/.gpsconfig  /mnt_data/gpsconfig  nfs  soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.idle-timeout=600,x-systemd.mount-timeout=10  0 0
 
 #nas
 #//nas.vedur.is/export/joklar /mnt/joklar cifs credentials=/root/.smbcredentials,iocharset=utf8,sec=ntlm,_netdev,domain=vi 0 0
@@ -61,7 +61,7 @@ gpsplot.vedur.is:/home/gpsops/.gpsconfig  /mnt_data/gpsconfig  nfs  soft,timeo=5
 #//nas.vedur.is/vatn /mnt/nas/vatn cifs credentials=/root/.smbcredentials,iocharset=utf8,domain=VI,vers=1.0 0 0
 #nas.vedur.is:/export/joklar /mnt/joklar nfs defaults 0 0
 #nas.vedur.is:/export/luk/gogn/haedarlikon/ /mnt/haedarlikon nfs defaults 0 0
-okada.vedur.is:/D/DATABASE	/mnt_data/gps_database	nfs	ro,relatime,vers=3,rsize=1048576,wsize=1048576,soft,fatal_neterrors=none,proto=tcp,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10	0 0
+okada.vedur.is:/D/DATABASE	/mnt_data/gps_database	nfs	ro,relatime,vers=3,rsize=1048576,wsize=1048576,soft,fatal_neterrors=none,proto=tcp,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.idle-timeout=600,x-systemd.mount-timeout=10	0 0
 # read-only server mounts (2026-10-10)
 okada.vedur.is:/mnt/sdc1/D    /mnt_data/okada/D        nfs  ro,soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10,x-systemd.idle-timeout=600  0 0
 okada.vedur.is:/data/D/WEEKS  /mnt_data/okada/WEEKS    nfs  ro,soft,timeo=50,retrans=2,nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10,x-systemd.idle-timeout=600  0 0
