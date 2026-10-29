@@ -115,6 +115,14 @@
         "BRAVE_API_KEY": "${BRAVE_API_KEY}"
       }
     },
+    "firecrawl": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "firecrawl-mcp@3.30.0"],
+      "env": {
+        "FIRECRAWL_API_KEY": "${FIRECRAWL_API_KEY}"
+      }
+    },
     "postgres-local": {
       "type": "stdio",
       "command": "uv",

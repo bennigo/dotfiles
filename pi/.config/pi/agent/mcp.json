@@ -13,6 +13,18 @@
       ],
       "exposure": "deferred",
       "description": "Chrome DevTools browser automation for reading JS-heavy pages"
+    },
+    "firecrawl": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "firecrawl-mcp@3.30.0"
+      ],
+      "env": {
+        "FIRECRAWL_API_KEY": "${FIRECRAWL_API_KEY}"
+      },
+      "exposure": "deferred",
+      "description": "Firecrawl web scrape/search/crawl/extract"
     }
   }
 }
