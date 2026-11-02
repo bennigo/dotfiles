@@ -33,6 +33,19 @@ vim.api.nvim_create_autocmd("FileType", {
   pattern = "markdown",
   callback = function(ev)
     vim.keymap.set("n", "gx", function()
+      -- Binary documents go to the system handler (xdg-open → zathura for pdf);
+      -- everything else opens in a buffer. Returns true if opened externally.
+      local external_exts = { "pdf", "docx", "doc", "odt", "xlsx", "pptx", "epub", "djvu" }
+      local function open_path(path)
+        local e = path:lower():match("%.(%w+)$")
+        if e and vim.tbl_contains(external_exts, e) then
+          vim.ui.open(path)
+          return true
+        end
+        vim.cmd.edit(path)
+        return false
+      end
+
       local line = vim.api.nvim_get_current_line()
       local col = vim.api.nvim_win_get_cursor(0)[2] + 1
 
@@ -127,11 +140,10 @@ vim.api.nvim_create_autocmd("FileType", {
           return
         end
 
-        -- Local file: open in buffer instead of external app
+        -- Local file: open in buffer (binary docs go to the external app)
         local resolved = vim.fn.resolve(vim.fn.expand("%:p:h") .. "/" .. filepath)
         if not filepath:match("^https?://") and vim.fn.filereadable(resolved) == 1 then
-          vim.cmd.edit(resolved)
-          if fragment then
+          if not open_path(resolved) and fragment then
             if not jump_to_anchor(fragment) then
               vim.notify("Heading not found: #" .. fragment, vim.log.levels.WARN)
             end
@@ -148,14 +160,14 @@ vim.api.nvim_create_autocmd("FileType", {
       local vault = vim.fn.expand("~/notes/bgovault")
       local direct = vault .. "/" .. target
       if vim.fn.filereadable(direct) == 1 then
-        vim.cmd.edit(direct)
+        open_path(direct)
         return
       end
 
       -- Search vault for the file
       local found = vim.fn.globpath(vault, "**/" .. target, false, true)
       if #found > 0 then
-        vim.cmd.edit(found[1])
+        open_path(found[1])
       else
         vim.notify("Not found in vault: " .. target, vim.log.levels.WARN)
       end
