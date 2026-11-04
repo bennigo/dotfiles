@@ -17,9 +17,9 @@ _show() {
     # NB: sway criteria are regex SEARCHES — patterns must be anchored (^...$),
     # otherwise "obsidian" also matches "md.obsidian.Obsidian" and the
     # `scratchpad show` commands would toggle the window on, then off again.
-    swaymsg "[app_id=\"^md.obsidian.Obsidian$\" title=\"^(?!Settings - )\"] scratchpad show, resize set width ${RESIZE_W} px height ${RESIZE_H} px, move position center" 2>/dev/null || true
-    swaymsg "[app_id=\"^obsidian$\" title=\"^(?!Settings - )\"] scratchpad show, resize set width ${RESIZE_W} px height ${RESIZE_H} px, move position center" 2>/dev/null || true
-    swaymsg "[class=\"^obsidian$\"  title=\"^(?!Settings - )\"] scratchpad show, resize set width ${RESIZE_W} px height ${RESIZE_H} px, move position center" 2>/dev/null || true
+    "$HOME/.local/bin/sway-scratch" "[app_id=\"^md.obsidian.Obsidian$\" title=\"^(?!Settings - )\"]" "resize set width ${RESIZE_W} px height ${RESIZE_H} px, move position center" 2>/dev/null || true
+    "$HOME/.local/bin/sway-scratch" "[app_id=\"^obsidian$\" title=\"^(?!Settings - )\"]" "resize set width ${RESIZE_W} px height ${RESIZE_H} px, move position center" 2>/dev/null || true
+    "$HOME/.local/bin/sway-scratch" "[class=\"^obsidian$\"  title=\"^(?!Settings - )\"]" "resize set width ${RESIZE_W} px height ${RESIZE_H} px, move position center" 2>/dev/null || true
 }
 
 _has_window() {

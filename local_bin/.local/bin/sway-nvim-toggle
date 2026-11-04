@@ -28,7 +28,7 @@ RESIZE_H=1150
 
 if [[ "${HAS_WINDOW}" == "yes" ]]; then
     # Window exists — toggle scratchpad visibility and ensure correct size
-    swaymsg "[con_mark=\"${MARK}\"] scratchpad show, resize set width ${RESIZE_W} px height ${RESIZE_H} px, move position center"
+    "$HOME/.local/bin/sway-scratch" "[con_mark=\"${MARK}\"]" "resize set width ${RESIZE_W} px height ${RESIZE_H} px, move position center"
 else
     # No window — launch and then show after it lands in scratchpad
     ${TERM} --class "${APP_ID}" zsh -i ~/.local/bin/run_nvim_obsidian.sh "${MODE}" &
@@ -36,7 +36,7 @@ else
     for _ in $(seq 1 20); do
         sleep 0.15
         if swaymsg -t get_tree | jq -r ".. | .marks? // empty | .[]" 2>/dev/null | grep -qxF "${MARK}"; then
-            swaymsg "[con_mark=\"${MARK}\"] scratchpad show, resize set width ${RESIZE_W} px height ${RESIZE_H} px, move position center"
+            "$HOME/.local/bin/sway-scratch" "[con_mark=\"${MARK}\"]" "resize set width ${RESIZE_W} px height ${RESIZE_H} px, move position center"
             exit 0
         fi
     done

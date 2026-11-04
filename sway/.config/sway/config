@@ -109,6 +109,11 @@ exec $term
 # these at runtime via scripts/workspace-layout.sh — keep its "default" in sync.
 # All other workspaces are pinned to the laptop panel so switching to them
 # pulls focus back to eDP-1 instead of dragging onto the external.
+# `swaymsg reload` re-applies sway's (empty) output config and undoes the kanshi
+# layout; kanshi only reacts to hotplug, so ask it to re-apply after every reload.
+# try-reload-or-restart is a no-op while kanshi.service isn't running (login).
+exec_always systemctl --user try-reload-or-restart kanshi.service
+
 workspace 5 output HDMI-A-1 HDMI-A-2 DP-1 DP-2 DP-3 DP-4 DP-5 DP-6 DVI-I-1 DVI-I-2 DVI-I-3 DVI-I-4 eDP-1
 workspace 1 output eDP-1
 workspace 2 output eDP-1
@@ -351,9 +356,9 @@ bindcode $mod+108 exec ~/.config/sway/scripts/show-layout.sh --restore
 # zathura-tabs makes its browsing windows tiled; only ordinary floating
 # readers participate in the scratchpad toggle.
 ## Scratchpad // Show Zathura from scratchpad // 📚 ##
-bindsym $mod+z [app_id="^org.pwmt.zathura$" floating] scratchpad show
+bindsym $mod+z exec ~/.local/bin/sway-scratch '[app_id="^org.pwmt.zathura$" floating]'
 ## Scratchpad // Show Cisco client from scratchpad // 🛡️ ##
-bindsym $mod+c [app_id="com.cisco.secureclient.gui"] scratchpad show
+bindsym $mod+c exec ~/.local/bin/sway-scratch '[app_id="com.cisco.secureclient.gui"]'
 ## Scratchpad // Show Obsidian from scratchpad // 🗒️ ##
 bindsym $mod+Shift+o exec ~/.local/bin/sway-obsidian-toggle
 ## Scratchpad // Show Neovim from scratchpad (any nvim window) // ⚡ ##
@@ -361,13 +366,13 @@ bindsym $mod+o [con_mark="nvim_today"] scratchpad show, move position center; [c
 ## Scratchpad // Toggle LibreOffice scratchpad // 📄 ##
 bindsym $mod+Shift+d exec /home/bgo/.local/bin/toggle-libreoffice.sh
 ## Scratchpad // Show Zotero from scratchpad // 📖 ##
-bindsym $mod+g [app_id="org.zotero.Zotero"] scratchpad show, move position center
+bindsym $mod+g exec ~/.local/bin/sway-scratch '[app_id="org.zotero.Zotero"]' 'move position center'
 ## Scratchpad // Toggle satellite imagery viewer // 🛰️ ##
 bindsym $mod+y exec ~/.local/bin/sat-viewer
 ## Scratchpad // Toggle diagram viewer (imv) // 📊 ##
-bindsym $mod+Shift+g [app_id="imv"] scratchpad show, move position center
+bindsym $mod+Shift+g exec ~/.local/bin/sway-scratch '[app_id="imv"]' 'move position center'
 ## Scratchpad // Show floating terminal // 🪟🖥️ ##
-bindsym $mod+Shift+Return [app_id="terminal_floating"] scratchpad show
+bindsym $mod+Shift+Return exec ~/.local/bin/sway-scratch '[app_id="terminal_floating"]'
 ## Scratchpad // Toggle persistent ranger scratchpad // 📂 ##
 bindsym $mod+Ctrl+f exec ~/.local/bin/sway-ranger toggle
 ## Scratchpad // Toggle GNSS detrend picker // 📈 ##
@@ -377,7 +382,7 @@ bindsym $mod+Ctrl+Shift+d exec ~/.local/bin/sway-detrend-picker menu
 ## Scratchpad // Toggle default Firefox scratchpad // 🦊 ##
 bindsym $mod+b exec ~/.local/bin/toggle-firefox-scratchpad
 ## Scratchpad // Show Chrome from scratchpad // 🌐 ##
-bindsym $mod+Shift+b [app_id="google-chrome"] scratchpad show, move position center
+bindsym $mod+Shift+b exec ~/.local/bin/sway-scratch '[app_id="google-chrome"]' 'move position center'
 
 # Screenshot the monitor
 # take screenshot and copy to clipboard

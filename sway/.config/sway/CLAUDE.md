@@ -333,6 +333,14 @@ kanshi applies the first profile whose outputs match exactly, then runs its
   matches any number. No `kanshictl` — `systemctl --user reload kanshi` (SIGHUP).
 - `exec` lines run **async, unordered** — one `exec` per profile.
 - `workspace-layout.sh default` mirrors the static rules in `config`; keep in sync.
+- **Scratchpads follow the profile**: at work Zathura (`$mod+z`) opens on the
+  portrait Dell, every other scratchpad window on the right screen, via
+  `~/.local/bin/sway-scratch` (targets file written by `workspace-layout.sh work`,
+  removed by `default`). Plain `scratchpad show` can't do this — it always shows
+  on the focused workspace, so a window on another screen is pulled back
+  instead of hidden.
+- `swaymsg reload` resets output layout; `exec_always systemctl --user
+  try-reload-or-restart kanshi.service` in `config` re-applies the profile.
 - New place: arrange with `wdisplays`, copy positions from
   `swaymsg -t get_outputs` into a profile above `other`.
 

@@ -1,0 +1,56 @@
+#!/bin/bash
+# sway-scratch — scratchpad toggle that follows the per-location target screen.
+#
+# Usage: sway-scratch '<criteria>' ['<extra sway commands>']
+#   e.g. sway-scratch '[app_id="org.zotero.Zotero"]' 'move position center'
+#
+# Drop-in for `swaymsg '<criteria> scratchpad show, <extra>'`. When a kanshi
+# profile defines target screens (written by
+# ~/.config/sway/scripts/workspace-layout.sh to $XDG_RUNTIME_DIR/sway-scratch-targets):
+#   pdf   — Zathura (portrait screen at work)
+#   other — every other scratchpad window
+# the window is shown on that screen instead of the focused one, sized in
+# percent of it, and a second press hides it again from any screen.
+# Without targets (laptop / unknown setups) it behaves exactly like the plain
+# swaymsg command, extras included.
+#
+# Plain `scratchpad show` cannot do this: it always shows on the focused
+# workspace, so a window parked on another screen would be pulled back instead
+# of hidden. Matching is left to sway itself (the caller's criteria plus a
+# workspace= criterion), so app_id regexes, `floating`, title lookaheads etc.
+# keep working unchanged.
+set -euo pipefail
+
+crit=${1:?Usage: sway-scratch '<criteria>' ['<extra sway commands>']}
+extra=${2:-}
+targets=${SWAY_SCRATCH_TARGETS:-${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/sway-scratch-targets}
+
+kind=other
+size="90 ppt height 88 ppt"
+if [[ $crit == *org.pwmt.zathura* ]]; then
+    kind=pdf
+    size="96 ppt height 92 ppt"
+fi
+
+target=""
+[[ -r $targets ]] && target=$(awk -v k="$kind" '$1 == k { print $2 }' "$targets")
+
+ws=""
+[[ -n $target ]] && ws=$(swaymsg -r -t get_workspaces |
+    jq -r --arg o "$target" '.[] | select(.output == $o and .visible) | .name')
+
+if [[ -z $ws ]]; then
+    exec swaymsg -q "$crit scratchpad show${extra:+, $extra}"
+fi
+
+ws_re=$(sed 's/[][\.^$*+?(){}|\\]/\\&/g' <<<"$ws")
+on_target="${crit%]} workspace=\"^${ws_re}\$\"]"
+
+# Visible on the target screen → hide (sway reports failure when nothing matches).
+swaymsg -q "$on_target move scratchpad" 2>/dev/null && exit 0
+
+# Otherwise: park everything matched (some may be visible elsewhere), then show
+# on the focused workspace and move it to the target screen.
+swaymsg -q "$crit move scratchpad" 2>/dev/null || true
+# No match is normal for callers that try several criteria (sway-obsidian-toggle).
+swaymsg -q "$crit scratchpad show, move container to output $target, resize set width $size, move position center, focus" >/dev/null

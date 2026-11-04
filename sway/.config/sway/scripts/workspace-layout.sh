@@ -3,6 +3,7 @@
 # and move workspaces that are already open onto their output.
 #
 # Called from kanshi profile `exec` lines (kanshi/.config/kanshi/config).
+# Also writes the scratchpad target screens used by ~/.local/bin/sway-scratch.
 # Usage: workspace-layout.sh <work|default>
 #
 # Sway `workspace N output A B …` rules only apply when a workspace is created,
@@ -65,4 +66,13 @@ while read -r ws current; do
 done <<<"$open"
 
 cmds+=("workspace number $focused")
+
+# Scratchpad target screens for ~/.local/bin/sway-scratch (pdf = Zathura,
+# other = every other scratchpad window). No file = plain `scratchpad show`.
+targets="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/sway-scratch-targets"
+if [[ "$1" == work ]]; then
+    printf 'pdf %s\nother %s\n' "$left" "${right:-$centre}" >"$targets"
+else
+    rm -f "$targets"
+fi
 swaymsg -q "$(IFS=';'; echo "${cmds[*]}")"

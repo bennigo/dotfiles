@@ -134,7 +134,7 @@ menu() {
 case "${1:-toggle}" in
     toggle)
         if window_exists; then
-            swaymsg "[app_id=\"$APP_ID\"] scratchpad show, move position center" >/dev/null
+            "$HOME/.local/bin/sway-scratch" "[app_id=\"$APP_ID\"]" "move position center" >/dev/null
         else
             menu
         fi ;;
