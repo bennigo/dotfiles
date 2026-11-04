@@ -31,10 +31,11 @@ case "${1:?Usage: workspace-layout.sh <work|default>}" in
         right=$(jq -r --arg l "$left" --arg c "$centre" --arg p "$laptop" \
             '.[] | select(.active and .name != $l and .name != $c and .name != $p) | .name' \
             <<<"$outputs" | head -1)
-        for ws in 1 3 6 7 8 9 10; do rules[$ws]=$laptop; done
+        for ws in 1 3 7 8 9 10; do rules[$ws]=$laptop; done
         rules[2]="$centre $laptop"         # work Firefox (assign → workspace 2)
         rules[5]="${left:+$left }$centre $laptop"
         rules[4]="${right:+$right }$laptop"
+        rules[6]="${right:+$right }$laptop"    # GIMP (assign → workspace 6)
         ;;
     default)
         for ws in 1 2 3 4 6 7 8 9 10; do rules[$ws]=$laptop; done

@@ -418,6 +418,10 @@ bindsym $mod+Shift+Print exec ${HOME}/.local/bin/run_screenshot.sh -e -c -m regi
     assign [app_id="spotify"] workspace 10
     assign [app_id="org.qlandkarte.qmapshack"] workspace 5
     assign [app_id="viking"] workspace 5
+    # GIMP 3 is native Wayland (app_id gimp / org.gimp.GIMP); class covers XWayland.
+    # Workspace 6 → right screen at work (scripts/workspace-layout.sh), else laptop.
+    assign [app_id="^(gimp|org\.gimp\.GIMP)$"] workspace 6
+    assign [class="^Gimp"] workspace 6
     for_window [app_id="spotify"] floating enable
     for_window [app_id="spotify"] resize set width 1900 height 1150
     for_window [app_id="spotify"] move position center
