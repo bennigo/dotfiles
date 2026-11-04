@@ -35,13 +35,14 @@ profile laptop {
 #   └──────┘ └─────────────┘
 #
 # Portrait: monitor turned counter-clockwise (top edge on the left). If the
-# picture is upside down, change `transform 90` to `transform 270` (both profiles).
+# picture is upside down, swap `transform 270` <-> `transform 90` (both profiles).
+# (kanshi uses the Wayland convention — counter-clockwise — so 270 here, not 90.)
 #
 # Named outputs come first so the wildcard only gets what is left over.
 
 # Duplicate dock cable to the centre HP UNPLUGGED (preferred): 4 outputs.
 profile work {
-    output DP-2 enable transform 90 position 0,0
+    output DP-2 enable transform 270 position 0,0
     output HDMI-A-1 enable position 1080,0
     output eDP-1 enable position 1080,1080
     output * enable position 3000,0
@@ -51,7 +52,7 @@ profile work {
 # Duplicate dock cable still PLUGGED: the centre HP also appears as an "HP"
 # DisplayLink output — disable it; the Dell DisplayLink output is the right screen.
 profile work-dup {
-    output DP-2 enable transform 90 position 0,0
+    output DP-2 enable transform 270 position 0,0
     output HDMI-A-1 enable position 1080,0
     output eDP-1 enable position 1080,1080
     output "HP Inc. HP E24 G4 CN421428Y3" disable
