@@ -45,6 +45,10 @@ start_bar() {  # start waybar, retrying past the reload layer-shell race
         : > "$log"
         waybar -c "$CFG" -s "$CSS" >>"$log" 2>&1 &
         wb=$!
+        # sway hands the bar process a one-shot WAYLAND_SOCKET fd; the first
+        # waybar consumes it, and any later waybar inheriting it fails with
+        # "Bar need to run under Wayland". Restarts use WAYLAND_DISPLAY.
+        unset WAYLAND_SOCKET
         sleep 1.5                           # the race kills waybar in ~80ms
         if proc_alive "$wb" && grep -q "Bar configured" "$log"; then
             rm -f "$log"

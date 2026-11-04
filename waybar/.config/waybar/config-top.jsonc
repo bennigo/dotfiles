@@ -1,151 +1,68 @@
-{
-    "layer": "top",
-    "position": "top",
-    "height": 30,
-    "margin-top": 4,
-    "margin-left": 10,
-    "margin-right": 10,
-    "spacing": 4,
-    "modules-left": [
-        "sway/workspaces",
-        "custom/git-sync"
-    ],
-    "modules-center": [],
-    "modules-right": [
-        "custom/network",
-        "custom/localip",
-        "custom/pubip",
-        "custom/vpn",
-        "custom/sysmon",
-        "custom/cpu",
-        "custom/battery",
-        "custom/brightness",
-        "custom/volume",
-        "custom/mic",
-        "custom/recording",
-        "custom/bluetooth",
-        "clock",
-        "custom/language",
-        "idle_inhibitor",
-        "custom/dnd",
-        "custom/power"
-    ],
-    "sway/workspaces": {
-        "disable-scroll": true,
-        "all-outputs": true
+// Top bar — one waybar process, two bars (launch-top.sh supervises it).
+// The full bar's content is wider than a portrait 1080p screen, and a
+// layer-shell bar can't shrink below its content, so on the portrait Dell
+// (DP-2, see kanshi config) it spilled onto the next screen. DP-2 gets a
+// short bar instead. Module definitions live in top-modules.jsonc.
+[
+    {
+        "output": "!DP-2",
+        "include": "~/.dotfiles/waybar/.config/waybar/top-modules.jsonc",
+        "layer": "top",
+        "position": "top",
+        "height": 30,
+        "margin-top": 4,
+        "margin-left": 10,
+        "margin-right": 10,
+        "spacing": 4,
+        "modules-left": [
+            "sway/workspaces",
+            "custom/git-sync"
+        ],
+        "modules-center": [],
+        "modules-right": [
+            "custom/network",
+            "custom/localip",
+            "custom/pubip",
+            "custom/vpn",
+            "custom/sysmon",
+            "custom/cpu",
+            "custom/battery",
+            "custom/brightness",
+            "custom/volume",
+            "custom/mic",
+            "custom/recording",
+            "custom/bluetooth",
+            "clock",
+            "custom/language",
+            "idle_inhibitor",
+            "custom/dnd",
+            "custom/power"
+        ]
     },
-    "custom/language": {
-        "exec": "~/.local/bin/herdr-waybar-lang",
-        "return-type": "json", "interval": 2, "format": "{}", "signal": 15,
-        "min-length": 3,
-        "on-click": "swaymsg input $(swaymsg -t get_inputs --raw | jq '[.[] | select(.type == \"keyboard\")][0] | .identifier') xkb_switch_layout next; pkill -RTMIN+15 waybar; ~/.config/sway/scripts/show-layout.sh --show-only"
-    },
-    "idle_inhibitor": {
-        "format": "{icon}",
-        "format-icons": {
-            "activated": "👁",
-            "deactivated": "🔇"
-        },
-        "start-activated": false,
-        "tooltip": true,
-        "tooltip-format-activated": "power-saving disabled",
-        "tooltip-format-deactivated": "power-saving enabled"
-    },
-    "custom/dnd": {
-        "interval": "once",
-        "return-type": "json",
-        "format": "{}",
-        "on-click": "makoctl mode | grep -qx 'do-not-disturb' && makoctl mode -r do-not-disturb || makoctl mode -a do-not-disturb; pkill -RTMIN+11 waybar",
-        "exec": "if makoctl mode | grep -qx 'do-not-disturb'; then printf '{\"text\":\"\ud83d\udd15\",\"tooltip\":\"Do Not Disturb ON\"}'; else printf '{\"text\":\"\ud83d\udd14\",\"tooltip\":\"Notifications on\"}'; fi",
-        "signal": 11
-    },
-    "custom/git-sync": {
-        "exec": "~/.local/bin/herdr-waybar-gitsync",
-        "return-type": "json", "interval": 90, "format": "{}", "signal": 17,
-        "on-click": "~/.config/waybar/scripts/git-sync-run",
-        "on-click-right": "~/.local/bin/kitty --app-id=git_sync_float -e bash -lc 'dotfiles-sync --status; echo; read -n1 -s -p \"press any key…\"'",
-        "on-click-middle": "pkill -RTMIN+17 waybar",
-        "tooltip": true
-    },
-    "custom/bluetooth": {
-        "exec": "~/.local/bin/herdr-waybar-metrics bluetooth",
-        "return-type": "json", "interval": 10, "format": "{}", "signal": 16,
-        "on-click": "blueman-manager",
-        "on-click-right": "rfkill toggle bluetooth; sleep 1; pkill -RTMIN+16 waybar",
-        "tooltip": true
-    },
-    "custom/power": {
-        "format": "⏻",
-        "on-click": "~/.local/bin/herdr-powermenu",
-        "tooltip": false
-    },
-    "clock": {
-        "format": "📅 {:%Y-%m-%d  🕐 %H:%M:%S}",
-        "format-alt": "{:%Y-%m-%d %H:%M:%S}",
-        "tooltip-format": "<tt><small>{calendar}</small></tt>",
-        "timezone": "UTC"
-    },
-    "custom/network": {
-        "exec": "~/.local/bin/herdr-waybar-metrics network",
-        "return-type": "json", "interval": 5, "format": "{}",
-        "on-click": "~/.config/waybar/scripts/network-menu.sh"
-    },
-    "custom/localip": {
-        "exec": "~/.local/bin/herdr-waybar-metrics localip",
-        "return-type": "json", "interval": 10, "format": "{}",
-        "on-click": "~/.local/bin/herdr-copy-ip local"
-    },
-    "custom/pubip": {
-        "exec": "~/.local/bin/herdr-waybar-metrics pubip",
-        "return-type": "json", "interval": 30, "format": "{}",
-        "on-click": "~/.local/bin/herdr-copy-ip public"
-    },
-    "custom/vpn": {
-        "exec": "~/.local/bin/herdr-waybar-metrics vpn",
-        "return-type": "json", "interval": 5, "format": "{}",
-        "on-click": "~/.local/bin/vpn-public-menu"
-    },
-    "custom/sysmon": {
-        "exec": "~/.local/bin/herdr-waybar-metrics sysmon",
-        "return-type": "json", "interval": 3, "format": "{}",
-        "on-click": "~/.local/bin/kitty --class htop htop"
-    },
-    "custom/cpu": {
-        "exec": "~/.local/bin/herdr-waybar-metrics cpu",
-        "return-type": "json", "interval": 3, "format": "{}",
-        "on-click": "~/.local/bin/herdr-cpu-detail"
-    },
-    "custom/battery": {
-        "exec": "~/.local/bin/herdr-waybar-metrics battery",
-        "return-type": "json", "interval": 10, "format": "{}",
-        "on-click": "~/.local/bin/herdr-powermenu"
-    },
-    "custom/brightness": {
-        "exec": "~/.local/bin/herdr-waybar-io brightness",
-        "return-type": "json", "interval": 5, "format": "{}", "signal": 14,
-        "on-scroll-up": "brightnessctl set 5%+; pkill -RTMIN+14 waybar",
-        "on-scroll-down": "brightnessctl set 5%-; pkill -RTMIN+14 waybar"
-    },
-    "custom/volume": {
-        "exec": "~/.local/bin/herdr-waybar-io volume",
-        "return-type": "json", "interval": 5, "format": "{}", "signal": 12,
-        "on-click": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle; pkill -RTMIN+12 waybar",
-        "on-scroll-up": "wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%+; pkill -RTMIN+12 waybar",
-        "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-; pkill -RTMIN+12 waybar"
-    },
-    "custom/mic": {
-        "exec": "~/.local/bin/herdr-waybar-io mic",
-        "return-type": "json", "interval": 5, "format": "{}", "signal": 13,
-        "on-click": "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle; pkill -RTMIN+13 waybar",
-        "on-scroll-up": "wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SOURCE@ 5%+; pkill -RTMIN+13 waybar",
-        "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 5%-; pkill -RTMIN+13 waybar"
-    },
-    "custom/recording": {
-        "exec": "~/.local/bin/herdr-waybar-recording",
-        "return-type": "json", "interval": 2, "format": "{}", "signal": 18,
-        "on-click": "~/.local/bin/record-desktop toggle; pkill -RTMIN+18 waybar",
-        "on-click-right": "~/.local/bin/record-desktop toggle-pause; pkill -RTMIN+18 waybar",
-        "on-click-middle": "notify-send -u normal 'Recording status' \"$(~/.local/bin/record-desktop status 2>&1)\"",
-        "tooltip": true
+    {
+        "output": "DP-2",
+        "include": "~/.dotfiles/waybar/.config/waybar/top-modules.jsonc",
+        "layer": "top",
+        "position": "top",
+        "height": 30,
+        "margin-top": 4,
+        "margin-left": 10,
+        "margin-right": 10,
+        "spacing": 4,
+        "modules-left": [
+            "sway/workspaces"
+        ],
+        "modules-center": [],
+        "modules-right": [
+            "custom/volume",
+            "clock",
+            "custom/language",
+            "custom/power"
+        ],
+        // Only this screen's workspaces, so the list stays short.
+        "sway/workspaces": {
+            "disable-scroll": true,
+            "all-outputs": false
+        }
     }
-}
+]
