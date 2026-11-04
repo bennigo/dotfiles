@@ -276,6 +276,25 @@ Note: `systemd-resolved` "start operation timed out" loops are **not** a harmles
 race. Twice (2026-10-27/28) they followed a VPN drop and were the NFS-mount hang above;
 `systemctl restart` does not help while the mounts are dead. See DNS-RECOVERY.md.
 
+### GDAL pinned to Ubuntu (pgdg mismatch with QGIS)
+
+**File**: `etc/apt/preferences.d/gdal-ubuntu` (Pin-Priority -1 for GDAL from `o=apt.postgresql.org`)
+
+pgdg ships a newer GDAL (3.13, `libgdal39`) than Ubuntu (3.12, `libgdal38`), so
+`apt full-upgrade` silently moved the **single-instance** packages (`gdal-plugins`,
+`python3-gdal`, `gdal-bin`, `gdal-data`, `libgdal-dev`) to 3.13. QGIS/GRASS/mapnik/OpenCV
+are built against Ubuntu's 3.12, so QGIS loaded 3.13 plugins/bindings into a 3.12 library:
+`ERROR 1: NUMPY driver was compiled against GDAL 3.13, but the current library version is 3.12`.
+The two *libraries* can coexist; the shared packages cannot. Nothing needed 3.13 (PostGIS
+is not installed). Fixed 2026-11-04: pin + downgrade to `3.12.2+dfsg-1build2`, `libgdal39`
+removed. PostgreSQL 18, libpq, GEOS 3.14, PROJ 9.8 stay on pgdg (backward compatible).
+Need GDAL 3.13 for development → project env (uv/pip wheels, pixi), not system packages.
+
+```bash
+sudo install -m0644 system/etc/apt/preferences.d/gdal-ubuntu /etc/apt/preferences.d/
+qgis_process --version | grep GDAL     # compiled/running against the same 3.12.x
+```
+
 ## Memory Pressure Guards (2026-09-20 hard freeze)
 
 **What happened.** The machine hard-wedged for ~3 hours and had to be power-cycled.

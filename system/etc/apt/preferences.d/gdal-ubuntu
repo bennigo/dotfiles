@@ -1,0 +1,17 @@
+# Take GDAL from Ubuntu, never from pgdg (apt.postgresql.org).
+#
+# QGIS, GRASS, mapnik and OpenCV are built against Ubuntu's libgdal (3.12,
+# libgdal38). pgdg ships a newer GDAL (3.13, libgdal39) for PostGIS, and because
+# its version is higher apt "upgraded" the single-instance packages — gdal-plugins,
+# python3-gdal, gdal-bin, gdal-data, libgdal-dev — to 3.13. QGIS then loaded
+# 3.13 plugins/bindings into its 3.12 library:
+#   ERROR 1: NUMPY driver was compiled against GDAL 3.13, but the current library version is 3.12
+# (2026-11-04). PostgreSQL, libpq, GEOS and PROJ stay on pgdg — they are
+# backward-compatible and used fine by QGIS.
+#
+# Deploy: sudo cp ~/.dotfiles/system/etc/apt/preferences.d/gdal-ubuntu /etc/apt/preferences.d/
+# Remove this pin if PostGIS from pgdg is ever installed and needs pgdg GDAL —
+# and then install QGIS from qgis.org built against the same GDAL.
+Package: gdal-bin gdal-data gdal-plugins libgdal* python3-gdal
+Pin: release o=apt.postgresql.org
+Pin-Priority: -1
