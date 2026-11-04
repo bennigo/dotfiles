@@ -61,7 +61,7 @@
 | `toggle-libreoffice.sh` | Toggle LibreOffice scratchpad window |
 | `sway-displays-menu` | `$mod+F7` rofi Displays menu: re-apply kanshi layout, identify screens (swaynag labels), mirror laptop (asks which screen when several — plain F7 refuses then), arrange with wdisplays. Prompt shows the active kanshi profile |
 | `sway-scratch` | Output-aware scratchpad toggle: `sway-scratch '<criteria>' ['<extra cmds>']`. With kanshi targets (`$XDG_RUNTIME_DIR/sway-scratch-targets`, written by `sway/scripts/workspace-layout.sh`) shows Zathura on the `pdf` screen, the floating terminal on the `term` screen and everything else on the `other` screen, sized in `ppt`; without targets it is plain `scratchpad show`. Used by all scratchpad bindings + obsidian/nvim/libreoffice/detrend toggles |
-| `sway-obsidian-toggle` | Toggle Obsidian scratchpad (launch on cold start via gtk-launch) |
+| `sway-obsidian-toggle` | `$mod+Shift+o`: go to Obsidian on workspace 7 (again = back; launches if not running). Was a scratchpad toggle until 2026-11-04 |
 | `sway-debug` | GDM session launcher (`sway.desktop` → `Exec=sway-debug`). **`/usr/local/bin/sway-debug` symlinks here** (GDM's PATH lacks `~/.local/bin`). Logs to `~/.local/share/sway/sway-session.log{,.prev}`. Forces atomic KMS (unsets `WLR_DRM_NO_ATOMIC`, also commented out in `ollama/.config/environment.d/nvidia-wayland.conf`) — `touch ~/.config/sway/legacy-kms` re-enables `WLR_DRM_NO_ATOMIC=1`. Background: login loop 2026-11-04 when dock monitor was present at login (legacy pageflip EBUSY → no outputs → abort). |
 
 ### Office / Applications

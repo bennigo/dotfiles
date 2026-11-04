@@ -1,0 +1,18 @@
+[Unit]
+Description=Place new sway workspaces on the kanshi profile's screens
+# Script: sway/.config/sway/scripts/workspace-placer.sh (see its header for why
+# runtime `workspace N output` rules are not enough). Map written by
+# sway/.config/sway/scripts/workspace-layout.sh. Needs SWAYSOCK — imported into
+# the user manager before sway-session.target starts (sway/config).
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.config/sway/scripts/workspace-placer.sh
+# The IPC subscription ends when sway exits/restarts.
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=graphical-session.target

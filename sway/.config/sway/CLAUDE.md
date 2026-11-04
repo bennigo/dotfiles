@@ -322,7 +322,7 @@ kanshi applies the first profile whose outputs match exactly, then runs its
 | Profile | Outputs | Workspaces |
 |---|---|---|
 | `laptop` | eDP-1 | all on the laptop (ws 5 too) |
-| `work` | DP-2 left portrait · HDMI-A-1 centre above laptop · eDP-1 · `*` right (DisplayLink) | 5 left, 2 centre (work Firefox), 4 + 6 (GIMP) right, rest laptop |
+| `work` | DP-2 left portrait · HDMI-A-1 centre above laptop · eDP-1 · `*` right (DisplayLink) | 5 left, 2 centre (work Firefox), 4 + 6 (GIMP) + 7 (Obsidian) right, rest laptop |
 | `work-dup` | same, while the centre HP's duplicate dock cable is plugged in (its HP DisplayLink output is disabled) | same as `work` |
 | `other` | eDP-1 + any number of others, no positions → sway extends right | ws 5 on first external (`default`) |
 
@@ -347,8 +347,18 @@ kanshi applies the first profile whose outputs match exactly, then runs its
 - **`$mod+F7` Displays menu** (`~/.local/bin/sway-displays-menu`): re-apply,
   identify screens, mirror (choose target screen), arrange. Profiles still
   switch automatically — kanshi 1.9 cannot be told to use a given profile.
-- **Apps per place**: `assign` app → workspace (fixed), pin workspace → screen
-  per profile in `workspace-layout.sh`. No per-profile window logic.
+- **Apps per place**: `assign` app → workspace (fixed), workspace → screen per
+  profile in `workspace-layout.sh`. No per-profile window logic.
+- **Runtime `workspace N output` rules don't work for this**: sway APPENDS them
+  to the static rules in `config` (first available output wins), so they can't
+  override `workspace 7 output eDP-1` (verified 2026-11-04). Instead
+  `workspace-layout.sh` moves existing workspaces and writes
+  `$XDG_RUNTIME_DIR/sway-workspace-outputs`; `workspace-placer.service`
+  (`scripts/workspace-placer.sh`, IPC `workspace` init events) moves workspaces
+  created later. Test placement with a workspace that really doesn't exist yet —
+  a visible empty workspace is not destroyed.
+- **Obsidian is a normal window on workspace 7** (not a scratchpad since
+  2026-11-04); `$mod+Shift+o` jumps there / back.
 - New place: arrange with `wdisplays`, copy positions from
   `swaymsg -t get_outputs` into a profile above `other`.
 

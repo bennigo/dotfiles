@@ -1,26 +1,17 @@
 #!/usr/bin/env bash
-# sway-obsidian-toggle — Toggle Obsidian scratchpad window.
-# If running, toggle scratchpad visibility. If not, launch and show.
-
+# sway-obsidian-toggle — $mod+Shift+o: go to Obsidian on workspace 7.
+#
+# Obsidian is a normal window on workspace 7 (sway `assign`; at work workspace 7
+# is on the right screen — sway/scripts/workspace-layout.sh). Pressing again
+# while on workspace 7 returns to the previous workspace. Not running → launch
+# (the assign places it on 7) and go there.
+#
+# Until 2026-11-04 this toggled an Obsidian scratchpad window; see git history.
 set -uo pipefail
 
 LOG="${XDG_RUNTIME_DIR:-/tmp}/sway-obsidian-toggle.log"
-RESIZE_W=2000
-RESIZE_H=1190
-
+WS=7
 _log() { echo "[$(date '+%H:%M:%S')] $*" >> "$LOG"; }
-
-_show() {
-    # Only the MAIN window lives in the scratchpad — dialogs (Settings, ...) are
-    # excluded by title so a toggle can't accidentally swallow/reveal them.
-    # The snap on native Wayland reports app_id "md.obsidian.Obsidian".
-    # NB: sway criteria are regex SEARCHES — patterns must be anchored (^...$),
-    # otherwise "obsidian" also matches "md.obsidian.Obsidian" and the
-    # `scratchpad show` commands would toggle the window on, then off again.
-    "$HOME/.local/bin/sway-scratch" "[app_id=\"^md.obsidian.Obsidian$\" title=\"^(?!Settings - )\"]" "resize set width ${RESIZE_W} px height ${RESIZE_H} px, move position center" 2>/dev/null || true
-    "$HOME/.local/bin/sway-scratch" "[app_id=\"^obsidian$\" title=\"^(?!Settings - )\"]" "resize set width ${RESIZE_W} px height ${RESIZE_H} px, move position center" 2>/dev/null || true
-    "$HOME/.local/bin/sway-scratch" "[class=\"^obsidian$\"  title=\"^(?!Settings - )\"]" "resize set width ${RESIZE_W} px height ${RESIZE_H} px, move position center" 2>/dev/null || true
-}
 
 _has_window() {
     swaymsg -t get_tree \
@@ -28,50 +19,16 @@ _has_window() {
         | grep -qi 'obsidian'
 }
 
-# True if the MAIN window (not a dialog) is currently visible — i.e. this
-# invocation is about to HIDE it.
-_main_visible() {
-    swaymsg -t get_tree 2>/dev/null | jq -e '
-        .. | objects
-        | select(.app_id? == "md.obsidian.Obsidian" or .window_properties?.class? == "obsidian")
-        | select((.name // "") | (startswith("Settings - ") | not))
-        | select(.visible == true)
-    ' >/dev/null 2>&1
-}
+focused=$(swaymsg -t get_workspaces -r | jq -r '.[] | select(.focused) | .name')
 
-# Close any open Obsidian dialogs (Settings, ...) when the main window is about
-# to be hidden, so they don't linger on the workspace by themselves. Killing is
-# safe here — these dialogs hold no state that isn't already saved elsewhere —
-# and it avoids the alternative (hiding them into the scratchpad) piling up
-# zombie windows the way Zotero's Import/Close dialogs do.
-# Add more `title=` prefixes here if another dialog type starts lingering.
-_close_dialogs() {
-    swaymsg '[app_id="^md.obsidian.Obsidian$" title="^Settings - "] kill' 2>/dev/null || true
-    swaymsg '[class="^obsidian$" title="^Settings - "] kill' 2>/dev/null || true
-}
-
-_log "invoked"
-
-if _has_window; then
-    if _main_visible; then
-        _log "main visible — closing dialogs, hiding"
-        _close_dialogs
-    else
-        _log "main hidden — showing"
-    fi
-    _show
-else
+if ! _has_window; then
     _log "no window — launching obsidian-launch"
     /home/bgo/.local/bin/obsidian-launch &
-    for _ in $(seq 1 60); do
-        sleep 0.5
-        if _has_window; then
-            sleep 0.3  # let for_window rule fire before calling scratchpad show
-            _log "window appeared — showing scratchpad"
-            _show
-            exit 0
-        fi
-    done
-    _log "ERROR: window never appeared after 30s"
-    notify-send -u critical -t 8000 "Obsidian" "Failed to launch after 30s — check ${LOG}"
+    swaymsg -q "workspace number $WS"
+elif [[ "$focused" == "$WS" ]]; then
+    _log "on workspace $WS — going back"
+    swaymsg -q "workspace back_and_forth"
+else
+    _log "going to workspace $WS"
+    swaymsg -q "workspace number $WS"
 fi

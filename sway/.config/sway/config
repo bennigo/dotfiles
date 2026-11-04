@@ -359,7 +359,7 @@ bindcode $mod+108 exec ~/.config/sway/scripts/show-layout.sh --restore
 bindsym $mod+z exec ~/.local/bin/sway-scratch '[app_id="^org.pwmt.zathura$" floating]'
 ## Scratchpad // Show Cisco client from scratchpad // 🛡️ ##
 bindsym $mod+c exec ~/.local/bin/sway-scratch '[app_id="com.cisco.secureclient.gui"]'
-## Scratchpad // Show Obsidian from scratchpad // 🗒️ ##
+## Notes // Go to Obsidian (workspace 7; again = back) // 🗒️ ##
 bindsym $mod+Shift+o exec ~/.local/bin/sway-obsidian-toggle
 ## Scratchpad // Show Neovim from scratchpad (any nvim window) // ⚡ ##
 bindsym $mod+o [con_mark="nvim_today"] scratchpad show, move position center; [con_mark="nvim_new"] scratchpad show, move position center; [con_mark="nvim_quick"] scratchpad show, move position center
@@ -673,10 +673,12 @@ for_window [app_id="viking"] floating enable, resize set width 2500 px height 16
 # Secondary windows (Settings, pop-outs) share the app_id, so the scratchpad rule
 # must exclude them by title — otherwise dialogs get swallowed into the scratchpad,
 # resized to main-window geometry, and z-fight the main window on every toggle.
-## Scratchpad // Obsidian main window → scratchpad // 🗒️ ##
-for_window [app_id="^md.obsidian.Obsidian$" title="^(?!Settings - )"] floating enable, resize set width 2000 px height 1190 px, move position center, move scratchpad
-for_window [app_id="^obsidian$" title="^(?!Settings - )"] floating enable, resize set width 2000 px height 1190 px, move position center, move scratchpad
-for_window [class="^obsidian$" title="^(?!Settings - )"] floating enable, resize set width 2000 px height 1190 px, move position center, move scratchpad
+# Obsidian is a normal (tiled) window on workspace 7 — not a scratchpad since
+# 2026-11-04. Workspace 7 → right screen at work (scripts/workspace-layout.sh),
+# laptop elsewhere. $mod+Shift+o jumps there (sway-obsidian-toggle).
+assign [app_id="^md.obsidian.Obsidian$"] workspace 7
+assign [app_id="^obsidian$"] workspace 7
+assign [class="^obsidian$"] workspace 7
 ## Obsidian // Settings dialog floats centered on current workspace // ⚙️ ##
 for_window [app_id="^md.obsidian.Obsidian$" title="^Settings - "] floating enable, resize set width 1600 px height 1050 px, move position center
 for_window [class="^obsidian$" title="^Settings - "] floating enable, resize set width 1600 px height 1050 px, move position center
