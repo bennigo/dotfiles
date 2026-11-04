@@ -311,6 +311,31 @@ position, existing windows, or workspace assignments.
 Live test verified the mirror fullscreen on HDMI-A-1, keyboard focus on eDP-1,
 and successful return to workspace 5 with both outputs' modes/scales unchanged.
 
+### Multi-Monitor Profiles (kanshi)
+
+Per-location layouts are **kanshi** profiles (`kanshi/.config/kanshi/config`),
+run by `kanshi.service` (`systemd/`, `WantedBy=graphical-session.target`).
+kanshi applies the first profile whose outputs match exactly, then runs its
+`exec` → `scripts/workspace-layout.sh <work|default>`, which replaces sway's
+`workspace N output …` rules and moves already-open workspaces.
+
+| Profile | Outputs | Workspaces |
+|---|---|---|
+| `laptop` | eDP-1 | all on the laptop (ws 5 too) |
+| `work` | DP-2 left portrait · HDMI-A-1 centre above laptop · eDP-1 · `*` right (DisplayLink) | 5 left, 2 centre (work Firefox), 4 right, rest laptop |
+| `work-dup` | same, while the centre HP's duplicate dock cable is plugged in (its HP DisplayLink output is disabled) | same as `work` |
+| `other` | eDP-1 + any number of others, no positions → sway extends right | ws 5 on first external (`default`) |
+
+- **Match by connector at work, not EDID**: both Dells report serial `55C9PM2`
+  and the HP appears twice with two cables. Identify screens with
+  `swaynag -o <output> -m <output>` labels per output.
+- **kanshi 1.9 syntax**: wildcard `output *` matches one output; `...output *`
+  matches any number. No `kanshictl` — `systemctl --user reload kanshi` (SIGHUP).
+- `exec` lines run **async, unordered** — one `exec` per profile.
+- `workspace-layout.sh default` mirrors the static rules in `config`; keep in sync.
+- New place: arrange with `wdisplays`, copy positions from
+  `swaymsg -t get_outputs` into a profile above `other`.
+
 ### Scratchpad Windows
 
 Non-Neovim scratchpad windows (Obsidian, Zotero, Zathura, Cisco, terminal, LibreOffice) use **`app_id`-based** keybindings — the toggle shortcut matches the window by its `app_id` property directly, with no marks involved. The `for_window` rules handle initial placement (move to scratchpad + resize) when the window first appears.

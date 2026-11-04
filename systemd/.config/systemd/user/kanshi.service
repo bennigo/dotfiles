@@ -1,0 +1,20 @@
+[Unit]
+Description=kanshi — per-location output profiles (laptop / work / other)
+Documentation=man:kanshi(1) man:kanshi(5)
+# Config: kanshi/.config/kanshi/config. Profile exec lines call
+# ~/.config/sway/scripts/workspace-layout.sh, which needs SWAYSOCK — sway imports
+# it into the user manager before starting sway-session.target (sway/config),
+# and After= orders this unit behind that.
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/kanshi
+# kanshi 1.9 has no kanshictl; SIGHUP rereads the config.
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=graphical-session.target

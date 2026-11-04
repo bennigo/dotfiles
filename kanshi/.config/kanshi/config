@@ -1,0 +1,75 @@
+# kanshi — per-location output profiles for sway
+#
+# kanshi applies the FIRST profile whose outputs exactly match what is
+# connected, then runs its `exec` lines. Workspace placement lives in
+# ~/.config/sway/scripts/workspace-layout.sh.
+#
+# Positions are in LOGICAL pixels: the laptop panel is 3840x2400 at scale 2
+# = 1920x1200; a portrait 1080p monitor is 1080x1920.
+#
+# Adding a new place (e.g. home): arrange the screens with `wdisplays`, run
+#   swaymsg -t get_outputs -r | jq -r '.[] | "\(.make) \(.model) \(.serial)  \(.rect.x),\(.rect.y)  \(.transform)"'
+# and copy the result into a new profile ABOVE `profile other`.
+# Reload after editing: systemctl --user reload kanshi
+#
+# Start/stop: systemd/.config/systemd/user/kanshi.service (graphical-session.target)
+
+output eDP-1 mode 3840x2400 scale 2
+
+# Laptop alone.
+profile laptop {
+    output eDP-1 enable position 0,0
+    exec ~/.config/sway/scripts/workspace-layout.sh default
+}
+
+# Work desk (Dell D6000 dock + laptop HDMI). Identified 2026-11-04 with
+# swaynag labels — EDID serials are useless here: both Dells report 55C9PM2,
+# and the centre HP shows up twice when its dock cable is plugged in.
+#
+#   ┌──────┐ ┌─ HP centre ─┐ ┌─ Dell right ─┐
+#   │ Dell │ │  HDMI-A-1   │ │ DisplayLink  │
+#   │ left │ │   ws 2      │ │ DVI-I-* ws 4 │
+#   │ DP-2 │ └─────────────┘ └──────────────┘
+#   │ ws 5 │ ┌── laptop ───┐
+#   │(port-│ │   eDP-1     │
+#   └──────┘ └─────────────┘
+#
+# Portrait: monitor turned counter-clockwise (top edge on the left). If the
+# picture is upside down, change `transform 90` to `transform 270` (both profiles).
+#
+# Named outputs come first so the wildcard only gets what is left over.
+
+# Duplicate dock cable to the centre HP UNPLUGGED (preferred): 4 outputs.
+profile work {
+    output DP-2 enable transform 90 position 0,0
+    output HDMI-A-1 enable position 1080,0
+    output eDP-1 enable position 1080,1080
+    output * enable position 3000,0
+    exec ~/.config/sway/scripts/workspace-layout.sh work
+}
+
+# Duplicate dock cable still PLUGGED: the centre HP also appears as an "HP"
+# DisplayLink output — disable it; the Dell DisplayLink output is the right screen.
+profile work-dup {
+    output DP-2 enable transform 90 position 0,0
+    output HDMI-A-1 enable position 1080,0
+    output eDP-1 enable position 1080,1080
+    output "HP Inc. HP E24 G4 CN421428Y3" disable
+    output "Dell Inc. DELL P2419H 55C9PM2" enable position 3000,0
+    exec ~/.config/sway/scripts/workspace-layout.sh work
+}
+
+# Home — not configured yet. Template:
+# profile home {
+#     output "<make> <model> <serial>" enable position 0,0
+#     output eDP-1 enable position 1920,0
+#     exec ~/.config/sway/scripts/workspace-layout.sh default
+# }
+
+# Anything else (meeting room, projector, a new desk): no positions, so sway
+# extends to the right; workspace 5 follows the first external.
+profile other {
+    output eDP-1 enable
+    ...output * enable
+    exec ~/.config/sway/scripts/workspace-layout.sh default
+}

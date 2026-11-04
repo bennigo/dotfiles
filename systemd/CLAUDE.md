@@ -32,6 +32,7 @@ git repo instead of in a real directory. Ansible handles this automatically duri
 | `backup-claude-sessions.service` | Triggered | via `.timer` | Runs `backup-claude-sessions` script (restic backup + retention) |
 | `morning-prewarm.timer` | Timer | `enable --now` | Weekdays 07:30 — pre-warms daily note + market pulse before /morning-v2 |
 | `morning-prewarm.service` | Triggered | via `.timer` | Runs `morning-prewarm` script (daily note + markets + Mako reminder) |
+| `kanshi.service` | Simple | `enable --now` | Per-location output profiles (laptop/work/other) — see `sway/.config/sway/CLAUDE.md` → "Multi-Monitor Profiles" |
 
 ## herdr persistence (why rebooting is cheap)
 
