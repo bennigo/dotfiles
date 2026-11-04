@@ -334,7 +334,8 @@ kanshi applies the first profile whose outputs match exactly, then runs its
 - `exec` lines run **async, unordered** — one `exec` per profile.
 - `workspace-layout.sh default` mirrors the static rules in `config`; keep in sync.
 - **Scratchpads follow the profile**: at work Zathura (`$mod+z`) opens on the
-  portrait Dell, every other scratchpad window on the right screen, via
+  portrait Dell, the floating terminal (`$mod+Shift+Return`) on the laptop,
+  every other scratchpad window on the right screen, via
   `~/.local/bin/sway-scratch` (targets file written by `workspace-layout.sh work`,
   removed by `default`). Plain `scratchpad show` can't do this — it always shows
   on the focused workspace, so a window on another screen is pulled back

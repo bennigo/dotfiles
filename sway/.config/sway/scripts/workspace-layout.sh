@@ -68,10 +68,11 @@ done <<<"$open"
 cmds+=("workspace number $focused")
 
 # Scratchpad target screens for ~/.local/bin/sway-scratch (pdf = Zathura,
-# other = every other scratchpad window). No file = plain `scratchpad show`.
+# term = floating terminal, other = every other scratchpad window).
+# No file = plain `scratchpad show`.
 targets="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/sway-scratch-targets"
 if [[ "$1" == work ]]; then
-    printf 'pdf %s\nother %s\n' "$left" "${right:-$centre}" >"$targets"
+    printf 'pdf %s\nterm %s\nother %s\n' "$left" "$laptop" "${right:-$centre}" >"$targets"
 else
     rm -f "$targets"
 fi

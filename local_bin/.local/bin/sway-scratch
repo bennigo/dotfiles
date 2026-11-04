@@ -13,7 +13,9 @@
 # profile defines target screens (written by
 # ~/.config/sway/scripts/workspace-layout.sh to $XDG_RUNTIME_DIR/sway-scratch-targets):
 #   pdf   — Zathura (portrait screen at work)
+#   term  — the floating terminal (laptop panel at work)
 #   other — every other scratchpad window
+# A kind missing from the file falls back to the focused screen.
 # the window is shown on that screen instead of the focused one, sized in
 # percent of it, and a second press hides it again from any screen.
 # Without targets (laptop / unknown setups) it behaves exactly like the plain
@@ -40,6 +42,9 @@ size="90 ppt height 88 ppt"
 if [[ $crit == *org.pwmt.zathura* ]]; then
     kind=pdf
     size="96 ppt height 92 ppt"
+elif [[ $crit == *terminal_floating* ]]; then
+    kind=term
+    size="78 ppt height 75 ppt"   # ≈ the 1500x900 px of its for_window rule
 fi
 
 target=""
