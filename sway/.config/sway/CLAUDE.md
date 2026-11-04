@@ -344,6 +344,11 @@ kanshi applies the first profile whose outputs match exactly, then runs its
   zathura-tabs windows are tiled, so they are not matched).
 - `swaymsg reload` resets output layout; `exec_always systemctl --user
   try-reload-or-restart kanshi.service` in `config` re-applies the profile.
+- **`$mod+F7` Displays menu** (`~/.local/bin/sway-displays-menu`): re-apply,
+  identify screens, mirror (choose target screen), arrange. Profiles still
+  switch automatically — kanshi 1.9 cannot be told to use a given profile.
+- **Apps per place**: `assign` app → workspace (fixed), pin workspace → screen
+  per profile in `workspace-layout.sh`. No per-profile window logic.
 - New place: arrange with `wdisplays`, copy positions from
   `swaymsg -t get_outputs` into a profile above `other`.
 

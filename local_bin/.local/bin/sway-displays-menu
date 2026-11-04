@@ -1,0 +1,60 @@
+#!/bin/bash
+# sway-displays-menu — rofi menu for the occasional manual display job.
+# Profiles switch automatically (kanshi); this is for everything else:
+# re-apply the layout, identify screens, arrange a new desk, mirror the laptop.
+# Bound to $mod+F7 (sway/config.d/display-toggle.conf).
+set -euo pipefail
+
+toggle=~/.config/sway/scripts/display-toggle.py
+mirror_title="Sway laptop mirror"   # must match display-toggle.py
+
+profile=$(journalctl --user -u kanshi -b -o cat 2>/dev/null |
+    sed -n "s/^configuration for profile '\(.*\)' applied$/\1/p" | tail -1)
+
+mirroring=false
+swaymsg -t get_tree -r | jq -e --arg t "$mirror_title" \
+    '.. | objects | select(.app_id? == "at.yrlf.wl_mirror" and .name? == $t)' >/dev/null &&
+    mirroring=true
+
+if $mirroring; then mirror_item='󰍺  Stop mirroring'; else mirror_item='󰍺  Mirror laptop…'; fi
+
+choice=$(printf '%s\n' \
+    "󰑓  Re-apply layout" \
+    "󰍹  Identify screens" \
+    "$mirror_item" \
+    "󰹑  Arrange screens (wdisplays)" |
+    rofi -dmenu -i -p "Displays${profile:+ · $profile}" -theme-str 'window {width: 380px;}' 2>/dev/null) || exit 0
+
+case "$choice" in
+    *Re-apply*)
+        systemctl --user reload kanshi.service
+        notify-send -t 3000 "Displays" "Re-applied kanshi profile${profile:+ '$profile'}"
+        ;;
+    *Identify*)
+        # Each physical screen shows the label of the input it is displaying.
+        swaymsg -t get_outputs -r |
+            jq -r '.[] | select(.active) | "\(.name)\t\(.make) \(.model)"' |
+            while IFS=$'\t' read -r name model; do
+                (timeout 10 swaynag -o "$name" -t warning \
+                    -m "THIS SCREEN = $name   ($model)${profile:+   · profile: $profile}" >/dev/null 2>&1 &)
+            done
+        ;;
+    *Stop\ mirroring*)
+        "$toggle" extend
+        ;;
+    *Mirror*)
+        externals=$(swaymsg -t get_outputs -r |
+            jq -r '.[] | select(.active and (.name | startswith("eDP") | not)) | "\(.name)  (\(.make) \(.model))"')
+        [[ -n $externals ]] || { notify-send -t 4000 "Displays" "No external screen to mirror to"; exit 0; }
+        if [[ $(wc -l <<<"$externals") -gt 1 ]]; then
+            pick=$(rofi -dmenu -i -p "Mirror to" -theme-str 'window {width: 420px;}' <<<"$externals" 2>/dev/null) || exit 0
+        else
+            pick=$externals
+        fi
+        "$toggle" mirror --output "${pick%% *}"
+        ;;
+    *Arrange*)
+        wdisplays >/dev/null 2>&1 &
+        notify-send -t 8000 "Displays" "To keep a layout: copy positions from 'swaymsg -t get_outputs' into a kanshi profile (kanshi/.config/kanshi/config)"
+        ;;
+esac
