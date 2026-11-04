@@ -339,6 +339,8 @@ kanshi applies the first profile whose outputs match exactly, then runs its
   removed by `default`). Plain `scratchpad show` can't do this — it always shows
   on the focused workspace, so a window on another screen is pulled back
   instead of hidden.
+- New floating PDFs are placed there too (`for_window` → `sway-scratch --place`;
+  zathura-tabs windows are tiled, so they are not matched).
 - `swaymsg reload` resets output layout; `exec_always systemctl --user
   try-reload-or-restart kanshi.service` in `config` re-applies the profile.
 - New place: arrange with `wdisplays`, copy positions from

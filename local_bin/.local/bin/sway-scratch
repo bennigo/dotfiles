@@ -2,7 +2,12 @@
 # sway-scratch — scratchpad toggle that follows the per-location target screen.
 #
 # Usage: sway-scratch '<criteria>' ['<extra sway commands>']
+#        sway-scratch --place '<criteria>'
 #   e.g. sway-scratch '[app_id="org.zotero.Zotero"]' 'move position center'
+#
+# --place (from a for_window rule) moves NEW visible floating windows to the
+# target screen without toggling; it skips hidden scratchpad windows and ones
+# already there, and does nothing without targets.
 #
 # Drop-in for `swaymsg '<criteria> scratchpad show, <extra>'`. When a kanshi
 # profile defines target screens (written by
@@ -21,7 +26,12 @@
 # keep working unchanged.
 set -euo pipefail
 
-crit=${1:?Usage: sway-scratch '<criteria>' ['<extra sway commands>']}
+place=false
+if [[ ${1:-} == --place ]]; then
+    place=true
+    shift
+fi
+crit=${1:?Usage: sway-scratch [--place] '<criteria>' ['<extra sway commands>']}
 extra=${2:-}
 targets=${SWAY_SCRATCH_TARGETS:-${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/sway-scratch-targets}
 
@@ -40,10 +50,19 @@ ws=""
     jq -r --arg o "$target" '.[] | select(.output == $o and .visible) | .name')
 
 if [[ -z $ws ]]; then
+    $place && exit 0
     exec swaymsg -q "$crit scratchpad show${extra:+, $extra}"
 fi
 
 ws_re=$(sed 's/[][\.^$*+?(){}|\\]/\\&/g' <<<"$ws")
+
+if $place; then
+    # Visible floating matches that are neither hidden nor already on target.
+    new="${crit%]} floating workspace=\"^(?!__i3_scratch\$|${ws_re}\$)\"]"
+    swaymsg -q "$new move container to output $target, resize set width $size, move position center, focus" \
+        >/dev/null 2>&1 || true
+    exit 0
+fi
 on_target="${crit%]} workspace=\"^${ws_re}\$\"]"
 
 # Visible on the target screen → hide (sway reports failure when nothing matches).
