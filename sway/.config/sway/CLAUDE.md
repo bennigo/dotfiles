@@ -322,7 +322,7 @@ kanshi applies the first profile whose outputs match exactly, then runs its
 | Profile | Outputs | Workspaces |
 |---|---|---|
 | `laptop` | eDP-1 | all on the laptop (ws 5 too) |
-| `work` | DP-2 left portrait · HDMI-A-1 centre above laptop · eDP-1 · `*` right (DisplayLink) | 5 left, 2 centre (work Firefox), 4 + 6 (GIMP) + 7 (Obsidian) right, rest laptop |
+| `work` | DP-2 left portrait · HDMI-A-1 centre above laptop · eDP-1 · `*` right (DisplayLink) | 5 left, 2 (work Firefox) + 8 (QGIS) centre, 4 + 6 (GIMP) + 7 (Obsidian) right, rest laptop |
 | `work-dup` | same, while the centre HP's duplicate dock cable is plugged in (its HP DisplayLink output is disabled) | same as `work` |
 | `other` | eDP-1 + any number of others, no positions → sway extends right | ws 5 on first external (`default`) |
 
