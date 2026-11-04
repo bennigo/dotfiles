@@ -72,8 +72,13 @@ profile work-dup {
 
 # Anything else (meeting room, projector, a new desk): no positions, so sway
 # extends to the right; workspace 5 follows the first external.
+# `"* * *"` (any make/model/serial, matches exactly one output) requires at
+# least one external: `...output *` alone also matches zero, so `other` matched
+# laptop-alone and kanshi kept it after an unplug (work -> other on the first
+# cable, then never switched to `laptop`). kanshi rejects a second bare `*`.
 profile other {
     output eDP-1 enable
+    output "* * *" enable
     ...output * enable
     exec ~/.config/sway/scripts/workspace-layout.sh default
 }
