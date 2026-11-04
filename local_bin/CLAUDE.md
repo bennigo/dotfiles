@@ -60,7 +60,7 @@
 |--------|---------|
 | `toggle-libreoffice.sh` | Toggle LibreOffice scratchpad window |
 | `sway-obsidian-toggle` | Toggle Obsidian scratchpad (launch on cold start via gtk-launch) |
-| `sway-debug` | GDM session launcher (`sway.desktop` → `Exec=sway-debug`). **`/usr/local/bin/sway-debug` symlinks here** (GDM's PATH lacks `~/.local/bin`). Logs to `~/.local/share/sway/sway-session.log{,.prev}`. Sets `WLR_EVDI_RENDER_DEVICE` (Intel iGPU by PCI path) for the DisplayLink dock; atomic KMS by default — `touch ~/.config/sway/legacy-kms` re-enables `WLR_DRM_NO_ATOMIC=1`. Background: login loop 2026-11-04 when dock monitor was present at login (legacy pageflip EBUSY → no outputs → abort). |
+| `sway-debug` | GDM session launcher (`sway.desktop` → `Exec=sway-debug`). **`/usr/local/bin/sway-debug` symlinks here** (GDM's PATH lacks `~/.local/bin`). Logs to `~/.local/share/sway/sway-session.log{,.prev}`. Forces atomic KMS (unsets `WLR_DRM_NO_ATOMIC`, also commented out in `ollama/.config/environment.d/nvidia-wayland.conf`) — `touch ~/.config/sway/legacy-kms` re-enables `WLR_DRM_NO_ATOMIC=1`. Background: login loop 2026-11-04 when dock monitor was present at login (legacy pageflip EBUSY → no outputs → abort). |
 
 ### Office / Applications
 | Script | Purpose |
