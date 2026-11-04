@@ -50,13 +50,16 @@ profile work {
 }
 
 # Duplicate dock cable still PLUGGED: the centre HP also appears as an "HP"
-# DisplayLink output — disable it; the Dell DisplayLink output is the right screen.
+# DisplayLink output — disable it; the leftover (Dell DisplayLink) output is the
+# right screen. Don't match the right Dell by serial: over DisplayLink it has
+# reported both 55C9PM2 and 2GSWYR2, and a miss leaves no profile matching, so
+# the duplicate HP stays enabled on top of the portrait Dell.
 profile work-dup {
     output DP-2 enable transform 270 position 0,0
     output HDMI-A-1 enable position 1080,0
     output eDP-1 enable position 1080,1080
     output "HP Inc. HP E24 G4 CN421428Y3" disable
-    output "Dell Inc. DELL P2419H 55C9PM2" enable position 3000,0
+    output * enable position 3000,0
     exec ~/.config/sway/scripts/workspace-layout.sh work
 }
 
