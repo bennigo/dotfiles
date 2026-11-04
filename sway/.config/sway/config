@@ -650,7 +650,7 @@ for_window [app_id="org.gnome.Calculator"] floating enable,  sticky enable
 for_window [app_id="imv"] floating enable, resize set width 1800 px height 1100 px, move scratchpad, scratchpad show, move position center
 
 
-for_window [app_id="com.cisco.secureclient.gui"] move scratchpad, floating enable
+for_window [app_id="com.cisco.secureclient.gui"] floating enable, move scratchpad
 # QMapShack — GPS mapping tool, workspace 5, floating mostly-fullscreen
 ## QMapShack // Assign to workspace 5 + float // 🗺️ ##
 for_window [app_id="org.qlandkarte.qmapshack"] floating enable, resize set width 2500 px height 1600 px, move position center
@@ -669,8 +669,8 @@ for_window [class="^obsidian$" title="^(?!Settings - )"] floating enable, resize
 ## Obsidian // Settings dialog floats centered on current workspace // ⚙️ ##
 for_window [app_id="^md.obsidian.Obsidian$" title="^Settings - "] floating enable, resize set width 1600 px height 1050 px, move position center
 for_window [class="^obsidian$" title="^Settings - "] floating enable, resize set width 1600 px height 1050 px, move position center
-for_window [app_id="google-chrome"] move scratchpad, floating enable, resize set width 2000 px height 1190 px, move position center
-for_window [app_id="org.zotero.Zotero"] move scratchpad, floating enable, resize set width 1900 px height 1100 px, move position center
+for_window [app_id="google-chrome"] floating enable, resize set width 2000 px height 1190 px, move position center, move scratchpad
+for_window [app_id="org.zotero.Zotero"] floating enable, resize set width 1900 px height 1100 px, move position center, move scratchpad
 for_window [app_id="^libreoffice"] floating enable, resize set width 3200 px height 2000 px, move scratchpad
 for_window [app_id="terminal_floating"] move scratchpad, move container to workspace current, resize set width 1500 px height 900 px
 for_window [app_id="git_sync_float"] floating enable, resize set width 1200 px height 800 px, move position center
