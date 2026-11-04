@@ -1,0 +1,20 @@
+#!/bin/sh
+# Sway session launcher used by GDM (/usr/share/wayland-sessions/sway.desktop: Exec=sway-debug).
+# /usr/local/bin/sway-debug is a symlink to this file so GDM's PATH finds it.
+# stderr is kept in ~/.local/share/sway/sway-session.log (previous session: .log.prev).
+LOGDIR=/home/bgo/.local/share/sway
+mkdir -p "$LOGDIR"
+mv "$LOGDIR/sway-session.log" "$LOGDIR/sway-session.log.prev" 2>/dev/null || true
+
+# DisplayLink (evdi) cards have no GPU of their own; render their outputs on the
+# Intel iGPU. Use the stable PCI path — renderD12x numbering changes between boots
+# (under nomodeset renderD128 is the NVIDIA card).
+EVDI_RENDER=/dev/dri/by-path/pci-0000:00:02.0-render
+[ -e "$EVDI_RENDER" ] && export WLR_EVDI_RENDER_DEVICE="$EVDI_RENDER"
+
+# Legacy (non-atomic) KMS made the dock output fail with drmModePageFlip EBUSY at
+# login, leaving sway with no outputs (2026-11-04). Atomic is now the default.
+# Escape hatch from a TTY if the old NVIDIA issue returns: touch ~/.config/sway/legacy-kms
+[ -e /home/bgo/.config/sway/legacy-kms ] && export WLR_DRM_NO_ATOMIC=1
+
+exec sway --unsupported-gpu 2>"$LOGDIR/sway-session.log"
