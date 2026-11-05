@@ -1,0 +1,17 @@
+#!/bin/bash
+# tmp-size-check — notify when ~/tmp grows past a limit.
+# ~/tmp is scratch for re-rinex runs etc.; nothing there is the only copy, so
+# it should be emptied once results are archived (it reached 151 GB unnoticed).
+#
+# Usage: tmp-size-check [limit_gb]     (default 20; also: TMP_SIZE_LIMIT_GB)
+# Run daily by tmp-size-check.timer.
+DIR="$HOME/tmp"
+LIMIT_GB="${1:-${TMP_SIZE_LIMIT_GB:-20}}"
+
+[ -d "$DIR" ] || exit 0
+used_gb=$(du -xs --block-size=1G "$DIR" 2>/dev/null | cut -f1)
+[ "$used_gb" -lt "$LIMIT_GB" ] && exit 0
+
+top=$(du -xh --max-depth=1 "$DIR" 2>/dev/null | sort -k1,1rh | sed -n 2,4p | sed "s|$DIR/||")
+notify-send -u normal -t 30000 "~/tmp is ${used_gb} GB (limit ${LIMIT_GB} GB)" "Archive and clean up. Largest:
+$top"

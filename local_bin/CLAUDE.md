@@ -87,6 +87,7 @@
 | `sendsshKey.sh` | SSH public key deployment helper |
 | `getnf` | Nerd Font installer (third-party, maintained by trimclain) |
 | `setup-family-laptop` | Create isolated credentials for family laptops |
+| `tmp-size-check` | Notify when `~/tmp` passes a limit (default 20 GB). Daily via `tmp-size-check.timer` |
 
 ### Backup
 | Script | Purpose |

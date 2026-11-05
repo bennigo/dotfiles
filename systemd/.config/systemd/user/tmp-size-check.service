@@ -1,0 +1,8 @@
+[Unit]
+Description=Warn when ~/tmp grows past its size limit
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/tmp-size-check
+# Ensure notify-send can reach Mako via D-Bus
+Environment=DISPLAY=:0

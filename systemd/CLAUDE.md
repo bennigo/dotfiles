@@ -32,6 +32,8 @@ git repo instead of in a real directory. Ansible handles this automatically duri
 | `backup-claude-sessions.service` | Triggered | via `.timer` | Runs `backup-claude-sessions` script (restic backup + retention) |
 | `morning-prewarm.timer` | Timer | `enable --now` | Weekdays 07:30 — pre-warms daily note + market pulse before /morning-v2 |
 | `morning-prewarm.service` | Triggered | via `.timer` | Runs `morning-prewarm` script (daily note + markets + Mako reminder) |
+| `tmp-size-check.timer` | Timer | `enable --now` | Daily — notifies via Mako when `~/tmp` passes 20 GB |
+| `tmp-size-check.service` | Triggered | via `.timer` | Runs `tmp-size-check` script |
 | `kanshi.service` | Simple | `enable --now` | Per-location output profiles (laptop/work/other) — see `sway/.config/sway/CLAUDE.md` → "Multi-Monitor Profiles" |
 | `workspace-placer.service` | Simple | `enable --now` | Moves newly created sway workspaces to the active profile's screen (IPC listener; map from `workspace-layout.sh`) |
 
