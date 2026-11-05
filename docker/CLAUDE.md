@@ -69,6 +69,14 @@ This avoids conflicts with:
 - d_type support: enabled
 - metacopy: disabled (stability)
 
+### Build Cache Limit
+
+`builder.gc` caps the BuildKit build cache at 200 GB (`maxUsedSpace`); it had grown
+to 217 GB unnoticed. Docker has no overall disk cap, so images and volumes are not
+covered: check them with `docker system df`. Verify the active policy with
+`docker buildx inspect --bootstrap default`, and validate edits first with
+`sudo dockerd --validate --config-file=docker/daemon.json`.
+
 ## Utility Scripts
 
 ### docker-cleanup
