@@ -18,6 +18,7 @@ SRC=/mnt_data
 LOG_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/gogn-sync-imo"
 TODAY=$(date +%F)
 WORST=0
+EXTRA=()
 
 mkdir -p "$LOG_DIR"
 LOG="$LOG_DIR/$TODAY.log"
@@ -38,7 +39,7 @@ copy() {
     echo "=== $(date '+%F %T') $dataset/$sub" >>"$LOG"
     rsync -rlt --mkpath --timeout=300 --bwlimit=30m \
         --backup --backup-dir="$DEST/$dataset/.rsync-replaced/$TODAY" \
-        --stats --log-file="$LOG" --log-file-format='%i %n' \
+        --stats --log-file="$LOG" --log-file-format='%i %n' "${EXTRA[@]}" \
         "${from%/}/" "${to%/}/" >>"$LOG" 2>&1
     rc=$?
     echo "=== $(date '+%F %T') $dataset/$sub rc=$rc" >>"$LOG"
@@ -56,7 +57,11 @@ copy hytrodata
 
 if [ "${1:-}" = "--full" ]; then
     copy tremdata
+    # gogn's older sildata has 2019 copy-time mtimes, so a normal size+mtime check
+    # would re-copy all ~12M files. Event files never change once written.
+    EXTRA=(--ignore-existing)
     copy sildata
+    EXTRA=()
 else
     # Also last year's directory during the first week of January
     for year in $(printf '%s\n' "$(date +%Y)" "$(date -d '7 days ago' +%Y)" | sort -u); do
