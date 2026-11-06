@@ -37,7 +37,9 @@ copy() {
     timeout 60 test -d "$from" || return 0
 
     echo "=== $(date '+%F %T') $dataset/$sub" >>"$LOG"
-    rsync -rlt --mkpath --timeout=300 --bwlimit=30m \
+    # --fsync: gogn is a shuttle drive, and a USB drop mid-run left 0-byte files
+    # that --ignore-existing would then skip for good
+    rsync -rlt --mkpath --fsync --timeout=300 --bwlimit=30m \
         --backup --backup-dir="$DEST/$dataset/.rsync-replaced/$TODAY" \
         --stats --log-file="$LOG" --log-file-format='%i %n' "${EXTRA[@]}" \
         "${from%/}/" "${to%/}/" >>"$LOG" 2>&1
