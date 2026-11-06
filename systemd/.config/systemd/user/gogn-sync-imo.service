@@ -1,0 +1,11 @@
+[Unit]
+Description=Sync IMO monitoring data from /mnt_data to the gogn drive
+# Skipped quietly on the days gogn is not plugged in
+ConditionPathIsMountPoint=/run/media/bgo/gogn
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/systemd-inhibit --what=sleep --who=gogn-sync-imo --why="Syncing IMO data to gogn" %h/.local/bin/gogn-sync-imo
+Nice=10
+# Ensure notify-send can reach Mako via D-Bus
+Environment=DISPLAY=:0

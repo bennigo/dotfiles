@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+# Additive sync of IMO monitoring data from /mnt_data to the gogn external drive.
+#
+# gogn keeps data the servers no longer have (they prune and move old years),
+# so this must NEVER use --delete, and a file the server changed is kept under
+# <dataset>/.rsync-replaced/<date>/ instead of being overwritten.
+#
+# Usage: gogn-sync-imo [--full]
+#   default  hytrodata + the current year of sildata and tremdata (daily timer)
+#   --full   everything (sildata is ~12M files, so this takes many hours)
+#
+# extension_meters_data is left out while its server side is broken.
+set -uo pipefail
+
+GOGN="${GOGN_MOUNT:-/run/media/bgo/gogn}"
+DEST="$GOGN/mnt_data"
+SRC=/mnt_data
+LOG_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/gogn-sync-imo"
+TODAY=$(date +%F)
+WORST=0
+
+mkdir -p "$LOG_DIR"
+LOG="$LOG_DIR/$TODAY.log"
+
+exec 9>"$LOG_DIR/lock"
+flock -n 9 || { echo "gogn-sync-imo: already running" >&2; exit 0; }
+
+mountpoint -q "$GOGN" || { echo "gogn-sync-imo: $GOGN not mounted" >&2; exit 0; }
+
+# copy <dataset> [subpath]
+copy() {
+    local dataset=$1 sub=${2:-} rc
+    local from="$SRC/$dataset/$sub" to="$DEST/$dataset/$sub"
+
+    # A missing subpath is normal (a station with no data this year)
+    timeout 60 test -d "$from" || return 0
+
+    echo "=== $(date '+%F %T') $dataset/$sub" >>"$LOG"
+    rsync -rlt --mkpath --timeout=300 --bwlimit=30m \
+        --backup --backup-dir="$DEST/$dataset/.rsync-replaced/$TODAY" \
+        --stats --log-file="$LOG" --log-file-format='%i %n' \
+        "${from%/}/" "${to%/}/" >>"$LOG" 2>&1
+    rc=$?
+    echo "=== $(date '+%F %T') $dataset/$sub rc=$rc" >>"$LOG"
+    # 24 = files vanished during the transfer, normal on live data
+    [ "$rc" -ne 0 ] && [ "$rc" -ne 24 ] && WORST=$rc
+    return 0
+}
+
+if ! timeout 60 test -d "$SRC/sildata/$(date +%Y)"; then
+    echo "gogn-sync-imo: $SRC not reachable" >&2
+    exit 0
+fi
+
+copy hytrodata
+
+if [ "${1:-}" = "--full" ]; then
+    copy tremdata
+    copy sildata
+else
+    # Also last year's directory during the first week of January
+    for year in $(printf '%s\n' "$(date +%Y)" "$(date -d '7 days ago' +%Y)" | sort -u); do
+        copy tremdata "$year"
+        for station in al3 ph6 sh1 sh2 tr1; do
+            copy tremdata "$station/$year"
+        done
+        copy sildata "$year"
+    done
+fi
+
+if [ "$WORST" -ne 0 ]; then
+    notify-send -u normal -t 0 "gogn-sync-imo" "Finished with errors (rsync $WORST), see $LOG"
+fi
+exit "$WORST"

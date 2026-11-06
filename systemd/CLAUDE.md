@@ -34,6 +34,8 @@ git repo instead of in a real directory. Ansible handles this automatically duri
 | `morning-prewarm.service` | Triggered | via `.timer` | Runs `morning-prewarm` script (daily note + markets + Mako reminder) |
 | `tmp-size-check.timer` | Timer | `enable --now` | Daily — notifies via Mako when `~/tmp` passes 20 GB |
 | `tmp-size-check.service` | Triggered | via `.timer` | Runs `tmp-size-check` script |
+| `gogn-sync-imo.timer` | Timer | `enable --now` after the first `--full` run | Daily 03:30 — additive IMO data sync to the gogn drive; skipped when gogn is not mounted |
+| `gogn-sync-imo.service` | Triggered | via `.timer` | Runs `gogn-sync-imo` (current year only) under a sleep inhibitor |
 | `kanshi.service` | Simple | `enable --now` | Per-location output profiles (laptop/work/other) — see `sway/.config/sway/CLAUDE.md` → "Multi-Monitor Profiles" |
 | `workspace-placer.service` | Simple | `enable --now` | Moves newly created sway workspaces to the active profile's screen (IPC listener; map from `workspace-layout.sh`) |
 
