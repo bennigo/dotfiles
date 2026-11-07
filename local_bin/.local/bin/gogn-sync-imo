@@ -7,7 +7,8 @@
 #
 # Usage: gogn-sync-imo [--full]
 #   default  hytrodata + the current year of sildata and tremdata (daily timer)
-#   --full   everything (sildata is ~12M files, so this takes many hours)
+#   --full   everything, sildata year by year with the newest first, so a dropped
+#            VPN costs the least (sildata is ~12M files, so this takes many hours)
 #
 # extension_meters_data is left out while its server side is broken.
 set -uo pipefail
@@ -28,6 +29,8 @@ flock -n 9 || { echo "gogn-sync-imo: already running" >&2; exit 0; }
 
 mountpoint -q "$GOGN" || { echo "gogn-sync-imo: $GOGN not mounted" >&2; exit 0; }
 
+reachable() { timeout 60 test -d "$SRC/sildata/$(date +%Y)"; }
+
 # copy <dataset> [subpath]
 copy() {
     local dataset=$1 sub=${2:-} rc
@@ -37,20 +40,27 @@ copy() {
     timeout 60 test -d "$from" || return 0
 
     echo "=== $(date '+%F %T') $dataset/$sub" >>"$LOG"
-    # --fsync: gogn is a shuttle drive, and a USB drop mid-run left 0-byte files
-    # that --ignore-existing would then skip for good
-    rsync -rlt --mkpath --fsync --timeout=300 --bwlimit=30m \
-        --backup --backup-dir="$DEST/$dataset/.rsync-replaced/$TODAY" \
+    rsync -rlt --mkpath --timeout=300 --bwlimit=30m \
+        --backup --backup-dir="$DEST/$dataset/.rsync-replaced/$TODAY/$sub" \
         --stats --log-file="$LOG" --log-file-format='%i %n' "${EXTRA[@]}" \
         "${from%/}/" "${to%/}/" >>"$LOG" 2>&1
     rc=$?
+    # gogn is a shuttle drive: make this part durable before starting the next
+    sync -f "$DEST"
     echo "=== $(date '+%F %T') $dataset/$sub rc=$rc" >>"$LOG"
     # 24 = files vanished during the transfer, normal on live data
     [ "$rc" -ne 0 ] && [ "$rc" -ne 24 ] && WORST=$rc
+
+    # A lost server looks like rc 23, the same as a few unreadable files
+    if ! reachable; then
+        echo "=== $(date '+%F %T') $SRC lost during $dataset/$sub, stopping" >>"$LOG"
+        notify-send -u normal -t 0 "gogn-sync-imo" "Stopped: $SRC lost during $dataset/$sub (VPN?), see $LOG"
+        exit 1
+    fi
     return 0
 }
 
-if ! timeout 60 test -d "$SRC/sildata/$(date +%Y)"; then
+if ! reachable; then
     echo "gogn-sync-imo: $SRC not reachable" >&2
     exit 0
 fi
@@ -60,8 +70,15 @@ copy hytrodata
 if [ "${1:-}" = "--full" ]; then
     copy tremdata
     # gogn's older sildata has 2019 copy-time mtimes, so a normal size+mtime check
-    # would re-copy all ~12M files. Event files never change once written.
-    EXTRA=(--ignore-existing)
+    # would re-copy all ~12M files. Event files never change once written, and
+    # unlike --ignore-existing this re-fetches 0-byte files left by a USB drop.
+    # (--fsync on each file also protects against that, but limits us to ~10 files/s.)
+    EXTRA=(--size-only)
+    for dir in $(printf '%s\n' "$SRC"/sildata/[12][0-9][0-9][0-9]/ | sort -r); do
+        copy sildata "$(basename "$dir")"
+    done
+    # Whatever is left at the top level (alert, projects, ...)
+    EXTRA=(--size-only --exclude='/[12][0-9][0-9][0-9]/')
     copy sildata
     EXTRA=()
 else

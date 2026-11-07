@@ -93,7 +93,7 @@
 | Script | Purpose |
 |--------|---------|
 | `backup-claude-sessions` | Restic backup of session transcripts (`.claude/projects`, `.pi-sessions`, `shell-snapshots`, `history.jsonl`) to Google Drive. Nightly via `backup-claude-sessions.timer`. Requires `pass show restic/ai-sessions` + rclone `bgovedur:` remote. |
-| `gogn-sync-imo` | Additive sync of `hytrodata`, `sildata`, `tremdata` from `/mnt_data` to the gogn drive. **Never `--delete`**: gogn holds years the servers have pruned; changed files go to `<dataset>/.rsync-replaced/<date>/`. Default = current year (via `gogn-sync-imo.timer`), `--full` = everything (hours). Logs in `~/.local/state/gogn-sync-imo/`. |
+| `gogn-sync-imo` | Additive sync of `hytrodata`, `sildata`, `tremdata` from `/mnt_data` to the gogn drive. **Never `--delete`**: gogn holds years the servers have pruned; changed files go to `<dataset>/.rsync-replaced/<date>/`. Default = current year (via `gogn-sync-imo.timer`), `--full` = everything (hours), `sildata` year by year with the newest first. Stops with rc 1 and a notification if `/mnt_data` disappears mid-run. Logs in `~/.local/state/gogn-sync-imo/`. |
 
 ## Dependencies
 
