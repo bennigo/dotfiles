@@ -5,13 +5,32 @@
 # so this must NEVER use --delete, and a file the server changed is kept under
 # <dataset>/.rsync-replaced/<date>/ instead of being overwritten.
 #
-# Usage: gogn-sync-imo [--full]
+# Usage: gogn-sync-imo [--full] [--years FROM-TO]
 #   default  hytrodata + the current year of sildata and tremdata (daily timer)
 #   --full   everything, sildata year by year with the newest first, so a dropped
 #            VPN costs the least (sildata is ~12M files, so this takes many hours)
+#   --years  only these sildata years (implies --full), e.g. 2018- or 2001-2001
 #
 # extension_meters_data is left out while its server side is broken.
 set -uo pipefail
+
+FULL=0
+YMIN=0
+YMAX=9999
+while [ $# -gt 0 ]; do
+    case $1 in
+        --full) FULL=1 ;;
+        --years)
+            FULL=1
+            [[ ${2:-} =~ ^([0-9]{4})?-([0-9]{4})?$ ]] || { echo "gogn-sync-imo: --years FROM-TO" >&2; exit 2; }
+            YMIN=${BASH_REMATCH[1]:-0}
+            YMAX=${BASH_REMATCH[2]:-9999}
+            shift
+            ;;
+        *) echo "usage: gogn-sync-imo [--full] [--years FROM-TO]" >&2; exit 2 ;;
+    esac
+    shift
+done
 
 GOGN="${GOGN_MOUNT:-/run/media/bgo/gogn}"
 DEST="$GOGN/mnt_data"
@@ -28,8 +47,17 @@ exec 9>"$LOG_DIR/lock"
 flock -n 9 || { echo "gogn-sync-imo: already running" >&2; exit 0; }
 
 mountpoint -q "$GOGN" || { echo "gogn-sync-imo: $GOGN not mounted" >&2; exit 0; }
+# udisks remounts gogn at the same path after a USB drop, but as a new device
+GOGN_DEV=$(stat -c %d "$GOGN")
 
 reachable() { timeout 60 test -d "$SRC/sildata/$(date +%Y)"; }
+
+# stop <reason> <part>
+stop() {
+    echo "=== $(date '+%F %T') $1 during $2, stopping" >>"$LOG"
+    notify-send -u normal -t 0 "gogn-sync-imo" "Stopped: $1 during $2, see $LOG"
+    exit 1
+}
 
 # copy <dataset> [subpath]
 copy() {
@@ -51,12 +79,11 @@ copy() {
     # 24 = files vanished during the transfer, normal on live data
     [ "$rc" -ne 0 ] && [ "$rc" -ne 24 ] && WORST=$rc
 
-    # A lost server looks like rc 23, the same as a few unreadable files
-    if ! reachable; then
-        echo "=== $(date '+%F %T') $SRC lost during $dataset/$sub, stopping" >>"$LOG"
-        notify-send -u normal -t 0 "gogn-sync-imo" "Stopped: $SRC lost during $dataset/$sub (VPN?), see $LOG"
-        exit 1
+    # A lost server or drive looks like rc 23, the same as a few unreadable files
+    if ! mountpoint -q "$GOGN" || [ "$(stat -c %d "$GOGN")" != "$GOGN_DEV" ]; then
+        stop "gogn dropped (check the filesystem, then rerun this part)" "$dataset/$sub"
     fi
+    reachable || stop "$SRC lost (VPN?)" "$dataset/$sub"
     return 0
 }
 
@@ -67,7 +94,7 @@ fi
 
 copy hytrodata
 
-if [ "${1:-}" = "--full" ]; then
+if [ "$FULL" = 1 ]; then
     copy tremdata
     # gogn's older sildata has 2019 copy-time mtimes, so a normal size+mtime check
     # would re-copy all ~12M files. Event files never change once written, and
@@ -75,7 +102,8 @@ if [ "${1:-}" = "--full" ]; then
     # (--fsync on each file also protects against that, but limits us to ~10 files/s.)
     EXTRA=(--size-only)
     for dir in $(printf '%s\n' "$SRC"/sildata/[12][0-9][0-9][0-9]/ | sort -r); do
-        copy sildata "$(basename "$dir")"
+        year=$(basename "$dir")
+        [ "$year" -ge "$YMIN" ] && [ "$year" -le "$YMAX" ] && copy sildata "$year"
     done
     # Whatever is left at the top level (alert, projects, ...)
     EXTRA=(--size-only --exclude='/[12][0-9][0-9][0-9]/')
