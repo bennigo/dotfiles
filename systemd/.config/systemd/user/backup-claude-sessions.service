@@ -1,8 +1,12 @@
 [Unit]
 Description=Back up Claude/Pi session transcripts to Google Drive (restic)
 
+StartLimitIntervalSec=1d
+StartLimitBurst=7
+
 [Service]
 Type=oneshot
 ExecStart=%h/.local/bin/backup-claude-sessions
-# GPG agent may be locked; don't spam restarts — just retry next timer run
-Restart=no
+# GPG agent locked or offline: retry hourly, at most 6 times a day
+Restart=on-failure
+RestartSec=1h

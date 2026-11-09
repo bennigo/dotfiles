@@ -3,7 +3,13 @@ Description=Sync IMO monitoring data from /mnt_data to the gogn drive
 # Skipped quietly on the days gogn is not plugged in
 ConditionPathIsMountPoint=/run/media/bgo/gogn
 
+# 75 = /mnt_data not reachable (VPN off): try again in 30 min
+StartLimitIntervalSec=1d
+StartLimitBurst=30
+
 [Service]
+RestartForceExitStatus=75
+RestartSec=30min
 Type=oneshot
 ExecStart=/usr/bin/systemd-inhibit --what=sleep --who=gogn-sync-imo --why="Syncing IMO data to gogn" %h/.local/bin/gogn-sync-imo
 Nice=10

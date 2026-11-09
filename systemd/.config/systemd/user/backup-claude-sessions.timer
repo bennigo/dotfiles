@@ -2,8 +2,9 @@
 Description=Daily Claude session transcript backup
 
 [Timer]
-# Run nightly after midnight; Persistent catches missed runs after sleep/boot
-OnCalendar=*-*-* 03:00:00
+# Midday, when gpg-agent is unlocked (at 03:00 pass failed every night, BGÓ 2026-11-09);
+# Persistent catches missed runs after sleep/boot
+OnCalendar=*-*-* 12:00:00
 Persistent=true
 RandomizedDelaySec=10min
 
