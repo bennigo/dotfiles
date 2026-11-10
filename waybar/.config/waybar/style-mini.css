@@ -15,10 +15,10 @@ window#waybar { background: transparent; }
     margin: 0;
 }
 
-#custom-battery, #custom-language, #idle_inhibitor {
+#custom-battery, #custom-language, #custom-keep-awake {
     padding: 0 6px; margin: 0 1px; border-radius: 4px;
 }
-#custom-battery:hover, #custom-language:hover, #idle_inhibitor:hover {
+#custom-battery:hover, #custom-language:hover, #custom-keep-awake:hover {
     background: rgba(137, 180, 250, 0.18);
 }
-#idle_inhibitor.activated { color: #f9e2af; }
+#custom-keep-awake.activated { color: #f9e2af; }

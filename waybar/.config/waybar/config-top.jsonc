@@ -34,7 +34,7 @@
             "custom/bluetooth",
             "clock",
             "custom/language",
-            "idle_inhibitor",
+            "custom/keep-awake",
             "custom/dnd",
             "custom/power"
         ]

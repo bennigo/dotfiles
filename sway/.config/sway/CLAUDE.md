@@ -61,6 +61,8 @@ This architecture separates **event detection** (Sway bindswitch) from **policy 
 - **900s** (15min): Power off display
 - **1800s** (30min): **Conditional suspend** (battery only)
 
+**Waybar keep-awake toggle** (👁, `waybar/.config/waybar/scripts/keep-awake`, flag `$XDG_RUNTIME_DIR/keep-awake`): no dim, 5 min lock, 15 min screen-off or suspend; only lock + all screens off at 30 min. Replaces Waybar's `idle_inhibitor`, which stops every swayidle timer.
+
 **On AC Power**:
 - System stays awake even after 30min idle
 - Prevents interrupting background tasks

@@ -21,7 +21,7 @@
     "modules-right": [
         "custom/battery",
         "custom/language",
-        "idle_inhibitor"
+        "custom/keep-awake"
     ],
     "custom/battery": {
         "exec": "~/.local/bin/herdr-waybar-metrics battery",
@@ -34,15 +34,10 @@
         "min-length": 3,
         "on-click": "swaymsg input $(swaymsg -t get_inputs --raw | jq '[.[] | select(.type == \"keyboard\")][0] | .identifier') xkb_switch_layout next; pkill -RTMIN+15 waybar; ~/.config/sway/scripts/show-layout.sh --show-only"
     },
-    "idle_inhibitor": {
-        "format": "{icon}",
-        "format-icons": {
-            "activated": "👁",
-            "deactivated": "🔇"
-        },
-        "start-activated": false,
-        "tooltip": true,
-        "tooltip-format-activated": "power-saving disabled",
-        "tooltip-format-deactivated": "power-saving enabled"
+    "custom/keep-awake": {
+        "exec": "~/.config/waybar/scripts/keep-awake",
+        "return-type": "json", "interval": "once", "format": "{}",
+        "on-click": "~/.config/waybar/scripts/keep-awake toggle",
+        "signal": 19
     }
 }

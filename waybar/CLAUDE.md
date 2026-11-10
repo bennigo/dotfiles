@@ -60,6 +60,8 @@ right-click shows `dotfiles-sync --status`. Setup history: `SETUP_GIT_SYNC.md`.
 
 ## Custom Scripts (`scripts/`)
 
+`keep-awake` — the 👁/🔇 toggle (signal 19). See `sway/.config/sway/CLAUDE.md`.
+
 | Script | Purpose |
 |--------|---------|
 | `git-sync-status` | Multi-repo git status monitor (legacy module script) |

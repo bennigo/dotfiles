@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# keep-awake — Waybar toggle for "power-saving disabled".
+#
+# While the flag exists, swayidle skips the dim, the 5 min lock, the 15 min
+# screen-off and suspend, and only locks and turns the screens off after 30 min
+# idle (sway/.config/sway/scripts/swayidle-power-aware.sh). Waybar's built-in
+# idle_inhibitor can't do this: it stops every swayidle timer.
+#
+# Usage: keep-awake          print the Waybar JSON
+#        keep-awake toggle   flip the flag and refresh the bars
+set -euo pipefail
+
+FLAG="${XDG_RUNTIME_DIR:-/tmp}/keep-awake"
+
+if [[ "${1:-}" == toggle ]]; then
+    if [[ -e $FLAG ]]; then rm -f "$FLAG"; else : >"$FLAG"; fi
+    pkill -RTMIN+19 -x waybar || true
+    exit 0
+fi
+
+if [[ -e $FLAG ]]; then
+    printf '{"text":"👁","class":"activated","tooltip":"power-saving disabled: only lock and screen off after 30 min idle"}\n'
+else
+    printf '{"text":"🔇","tooltip":"power-saving enabled"}\n'
+fi

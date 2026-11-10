@@ -17,6 +17,8 @@ set -euo pipefail
 LAPTOP_DISPLAY="eDP-1"
 WALLPAPER="${XDG_CONFIG_HOME:-$HOME/.config}/sway/wallpapers/mahdi-khomsaz-asset.jpg"
 LOG_FILE="${XDG_RUNTIME_DIR:-/tmp}/swayidle-power-aware.log"
+# Set by the Waybar keep-awake toggle: only lock + screens off after 30 min
+KEEP_AWAKE="${XDG_RUNTIME_DIR:-/tmp}/keep-awake"
 
 # Timeouts (in seconds)
 TIMEOUT_DIM=60           # Dim screen after 1 minute
@@ -50,7 +52,11 @@ is_on_ac_power() {
 
 # Conditional suspend - only if on battery
 conditional_suspend() {
-    if is_on_ac_power; then
+    if [[ -e "$KEEP_AWAKE" ]]; then
+        log "Keep-awake on - locking and turning screens off only"
+        pgrep -x swaylock >/dev/null || swaylock -f -c 000000 -i "$WALLPAPER"
+        swaymsg 'output * power off'
+    elif is_on_ac_power; then
         log "Would suspend, but on AC power - skipping"
     else
         log "On battery power - executing system suspend"
@@ -72,11 +78,12 @@ sleep 0.5
 
 # Launch swayidle with power-aware configuration
 exec swayidle -w \
-    timeout $TIMEOUT_DIM 'brightnessctl -s; brightnessctl set 10%' \
-        resume 'brightnessctl -r' \
-    timeout $TIMEOUT_LOCK "swaylock -f -c 000000 -i $WALLPAPER" \
-    timeout $TIMEOUT_SCREEN_OFF "swaymsg output $LAPTOP_DISPLAY power off" \
+    timeout $TIMEOUT_DIM "[ -e $KEEP_AWAKE ] || { brightnessctl -s; brightnessctl set 10%; }" \
+        resume "[ -e $KEEP_AWAKE ] || brightnessctl -r" \
+    timeout $TIMEOUT_LOCK "[ -e $KEEP_AWAKE ] || swaylock -f -c 000000 -i $WALLPAPER" \
+    timeout $TIMEOUT_SCREEN_OFF "[ -e $KEEP_AWAKE ] || swaymsg output $LAPTOP_DISPLAY power off" \
         resume "swaymsg output $LAPTOP_DISPLAY power on" \
     timeout $TIMEOUT_SUSPEND "$0 --suspend-check" \
+        resume "[ -e $KEEP_AWAKE ] && swaymsg 'output * power on'" \
     before-sleep "swaylock -f -c 000000 -i $WALLPAPER; swaymsg 'output * power off'" \
     after-resume "swaymsg output $LAPTOP_DISPLAY power on; brightnessctl -r"
