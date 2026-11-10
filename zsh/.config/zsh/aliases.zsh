@@ -28,6 +28,7 @@ alias brunnur='TERM=xterm-256color ssh pub@brunnur.vedur.is'
 alias glass='TERM=xterm-256color ssh bgo@glass'
 alias holuhraun='TERM=xterm-256color ssh bgo@192.168.50.99'
 alias yang='TERM=xterm-256color ssh bgo@yang-d01.vedur.is'
+alias gpsops_yang='TERM=xterm-256color ssh gpsops@yang-d01.vedur.is'
 alias klosigar='TERM=xterm-256color ssh gpsops@klosigar.dyn.vedur.is'
 
 # Colorize grep output (good for log files)
