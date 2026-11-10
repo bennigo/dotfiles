@@ -64,7 +64,7 @@ KEYS=(
     "openrouter_api_key|OPENROUTER_API_KEY|tokens/openrouter_api_key|bearer|https://openrouter.ai/api/v1/key"
     "deepseek_api_key|DEEPSEEK_API_KEY|tokens/deepseek_api_key|bearer|https://api.deepseek.com/v1/models"
     "zhipu_api_key|ZHIPU_API_KEY / ZAI_CODING_CN_API_KEY|tokens/zhipu_api_key|bearer|https://api.z.ai/api/coding/paas/v4/models"
-    "firecrawl_api_key|FIRECRAWL_API_KEY|tokens/firecrawl_api_key|bearer|https://api.firecrawl.dev/v1/team/credit-usage"
+    "firecrawl_api_key|FIRECRAWL_API_KEY|tokens/firecrawl_api_key|bearer|https://api.firecrawl.dev/v2/team/credit-usage"
 )
 
 probe() {   # $1=style $2=url $3=key -> prints HTTP code only

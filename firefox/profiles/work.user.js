@@ -27,3 +27,7 @@ user_pref("datareporting.policy.dataSubmissionPolicyBypassNotification", true);
 user_pref("browser.translations.mostRecentTargetLanguages", "en");
 user_pref("browser.translations.neverTranslateLanguages", "is");
 user_pref("browser.translations.alwaysTranslateLanguages", "ar,bg,bn,bs,ca,cs,da,de,el,es,et,fa,fi,fr,gu,he,hi,hr,hu,id,it,ja,kn,ko,lt,lv,ml,mr,ms,mt,nb,nl,nn,pa,pl,pt,ro,ru,sk,sl,sq,sr,sv,ta,te,th,tr,uk,ur,vi,zh-Hans,zh-Hant");
+
+// Treat this plain-http internal host as a secure context, so navigator.clipboard
+// works there (Vimium yy). Traffic stays unencrypted. Comma-separated hosts.
+user_pref("dom.securecontext.allowlist", "yang-d01.vedur.is");
