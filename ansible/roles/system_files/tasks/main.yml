@@ -259,3 +259,20 @@
         backup: yes
       when: deploy_custom_hosts | default(false)
   tags: ["system", "critical"]
+
+# Hibernation: suspend-then-hibernate after 2 h, hibernate on critical battery.
+# Swap size and GRUB resume=/resume_offset are machine-specific: see system/CLAUDE.md.
+- name: Deploy hibernation config
+  copy:
+    src: "{{ playbook_dir }}/../system/{{ item.path }}"
+    dest: "/{{ item.path }}"
+    owner: root
+    group: root
+    mode: "{{ item.mode }}"
+  loop:
+    - { path: etc/systemd/sleep.conf.d/50-hibernate.conf, mode: '0644' }
+    - { path: etc/polkit-1/rules.d/85-allow-hibernate.rules, mode: '0644' }
+    - { path: etc/UPower/UPower.conf, mode: '0644' }
+    - { path: usr/lib/systemd/system-sleep/gpsplot-stop, mode: '0755' }
+  tags: ["system", "power"]
+  when: hardware_roles.laptop.enabled | default(false)

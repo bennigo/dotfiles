@@ -24,6 +24,20 @@
   tags: ["nvidia", "kernel", "config"]
   when: hardware_roles.nvidia.enabled
 
+# Each sleep type needs its own NVIDIA hook, or nv_pmops_suspend returns -5 and
+# the sleep fails with "Input/output error". suspend-then-hibernate ships disabled.
+- name: Enable NVIDIA sleep hooks (suspend, hibernate, suspend-then-hibernate, resume)
+  systemd:
+    name: "{{ item }}"
+    enabled: yes
+  loop:
+    - nvidia-suspend.service
+    - nvidia-hibernate.service
+    - nvidia-suspend-then-hibernate.service
+    - nvidia-resume.service
+  tags: ["nvidia", "power", "config"]
+  when: hardware_roles.nvidia.enabled
+
 - name: Test NVIDIA installation
   command: nvidia-smi
   register: nvidia_test

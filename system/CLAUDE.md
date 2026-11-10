@@ -135,9 +135,21 @@ hibernate after 2 h, and on AC the countdown only starts once the charger is unp
 - `etc/polkit-1/rules.d/85-allow-hibernate.rules` — overrides Ubuntu's deny, as the lid and idle scripts run `systemctl` unprivileged
 - `usr/lib/systemd/system-sleep/gpsplot-stop` — stops gpsplot jobs before sleep: one stuck on NFS (D state) makes the freezer fail after 20 s and hibernate returns "Device or resource busy"
 
+**NVIDIA hook (required)**: `nvidia-suspend-then-hibernate.service` ships *disabled*. Without it the
+driver gets no `suspend` write to `/proc/driver/nvidia/suspend`, `nv_pmops_suspend` returns -5 and every
+suspend-then-hibernate fails in seconds ("Failed to put system to sleep … Input/output error"). swayidle
+does not retry, so on 2026-11-10 the laptop stayed awake on battery until it ran down. Fix:
+`sudo systemctl enable nvidia-suspend-then-hibernate.service` (also done by the Ansible `nvidia` role).
+Check: `ls /etc/systemd/system/systemd-suspend-then-hibernate.service.wants/` lists it.
+
+**Fan in s2idle**: the EC controls the fan, so a machine suspended while hot keeps the fan running
+until it cools, even at ~99% hardware sleep (`/sys/power/suspend_stats/last_hw_sleep`).
+
 **If `/swap.img` is ever recreated, `resume_offset` changes**: `sudo filefrag -v /swap.img` (first physical offset of extent 0), update GRUB, `sudo update-grub`.
 
-**Deploy after reinstall** (swap and GRUB as above, then `sudo update-initramfs -u`):
+**Deploy after reinstall**: Ansible does the files below (`system_files` role, tag `power`, laptops only)
+and the NVIDIA hooks (`nvidia` role). Swap and GRUB stay manual (as above, then `sudo update-initramfs -u`).
+By hand:
 ```bash
 sudo install -d /etc/systemd/sleep.conf.d
 sudo install -m0644 etc/systemd/sleep.conf.d/50-hibernate.conf /etc/systemd/sleep.conf.d/
