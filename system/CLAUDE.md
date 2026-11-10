@@ -27,10 +27,9 @@ for the dotfiles repository. For general repository usage, see the main `CLAUDE.
 - `etc/udev/rules.d/99-lid-ac-suspend.rules` — AC-unplug + lid-closed suspend
 - `local_bin/.local/bin/lid-ac-suspend-check` — helper called by udev rule
 
-**Critical battery (suspend at 10% instead of poweroff)**:
+**Critical battery (hibernate at 10%)**:
 - `PercentageAction=10.0` — triggers at 10%, not 2%
-- `AllowRiskyCriticalPowerAction=true` + `CriticalPowerAction=Suspend`
-- Without this the fallback chain (HybridSleep → Hibernate → PowerOff) reaches PowerOff when hibernation is not configured
+- `CriticalPowerAction=Hibernate` — a suspended laptop keeps draining, so `Suspend` here let the battery run out on long trips
 
 **Lid closed while on AC, then charger unplugged**:
 - The `lid-handler.sh` only fires on lid events, not power-state changes
@@ -123,6 +122,28 @@ D-state, so suspend can complete. Trade-off: GPS jobs may see read/write errors 
 a genuine network stall (accepted; the mounts are read-dominated, `rawgpsdata` is `ro`).
 Note: `soft`/`hard` can't be toggled by remount — already-mounted shares keep their old
 behavior until they idle-unmount (automount) or a reboot.
+
+### Hibernation (suspend-then-hibernate)
+Only `s2idle` exists on this laptop (no S3), so sleep keeps draining the battery. All sleep paths
+(`$mod+Shift+x`, lid, idle, `lid-ac-suspend-check`, `herdr-powermenu`) use `suspend-then-hibernate`:
+hibernate after 2 h, and on AC the countdown only starts once the charger is unplugged.
+`$mod+Ctrl+x` hibernates immediately.
+
+**Files**:
+- `/swap.img` is 72 GB (RAM is 64 GB); `/etc/default/grub` has `resume=UUID=<root> resume_offset=<n>`; `/etc/initramfs-tools/conf.d/resume` has `RESUME=UUID=<root>`
+- `etc/systemd/sleep.conf.d/50-hibernate.conf` — `HibernateDelaySec=2h`, `HibernateOnACPower=no`
+- `etc/polkit-1/rules.d/85-allow-hibernate.rules` — overrides Ubuntu's deny, as the lid and idle scripts run `systemctl` unprivileged
+- `usr/lib/systemd/system-sleep/gpsplot-stop` — stops gpsplot jobs before sleep: one stuck on NFS (D state) makes the freezer fail after 20 s and hibernate returns "Device or resource busy"
+
+**If `/swap.img` is ever recreated, `resume_offset` changes**: `sudo filefrag -v /swap.img` (first physical offset of extent 0), update GRUB, `sudo update-grub`.
+
+**Deploy after reinstall** (swap and GRUB as above, then `sudo update-initramfs -u`):
+```bash
+sudo install -d /etc/systemd/sleep.conf.d
+sudo install -m0644 etc/systemd/sleep.conf.d/50-hibernate.conf /etc/systemd/sleep.conf.d/
+sudo install -m0644 etc/polkit-1/rules.d/85-allow-hibernate.rules /etc/polkit-1/rules.d/
+sudo install -m0755 usr/lib/systemd/system-sleep/gpsplot-stop /usr/lib/systemd/system-sleep/
+```
 
 ### Thunderbolt 4 Resume Fix
 **File**: `usr/lib/systemd/system-sleep/thunderbolt-fix`

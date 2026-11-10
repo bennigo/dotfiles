@@ -254,7 +254,9 @@ bindsym $mod+x exec swaylock -f -c 000000 -i $wallpaper
 ## Power // Suspend system // 😴 ##
 # Power off outputs first so the NVIDIA modeset engine is idle when the GPU
 # enters its suspend path — avoids the "waiting for GPU progress" resume hang.
-bindsym $mod+Shift+x exec 'swaymsg "output * power off"; sleep 0.3; sudo systemctl suspend'
+bindsym $mod+Shift+x exec 'swaymsg "output * power off"; sleep 0.3; sudo systemctl suspend-then-hibernate'
+## Power // Hibernate now // 💤 ##
+bindsym $mod+Ctrl+x exec 'swaymsg "output * power off"; sleep 0.3; sudo systemctl hibernate'
 ## Power // Restore laptop panel power and brightness // 💡 ##
 bindsym $mod+Shift+z exec 'swaymsg output $laptop power on; brightnessctl -r'
 
@@ -372,7 +374,7 @@ bindsym $mod+y exec ~/.local/bin/sat-viewer
 ## Scratchpad // Toggle diagram viewer (imv) // 📊 ##
 bindsym $mod+Shift+g exec ~/.local/bin/sway-scratch '[app_id="imv"]' 'move position center'
 ## Scratchpad // Show floating terminal // 🪟🖥️ ##
-bindsym $mod+Shift+Return exec ~/.local/bin/sway-scratch '[app_id="terminal_floating"]'
+bindsym $mod+Shift+Return exec ~/.local/bin/sway-scratch '[app_id="terminal_floating"]' 'resize set width 1500 px height 900 px, move position center'
 ## Scratchpad // Toggle persistent ranger scratchpad // 📂 ##
 bindsym $mod+Ctrl+f exec ~/.local/bin/sway-ranger toggle
 ## Scratchpad // Toggle GNSS detrend picker // 📈 ##

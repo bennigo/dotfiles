@@ -1,0 +1,50 @@
+#!/bin/bash
+# gpsplot-stop — stop running gpsplot jobs before any sleep.
+#
+# A gpsplot job stuck on NFS (D state, server gone with the VPN) makes the
+# kernel's freezer give up after 20 s, so hibernate fails with "Device or
+# resource busy" and the laptop keeps draining. Seen three times on 2026-11-10.
+# The jobs are rerun by their timers after wake.
+#
+# Called by systemd-sleep with: $1 = pre|post, $2 = suspend|hibernate|...
+# Deployed from: ~/.dotfiles/system/usr/lib/systemd/system-sleep/gpsplot-stop
+set -u
+
+[ "${1:-}" = pre ] || exit 0
+
+UNITS=(gpsplot-run gpsplot-run-update gpsplot-rtk gpsplot-rtk-long gpsplot-rtk-map)
+
+for bus in /run/user/*/bus; do
+    [ -S "$bus" ] || continue
+    uid=$(basename "$(dirname "$bus")")
+    user=$(id -nu "$uid" 2>/dev/null) || continue
+
+    sysd() {
+        timeout 10 runuser -u "$user" -- env XDG_RUNTIME_DIR="/run/user/$uid" \
+            DBUS_SESSION_BUS_ADDRESS="unix:path=$bus" systemctl --user "$@" 2>/dev/null
+    }
+    running() {
+        local u
+        for u in "${UNITS[@]}"; do
+            case $(sysd is-active "$u.service") in
+                active | activating | deactivating) echo "$u.service" ;;
+            esac
+        done
+    }
+
+    mapfile -t units < <(running)
+    [ ${#units[@]} -gt 0 ] || continue
+    logger -t gpsplot-stop "stopping ${units[*]} (user=$user)"
+    sysd stop --no-block "${units[@]}"
+
+    for _ in 1 2 3 4 5 6 7 8; do
+        sleep 1
+        mapfile -t units < <(running)
+        [ ${#units[@]} -gt 0 ] || break
+    done
+    if [ ${#units[@]} -gt 0 ]; then
+        logger -t gpsplot-stop "SIGKILL ${units[*]} (user=$user)"
+        sysd kill --signal=SIGKILL "${units[@]}"
+    fi
+done
+exit 0

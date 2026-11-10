@@ -1,0 +1,10 @@
+// Ubuntu's com.ubuntu.desktop.rules denies hibernate to everyone. This file
+// sorts before it, so sudo-group users can hibernate without sudo: the lid and
+// idle scripts run systemctl unprivileged.
+polkit.addRule(function(action, subject) {
+    if ((action.id == "org.freedesktop.login1.hibernate" ||
+         action.id == "org.freedesktop.login1.hibernate-multiple-sessions") &&
+        subject.isInGroup("sudo")) {
+        return polkit.Result.YES;
+    }
+});

@@ -54,7 +54,7 @@ conditional_suspend() {
         log "Would suspend, but on AC power - skipping"
     else
         log "On battery power - executing system suspend"
-        systemctl suspend
+        systemctl suspend-then-hibernate
     fi
 }
 
