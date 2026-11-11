@@ -142,6 +142,15 @@ does not retry, so on 2026-11-10 the laptop stayed awake on battery until it ran
 `sudo systemctl enable nvidia-suspend-then-hibernate.service` (also done by the Ansible `nvidia` role).
 Check: `ls /etc/systemd/system/systemd-suspend-then-hibernate.service.wants/` lists it.
 
+**`SuspendEstimationSec=2h` (required)**: with `HibernateDelaySec` set, systemd wakes every
+`SuspendEstimationSec` (default 1h) to measure the battery, then suspends again. NVIDIA's
+`system-sleep/nvidia` hook writes `resume` on that wake but only re-arms for `pre:hibernate`, so the
+re-suspend fails (-5) and the laptop stays awake (2026-11-11: awake 01:19–02:23, then battery empty).
+Matching the two values makes the first wake the hibernate.
+
+**UPower thresholds must descend** (`Low > Critical > Action`), or UPower silently uses the defaults
+(action at 2%). `Critical=5, Action=10` did exactly that; now 20/12/10.
+
 **Fan in s2idle**: the EC controls the fan, so a machine suspended while hot keeps the fan running
 until it cools, even at ~99% hardware sleep (`/sys/power/suspend_stats/last_hw_sleep`).
 
