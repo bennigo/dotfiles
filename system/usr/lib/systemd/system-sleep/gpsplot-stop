@@ -1,5 +1,5 @@
 #!/bin/bash
-# gpsplot-stop — stop running gpsplot jobs before any sleep.
+# gpsplot-stop — stop running gpsplot jobs before any sleep or on AC unplug.
 #
 # A gpsplot job stuck on NFS (D state, server gone with the VPN) makes the
 # kernel's freezer give up after 20 s, so hibernate fails with "Device or
@@ -7,12 +7,15 @@
 # The jobs are rerun by their timers after wake.
 #
 # Called by systemd-sleep with: $1 = pre|post, $2 = suspend|hibernate|...
+# and by lid-ac-suspend-check with: pre ac-unplug (no automatic runs on battery).
 # Deployed from: ~/.dotfiles/system/usr/lib/systemd/system-sleep/gpsplot-stop
 set -u
 
 [ "${1:-}" = pre ] || exit 0
 
-UNITS=(gpsplot-run gpsplot-run-update gpsplot-rtk gpsplot-rtk-long gpsplot-rtk-map)
+# Sleep stops every job; GPSPLOT_STOP_UNITS narrows the list (AC unplug stops
+# only the long runs and lets the few-minute ones finish).
+read -ra UNITS <<<"${GPSPLOT_STOP_UNITS:-gpsplot-run gpsplot-run-update gpsplot-rtk gpsplot-rtk-long gpsplot-rtk-map svinafell-watch}"
 
 for bus in /run/user/*/bus; do
     [ -S "$bus" ] || continue

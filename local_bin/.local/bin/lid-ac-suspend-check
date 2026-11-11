@@ -17,6 +17,12 @@ if [[ -f "$STAMP" ]]; then
 fi
 echo "$NOW" > "$STAMP"
 
+# No automatic gpsplot runs on battery: the units carry ConditionACPower=true.
+# Of the runs already going, stop only the long ones (~40 min, 25-45 Wh); the
+# rtk/svinafell runs take minutes and are left to finish.
+GPSPLOT_STOP_UNITS="gpsplot-run gpsplot-run-update" \
+    /usr/lib/systemd/system-sleep/gpsplot-stop pre ac-unplug || true
+
 LID_STATE=""
 for state_file in /proc/acpi/button/lid/*/state; do
     [[ -f "$state_file" ]] && LID_STATE=$(awk '{print $2}' "$state_file") && break
