@@ -86,6 +86,10 @@ hardware_roles:
     packages:
       - "nvidia-driver-{{ nvidia_driver_version }}"
       - "nvidia-utils-{{ nvidia_driver_version }}"
+      # Video decode on the Intel iGPU (LIBVA_DRIVER_NAME=iHD in sway/environment.d/vaapi.conf),
+      # so browsers do not open the dGPU and it can sleep on battery (multiverse)
+      - intel-media-va-driver-non-free
+      - vainfo
     modprobe_configs:
       - "nvidia-drm modeset=1"
   

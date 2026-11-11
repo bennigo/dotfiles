@@ -438,6 +438,12 @@ sudo systemctl set-property user-1000.slice MemoryHigh=46G MemoryMax=54G
 ## GPU / Nvidia Configuration
 
 - **Modprobe**: `nvidia-drm.conf` enables DRM kernel mode setting (early KMS for Wayland)
+- **dGPU sleep on battery** (2026-11-11): TLP sets `power/control=auto` on battery, but the RTX 2000 only reaches
+  runtime D3 (`/sys/bus/pci/devices/0000:01:00.0/power/runtime_status` = `suspended`) when nothing uses it.
+  `LIBVA_DRIVER_NAME=nvidia` (NVDEC, needs CUDA) made Chrome and Obsidian open `/dev/nvidia0` + `nvidia-uvm`
+  and kept it awake; now `iHD` (`sway/.config/environment.d/vaapi.conf`, `intel-media-va-driver-non-free`).
+  GPU jobs (`diesen-backfill` Whisper, `ConditionACPower=true`) also keep it awake. sway holding `card0` does not.
+  Measured on battery: 72 W with Whisper on the dGPU, 21 W idle with the dGPU suspended.
 - **Performance testing**: `nvidia.test` validation script
 - **Wayland compatibility**: Early KMS required for optimal Sway performance
 
