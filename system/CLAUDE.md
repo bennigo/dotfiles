@@ -154,6 +154,13 @@ Matching the two values makes the first wake the hibernate.
 **Fan in s2idle**: the EC controls the fan, so a machine suspended while hot keeps the fan running
 until it cools, even at ~99% hardware sleep (`/sys/power/suspend_stats/last_hw_sleep`).
 
+**Verified 2026-11-11/12** (battery, lid open, swayidle timeout): suspend 23:48 → hibernate 01:48,
+no wakes between → resume 07:33. 75% → 68% (~5.6 Wh) over 7¾ h; estimated ~1.3 W in s2idle and
+~0.5 W hibernated. `BAT0: Failed to update battery discharge rate … out of range` at the 2 h wake is
+harmless (drain too small to compute, so the fixed delay is used). Not yet exercised: the UPower
+10% hibernate action.
+Check a night with: `journalctl --since yesterday -o short-iso | grep -E "suspend entry|hibernation (entry|exit)|sleep operation"`.
+
 **If `/swap.img` is ever recreated, `resume_offset` changes**: `sudo filefrag -v /swap.img` (first physical offset of extent 0), update GRUB, `sudo update-grub`.
 
 **Deploy after reinstall**: Ansible does the files below (`system_files` role, tag `power`, laptops only)
