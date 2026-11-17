@@ -255,8 +255,9 @@ sudo systemctl daemon-reload
 `etc/systemd/system/vpn-route-fix-watchdog.{service,timer}`
 
 Bypasses Cisco AnyConnect VPN hijacking of local subnet routes. Uses policy routing (table 200)
-+ iptables RETURN rules with device whitelist (router, printer, etc.). Auto-retries to survive
-vpnagentd chain rebuilds.
++ whole-subnet iptables RETURN rules for **every** physical interface with IPv4 (wifi plus any
+bench-eth subnet such as `gps-receiver-lab`); the per-IP `LOCAL_DEVICES` list is kept for
+compatibility. Auto-retries to survive vpnagentd chain rebuilds.
 
 **The watchdog timer must stay at 30s.** `vpnagentd` rebuilds its iptables chains ~9,576 times
 per boot (~100/hour at peak — roughly one rebuild every 36s), so the poll has to be faster than
@@ -268,6 +269,13 @@ which runs a 5x/3s retry loop — 12+ seconds of wall clock, plus 5 journal line
 `watchdog` action that does a **single quiet pass**, and `apply_fixes()` only logs when the rules
 actually needed changing. The 5x retry loop still runs for real NetworkManager `vpn-up` events,
 where the post-connect rebuild burst makes it worthwhile.
+
+**That fix never reached the machine until 2026-11-17.** The multi-interface version had been
+edited directly in `/etc` (2026-05-12, never committed), and the quiet repo version was never
+installed, so `/etc` kept logging ~560 lines/hour and the unit still passed `vpn-up`. The two were
+merged (multi-interface + quiet `watchdog`, log line now says how many rules were restored) and
+deployed. Edit the repo copy and install it; never edit `/etc` in place. Check for drift with
+`diff system/etc/NetworkManager/dispatcher.d/99-fix-vpn-local-routes /etc/NetworkManager/dispatcher.d/`.
 
 Verify the change is behaving:
 ```bash
