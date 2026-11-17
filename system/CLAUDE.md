@@ -259,9 +259,13 @@ Bypasses Cisco AnyConnect VPN hijacking of local subnet routes. Uses policy rout
 bench-eth subnet such as `gps-receiver-lab`); the per-IP `LOCAL_DEVICES` list is kept for
 compatibility. Auto-retries to survive vpnagentd chain rebuilds.
 
-**The watchdog timer must stay at 30s.** `vpnagentd` rebuilds its iptables chains ~9,576 times
-per boot (~100/hour at peak — roughly one rebuild every 36s), so the poll has to be faster than
-that to keep the bypass in place. Do not slow it down.
+**Keep the watchdog timer at 30s.** The old figure of "~9,576 chain rebuilds per boot (~100/hour)"
+was counted from the old always-on log line, so it counted watchdog runs, not repairs. Measured
+2026-11-17 with repair-only logging (Cisco 5.1.21, steady tunnel): **0 repairs in ~3¼ h /
+~390 runs**. Rebuilds that strip the bypass seem to come in bursts (reconnect, network change,
+resume), not continuously. The 30 s poll is kept because it now costs <1 s and is silent, and it
+bounds a LAN outage after such a burst to 30 s. Re-check over days with
+`journalctl -t vpn-route-fix --since "-3days" | grep restored` before changing it.
 
 What *was* wasteful (fixed 2026-09-20): the timer invoked the script with the `vpn-up` action,
 which runs a 5x/3s retry loop — 12+ seconds of wall clock, plus 5 journal lines, every 30 seconds
