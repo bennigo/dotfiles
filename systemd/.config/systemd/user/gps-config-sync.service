@@ -1,0 +1,23 @@
+[Unit]
+Description=Deploy gps-config-data to ~/.config/gpsconfig (laptop)
+Documentation=file:%h/git/gps-config-data/deploy.py
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+# deploy.py resolves its repo and environments/ relative to the cwd.
+WorkingDirectory=%h/git/gps-config-data
+# deploy.py --sync: git fetch + ff-only pull, then reconcile every deployed
+# file. Offline / off-VPN is not an error (the clone is deployed as-is), and
+# the laptop-only files (receivers.cfg, scheduler.yaml, sync.yaml,
+# icinga.cfg) are skipped by the [deploy] exclude in laptop-bgo.env.
+# Unchanged files are not rewritten, so gps_parser's config cache survives.
+ExecStart=/usr/bin/python3 %h/git/gps-config-data/deploy.py --env laptop-bgo --target %h/.config/gpsconfig --sync
+TimeoutStartSec=180
+StandardOutput=journal
+StandardError=journal
+Environment="PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin"
+# PrivateTmp deliberately NOT set: it breaks OpenSSH (git fetch) on this
+# kernel — see password-store-sync.service.
+NoNewPrivileges=true

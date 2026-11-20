@@ -1,0 +1,13 @@
+[Unit]
+Description=Deploy gps-config-data to the laptop every 10 min
+Documentation=man:systemd.timer(5)
+
+[Timer]
+# Same cadence as rek-d01's gps-config-sync.timer: a push to gps-config-data
+# reaches the laptop within ~10 min.
+OnBootSec=3min
+OnUnitActiveSec=10min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

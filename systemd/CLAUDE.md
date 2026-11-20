@@ -36,6 +36,8 @@ git repo instead of in a real directory. Ansible handles this automatically duri
 | `tmp-size-check.service` | Triggered | via `.timer` | Runs `tmp-size-check` script |
 | `gogn-sync-imo.timer` | Timer | `enable --now` after the first `--full` run | Daily 03:30 — additive IMO data sync to the gogn drive; skipped when gogn is not mounted |
 | `gogn-sync-imo.service` | Triggered | via `.timer` | Runs `gogn-sync-imo` (current year only) under a sleep inhibitor |
+| `gps-config-sync.timer` | Timer | `enable --now` | Every 10 min (3 min after boot) — deploys `~/git/gps-config-data` to `~/.config/gpsconfig` (same cadence as rek-d01) |
+| `gps-config-sync.service` | Triggered | via `.timer` | `deploy.py --env laptop-bgo --sync`: ff-only pull, then reconcile; offline is not an error; laptop-only files excluded by `laptop-bgo.env` |
 | `kanshi.service` | Simple | `enable --now` | Per-location output profiles (laptop/work/other) — see `sway/.config/sway/CLAUDE.md` → "Multi-Monitor Profiles" |
 | `workspace-placer.service` | Simple | `enable --now` | Moves newly created sway workspaces to the active profile's screen (IPC listener; map from `workspace-layout.sh`) |
 
