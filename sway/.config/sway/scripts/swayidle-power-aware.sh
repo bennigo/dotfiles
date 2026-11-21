@@ -60,7 +60,7 @@ conditional_suspend() {
         log "Would suspend, but on AC power - skipping"
     else
         log "On battery power - executing system suspend"
-        systemctl suspend-then-hibernate
+        "$HOME/.local/bin/sleep-guard" suspend-then-hibernate
     fi
 }
 

@@ -252,7 +252,8 @@ journalctl -b -k | grep -i nvidia
 | Shortcut | Action | Description |
 |----------|--------|-------------|
 | `$mod+x` | Lock screen | Immediate lock with wallpaper |
-| `$mod+Shift+x` | Suspend | Powers outputs off, then `sudo systemctl suspend` (see NVIDIA suspend note) |
+| `$mod+Shift+x` | Suspend | `sleep-guard --screen-off suspend-then-hibernate`: outputs off, sleep; if an inhibitor refuses, outputs back on + notification (see NVIDIA suspend note) |
+| `$mod+Ctrl+x` | Hibernate | `sleep-guard --screen-off hibernate` |
 | `$mod+Ctrl+b` | Emergency display on | Force panel on + 50% brightness |
 | `$mod+Shift+z` | Restore display | Power on + restore brightness |
 
@@ -270,7 +271,7 @@ all already in place and did **not** prevent it. 595-open is already the
 The reliable fix is to **DPMS-off all outputs before suspend** so the compositor
 releases the GPU. Implemented in three layers:
 
-1. **`$mod+Shift+x` keybind** — `swaymsg "output * power off"; sleep 0.3; sudo systemctl suspend`
+1. **`$mod+Shift+x` keybind** — `sleep-guard --screen-off` (`output * power off`, 0.3 s, then sleep)
 2. **`swayidle` `before-sleep`** (`scripts/swayidle-power-aware.sh`) — locks, then
    `swaymsg 'output * power off'` (previously powered the display *on*, which
    kept the GPU busy going into suspend).

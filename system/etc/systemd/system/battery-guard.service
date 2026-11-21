@@ -1,0 +1,11 @@
+# Deployed to: /etc/systemd/system/battery-guard.service
+# Last-resort hibernate at 5% that ignores block inhibitors; see
+# /usr/local/bin/battery-guard and system/CLAUDE.md (Hibernation).
+
+[Unit]
+Description=Hibernate at critical battery even when sleep is inhibited
+ConditionACPower=false
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/battery-guard

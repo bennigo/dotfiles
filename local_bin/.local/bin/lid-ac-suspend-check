@@ -32,7 +32,7 @@ if [[ "$LID_STATE" == "closed" ]]; then
     logger -t lid-ac-suspend "AC disconnected with lid closed — locking and suspending"
     loginctl lock-sessions
     sleep 1
-    systemctl suspend-then-hibernate
+    /usr/local/bin/sleep-guard suspend-then-hibernate || true
 else
     logger -t lid-ac-suspend "AC disconnected, lid is open — no action"
 fi

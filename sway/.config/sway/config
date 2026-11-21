@@ -252,11 +252,12 @@ bindsym $mod+x exec swaylock -f -c 000000 -i $wallpaper
 # bindsym $mod+Shift+x exec swaymsg "output * power off"
 # bindsym $mod+Shift+z exec swaymsg "output * power on"
 ## Power // Suspend system // 😴 ##
-# Power off outputs first so the NVIDIA modeset engine is idle when the GPU
-# enters its suspend path — avoids the "waiting for GPU progress" resume hang.
-bindsym $mod+Shift+x exec 'swaymsg "output * power off"; sleep 0.3; sudo systemctl suspend-then-hibernate'
+# sleep-guard powers the outputs off first (NVIDIA modeset idle before the GPU
+# suspends — avoids the "waiting for GPU progress" resume hang), and if a block
+# inhibitor refuses the sleep it turns them back on and names the blocker.
+bindsym $mod+Shift+x exec ~/.local/bin/sleep-guard --screen-off suspend-then-hibernate
 ## Power // Hibernate now // 💤 ##
-bindsym $mod+Ctrl+x exec 'swaymsg "output * power off"; sleep 0.3; sudo systemctl hibernate'
+bindsym $mod+Ctrl+x exec ~/.local/bin/sleep-guard --screen-off hibernate
 ## Power // Restore laptop panel power and brightness // 💡 ##
 bindsym $mod+Shift+z exec 'swaymsg output $laptop power on; brightnessctl -r'
 

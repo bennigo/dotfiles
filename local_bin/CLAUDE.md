@@ -87,6 +87,8 @@
 | `sendsshKey.sh` | SSH public key deployment helper |
 | `getnf` | Nerd Font installer (third-party, maintained by trimclain) |
 | `setup-family-laptop` | Create isolated credentials for family laptops |
+| `sleep-guard` | Every suspend/hibernate goes through it (sway keys, swayidle, lid scripts, herdr-powermenu). If a logind block inhibitor refuses the sleep: critical notification naming the blocker, `--screen-off` restores outputs. Also `/usr/local/bin` (root, from udev). See `system/CLAUDE.md` Hibernation |
+| `battery-guard` | Root, `battery-guard.timer`: hibernates at ≤5% on battery ignoring inhibitors (UPower's 10% action can be blocked). `/usr/local/bin` |
 | `tmp-size-check` | Notify when `~/tmp` passes a limit (default 20 GB). Daily via `tmp-size-check.timer` |
 
 ### Backup

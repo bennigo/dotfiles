@@ -161,6 +161,21 @@ harmless (drain too small to compute, so the fixed delay is used). Not yet exerc
 10% hibernate action.
 Check a night with: `journalctl --since yesterday -o short-iso | grep -E "suspend entry|hibernation (entry|exit)|sleep operation"`.
 
+**Block inhibitors refuse every sleep path, silently** (2026-11-20): `apt` holds a logind *block*
+inhibitor ("APT is installing or removing packages") while dpkg runs, including while it waits at a
+debconf prompt. One unanswered prompt held it 10:09–17:51. `$mod+Shift+x`, the lid script and
+UPower's 10% `Hibernate` were all refused (`sudo` does not override inhibitors), and the battery ran
+from 63% to 0% with the lid closed. Two safeguards:
+- **`sleep-guard`** (`local_bin`, also `/usr/local/bin` for root): every caller (sway keys,
+  swayidle, `lid-handler.sh`, `lid-ac-suspend-check`, `herdr-powermenu`) sleeps through it. On
+  refusal it logs to `-t sleep-guard`, sends a critical mako notification naming the blocker (as
+  root to every session bus) and, with `--screen-off`, turns the outputs back on.
+- **`battery-guard`** (`battery-guard.timer`, every minute, `ConditionACPower=false`): at ≤5% while
+  discharging it runs `systemctl hibernate --check-inhibitors=no`. Cooldown is 10 min after a
+  trigger. Test with `BATTERY_GUARD_DRY_RUN=1 BATTERY_GUARD_STATUS=Discharging BATTERY_GUARD_PCT=100 battery-guard`.
+
+See who blocks: `systemd-inhibit --list --mode=block`.
+
 **If `/swap.img` is ever recreated, `resume_offset` changes**: `sudo filefrag -v /swap.img` (first physical offset of extent 0), update GRUB, `sudo update-grub`.
 
 **Deploy after reinstall**: Ansible does the files below (`system_files` role, tag `power`, laptops only)

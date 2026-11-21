@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# battery-guard — last-resort hibernate that ignores block inhibitors.
+#
+# Run as root every minute on battery by battery-guard.timer. UPower's
+# CriticalPowerAction=Hibernate (10%) goes through logind and is refused by
+# any block inhibitor; on 2026-11-20 apt held one all day and the laptop died
+# at 0% in the middle of a dpkg run. At BATTERY_GUARD_PCT (default 5%) while
+# discharging this hibernates with --check-inhibitors=no: hibernating during
+# an apt run is a risk, but losing power during it is a bigger one.
+#
+# Deployed to: /usr/local/bin/battery-guard
+
+set -uo pipefail
+
+PCT="${BATTERY_GUARD_PCT:-5}"
+DRY="${BATTERY_GUARD_DRY_RUN:-0}"   # 1: report the decision, don't hibernate (testing)
+STATUS_OVERRIDE="${BATTERY_GUARD_STATUS:-}"  # testing only
+STAMP=/run/battery-guard.stamp   # tmpfs: cleared on reboot, survives hibernate
+COOLDOWN=600                     # after resume at low charge, give 10 min to plug in
+
+bat=""
+for b in /sys/class/power_supply/BAT*; do [[ -r $b/capacity ]] && bat=$b && break; done
+[[ -n $bat ]] || exit 0
+
+status=${STATUS_OVERRIDE:-$(<"$bat/status")}
+cap=$(<"$bat/capacity")
+[[ $status == Discharging ]] || { (( DRY )) && echo "skip: $status"; exit 0; }
+(( cap <= PCT )) || { (( DRY )) && echo "skip: ${cap}% > ${PCT}%"; exit 0; }
+
+now=$(date +%s)
+if (( DRY )); then echo "would hibernate: ${cap}% <= ${PCT}%, $status"; exit 0; fi
+if [[ -f $STAMP ]] && (( now - $(<"$STAMP") < COOLDOWN )); then
+    exit 0
+fi
+echo "$now" >"$STAMP"
+
+blockers=$(systemd-inhibit --list --no-pager --no-legend --mode=block 2>/dev/null | awk '{print $1}' | sort -u | paste -sd, -)
+logger -t battery-guard "Battery at ${cap}% and discharging — hibernating, ignoring inhibitors${blockers:+ (blocked by: $blockers)}"
+sync
+exec systemctl hibernate --check-inhibitors=no

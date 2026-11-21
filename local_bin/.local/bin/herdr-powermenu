@@ -6,8 +6,8 @@ choice=$(printf '\U000f033e  Lock\n⏾  Suspend\n💤  Hibernate\n🔄  Restart 
     rofi -dmenu -p 'Power' -theme-str 'window {width: 200px;}' 2>/dev/null)
 case "$choice" in
     *Lock*)      swaylock -f -c 000000 -i "$wallpaper" ;;
-    *Suspend*)   systemctl suspend-then-hibernate ;;
-    *Hibernate*) systemctl hibernate ;;
+    *Suspend*)   "$HOME/.local/bin/sleep-guard" suspend-then-hibernate ;;
+    *Hibernate*) "$HOME/.local/bin/sleep-guard" hibernate ;;
     *Restart*)   swaymsg reload ;;
     *Logout*)    swaymsg exit ;;
     *Reboot*)    systemctl reboot ;;

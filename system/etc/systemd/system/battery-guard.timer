@@ -1,0 +1,14 @@
+# Deployed to: /etc/systemd/system/battery-guard.timer
+# Checks every minute; the service skips itself on AC (ConditionACPower=false).
+# At ~22 W awake, 5% (~4 Wh) lasts ~10 min, so 1 min leaves a wide margin.
+
+[Unit]
+Description=Check for critical battery every minute
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+AccuracySec=10s
+
+[Install]
+WantedBy=timers.target

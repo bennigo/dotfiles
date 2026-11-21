@@ -274,5 +274,34 @@
     - { path: etc/polkit-1/rules.d/85-allow-hibernate.rules, mode: '0644' }
     - { path: etc/UPower/UPower.conf, mode: '0644' }
     - { path: usr/lib/systemd/system-sleep/gpsplot-stop, mode: '0755' }
+    - { path: etc/systemd/system/battery-guard.service, mode: '0644' }
+    - { path: etc/systemd/system/battery-guard.timer, mode: '0644' }
+  tags: ["system", "power"]
+  when: hardware_roles.laptop.enabled | default(false)
+
+# Root-side helpers live in local_bin (also stowed for the user): udev and
+# battery-guard.service run them as root from /usr/local/bin.
+- name: Deploy root sleep helpers to /usr/local/bin
+  copy:
+    src: "{{ playbook_dir }}/../local_bin/.local/bin/{{ item }}"
+    dest: "/usr/local/bin/{{ item }}"
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - sleep-guard
+    - battery-guard
+    - lid-ac-suspend-check
+  tags: ["system", "power"]
+  when: hardware_roles.laptop.enabled | default(false)
+
+# Last-resort hibernate at 5% that ignores block inhibitors (UPower's 10%
+# action goes through logind and is refused by them).
+- name: Enable battery-guard timer
+  systemd:
+    name: battery-guard.timer
+    enabled: yes
+    state: started
+    daemon_reload: yes
   tags: ["system", "power"]
   when: hardware_roles.laptop.enabled | default(false)

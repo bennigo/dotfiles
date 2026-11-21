@@ -65,7 +65,7 @@ handle_lid_close() {
         # Turn off display
         swaymsg output "$LAPTOP_DISPLAY" power off
         # Full system suspend
-        systemctl suspend-then-hibernate
+        "$HOME/.local/bin/sleep-guard" suspend-then-hibernate
     fi
 }
 
