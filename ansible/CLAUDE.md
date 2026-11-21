@@ -78,7 +78,7 @@ Hardware roles can be manually overridden via `--extra-vars`.
 | `README.md` | Full usage guide (276 lines) |
 | `INSTALL.md` | Step-by-step installation walkthrough |
 | `TESTING.md` | Testing procedures |
-| `DATABASE_SETUP.md` | PostgreSQL 18 setup and credential management |
+| `DATABASE_SETUP.md` | PostgreSQL 19 setup and credential management |
 
 ## Cross-References
 

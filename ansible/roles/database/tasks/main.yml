@@ -41,18 +41,6 @@
     update_cache: yes
   tags: ["database", "postgresql", "packages"]
 
-- name: Get installed PostgreSQL version
-  shell: |
-    apt list --installed | grep "^postgresql/" | head -1 | grep -oP '\d+' | head -1
-  register: detected_postgresql_version
-  changed_when: false
-  tags: ["database", "postgresql", "setup"]
-
-- name: Set PostgreSQL version fact
-  set_fact:
-    postgresql_version: "{{ detected_postgresql_version.stdout }}"
-  tags: ["database", "postgresql", "setup"]
-
 - name: Ensure PostgreSQL service is enabled and started
   systemd:
     name: postgresql

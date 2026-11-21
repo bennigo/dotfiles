@@ -127,7 +127,7 @@ No passwords stored in configuration files - all handled via `.pgpass`.
 ### Repository Setup
 - Uses PostgreSQL official APT repository for latest versions
 - Modern GPG key management (no deprecated `apt-key`)
-- Automatic version detection (currently installs PostgreSQL 18)
+- Automatic version detection (pinned by `postgresql_version`, currently 19)
 
 ### Authentication Configuration
 - **Peer authentication**: For Unix socket connections (development workflow)

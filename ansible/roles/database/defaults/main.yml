@@ -2,13 +2,16 @@
 # Default variables for database role
 # PostgreSQL installation and configuration
 
-# PostgreSQL version (will be automatically detected, but can be overridden)
-postgresql_version: "18"
+# PostgreSQL major version (pinned; bump deliberately, then pg_upgradecluster)
+postgresql_version: "19"
 
 # PostgreSQL packages to install
+# Versioned server package, NOT the `postgresql` metapackage: the metapackage
+# follows pgdg's newest major, so `apt upgrade` pulls in N+1 and its postinst
+# offers an automatic cluster upgrade (2026-11-20: half-done 18->19, empty 19
+# cluster took port 5432). contrib is built into postgresql-NN.
 database_packages:
-  - postgresql
-  - postgresql-contrib
+  - "postgresql-{{ postgresql_version }}"
   - postgresql-client
   - libpq-dev
   - python3-psycopg2  # Required for Ansible PostgreSQL modules

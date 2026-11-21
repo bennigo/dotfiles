@@ -13,7 +13,7 @@ ansible-playbook bootstrap.yml --tags database
 
 ## What it installs
 
-- PostgreSQL (version pinned, currently 18) from `apt.postgresql.org`
+- PostgreSQL (version pinned, currently 19) from `apt.postgresql.org`
 - `postgresql-contrib`, `libpq-dev`, `python3-psycopg2`
 - DbVisualizer GUI client (optional)
 - Credential management scripts
@@ -25,7 +25,7 @@ ansible-playbook bootstrap.yml --tags database
 
 ## Key variables
 
-- `postgresql_version` — default `"18"` (in `roles/database/defaults/main.yml`)
+- `postgresql_version` — default `"19"` (in `roles/database/defaults/main.yml`)
 - `dbvisualizer_version` — default `"25.3.2"`
 - `postgresql_auth_method` — default `"peer"`
 
