@@ -105,6 +105,19 @@
     - reload systemd
   tags: ["system", "suspend", "notify"]
 
+# Prefix drop-in for every mnt_data-*.mount: no start limit, so access before
+# the VPN is up can't kill the automount ('mount-start-limit-hit').
+- name: Deploy /mnt_data NFS no-start-limit drop-in
+  copy:
+    src: "{{ playbook_dir }}/../system/etc/systemd/system/mnt_data-.mount.d/10-no-start-limit.conf"
+    dest: /etc/systemd/system/mnt_data-.mount.d/10-no-start-limit.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - reload systemd
+  tags: ["system", "nfs"]
+
 - name: Deploy VPN DNS death-spiral guard script
   copy:
     src: "{{ playbook_dir }}/../system/usr/local/bin/resolv-fallback"

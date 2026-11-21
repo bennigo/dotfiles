@@ -94,3 +94,4 @@ rtk.vedur.is:/home/gpsops/rtklib-run/data  /mnt_data/rtgpsdata  nfs  soft,timeo=
 #//nas.vedur.is/vatn /mnt/nas/vatn cifs credentials=/root/.smbcredentials,iocharset=utf8,domain=VI,vers=1.0 0 0
 #nas.vedur.is:/export/joklar /mnt/joklar nfs defaults 0 0
 #nas.vedur.is:/export/luk/gogn/haedarlikon/ /mnt/haedarlikon nfs defaults 0 0
+

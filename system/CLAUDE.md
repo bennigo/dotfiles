@@ -255,7 +255,17 @@ Two latent issues on fresh Ubuntu installs, both fixed in Ansible:
 2. **NFS mounts block boot** — the vedur.is `/mnt_data/*` NFS shares must use
    `nofail,_netdev,x-systemd.automount,x-systemd.mount-timeout=10` (NOT `nfs
    defaults`). Otherwise each blocks boot ~25s when off the network/VPN. Automount
-   mounts them on first access instead.
+   mounts them on first access instead. The VPN is never up at boot, so every
+   vedur.is share (incl. `/mnt/rekd01_gps`) must have `x-systemd.automount`.
+3. **Automount killed by the start limit** (2026-11-21) — `gpsplot-rtk-map` ran
+   right after login, before the VPN, and touched `/mnt_data/gps` many times in a
+   second; each mount failed on DNS, systemd hit 5 starts/10 s and failed
+   `mnt_data-gps.automount` (`mount-start-limit-hit`), leaving an empty directory
+   for the rest of the boot. Fix: prefix drop-in
+   `etc/systemd/system/mnt_data-.mount.d/10-no-start-limit.conf`
+   (`StartLimitIntervalSec=0` for every `mnt_data-*.mount`). Recover by hand:
+   `sudo systemctl reset-failed <x>.automount <x>.mount && sudo systemctl start <x>.automount`.
+   Check: `systemctl list-units --all --type=automount | grep -v waiting`.
 
 Manual re-apply (if a reinstall restores defaults):
 ```bash
