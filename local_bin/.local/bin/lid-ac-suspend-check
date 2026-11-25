@@ -5,6 +5,18 @@
 
 set -euo pipefail
 
+# At the suspend-then-hibernate estimation wake (system up for a few seconds
+# before hibernating) an AC unplug that happened during sleep still reaches
+# udev. A sleep operation is already running: do nothing.
+for unit in systemd-suspend-then-hibernate systemd-suspend systemd-hibernate; do
+    # Oneshot: "activating" for the whole sleep, so is-active would miss it.
+    state=$(systemctl show -P ActiveState "$unit.service" 2>/dev/null || true)
+    if [[ $state == activating || $state == active ]]; then
+        logger -t lid-ac-suspend "AC disconnected during $unit — sleep already in progress, skipping"
+        exit 0
+    fi
+done
+
 STAMP="/tmp/lid-ac-suspend.stamp"
 NOW=$(date +%s)
 if [[ -f "$STAMP" ]]; then

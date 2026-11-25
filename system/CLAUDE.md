@@ -170,6 +170,11 @@ from 63% to 0% with the lid closed. Two safeguards:
   swayidle, `lid-handler.sh`, `lid-ac-suspend-check`, `herdr-powermenu`) sleeps through it. On
   refusal it logs to `-t sleep-guard`, sends a critical mako notification naming the blocker (as
   root to every session bus) and, with `--screen-off`, turns the outputs back on.
+  "Action … already in progress" is **not** a refusal: it is only logged, with rc 0. It happens at
+  the 2 h estimation wake when AC was unplugged during sleep: udev runs `lid-ac-suspend-check`
+  seconds before `systemd-sleep` hibernates. That gave false "Svefni hafnað" alerts on
+  2026-11-24/25. `lid-ac-suspend-check` now also skips while a `systemd-{suspend,hibernate,
+  suspend-then-hibernate}.service` is `activating`. These are oneshots, so `is-active` misses them.
 - **`battery-guard`** (`battery-guard.timer`, every minute, `ConditionACPower=false`): at ≤5% while
   discharging it runs `systemctl hibernate --check-inhibitors=no`. Cooldown is 10 min after a
   trigger. Test with `BATTERY_GUARD_DRY_RUN=1 BATTERY_GUARD_STATUS=Discharging BATTERY_GUARD_PCT=100 battery-guard`.

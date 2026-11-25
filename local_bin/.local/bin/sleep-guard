@@ -36,6 +36,16 @@ err=$(systemctl "$action" 2>&1)
 rc=$?
 (( rc == 0 )) && exit 0
 
+# "already in progress": the system is mid-sleep, not refusing it. Happens at
+# the suspend-then-hibernate estimation wake (2026-11-24/25): AC unplugged
+# while asleep -> udev -> lid-ac-suspend-check calls us seconds before
+# systemd-sleep hibernates. Log only; no notification, and the outputs stay
+# off because sleep is going ahead.
+if [[ $err == *"already in progress"* ]]; then
+    logger -t sleep-guard "$action requested while a sleep operation is already in progress — ignored"
+    exit 0
+fi
+
 if (( screen_off )) && [[ -n "${SWAYSOCK:-}" ]]; then
     swaymsg 'output * power on' >/dev/null 2>&1 || true
 fi
